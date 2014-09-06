@@ -1,4 +1,5 @@
 {View} = require 'atom'
+OmniSharpServer = require './omni-sharp-wrapper'
 
 module.exports =
 class AtomSharpStatusBarView extends View
@@ -11,6 +12,11 @@ class AtomSharpStatusBarView extends View
   # Internal: Initialize the status bar view and event handlers.
   initialize: ->
     atom.workspaceView.command "atom-sharp:toggle", => @toggle()
+    @subscribe this, 'click', =>
+      console.log "clicked on the omni icon"
+      atom.workspaceView.trigger 'atom-sharp:toggle-output'
+
+
 
   # Internal: Attach the status bar view to the status bar.
   #
@@ -20,6 +26,7 @@ class AtomSharpStatusBarView extends View
     atom.workspaceView.statusBar.appendLeft(this)
 
   toggle: ->
+    OmniSharpServer.get().toggle()
     if @hasParent()
       @detach()
     else

@@ -1,4 +1,5 @@
 AtomSharpStatusBarView = require './atom-sharp-status-bar-view'
+AtomSharpOutputView = require './atom-sharp-output-view'
 
 module.exports =
   atomSharpView: null
@@ -7,6 +8,9 @@ module.exports =
     atom.config.setDefaults('test-status', autorun: true)
     createStatusEntry = =>
       @testStatusStatusBar = new AtomSharpStatusBarView
+      @outputView = new AtomSharpOutputView
+
+      atom.on("omni-sharp:close", => @outputView.destroy())
 
     if atom.workspaceView.statusBar
       createStatusEntry()
@@ -17,6 +21,8 @@ module.exports =
   deactivate: ->
     @testStatusStatusBar?.destroy()
     @testStatusStatusBar = null
+    @outputView?.destroy()
+    @outputView = null
 
   serialize: ->
     atomSharpViewState: @atomSharpView.serialize()

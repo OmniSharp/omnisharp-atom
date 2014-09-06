@@ -3,6 +3,32 @@
 // See https://github.com/atom/atom-dark-ui/blob/master/stylesheets/ui-variables.less
 // for a full listing of what's available.
 @import "ui-variables";
+@import "octicon-mixins";
 
 .atom-sharp {
+}
+
+.atom-sharp-output {
+  .message {
+    max-height: 150px;
+    overflow-y: scroll;
+  }
+
+  pre {
+    background: #161719;
+    color: #fff;
+    font-size: 10px;
+    margin: 0px;
+    padding: 0px;
+    border:none;
+  }
+  .pending {
+    color: @text-color-warning;
+  }
+  .success {
+    color: @text-color-success;
+  }
+  .fail {
+    color: @text-color-error;
+  }
 }
