@@ -1,0 +1,14 @@
+{
+  "name": "atom-sharp",
+  "main": "./lib/atom-sharp",
+  "version": "0.0.0",
+  "description": "A short description of your package",
+  "activationEvents": ["atom-sharp:toggle"],
+  "repository": "https://github.com/atom/atom-sharp",
+  "license": "MIT",
+  "engines": {
+    "atom": ">0.50.0"
+  },
+  "dependencies": {
+  }
+}
