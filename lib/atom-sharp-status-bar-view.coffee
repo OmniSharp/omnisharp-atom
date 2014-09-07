@@ -1,5 +1,4 @@
 {View} = require 'atom'
-OmniSharpServer = require './omni-sharp-wrapper'
 
 module.exports =
 class AtomSharpStatusBarView extends View
@@ -26,7 +25,6 @@ class AtomSharpStatusBarView extends View
     atom.workspaceView.statusBar.appendLeft(this)
 
   toggle: ->
-    OmniSharpServer.get().toggle()
     if @hasParent()
       @detach()
     else

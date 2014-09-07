@@ -1,6 +1,6 @@
 fs = require('fs')
 spawn = require('child_process').spawn
-
+BrowserWindow = require('remote').require('browser-window')
 
 
 module.exports =
@@ -12,7 +12,7 @@ module.exports =
       location = "#{packageDir}/atom-sharp/server/OmniSharp/bin/Debug/OmniSharp.exe"
 
       start: () ->
-        @child = spawn("mono", [location, "-s", atom?.project?.path])
+        @child = spawn("mono", [location, "-s", atom?.project?.path, "-p", @getPortNumber()])
         @child.stdout.on 'data', @out
         atom.emit("omni-sharp:start", @child.pid)
         #@child.stderr.on 'data', @err
@@ -20,7 +20,18 @@ module.exports =
 
       out: (data) => atom.emit("omni-sharp:out", data.toString())
       err: (data) => atom.emit("omni-sharp:err", data.toString())
-      close: (data) => atom.emit("omni-sharp:close", data)
+      close: (data) =>
+        atom.emit("omni-sharp:close", data)
+        @port = null
+
+      getPortNumber: ->
+        if @port
+          return @port
+        windows = BrowserWindow.getAllWindows()
+        currentWindow = BrowserWindow.getFocusedWindow().getProcessId()
+        index = windows.findIndex (w) => w.getProcessId() ==  currentWindow
+        @port = 2000 + index
+        @port
 
       stop: () ->
         @child?.kill "SIGKILL"
@@ -32,4 +43,4 @@ module.exports =
       instance ?= new OmniSharpServerInstance()
 
 
-@omni = OmniSharpServer.get()
+global.omni = OmniSharpServer.get()

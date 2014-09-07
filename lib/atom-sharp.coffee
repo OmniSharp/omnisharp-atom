@@ -1,11 +1,13 @@
 AtomSharpStatusBarView = require './atom-sharp-status-bar-view'
 AtomSharpOutputView = require './atom-sharp-output-view'
+OmniSharpServer = require './omni-sharp-wrapper'
 
 module.exports =
   atomSharpView: null
 
   activate: (state) ->
-    atom.config.setDefaults('test-status', autorun: true)
+    #atom.config.setDefaults('test-status', autorun: true)
+    atom.workspaceView.command "atom-sharp:toggle", => @toggle()
     createStatusEntry = =>
       @testStatusStatusBar = new AtomSharpStatusBarView
       @outputView = new AtomSharpOutputView
@@ -18,7 +20,11 @@ module.exports =
       atom.packages.once 'activated', ->
         createStatusEntry()
 
+  toggle: ->
+    OmniSharpServer.get().toggle()
+
   deactivate: ->
+    OmniSharpServer.get().stop()
     @testStatusStatusBar?.destroy()
     @testStatusStatusBar = null
     @outputView?.destroy()

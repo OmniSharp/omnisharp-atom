@@ -1,5 +1,4 @@
 {View}  = require 'atom'
-
 Convert = require 'ansi-to-html'
 
 module.exports =
@@ -21,11 +20,6 @@ class AtomSharpOutputView extends View
     atom.on("omni-sharp:out", (data) => @update data)
     atom.on("omni-sharp:err", (data) => @update data)
     atom.on "omni-sharp:start", @start
-  # Internal: Update the test-status output view contents.
-  #
-  # output - A string of the test runner results.
-  #
-  # Returns nothing.
 
   start: (pid) =>
     @output = "<strong class'success'>Started Omnisharp server (#{pid})</strong>"
