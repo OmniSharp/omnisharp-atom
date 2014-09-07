@@ -12,16 +12,12 @@ class AtomSharperStatusBarView extends View
   initialize: ->
     atom.workspaceView.command "atom-sharper:toggle", => @toggle()
     @subscribe this, 'click', =>
-      console.log "clicked on the omni icon"
       atom.workspaceView.trigger 'atom-sharper:toggle-output'
-
-
 
   # Internal: Attach the status bar view to the status bar.
   #
   # Returns nothing.
   attach: ->
-    console.log "AtomSharpStatusView was attached!"
     atom.workspaceView.statusBar.appendLeft(this)
 
   toggle: ->
@@ -30,7 +26,7 @@ class AtomSharperStatusBarView extends View
     else
       @attach()
 
-# Internal: Detach and destroy the test-status status barview.
+  # Internal: Detach and destroy the test-status status barview.
   #
   # Returns nothing.
   destroy: ->
