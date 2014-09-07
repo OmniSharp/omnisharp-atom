@@ -1,4 +1,4 @@
-AtomSharpStatusBarView = require '../lib/atom-sharp-status-bar-view'
+AtomSharperStatusBarView = require '../lib/atom-sharper/atom-sharper-status-bar-view'
 
 describe "AtomSharpView", ->
   it "has one valid test", ->

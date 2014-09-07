@@ -1,20 +1,20 @@
-AtomSharpStatusBarView = require './atom-sharp-status-bar-view'
-AtomSharpOutputView = require './atom-sharp-output-view'
-OmniSharpServer = require './omni-sharp-wrapper'
-Omni = require './omni'
+AtomSharperStatusBarView = require './atom-sharper-status-bar-view'
+AtomSharperOutputView = require './atom-sharper-output-view'
+OmniSharpServer = require '../omni-sharp-server/omni-sharp-server'
+Omni = require '../omni-sharp-server/omni'
 
 module.exports =
   atomSharpView: null
 
   activate: (state) ->
     #atom.config.setDefaults('test-status', autorun: true)
-    atom.workspaceView.command "atom-sharp:toggle", => @toggle()
-    atom.workspaceView.command "atom-sharp:request", => @testRequest()
+    atom.workspaceView.command "atom-sharper:toggle", => @toggle()
+    atom.workspaceView.command "atom-sharper:request", => @testRequest()
     createStatusEntry = =>
-      @testStatusStatusBar = new AtomSharpStatusBarView
-      @outputView = new AtomSharpOutputView
+      @testStatusStatusBar = new AtomSharperStatusBarView
+      @outputView = new AtomSharperOutputView
 
-      atom.on("omni-sharp:close", => @outputView.destroy())
+      atom.on("omni-sharp-server:close", => @outputView.destroy())
 
     if atom.workspaceView.statusBar
       createStatusEntry()

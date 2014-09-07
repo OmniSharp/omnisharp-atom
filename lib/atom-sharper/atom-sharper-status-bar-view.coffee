@@ -1,7 +1,7 @@
 {View} = require 'atom'
 
 module.exports =
-class AtomSharpStatusBarView extends View
+class AtomSharperStatusBarView extends View
 
   # Internal: Initialize test-status status bar view DOM contents.
   @content: ->
@@ -10,10 +10,10 @@ class AtomSharpStatusBarView extends View
 
   # Internal: Initialize the status bar view and event handlers.
   initialize: ->
-    atom.workspaceView.command "atom-sharp:toggle", => @toggle()
+    atom.workspaceView.command "atom-sharper:toggle", => @toggle()
     @subscribe this, 'click', =>
       console.log "clicked on the omni icon"
-      atom.workspaceView.trigger 'atom-sharp:toggle-output'
+      atom.workspaceView.trigger 'atom-sharper:toggle-output'
 
 
 

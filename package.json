@@ -1,10 +1,10 @@
 {
-  "name": "atom-sharp",
-  "main": "./lib/atom-sharp",
+  "name": "atom-sharper",
+  "main": "./lib/atom-sharper/atom-sharper",
   "version": "0.0.0",
-  "description": "A short description of your package",
-  "activationEvents": ["atom-sharp:toggle"],
-  "repository": "https://github.com/atom/atom-sharp",
+  "description": "Brings the wonderful omnisharp server to powercharge atom's C# development experience",
+  "activationEvents": ["atom-sharper:toggle"],
+  "repository": "https://github.com/Mpdreamz/atom-sharper",
   "license": "MIT",
   "engines": {
     "atom": ">0.50.0"

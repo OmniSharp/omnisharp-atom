@@ -1,4 +1,4 @@
-OmniSharpServer = require './omni-sharp-wrapper'
+OmniSharpServer = require './omni-sharp-server'
 rp = require "request-promise"
 Url = require "url"
 
