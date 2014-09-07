@@ -10,6 +10,8 @@ module.exports =
     #atom.config.setDefaults('test-status', autorun: true)
     atom.workspaceView.command "atom-sharper:toggle", => @toggle()
     atom.workspaceView.command "atom-sharper:request", => @testRequest()
+    atom.workspaceView.command "atom-sharp:go-to-definition", => @goToDefinition()
+
     createStatusEntry = =>
       @testStatusStatusBar = new AtomSharperStatusBarView
       @outputView = new AtomSharperOutputView
@@ -34,6 +36,23 @@ module.exports =
       buffer: editor.displayBuffer.buffer.cachedText
     .then (data) -> console.log(data)
     .catch (data) -> console.error(data)
+
+  translatePoint: (line, column) ->
+    return [
+      line - 1
+      column
+    ]
+
+  goToDefinition: ->
+    translatePoint = @translatePoint
+
+    Omni
+      .goToDefinition()
+      .then (data) ->
+        definition = JSON.parse(data)
+        atom.workspace.open(definition.FileName).then (editor) ->
+          editor.setCursorBufferPosition translatePoint(definition.Line, definition.Column)
+      .catch (data) -> console.error(data)
 
   deactivate: ->
     OmniSharpServer.get().stop()
