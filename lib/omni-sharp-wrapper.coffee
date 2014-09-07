@@ -12,10 +12,10 @@ module.exports =
       location = "#{packageDir}/atom-sharp/server/OmniSharp/bin/Debug/OmniSharp.exe"
 
       start: () ->
-        @child = spawn("mono", [location, "-s", atom?.project?.path, "-p", @getPortNumber()])
+        @child = spawn("mono", [location, "-s", atom?.project?.path, "-p", @getPortNumber(), "-v", "Verbose"])
         @child.stdout.on 'data', @out
         atom.emit("omni-sharp:start", @child.pid)
-        #@child.stderr.on 'data', @err
+        @child.stderr.on 'data', @err
         @child.on 'close', @close
 
       out: (data) => atom.emit("omni-sharp:out", data.toString())
@@ -41,6 +41,3 @@ module.exports =
 
     @get: () ->
       instance ?= new OmniSharpServerInstance()
-
-
-global.omni = OmniSharpServer.get()

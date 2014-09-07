@@ -9,3 +9,4 @@
 # https://atom.io/docs/latest/advanced/keymaps
 '.workspace':
   'ctrl-alt-o': 'atom-sharp:toggle'
+  'ctrl-alt-r': 'atom-sharp:request'
