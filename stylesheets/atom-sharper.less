@@ -6,12 +6,26 @@
 @import "octicon-mixins";
 
 .atom-sharper {
+  position:relative;
+  padding:0px !important;
+  margin:0px;
+}
+
+.atom-sharper-output-resizer{
+  position:absolute;
+  height:5px;
+  cursor: row-resize;
+  z-index:4;
+  top:0;
+  right:0;
+  left:0;
+
 }
 
 .atom-sharper-output {
+  overflow-y: scroll;
+  height:150px;
   .message {
-    max-height: 150px;
-    overflow-y: scroll;
   }
 
   pre {

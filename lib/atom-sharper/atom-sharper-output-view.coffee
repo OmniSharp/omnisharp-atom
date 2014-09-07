@@ -1,4 +1,5 @@
 {View}  = require 'atom'
+{$} = require 'atom'
 Convert = require 'ansi-to-html'
 
 module.exports =
@@ -7,9 +8,11 @@ class AtomSharperOutputView extends View
 
   # Internal: Initialize test-status output view DOM contents.
   @content: ->
-    @div tabIndex: -1, class: 'atom-sharper-output tool-panel panel-bottom padded native-key-bindings', =>
-      @div class: 'block', =>
-        @div class: 'message', outlet: 'sharpAtomOutput'
+    @div class: 'tool-panel panel-bottom native-key-bindings atom-sharper', outlet: 'pane', =>
+      @div class: 'atom-sharper-output-resizer', outlet: 'resizeHandle'
+      @div tabIndex: -1, class: 'atom-sharper-output padded', =>
+        @div class: 'block', =>
+          @div class: 'message', outlet: 'sharpAtomOutput'
 
   # Internal: Initialize the test-status output view and event handlers.
   initialize: ->
@@ -20,6 +23,23 @@ class AtomSharperOutputView extends View
     atom.on("omni-sharp-server:out", (data) => @update data)
     atom.on("omni-sharp-server:err", (data) => @update data)
     atom.on "omni-sharp-server:start", @start
+
+    @on 'mousedown', '.atom-sharper-output-resizer', (e) => @resizeStarted(e)
+
+  resizeStarted: =>
+    @fixedTop = @resizeHandle.offset().top
+    @fixedHeight = $(".atom-sharper").height()
+    $(document).on('mousemove', @resizePane)
+    $(document).on('mouseup', @resizeStopped)
+
+  resizeStopped: =>
+    $(document).off('mousemove', @resizePane)
+    $(document).off('mouseup', @resizeStopped)
+
+  resizePane: ({pageY, which}) =>
+    return @resizeStopped() unless which is 1
+    h = @fixedHeight + (@fixedTop - pageY)
+    $(".atom-sharper").height(h)
 
   start: (pid) =>
     @output = "<strong class'success'>Started Omnisharp server (#{pid})</strong>"
