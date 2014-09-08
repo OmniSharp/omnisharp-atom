@@ -10,4 +10,4 @@
 '.workspace':
   'ctrl-alt-o': 'atom-sharper:toggle'
   'ctrl-alt-r': 'atom-sharper:request'
-  'F12': 'atom-sharp:go-to-definition'
+  'ctrl-d': 'atom-sharp:go-to-definition'
