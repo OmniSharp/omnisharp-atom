@@ -15,15 +15,19 @@ module.exports =
         pathname: path
         query: query
 
-    @syntaxErrors: (data) =>
+    @req: (path, event, line = 0, column = 0) =>
       editor = atom.workspace.getActiveEditor()
+      buffer =  editor.displayBuffer.buffer.cachedText
+      return if !buffer
       rp
-        uri: @_uri "syntaxErrors"
+        uri: @_uri path
         method: "POST"
         form:
-          column: 0
+          column: column
           filename: editor.getUri()
-          line: 0
-          buffer: editor.displayBuffer.buffer.cachedText
-      .then (data) -> atom.emit("omni:syntax-errors", data)
-      .catch (data) -> console.error(data)
+          line: line
+          buffer: buffer
+      .then (data) -> atom.emit("omni:#{event}", JSON.parse(data))
+      .catch (data) -> console.error(data.statusCode?, data.options?.uri)
+
+    @syntaxErrors: (data) => @req "syntaxErrors", "syntax-errors"

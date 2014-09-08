@@ -2,6 +2,7 @@
 {$} = require 'atom'
 AtomSharperErrorView = require './atom-sharper-error-view'
 Convert = require 'ansi-to-html'
+Vue = require 'vue'
 
 module.exports =
 # Internal: A tool-panel view for the test result output.
@@ -26,6 +27,10 @@ class AtomSharperOutputView extends View
   initialize: ->
 
     @errorsOutput.append(new AtomSharperErrorView())
+    @vm = new Vue
+      data:
+        selected: "errors"
+      el: this[0]
 
     atom.workspaceView.command "atom-sharper:toggle-output", =>
       @toggle()

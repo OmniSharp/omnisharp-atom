@@ -13,6 +13,7 @@
     "ansi-to-html": "~0.1.0",
     "request-promise" : "~0.1.2",
     "bluebird" : "~2.3.2",
-    "vue": "~0.10.6"
+    "vue": "~0.10.6",
+    "underscore": "~1.7.0"
   }
 }

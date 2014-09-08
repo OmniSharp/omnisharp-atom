@@ -2,6 +2,7 @@ AtomSharperStatusBarView = require './atom-sharper-status-bar-view'
 AtomSharperOutputView = require './atom-sharper-output-view'
 OmniSharpServer = require '../omni-sharp-server/omni-sharp-server'
 Omni = require '../omni-sharp-server/omni'
+_ = require "underscore"
 
 module.exports =
   atomSharpView: null
@@ -9,8 +10,9 @@ module.exports =
   activate: (state) ->
     #atom.config.setDefaults('test-status', autorun: true)
     atom.workspaceView.command "atom-sharper:toggle", => @toggle()
-    atom.workspaceView.command "atom-sharper:request", => Omni.syntaxErrors()
-
+    atom.workspaceView.command "atom-sharper:request", _.debounce(Omni.syntaxErrors, 200)
+    atom.workspaceView.command "editor:display-updated", _.debounce(Omni.syntaxErrors, 200)
+    
     createStatusEntry = =>
       @testStatusStatusBar = new AtomSharperStatusBarView
       @outputView = new AtomSharperOutputView

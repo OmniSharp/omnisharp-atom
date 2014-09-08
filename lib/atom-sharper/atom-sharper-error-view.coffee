@@ -29,8 +29,8 @@ class AtomSharperErrorView extends View
       el: this[0]
 
     atom.on "omni:syntax-errors", (data) =>
-      console.log data
-      @vm.errors = JSON.parse(data).Errors
+      console.log "/syntaxErrors"
+      @vm.errors = data.Errors
 
   destroy: ->
     @detach()
