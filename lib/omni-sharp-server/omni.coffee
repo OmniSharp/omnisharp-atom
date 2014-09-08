@@ -12,7 +12,7 @@ module.exports =
       marker = editor.getCursorBufferPosition()
 
       context =
-        column: marker.column
+        column: marker.column + 1
         filename: editor.getUri()
         line: marker.row + 1
         buffer: editor.buffer.getLines().join('\n')
