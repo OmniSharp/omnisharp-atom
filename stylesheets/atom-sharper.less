@@ -5,12 +5,11 @@
 @import "ui-variables";
 @import "octicon-mixins";
 
-.atom-sharper {
+.atom-sharper-pane {
   position:relative;
   padding:0px !important;
   margin:0px;
 }
-
 .atom-sharper-output-resizer{
   position:absolute;
   height:5px;
@@ -19,13 +18,34 @@
   top:0;
   right:0;
   left:0;
-
 }
-
+.border-flip (@a) when (lightness(@a) >= 50%) {
+  border: 1px solid darken(@tool-panel-background-color, 30%);
+}
+.border-flip (@a) when (lightness(@a) < 50%) {
+  border: 1px solid lighten(@tool-panel-background-color, 20%);
+  border-top: 1px solid transparent;
+}
+.btn-fix {
+  top: -2px !important;
+}
 .atom-sharper-output {
   overflow-y: scroll;
   height:150px;
-  .message {
+
+  .error-table {
+    width:100%;
+    line-height: 1.42;
+    th {
+      .border-flip(@tool-panel-background-color);
+      padding:2px;
+      padding-top:0px;
+    }
+    tr.selected {
+      background-color: @background-color-selected; 
+    }
+    td {
+    }
   }
 
   pre {

@@ -9,8 +9,16 @@ module.exports =
   activate: (state) ->
     #atom.config.setDefaults('test-status', autorun: true)
     atom.workspaceView.command "atom-sharper:toggle", => @toggle()
-    atom.workspaceView.command "atom-sharper:request", => @testRequest()
+    atom.workspaceView.command "atom-sharper:request", _.debounce(Omni.syntaxErrors, 200)
+    atom.workspaceView.command "editor:display-updated", _.debounce(Omni.syntaxErrors, 200)
     atom.workspaceView.command "atom-sharp:go-to-definition", => @goToDefinition()
+
+    atom.on "omni:navigate-to", (position) =>
+      atom.workspace.open(position.FileName).then (editor) ->
+        editor.setCursorBufferPosition [
+          position.Line
+          position.Column
+        ]
 
     createStatusEntry = =>
       @testStatusStatusBar = new AtomSharperStatusBarView
@@ -28,19 +36,9 @@ module.exports =
     OmniSharpServer.get().toggle()
 
   testRequest: ->
-    editor = atom.workspace.getActiveEditor()
-    Omni.syntaxErrors
-    .then (data) -> console.log(data)
-    .catch (data) -> console.error(data)
 
   goToDefinition: ->
-    Omni.goToDefinition().then (response) ->
-      atom.workspace.open(response.FileName).then (editor) ->
-        editor.setCursorBufferPosition [
-          response.Line
-          response.Column
-        ]
-      .catch (data) -> console.error(data)
+    Omni.goToDefinition()
 
   deactivate: ->
     OmniSharpServer.get().stop()

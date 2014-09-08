@@ -5,14 +5,15 @@ class AtomSharperStatusBarView extends View
 
   # Internal: Initialize test-status status bar view DOM contents.
   @content: ->
-    @div class: 'inline-block omni-meter', =>
-      @span outlet:  'omni-meter', class: 'test-status icon icon-flame', tabindex: -1, 'omni'
+    @a href:'#', outlet:  'omni-meter', class: 'inline-block atom-sharper-button', =>
+      @span class: 'icon icon-flame', 'omni'
 
   # Internal: Initialize the status bar view and event handlers.
   initialize: ->
     atom.workspaceView.command "atom-sharper:toggle", => @toggle()
     @subscribe this, 'click', =>
       atom.workspaceView.trigger 'atom-sharper:toggle-output'
+      this.toggleClass("atom-sharper-button-selected")
 
   # Internal: Attach the status bar view to the status bar.
   #

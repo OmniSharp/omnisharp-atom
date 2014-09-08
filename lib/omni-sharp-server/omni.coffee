@@ -4,37 +4,8 @@ Url = require "url"
 $ = require "jquery"
 
 module.exports =
+
   class Omni
-
-    @request: (options) ->
-      deferred = new $.Deferred()
-      translateResponse = @translateResponse
-      options.form = $.extend({}, @getEditorRequestContext(), options.form)
-
-      rp(options)
-        .then (response) ->
-          parsedResponse = JSON.parse(response)
-          deferred.resolve translateResponse(parsedResponse)
-
-      return deferred.promise()
-
-    @translateResponse: (response) ->
-      response.Line = response.Line && response.Line - 1
-      response.Column = response.Column && response.Column - 1
-
-      return response
-
-    @getEditorRequestContext: ->
-      editor = atom.workspace.getActiveEditor()
-      marker = editor.getCursorBufferPosition()
-
-      context =
-        column: marker.column + 1
-        line: marker.row + 1
-        filename: editor.getUri()
-        buffer: editor.displayBuffer.buffer.cachedText
-
-      return context
 
     @_uri: (path, query) =>
       port = OmniSharpServer.get().getPortNumber()
@@ -45,14 +16,30 @@ module.exports =
         pathname: path
         query: query
 
-    @syntaxErrors: (data) =>
-      @request
-        uri: @_uri "syntaxErrors"
+    @req: (path, event) =>
+      editor = atom.workspace.getActiveEditor()
+      cursor = editor.getCursorBufferPosition()
+      buffer =  editor.displayBuffer.buffer.cachedText
+      parse = @parse
+      return if !buffer
+      rp
+        uri: @_uri path
         method: "POST"
-        form: data
+        form:
+          column: cursor.column + 1
+          filename: editor.getUri()
+          line: cursor.line + 1
+          buffer: buffer
+      .then (data) -> atom.emit("omni:#{event}", parse(data))
+      .catch (data) -> console.error(data.statusCode?, data.options?.uri)
 
-    @goToDefinition: (data) =>
-      @request
-        uri: @_uri "gotoDefinition"
-        method: "POST"
-        form: data
+    @parse: (response) ->
+      response = JSON.parse(response)
+      response.Line = response.Line && response.Line - 1
+      response.Column = response.Column && response.Column - 1
+
+      return response
+    
+    @syntaxErrors: (data) => @req "syntaxErrors", "syntax-errors"
+
+    @goToDefinition: (data) => @req "gotoDefinition", "go-to-definition"
