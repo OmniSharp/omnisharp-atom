@@ -30,10 +30,6 @@ module.exports =
   testRequest: ->
     editor = atom.workspace.getActiveEditor()
     Omni.syntaxErrors
-      column: 0
-      filename: editor.getUri()
-      line: 0
-      buffer: editor.displayBuffer.buffer.cachedText
     .then (data) -> console.log(data)
     .catch (data) -> console.error(data)
 

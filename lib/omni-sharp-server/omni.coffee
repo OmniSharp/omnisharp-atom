@@ -29,9 +29,9 @@ module.exports =
       marker = editor.getCursorBufferPosition()
 
       context =
-        column: marker.column
-        filename: editor.getUri()
+        column: marker.column + 1
         line: marker.row + 1
+        filename: editor.getUri()
         buffer: editor.displayBuffer.buffer.cachedText
 
       return context
@@ -46,13 +46,13 @@ module.exports =
         query: query
 
     @syntaxErrors: (data) =>
-      rp
+      @request
         uri: @_uri "syntaxErrors"
         method: "POST"
         form: data
 
     @goToDefinition: (data) =>
-      return @request
+      @request
         uri: @_uri "gotoDefinition"
         method: "POST"
         form: data
