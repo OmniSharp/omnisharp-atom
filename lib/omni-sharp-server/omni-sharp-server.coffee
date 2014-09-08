@@ -14,19 +14,16 @@ module.exports =
       start: () ->
         useMono = process.platform isnt "win32"
         executablePath = if useMono then "mono" else location
+        port = @getPortNumber()
 
         serverArguments = [
-          location
-          "-s"
-          atom?.project?.path
-          "-p"
-          @getPortNumber()
-          "-v"
-          "Verbose"
+          "-s #{ atom?.project?.path }"
+          "-p #{ port }"
+          "-v Verbose"
         ]
 
-        if !useMono
-          serverArguments.shift()
+        if useMono
+          serverArguments.unshift location
 
         @child = spawn(executablePath, serverArguments)
         @child.stdout.on 'data', @out
