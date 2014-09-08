@@ -15,17 +15,22 @@ class AtomSharperErrorView extends View
           @th 'column'
           @th 'file'
           @th 'error'
-        @tr 'v-repeat': 'e :errors', =>
-          @td '{{e}}'
-          @td '{{e}}'
-          @td '{{e}}'
-          @td '{{e}}'
+        @tbody =>
+          @tr 'v-repeat': 'e :errors', class:"", data='{{$index}}', =>
+            @td '{{e.Line}}'
+            @td '{{e.Column}}'
+            @td '{{e.FileName}}'
+            @td '{{e.Message}}'
 
   initialize: ->
     @vm = new Vue
       data:
-        errors: ["a", "b", "c"]
+        errors: []
       el: this[0]
+
+    atom.on "omni:syntax-errors", (data) =>
+      console.log data
+      @vm.errors = JSON.parse(data).Errors
 
   destroy: ->
     @detach()

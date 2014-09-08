@@ -23,7 +23,8 @@
   border: 1px solid darken(@tool-panel-background-color, 30%);
 }
 .border-flip (@a) when (lightness(@a) < 50%) {
-  border: 1px solid lighten(@tool-panel-background-color, 30%);
+  border: 1px solid lighten(@tool-panel-background-color, 20%);
+  border-top: 1px solid transparent;
 }
 .btn-fix {
   top: -2px !important;
@@ -36,10 +37,14 @@
     width:100%;
     line-height: 1.42;
     th {
-      .border-flip(@tool-panel-background-color)
+      .border-flip(@tool-panel-background-color);
+      padding:2px;
+      padding-top:0px;
+    }
+    tr.selected {
+      background-color: @background-color-selected; 
     }
     td {
-      .border-flip(@tool-panel-background-color)
     }
   }
 

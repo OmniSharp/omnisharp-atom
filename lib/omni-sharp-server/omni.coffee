@@ -3,6 +3,7 @@ rp = require "request-promise"
 Url = require "url"
 
 module.exports =
+
   class Omni
 
     @_uri: (path, query) =>
@@ -15,7 +16,14 @@ module.exports =
         query: query
 
     @syntaxErrors: (data) =>
+      editor = atom.workspace.getActiveEditor()
       rp
         uri: @_uri "syntaxErrors"
         method: "POST"
-        form: data
+        form:
+          column: 0
+          filename: editor.getUri()
+          line: 0
+          buffer: editor.displayBuffer.buffer.cachedText
+      .then (data) -> atom.emit("omni:syntax-errors", data)
+      .catch (data) -> console.error(data)
