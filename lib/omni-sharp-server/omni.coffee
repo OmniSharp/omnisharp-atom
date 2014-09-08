@@ -6,6 +6,24 @@ $ = require "jquery"
 module.exports =
   class Omni
 
+    @request: (options) ->
+      deferred = new $.Deferred()
+      translateResponse = @translateResponse
+      options.form = $.extend({}, @getEditorRequestContext(), options.form)
+
+      rp(options)
+        .then (response) ->
+          parsedResponse = JSON.parse(response)
+          deferred.resolve translateResponse(parsedResponse)
+
+      return deferred.promise()
+
+    @translateResponse: (response) ->
+      response.Line = response.Line && response.Line - 1
+      response.Column = response.Column && response.Column - 1
+
+      return response
+
     @getEditorRequestContext: ->
       editor = atom.workspace.getActiveEditor()
       marker = editor.getCursorBufferPosition()
@@ -34,8 +52,7 @@ module.exports =
         form: data
 
     @goToDefinition: (data) =>
-      data = $.extend({}, data, @getEditorRequestContext())
-      return rp
+      return @request
         uri: @_uri "gotoDefinition"
         method: "POST"
         form: data

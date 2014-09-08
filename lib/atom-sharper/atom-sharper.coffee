@@ -37,21 +37,13 @@ module.exports =
     .then (data) -> console.log(data)
     .catch (data) -> console.error(data)
 
-  translatePoint: (line, column) ->
-    return [
-      line - 1
-      column
-    ]
-
   goToDefinition: ->
-    translatePoint = @translatePoint
-
-    Omni
-      .goToDefinition()
-      .then (data) ->
-        definition = JSON.parse(data)
-        atom.workspace.open(definition.FileName).then (editor) ->
-          editor.setCursorBufferPosition translatePoint(definition.Line, definition.Column)
+    Omni.goToDefinition().then (response) ->
+      atom.workspace.open(response.FileName).then (editor) ->
+        editor.setCursorBufferPosition [
+          response.Line
+          response.Column
+        ]
       .catch (data) -> console.error(data)
 
   deactivate: ->
