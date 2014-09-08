@@ -2,6 +2,7 @@ AtomSharperStatusBarView = require './atom-sharper-status-bar-view'
 AtomSharperOutputView = require './atom-sharper-output-view'
 OmniSharpServer = require '../omni-sharp-server/omni-sharp-server'
 Omni = require '../omni-sharp-server/omni'
+_ = require "underscore"
 
 module.exports =
   atomSharpView: null
