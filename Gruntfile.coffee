@@ -8,9 +8,9 @@ module.exports = (grunt) ->
             specs: 'spec/**/*.spec.js'
 
         watch:
-            codegen:
-                files: ['<%= meta.src %>']
-                tasks: ['coffee']
+            # codegen:
+            #     files: ['<%= meta.src %>']
+            #     tasks: ['coffee']
 
             quality:
                 files: [
@@ -79,5 +79,6 @@ module.exports = (grunt) ->
     grunt.loadNpmTasks 'grunt-coffeelint'
 
     grunt.registerTask 'default', ['watch']
+    grunt.registerTask 'codegen', ['codegen'] # not recommended!
 
     return
