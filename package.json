@@ -3,9 +3,7 @@
   "main": "./lib/atom-sharper/atom-sharper",
   "version": "0.0.0",
   "description": "Brings the wonderful omnisharp server to powercharge atom's C# development experience",
-  "activationEvents": [
-    "atom-sharper:toggle"
-  ],
+  "activationEvents": ["atom-sharper:toggle"],
   "repository": "https://github.com/Mpdreamz/atom-sharper",
   "license": "MIT",
   "engines": {
