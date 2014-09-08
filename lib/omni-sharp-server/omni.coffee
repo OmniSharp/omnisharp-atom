@@ -39,7 +39,7 @@ module.exports =
       response.Column = response.Column && response.Column - 1
 
       return response
-    
+
     @syntaxErrors: (data) => @req "syntaxErrors", "syntax-errors"
 
-    @goToDefinition: (data) => @req "gotoDefinition", "go-to-definition"
+    @goToDefinition: (data) => @req "gotoDefinition", "navigate-to"
