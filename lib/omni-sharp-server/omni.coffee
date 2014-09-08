@@ -2,6 +2,7 @@ OmniSharpServer = require './omni-sharp-server'
 rp = require "request-promise"
 Url = require "url"
 $ = require "jquery"
+#httpsync = require('http-sync')
 
 module.exports =
   class Omni
@@ -14,7 +15,7 @@ module.exports =
         column: marker.column
         filename: editor.getUri()
         line: marker.row + 1
-        buffer: editor.displayBuffer.buffer.cachedText
+        buffer: editor.buffer.getLines().join('\n')
 
       return context
 
@@ -35,7 +36,16 @@ module.exports =
 
     @goToDefinition: (data) =>
       data = $.extend({}, data, @getEditorRequestContext())
-      return rp
+      rp
         uri: @_uri "gotoDefinition"
+        method: "POST"
+        form: data
+
+    @autocomplete: (wordToComplete) =>
+      console.log('word', wordToComplete)
+      data = @getEditorRequestContext()
+      data.wordToComplete = wordToComplete
+      rp
+        uri: @_uri "autocomplete"
         method: "POST"
         form: data

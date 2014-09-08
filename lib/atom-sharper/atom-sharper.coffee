@@ -1,10 +1,15 @@
 AtomSharperStatusBarView = require './atom-sharper-status-bar-view'
 AtomSharperOutputView = require './atom-sharper-output-view'
+AtomSharperProvider = require "./atom-sharper-complete-provider"
 OmniSharpServer = require '../omni-sharp-server/omni-sharp-server'
 Omni = require '../omni-sharp-server/omni'
 
 module.exports =
   atomSharpView: null
+
+  editorSubscription: null
+  autocomplete: null
+  providers: []
 
   activate: (state) ->
     #atom.config.setDefaults('test-status', autorun: true)
@@ -23,6 +28,19 @@ module.exports =
     else
       atom.packages.once 'activated', ->
         createStatusEntry()
+
+    atom.packages.activatePackage("autocomplete-plus-async")
+      .then (pkg) =>
+        @autocomplete = pkg.mainModule
+        @registerProviders()
+
+  registerProviders: ->
+    @editorSubscription = atom.workspaceView.eachEditorView (editorView) =>
+      if editorView.attached and not editorView.mini
+        provider = AtomSharperProvider.get(editorView)
+        @autocomplete.registerProviderForEditorView provider, editorView
+
+        @providers.push provider
 
   toggle: ->
     OmniSharpServer.get().toggle()
@@ -60,6 +78,14 @@ module.exports =
     @testStatusStatusBar = null
     @outputView?.destroy()
     @outputView = null
+
+    @editorSubscription?.off()
+    @editorSubscription = null
+
+#    @providers.forEach (provider) =>
+#      @autocomplete.unregisterProvider provider
+
+    @providers = []
 
   serialize: ->
     atomSharpViewState: @atomSharpView.serialize()
