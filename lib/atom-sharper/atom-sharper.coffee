@@ -29,7 +29,7 @@ module.exports =
       atom.packages.once 'activated', ->
         createStatusEntry()
 
-    atom.packages.activatePackage("autocomplete-plus-async")
+    atom.packages.activatePackage("autocomplete-plus")
       .then (pkg) =>
         @autocomplete = pkg.mainModule
         @registerProviders()

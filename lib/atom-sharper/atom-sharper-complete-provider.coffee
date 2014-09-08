@@ -1,17 +1,17 @@
 Omni = require '../omni-sharp-server/omni'
 
-if path = atom.packages.getLoadedPackage('autocomplete-plus-async')?.path
+if path = atom.packages.getLoadedPackage('autocomplete-plus')?.path
   {Provider, Suggestion} = require path
 else
   # Package not installed
-  console.log("autocomplete-plus-async has not been installed")
+  console.log("autocomplete-plus has not been installed")
 
 module.exports =
   class AtomSharperProvider
     instance = null
     class AtomSharperProviderInstance extends Provider
 
-      buildSuggestions: (callback) ->
+      buildSuggestions: ->
         wordRegex = /[A-Z_0-9]+/i
         editor = atom.workspace.getActiveEditor()
         buffer = editor.getBuffer()
@@ -26,14 +26,11 @@ module.exports =
           end--
 
         word = data.substring(end+1);
-        console.log(word)
-        Omni.autocomplete(word)
-        .then (data) ->
-          completions = JSON.parse(data)
-          suggestions =
-            (new Suggestion(this, word:item.CompletionText, label:item.DisplayText) for item in completions)
-          callback suggestions
-        .catch (data) -> console.error(data)
+        completions = Omni.autocomplete(word)
+        console.log(completions);
+        suggestions =
+          (new Suggestion(this, word:item.CompletionText, label:item.DisplayText, prefix:word) for item in completions)
+        return suggestions
 
     @get: (editorView) ->
       instance ?= new AtomSharperProviderInstance(editorView)

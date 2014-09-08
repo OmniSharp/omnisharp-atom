@@ -2,7 +2,6 @@ OmniSharpServer = require './omni-sharp-server'
 rp = require "request-promise"
 Url = require "url"
 $ = require "jquery"
-#httpsync = require('http-sync')
 
 module.exports =
   class Omni
@@ -45,7 +44,20 @@ module.exports =
       console.log('word', wordToComplete)
       data = @getEditorRequestContext()
       data.wordToComplete = wordToComplete
-      rp
-        uri: @_uri "autocomplete"
-        method: "POST"
-        form: data
+      data.wantDocumentationForEveryCompletionResult = false
+      response = null
+      # synchronous ajax - yuk, but autocomplete+ doesn't
+      # support callbacks (yet)
+      $.ajax
+        url: @_uri "autocomplete"
+        type: 'POST'
+        data: data
+        dataType: 'json'
+        async: false
+        error: (jqXHR, textStatus, errorThrown) ->
+          console.log("Autocomplete error - ", errorThrown)
+        success: (data, textStatus, jqXHR) ->
+          response = data
+
+      console.log(response)
+      return response
