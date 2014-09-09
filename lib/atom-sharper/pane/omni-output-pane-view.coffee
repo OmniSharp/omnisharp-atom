@@ -2,16 +2,19 @@
 {$} = require 'atom'
 Convert = require 'ansi-to-html'
 Vue = require 'vue'
+_ = require 'underscore'
 
 module.exports =
 # Internal: A tool-panel view for the test result output.
 class OmniOutputPaneView extends View
   @content: ->
-    @div class: 'message', outlet: 'sharpAtomOutput', =>
+    @div class: 'omni-output-pane-view', =>
       @pre 'v-repeat': 'l :output', '{{ l.message | ansi-to-html }}'
 
   initialize: ->
+    scrollToBottom= _.throttle (=>this[0].lastElementChild?.scrollIntoViewIfNeeded()), 100
     Vue.filter 'ansi-to-html', (value) =>
+      scrollToBottom()
       @convert ?= new Convert()
       v = @convert.toHtml value
       v.trim()

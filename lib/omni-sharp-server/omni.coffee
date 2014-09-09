@@ -1,6 +1,7 @@
 OmniSharpServer = require './omni-sharp-server'
 rp = require "request-promise"
 Url = require "url"
+_ = require "underscore"
 
 module.exports =
 
@@ -15,30 +16,25 @@ module.exports =
         pathname: path
         query: query
 
-    @req: (path, event) =>
+    @req: (path, event, data = null) =>
       editor = atom.workspace.getActiveEditor()
       cursor = editor.getCursorBufferPosition()
       buffer = editor.buffer.getLines().join('\n')
       parse = @parse
       return if !buffer
+      form =
+        column: cursor.column + 1
+        filename: editor.getUri()
+        line: cursor.row + 1
+        buffer: buffer
+      #_.extend(form, data) if data
       rp
         uri: @_uri path
         method: "POST"
-        form:
-          column: cursor.column + 1
-          filename: editor.getUri()
-          line: cursor.row + 1
-          buffer: buffer
-      .then (data) -> atom.emit("omni:#{event}", parse(data))
+        form: form
+      .then (data) -> atom.emit("omni:#{event}", JSON.parse(data))
       .catch (data) -> console.error(data.statusCode?, data.options?.uri)
 
-    @parse: (response) ->
-      response = JSON.parse(response)
-      response.Line = response.Line && response.Line - 1
-      response.Column = response.Column && response.Column - 1
+    @syntaxErrors: (data) => @req "syntaxErrors", "syntax-errors", data
 
-      return response
-
-    @syntaxErrors: (data) => @req "syntaxErrors", "syntax-errors"
-
-    @goToDefinition: (data) => @req "gotoDefinition", "navigate-to"
+    @goToDefinition: (data) => @req "gotoDefinition", "navigate-to", data

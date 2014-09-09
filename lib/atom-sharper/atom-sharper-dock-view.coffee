@@ -8,7 +8,7 @@ OmniOutputPaneView = require './pane/omni-output-pane-view'
 
 module.exports =
 # Internal: A tool-panel view for the test result output.
-class AtomSharperOutputView extends View
+class AtomSharperDockView extends View
 
   # Internal: Initialize test-status output view DOM contents.
   @content: ->

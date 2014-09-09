@@ -1,5 +1,6 @@
 {View}  = require 'atom'
 {$} = require 'atom'
+
 Convert = require 'ansi-to-html'
 Vue = require 'vue'
 
@@ -16,21 +17,28 @@ class ErrorPaneView extends View
           @th 'file'
           @th 'error'
         @tbody =>
-          @tr 'v-repeat': 'e :errors', class:"", data='{{$index}}', =>
-            @td '{{e.Line}}'
-            @td '{{e.Column}}'
-            @td '{{e.FileName}}'
-            @td '{{e.Message}}'
+          @tr
+            'v-repeat': 'errors',
+            'v-on': 'dblclick: gotoError',
+            data='{{$index}}',
+            =>
+              @td '{{Line}}'
+              @td '{{Column}}'
+              @td '{{Message}}'
+              @td '{{FileName}}'
 
   initialize: ->
     @vm = new Vue
+      el: this[0]
       data:
         errors: []
-      el: this[0]
+      methods:
+        gotoError: ({targetVM}) -> atom.emit "omni:navigate-to", targetVM.$data
 
-    atom.on "omni:syntax-errors", (data) =>
-      console.log "/syntaxErrors"
-      @vm.errors = data.Errors
+    atom.on "omni:syntax-errors", (data) => @vm.errors = data.Errors
+
+  gotoError: (i) =>
+    console.log i, this
 
   destroy: ->
     @detach()
