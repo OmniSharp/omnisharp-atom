@@ -5,7 +5,7 @@ Vue = require 'vue'
 
 module.exports =
 # Internal: A tool-panel view for the test result output.
-class AtomSharperErrorView extends View
+class ErrorPaneView extends View
 
   @content: ->
     @div class: 'error-output-pane', outlet: 'atomSharpErrorPane', =>
