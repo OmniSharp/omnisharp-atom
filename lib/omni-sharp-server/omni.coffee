@@ -28,7 +28,7 @@ module.exports =
         form:
           column: cursor.column + 1
           filename: editor.getUri()
-          line: cursor.line + 1
+          line: cursor.row + 1
           buffer: buffer
       .then (data) -> atom.emit("omni:#{event}", parse(data))
       .catch (data) -> console.error(data.statusCode?, data.options?.uri)
