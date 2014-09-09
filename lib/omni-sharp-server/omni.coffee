@@ -1,7 +1,6 @@
 OmniSharpServer = require './omni-sharp-server'
 rp = require "request-promise"
 Url = require "url"
-$ = require "jquery"
 
 module.exports =
 
