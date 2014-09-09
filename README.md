@@ -21,3 +21,4 @@ Install the autocomplete-plus-async package using the Atom package manager
 - Press Ctrl-Alt-o - this starts the OmniSharp server
 - Enjoy!
 
+Completions appear as you type. To select an item, press the TAB key.
