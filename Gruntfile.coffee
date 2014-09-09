@@ -4,6 +4,7 @@ module.exports = (grunt) ->
 
         meta:
             src: 'lib/**/*.coffee',
+<<<<<<< HEAD
             src1: 'lib/**/*.js'
             specs: 'spec/**/*.spec.js'
 
@@ -12,6 +13,11 @@ module.exports = (grunt) ->
                 files: ['<%= meta.src %>']
                 tasks: ['coffee']
 
+=======
+            specs: 'spec/**/*.spec.js'
+
+        watch:
+>>>>>>> origin/master
             quality:
                 files: [
                     '<%= meta.src %>'
@@ -24,6 +30,7 @@ module.exports = (grunt) ->
               'scripts/*.coffee'
             ]
 
+<<<<<<< HEAD
         jshint:
             options:
                 curly: true
@@ -76,6 +83,9 @@ module.exports = (grunt) ->
     grunt.loadNpmTasks 'grunt-contrib-watch'
     grunt.loadNpmTasks 'grunt-contrib-coffee'
     grunt.loadNpmTasks 'grunt-contrib-jshint'
+=======
+    grunt.loadNpmTasks 'grunt-contrib-watch'
+>>>>>>> origin/master
     grunt.loadNpmTasks 'grunt-coffeelint'
 
     grunt.registerTask 'default', ['watch']

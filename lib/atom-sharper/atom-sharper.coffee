@@ -3,6 +3,7 @@ AtomSharperOutputView = require './atom-sharper-output-view'
 AtomSharperProvider = require "./atom-sharper-complete-provider"
 OmniSharpServer = require '../omni-sharp-server/omni-sharp-server'
 Omni = require '../omni-sharp-server/omni'
+_ = require "underscore"
 
 module.exports =
   atomSharpView: null
@@ -14,7 +15,17 @@ module.exports =
   activate: (state) ->
     #atom.config.setDefaults('test-status', autorun: true)
     atom.workspaceView.command "atom-sharper:toggle", => @toggle()
-    atom.workspaceView.command "atom-sharper:request", => @testRequest()
+    atom.workspaceView.command "atom-sharper:request", _.debounce(Omni.syntaxErrors, 200)
+    atom.workspaceView.command "editor:display-updated", _.debounce(Omni.syntaxErrors, 200)
+    atom.workspaceView.command "atom-sharp:go-to-definition", => @goToDefinition()
+
+    atom.on "omni:navigate-to", (position) =>
+      atom.workspace.open(position.FileName).then (editor) ->
+        editor.setCursorBufferPosition [
+          position.Line
+          position.Column
+        ]
+
     atom.workspaceView.command "atom-sharp:go-to-definition", => @goToDefinition()
 
     createStatusEntry = =>
@@ -46,31 +57,9 @@ module.exports =
     OmniSharpServer.get().toggle()
 
   testRequest: ->
-    editor = atom.workspace.getActiveEditor()
-    Omni.syntaxErrors
-      column: 0
-      filename: editor.getUri()
-      line: 0
-      buffer: editor.displayBuffer.buffer.cachedText
-    .then (data) -> console.log(data)
-    .catch (data) -> console.error(data)
-
-  translatePoint: (line, column) ->
-    return [
-      line - 1
-      column
-    ]
 
   goToDefinition: ->
-    translatePoint = @translatePoint
-
-    Omni
-      .goToDefinition()
-      .then (data) ->
-        definition = JSON.parse(data)
-        atom.workspace.open(definition.FileName).then (editor) ->
-          editor.setCursorBufferPosition translatePoint(definition.Line, definition.Column)
-      .catch (data) -> console.error(data)
+    Omni.goToDefinition()
 
   deactivate: ->
     OmniSharpServer.get().stop()

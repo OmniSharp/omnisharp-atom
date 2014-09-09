@@ -12,7 +12,16 @@ module.exports =
       location = "#{packageDir}/atom-sharper/server/OmniSharp/bin/Debug/OmniSharp.exe"
 
       start: () ->
-        @child = spawn("mono", [location, "-s", atom?.project?.path, "-p", @getPortNumber(), "-v", "Verbose"])
+        useMono = process.platform isnt "win32"
+        executablePath = if useMono then "mono" else location
+        port = @getPortNumber()
+
+        serverArguments = [ "-s", atom?.project?.path, "-p", port ]
+
+        if useMono
+          serverArguments.unshift location
+
+        @child = spawn(executablePath, serverArguments)
         @child.stdout.on 'data', @out
         atom.emit("omni-sharp-server:start", @child.pid)
         @child.stderr.on 'data', @err

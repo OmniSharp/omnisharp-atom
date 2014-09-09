@@ -4,6 +4,7 @@ Url = require "url"
 $ = require "jquery"
 
 module.exports =
+
   class Omni
 
     @getEditorRequestContext: ->
@@ -27,18 +28,35 @@ module.exports =
         pathname: path
         query: query
 
-    @syntaxErrors: (data) =>
-      rp
-        uri: @_uri "syntaxErrors"
-        method: "POST"
-        form: data
+    @req: (path, event) =>
+      context = @getEditorRequestContext
 
-    @goToDefinition: (data) =>
-      data = $.extend({}, data, @getEditorRequestContext())
+      editor = atom.workspace.getActiveEditor()
+      cursor = editor.getCursorBufferPosition()
+      buffer = editor.buffer.getLines().join('\n')
+      parse = @parse
+      return if !buffer
       rp
-        uri: @_uri "gotoDefinition"
+        uri: @_uri path
         method: "POST"
-        form: data
+        form:
+          column: context.column
+          filename: context.filename
+          line: context.line
+          buffer: context.buffer
+      .then (data) -> atom.emit("omni:#{event}", parse(data))
+      .catch (data) -> console.error(data.statusCode?, data.options?.uri)
+
+    @parse: (response) ->
+      response = JSON.parse(response)
+      response.Line = response.Line && response.Line - 1
+      response.Column = response.Column && response.Column - 1
+
+      return response
+
+    @syntaxErrors: (data) => @req "syntaxErrors", "syntax-errors"
+
+    @goToDefinition: (data) => @req "gotoDefinition", "navigate-to"
 
     @autocomplete: (wordToComplete) =>
       console.log('word', wordToComplete)
