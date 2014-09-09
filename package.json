@@ -14,7 +14,6 @@
   "dependencies": {
     "ansi-to-html": "~0.1.0",
     "request-promise": "~0.1.2",
-    "httpsync": "0.0.5",
     "bluebird": "~2.3.2",
     "jquery": "^2.1.1"
   },
