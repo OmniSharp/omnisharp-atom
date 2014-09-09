@@ -19,7 +19,7 @@ class ErrorPaneView extends View
         @tbody =>
           @tr
             'v-repeat': 'errors',
-            'v-on': 'dblclick: gotoError',
+            'v-on': 'click: gotoError',
             data='{{$index}}',
             =>
               @td '{{Line}}'
