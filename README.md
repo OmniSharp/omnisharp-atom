@@ -6,6 +6,7 @@
 
 Right now, there isn't an official Atom package so you'll need to do the following :-
 
+Install npm if you don't have it already.
 ```
 cd ~/.atom/packages folder
 git clone https://github.com/Mpdreamz/atom-sharper.git
