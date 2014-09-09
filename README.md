@@ -8,7 +8,7 @@ Right now, there isn't an official Atom package so you'll need to do the followi
 
 Install npm if you don't have it already.
 ```
-cd ~/.atom/packages # or cd %USER%/.atom/packages for Windows
+cd ~/.atom/packages # or cd %HOMEPATH%\.atom\packages for Windows
 git clone https://github.com/Mpdreamz/atom-sharper.git
 ./build.sh or ./build.bat (on Windows this assumes that you have msbuild in your PATH)
 ```
