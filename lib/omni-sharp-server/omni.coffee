@@ -15,19 +15,30 @@ module.exports =
         pathname: path
         query: query
 
-    @req: (path, event, line = 0, column = 0) =>
+    @req: (path, event) =>
       editor = atom.workspace.getActiveEditor()
-      buffer =  editor.displayBuffer.buffer.cachedText
+      cursor = editor.getCursorBufferPosition()
+      buffer = editor.buffer.getLines().join('\n')
+      parse = @parse
       return if !buffer
       rp
         uri: @_uri path
         method: "POST"
         form:
-          column: column
+          column: cursor.column + 1
           filename: editor.getUri()
-          line: line
+          line: cursor.row + 1
           buffer: buffer
-      .then (data) -> atom.emit("omni:#{event}", JSON.parse(data))
+      .then (data) -> atom.emit("omni:#{event}", parse(data))
       .catch (data) -> console.error(data.statusCode?, data.options?.uri)
 
+    @parse: (response) ->
+      response = JSON.parse(response)
+      response.Line = response.Line && response.Line - 1
+      response.Column = response.Column && response.Column - 1
+
+      return response
+
     @syntaxErrors: (data) => @req "syntaxErrors", "syntax-errors"
+
+    @goToDefinition: (data) => @req "gotoDefinition", "navigate-to"
