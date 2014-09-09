@@ -1,3 +1,3 @@
 # atom-sharper package
 
-![toggle the server](atom-sharper-syntax.gif)
+![atom-sharper](atom-sharper.gif)
