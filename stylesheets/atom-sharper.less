@@ -19,6 +19,7 @@
   right:0;
   left:0;
 }
+
 .border-flip (@a) when (lightness(@a) >= 50%) {
   border: 1px solid darken(@tool-panel-background-color, 30%);
 }
@@ -26,6 +27,7 @@
   border: 1px solid lighten(@tool-panel-background-color, 20%);
   border-top: 1px solid transparent;
 }
+
 .btn-fix {
   top: -2px !important;
 }
@@ -42,7 +44,12 @@
       padding-top:0px;
     }
     tr.selected {
-      background-color: @background-color-selected; 
+      background-color: @background-color-selected;
+    }
+    tr:hover {
+      background-color: @background-color-selected;
+      color: @text-color-selected;
+      cursor:pointer;
     }
     td {
     }

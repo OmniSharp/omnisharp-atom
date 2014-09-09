@@ -1,6 +1,7 @@
 OmniSharpServer = require './omni-sharp-server'
 rp = require "request-promise"
 Url = require "url"
+_ = require "underscore"
 $ = require "jquery"
 
 module.exports =
@@ -16,9 +17,7 @@ module.exports =
         filename: editor.getUri()
         line: marker.row + 1
         buffer: editor.buffer.getLines().join('\n')
-
-      console.log(context)
-      return context
+      context
 
     @_uri: (path, query) =>
       port = OmniSharpServer.get().getPortNumber()
@@ -29,9 +28,8 @@ module.exports =
         pathname: path
         query: query
 
-    @req: (path, event) =>
+    @req: (path, event, data = null) =>
       context = @getEditorRequestContext()
-      parse = @parse
       rp
         uri: @_uri path
         method: "POST"
@@ -40,19 +38,12 @@ module.exports =
           filename: context.filename
           line: context.line
           buffer: context.buffer
-      .then (data) -> atom.emit("omni:#{event}", parse(data))
+      .then (data) -> atom.emit("omni:#{event}", JSON.parse(data))
       .catch (data) -> console.error(data.statusCode?, data.options?.uri)
 
-    @parse: (response) ->
-      response = JSON.parse(response)
-      response.Line = response.Line && response.Line - 1
-      response.Column = response.Column && response.Column - 1
+    @syntaxErrors: (data) => @req "syntaxErrors", "syntax-errors", data
 
-      return response
-
-    @syntaxErrors: (data) => @req "syntaxErrors", "syntax-errors"
-
-    @goToDefinition: (data) => @req "gotoDefinition", "navigate-to"
+    @goToDefinition: (data) => @req "gotoDefinition", "navigate-to", data
 
     @autocomplete: (wordToComplete) =>
       data = @getEditorRequestContext()

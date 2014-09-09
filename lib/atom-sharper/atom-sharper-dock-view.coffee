@@ -1,12 +1,14 @@
 {View}  = require 'atom'
 {$} = require 'atom'
-AtomSharperErrorView = require './atom-sharper-error-view'
 Convert = require 'ansi-to-html'
 Vue = require 'vue'
 
+ErrorPaneView = require './pane/error-pane-view'
+OmniOutputPaneView = require './pane/omni-output-pane-view'
+
 module.exports =
 # Internal: A tool-panel view for the test result output.
-class AtomSharperOutputView extends View
+class AtomSharperDockView extends View
 
   # Internal: Initialize test-status output view DOM contents.
   @content: ->
@@ -28,8 +30,7 @@ class AtomSharperOutputView extends View
               btn "build", "Build output"
               btn "omni", "Omnisharp output"
         #tab content panels
-        @div 'v-attr' : 'class: selected | content-selected omni', =>
-            @div class: 'message', outlet: 'sharpAtomOutput'
+        @div 'v-attr' : 'class: selected | content-selected omni', outlet: 'omniOutput'
         @div 'v-attr' : 'class: selected | content-selected errors', outlet: 'errorsOutput'
         @div 'v-attr' : 'class: selected | content-selected build'
 
@@ -44,7 +45,9 @@ class AtomSharperOutputView extends View
       selected = if value == expectedValue then "" else "hide"
       "atom-sharper-output #{expectedValue}-output #{selected}"
 
-    @errorsOutput.append(new AtomSharperErrorView())
+    @errorsOutput.append(new ErrorPaneView())
+    @omniOutput.append(new OmniOutputPaneView())
+
     @vm = new Vue
       el: this[0]
       data:
@@ -53,10 +56,6 @@ class AtomSharperOutputView extends View
         selectPane: ({target}) => @selectPane $(target).attr "pane"
 
     atom.workspaceView.command "atom-sharper:toggle-output", => @toggle()
-
-    atom.on("omni-sharp-server:out", (data) => @update data)
-    atom.on("omni-sharp-server:err", (data) => @update data)
-    atom.on "omni-sharp-server:start", @start
 
     @on 'mousedown', '.atom-sharper-output-resizer', (e) => @resizeStarted(e)
 
@@ -79,20 +78,6 @@ class AtomSharperOutputView extends View
     $(".atom-sharper-pane").height(h)
     this.find(".atom-sharper-output").height(h-@fixedButtonBarHeight)
 
-  start: (pid) =>
-    @output = "<strong class'success'>Started Omnisharp server (#{pid})</strong>"
-    @sharpAtomOutput.html(@output).css('font-size', "#{atom.config.getInt('editor.fontSize')}px")
-
-  update: (output) ->
-    @convert ?= new Convert
-    @output = @convert.toHtml(
-      output.replace(/&/g, '&amp;')
-        .replace(/"/g, '&quot;')
-        .replace(/</g, '&lt;')
-        .replace(/>/g, '&gt;')
-      )
-    message = @sharpAtomOutput.append("<pre>#{@output.trim()}</pre>")
-    message[0].lastChild.scrollIntoViewIfNeeded()
 
   destroy: ->
     @detach()
@@ -105,4 +90,3 @@ class AtomSharperOutputView extends View
       @detach()
     else
       atom.workspaceView.prependToBottom(this) unless @hasParent()
-      @sharpAtomOutput[0].lastChild.scrollIntoViewIfNeeded()

@@ -1,5 +1,5 @@
 AtomSharperStatusBarView = require './atom-sharper-status-bar-view'
-AtomSharperOutputView = require './atom-sharper-output-view'
+AtomSharperDockView = require './atom-sharper-dock-view'
 AtomSharperProvider = require "./atom-sharper-complete-provider"
 OmniSharpServer = require '../omni-sharp-server/omni-sharp-server'
 Omni = require '../omni-sharp-server/omni'
@@ -17,20 +17,20 @@ module.exports =
     atom.workspaceView.command "atom-sharper:toggle", => @toggle()
     atom.workspaceView.command "atom-sharper:request", _.debounce(Omni.syntaxErrors, 200)
     atom.workspaceView.command "editor:display-updated", _.debounce(Omni.syntaxErrors, 200)
-    atom.workspaceView.command "atom-sharp:go-to-definition", => @goToDefinition()
+    atom.workspaceView.command "atom-sharp:go-to-definition", Omni.gotoDefinition
 
     atom.on "omni:navigate-to", (position) =>
       atom.workspace.open(position.FileName).then (editor) ->
         editor.setCursorBufferPosition [
-          position.Line
-          position.Column
+          position.Line && position.Line - 1
+          position.Column && position.Column - 1
         ]
 
-    atom.workspaceView.command "atom-sharp:go-to-definition", => @goToDefinition()
+
 
     createStatusEntry = =>
       @testStatusStatusBar = new AtomSharperStatusBarView
-      @outputView = new AtomSharperOutputView
+      @outputView = new AtomSharperDockView
 
       atom.on("omni-sharp-server:close", => @outputView.destroy())
 
@@ -55,11 +55,6 @@ module.exports =
 
   toggle: ->
     OmniSharpServer.get().toggle()
-
-  testRequest: ->
-
-  goToDefinition: ->
-    Omni.goToDefinition()
 
   deactivate: ->
     OmniSharpServer.get().stop()
