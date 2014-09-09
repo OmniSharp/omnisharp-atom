@@ -27,7 +27,7 @@ module.exports =
 
         word = data.substring(end+1);
         completions = Omni.autocomplete(word)
-        console.log(completions);
+        
         suggestions =
           (new Suggestion(this, word:item.CompletionText, label:item.DisplayText, prefix:word) for item in completions)
         return suggestions

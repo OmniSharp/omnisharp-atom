@@ -17,6 +17,7 @@ module.exports =
         line: marker.row + 1
         buffer: editor.buffer.getLines().join('\n')
 
+      console.log(context)
       return context
 
     @_uri: (path, query) =>
@@ -29,13 +30,8 @@ module.exports =
         query: query
 
     @req: (path, event) =>
-      context = @getEditorRequestContext
-
-      editor = atom.workspace.getActiveEditor()
-      cursor = editor.getCursorBufferPosition()
-      buffer = editor.buffer.getLines().join('\n')
+      context = @getEditorRequestContext()
       parse = @parse
-      return if !buffer
       rp
         uri: @_uri path
         method: "POST"
@@ -59,7 +55,6 @@ module.exports =
     @goToDefinition: (data) => @req "gotoDefinition", "navigate-to"
 
     @autocomplete: (wordToComplete) =>
-      console.log('word', wordToComplete)
       data = @getEditorRequestContext()
       data.wordToComplete = wordToComplete
       data.wantDocumentationForEveryCompletionResult = false
@@ -77,5 +72,4 @@ module.exports =
         success: (data, textStatus, jqXHR) ->
           response = data
 
-      console.log(response)
       return response

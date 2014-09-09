@@ -16,7 +16,7 @@ module.exports =
         executablePath = if useMono then "mono" else location
         port = @getPortNumber()
 
-        serverArguments = [ "-s", atom?.project?.path, "-p", port ]
+        serverArguments = [ "-s", atom?.project?.path, "-p", port, "-v", "Verbose" ]
 
         if useMono
           serverArguments.unshift location

@@ -71,8 +71,8 @@ module.exports =
     @editorSubscription?.off()
     @editorSubscription = null
 
-#    @providers.forEach (provider) =>
-#      @autocomplete.unregisterProvider provider
+    @providers.forEach (provider) =>
+      @autocomplete.unregisterProvider provider
 
     @providers = []
 
