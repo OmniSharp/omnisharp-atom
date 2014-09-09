@@ -37,8 +37,5 @@ class ErrorPaneView extends View
 
     atom.on "omni:syntax-errors", (data) => @vm.errors = data.Errors
 
-  gotoError: (i) =>
-    console.log i, this
-
   destroy: ->
     @detach()

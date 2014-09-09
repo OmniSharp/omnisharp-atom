@@ -1,16 +1,12 @@
 AtomSharperStatusBarView = require './atom-sharper-status-bar-view'
 AtomSharperDockView = require './atom-sharper-dock-view'
-AtomSharperProvider = require "./atom-sharper-complete-provider"
+AtomSharperCompletion = require "./atom-sharper-completion"
 OmniSharpServer = require '../omni-sharp-server/omni-sharp-server'
 Omni = require '../omni-sharp-server/omni'
 _ = require "underscore"
 
 module.exports =
   atomSharpView: null
-
-  editorSubscription: null
-  autocomplete: null
-  providers: []
 
   activate: (state) ->
     #atom.config.setDefaults('test-status', autorun: true)
@@ -26,32 +22,17 @@ module.exports =
           position.Column && position.Column - 1
         ]
 
-
-
     createStatusEntry = =>
       @testStatusStatusBar = new AtomSharperStatusBarView
       @outputView = new AtomSharperDockView
+      @completion = new AtomSharperCompletion
 
       atom.on("omni-sharp-server:close", => @outputView.destroy())
 
     if atom.workspaceView.statusBar
       createStatusEntry()
     else
-      atom.packages.once 'activated', ->
-        createStatusEntry()
-
-    atom.packages.activatePackage("autocomplete-plus")
-      .then (pkg) =>
-        @autocomplete = pkg.mainModule
-        @registerProviders()
-
-  registerProviders: ->
-    @editorSubscription = atom.workspaceView.eachEditorView (editorView) =>
-      if editorView.attached and not editorView.mini
-        provider = AtomSharperProvider.get(editorView)
-        @autocomplete.registerProviderForEditorView provider, editorView
-
-        @providers.push provider
+      atom.packages.once 'activated', createStatusEntry
 
   toggle: ->
     OmniSharpServer.get().toggle()
@@ -63,13 +44,7 @@ module.exports =
     @outputView?.destroy()
     @outputView = null
 
-    @editorSubscription?.off()
-    @editorSubscription = null
+    @completion?.deactivate()
+    @completion = null
 
-    @providers.forEach (provider) =>
-      @autocomplete.unregisterProvider provider
-
-    @providers = []
-
-  serialize: ->
-    atomSharpViewState: @atomSharpView.serialize()
+  serialize: -> atomSharpViewState: @atomSharpView?.serialize()

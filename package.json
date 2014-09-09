@@ -17,6 +17,7 @@
     "bluebird" : "~2.3.2",
     "vue": "~0.10.6",
     "underscore": "~1.7.0",
+    "autocomplete-plus-async": "git+https://github.com/HaxeIDE/atom-autocomplete-plus-async.git",
     "jquery": "^2.1.1"
   },
   "devDependencies": {

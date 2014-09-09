@@ -1,13 +1,12 @@
-AtomSharperProvider = require "./atom-sharper-complete-provider"
-console.log("loaded complete")
+AtomSharperCompletionProvider = require "./atom-sharper-completion-provider"
+
 module.exports =
+class AtomSharperCompletion
   editorSubscription: null
   autocomplete: null
   providers: []
-  activate: ->
-    console.log("activated")
-
-    atom.packages.activatePackage("autocomplete-plus")
+  constructor: ->
+    atom.packages.activatePackage("autocomplete-plus-async")
       .then (pkg) =>
         @autocomplete = pkg.mainModule
         @registerProviders()
@@ -15,7 +14,7 @@ module.exports =
   registerProviders: ->
     @editorSubscription = atom.workspaceView.eachEditorView (editorView) =>
       if editorView.attached and not editorView.mini
-        provider = new AtomSharperProvider editorView
+        provider = new AtomSharperCompletionProvider editorView
 
         @autocomplete.registerProviderForEditorView provider, editorView
 

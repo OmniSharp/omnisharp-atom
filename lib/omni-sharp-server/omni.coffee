@@ -28,39 +28,30 @@ module.exports =
         pathname: path
         query: query
 
-    @req: (path, event, data = null) =>
+    @req: (path, event, d) =>
       context = @getEditorRequestContext()
+      r =
+        column: context.column
+        filename: context.filename
+        line: context.line
+        buffer: context.buffer
+      form = if d then d else r
       rp
         uri: @_uri path
         method: "POST"
-        form:
-          column: context.column
-          filename: context.filename
-          line: context.line
-          buffer: context.buffer
-      .then (data) -> atom.emit("omni:#{event}", JSON.parse(data))
+        form: form
+      .then (data) ->
+        json = JSON.parse(data)
+        atom.emit "omni:#{event}", json
+        json
       .catch (data) -> console.error(data.statusCode?, data.options?.uri)
 
-    @syntaxErrors: (data) => @req "syntaxErrors", "syntax-errors", data
+    @syntaxErrors: => @req "syntaxErrors", "syntax-errors"
 
-    @goToDefinition: (data) => @req "gotoDefinition", "navigate-to", data
+    @goToDefinition: => @req "gotoDefinition", "navigate-to"
 
     @autocomplete: (wordToComplete) =>
       data = @getEditorRequestContext()
       data.wordToComplete = wordToComplete
       data.wantDocumentationForEveryCompletionResult = false
-      response = null
-      # synchronous ajax - yuk, but autocomplete+ doesn't
-      # support callbacks (yet)
-      $.ajax
-        url: @_uri "autocomplete"
-        type: 'POST'
-        data: data
-        dataType: 'json'
-        async: false
-        error: (jqXHR, textStatus, errorThrown) ->
-          console.log("Autocomplete error - ", errorThrown)
-        success: (data, textStatus, jqXHR) ->
-          response = data
-
-      return response
+      @req "autocomplete", "autocomplete", data
