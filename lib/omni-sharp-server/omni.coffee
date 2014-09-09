@@ -18,7 +18,7 @@ module.exports =
     @req: (path, event) =>
       editor = atom.workspace.getActiveEditor()
       cursor = editor.getCursorBufferPosition()
-      buffer =  editor.displayBuffer.buffer.cachedText
+      buffer = editor.buffer.getLines().join('\n')
       parse = @parse
       return if !buffer
       rp
