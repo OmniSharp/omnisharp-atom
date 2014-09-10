@@ -9,6 +9,7 @@ module.exports =
 
     @getEditorContext: ->
       editor = atom.workspace.getActiveEditor()
+      return unless editor
       marker = editor.getCursorBufferPosition()
 
       context =
@@ -29,6 +30,7 @@ module.exports =
 
     @req: (path, event, d) =>
       context = @getEditorContext()
+      return unless context
       rp
         uri: @_uri path
         method: "POST"
