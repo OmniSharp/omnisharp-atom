@@ -14,7 +14,7 @@ module.exports =
     atom.workspaceView.command "atom-sharper:request", _.debounce(Omni.syntaxErrors, 200)
     atom.workspaceView.command "editor:display-updated", _.debounce(Omni.syntaxErrors, 200)
     atom.workspaceView.command "atom-sharper:go-to-definition", =>
-      @navigateToWord = @wordUnderCursor()
+      @navigateToWord = atom.workspace.getActiveEditor()?.getWordUnderCursor()
       Omni.goToDefinition()
 
     atom.on "omni:navigate-to", (position) =>
@@ -40,10 +40,6 @@ module.exports =
       createStatusEntry()
     else
       atom.packages.once 'activated', createStatusEntry
-
-  wordUnderCursor: ->
-    editor = atom.workspace.getActiveEditor()
-    editor.getWordUnderCursor()
 
   toggle: ->
     OmniSharpServer.get().toggle()
