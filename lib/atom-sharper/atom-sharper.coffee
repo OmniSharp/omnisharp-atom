@@ -13,7 +13,7 @@ module.exports =
     atom.workspaceView.command "atom-sharper:toggle", => @toggle()
     atom.workspaceView.command "atom-sharper:request", _.debounce(Omni.syntaxErrors, 200)
     atom.workspaceView.command "editor:display-updated", _.debounce(Omni.syntaxErrors, 200)
-    atom.workspaceView.command "atom-sharp:go-to-definition", Omni.gotoDefinition
+    atom.workspaceView.command "atom-sharper:go-to-definition", Omni.goToDefinition
 
     atom.on "omni:navigate-to", (position) =>
       atom.workspace.open(position.FileName).then (editor) ->
