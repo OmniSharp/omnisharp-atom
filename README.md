@@ -11,6 +11,7 @@ Install npm if you don't have it already.
 ```
 cd ~/.atom/packages # or cd %HOMEPATH%\.atom\packages for Windows
 git clone https://github.com/Mpdreamz/atom-sharper.git
+cd atom-sharper
 ./build.sh or ./build.bat (on Windows this assumes that you have msbuild in your PATH)
 ```
 
