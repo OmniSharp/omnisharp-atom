@@ -1,4 +1,5 @@
 # atom-sharper package
+###(The hackable IDE)
 
 ![atom-sharper](atom-sharper.gif)
 
