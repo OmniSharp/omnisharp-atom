@@ -13,14 +13,21 @@ module.exports =
     atom.workspaceView.command "atom-sharper:toggle", => @toggle()
     atom.workspaceView.command "atom-sharper:request", _.debounce(Omni.syntaxErrors, 200)
     atom.workspaceView.command "editor:display-updated", _.debounce(Omni.syntaxErrors, 200)
-    atom.workspaceView.command "atom-sharper:go-to-definition", Omni.goToDefinition
+    atom.workspaceView.command "atom-sharper:go-to-definition", =>
+      @navigateToWord = atom.workspace.getActiveEditor()?.getWordUnderCursor()
+      Omni.goToDefinition()
 
     atom.on "omni:navigate-to", (position) =>
-      atom.workspace.open(position.FileName).then (editor) ->
-        editor.setCursorBufferPosition [
-          position.Line && position.Line - 1
-          position.Column && position.Column - 1
-        ]
+      if position.FileName?
+        atom.workspace.open(position.FileName).then (editor) ->
+          editor.setCursorBufferPosition [
+            position.Line && position.Line - 1
+            position.Column && position.Column - 1
+          ]
+      else
+        atom.emit "atom-sharper:error", "Can't navigate to '#{ @navigateToWord }'"
+
+    atom.on "atom-sharper:error", (err) -> console.error err
 
     createStatusEntry = =>
       @testStatusStatusBar = new AtomSharperStatusBarView
