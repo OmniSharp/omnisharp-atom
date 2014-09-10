@@ -2,13 +2,12 @@ OmniSharpServer = require './omni-sharp-server'
 rp = require "request-promise"
 Url = require "url"
 _ = require "underscore"
-$ = require "jquery"
 
 module.exports =
 
   class Omni
 
-    @getEditorRequestContext: ->
+    @getEditorContext: ->
       editor = atom.workspace.getActiveEditor()
       marker = editor.getCursorBufferPosition()
 
@@ -29,29 +28,24 @@ module.exports =
         query: query
 
     @req: (path, event, d) =>
-      context = @getEditorRequestContext()
-      r =
-        column: context.column
-        filename: context.filename
-        line: context.line
-        buffer: context.buffer
-      form = if d then d else r
+      context = @getEditorContext()
       rp
         uri: @_uri path
         method: "POST"
-        form: form
+        form: _.extend({}, context, d)
       .then (data) ->
         json = JSON.parse(data)
         atom.emit "omni:#{event}", json
         json
-      .catch (data) -> console.error(data.statusCode?, data.options?.uri)
+      .catch (data) -> console.error data.statusCode?, data.options?.uri
 
     @syntaxErrors: => @req "syntaxErrors", "syntax-errors"
 
     @goToDefinition: => @req "gotoDefinition", "navigate-to"
 
     @autocomplete: (wordToComplete) =>
-      data = @getEditorRequestContext()
-      data.wordToComplete = wordToComplete
-      data.wantDocumentationForEveryCompletionResult = false
+      data =
+        wordToComplete: wordToComplete
+        wantDocumentationForEveryCompletionResult: false
+
       @req "autocomplete", "autocomplete", data
