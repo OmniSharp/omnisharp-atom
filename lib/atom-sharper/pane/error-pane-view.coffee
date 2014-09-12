@@ -1,8 +1,9 @@
 {View}  = require 'atom'
-{$} = require 'atom'
-
 Convert = require 'ansi-to-html'
 Vue = require 'vue'
+_ = require 'underscore'
+
+OmniSharpServer = require '../../omni-sharp-server/omni-sharp-server'
 
 module.exports =
 # Internal: A tool-panel view for the test result output.
@@ -10,7 +11,12 @@ class ErrorPaneView extends View
 
   @content: ->
     @div class: 'error-output-pane', outlet: 'atomSharpErrorPane', =>
-      @table class: 'error-table', =>
+      @ul class: 'background-message centered', 'v-class': 'hide: isLoadingOrReady', =>
+        @li 'Omnisharp server is turned off'
+      @ul class: 'background-message centered', 'v-class': 'hide: isNotLoading', =>
+        @li =>
+          @progress class: 'inline-block'
+      @table class: 'error-table', 'v-class': 'hide: isNotReady', =>
         @thead =>
           @th 'line'
           @th 'column'
@@ -30,7 +36,7 @@ class ErrorPaneView extends View
   initialize: ->
     @vm = new Vue
       el: this[0]
-      data:
+      data: _.extend OmniSharpServer.vm,
         errors: []
       methods:
         gotoError: ({targetVM}) -> atom.emit "omni:navigate-to", targetVM.$data

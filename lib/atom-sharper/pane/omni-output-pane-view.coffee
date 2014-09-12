@@ -4,6 +4,8 @@ Convert = require 'ansi-to-html'
 Vue = require 'vue'
 _ = require 'underscore'
 
+OmniSharpServer = require '../../omni-sharp-server/omni-sharp-server'
+
 module.exports =
 # Internal: A tool-panel view for the test result output.
 class OmniOutputPaneView extends View
@@ -21,7 +23,7 @@ class OmniOutputPaneView extends View
 
     @vm = new Vue
       el: this[0]
-      data:
+      data:_ .extend OmniSharpServer.vm,
         output: []
 
     atom.on "omni-sharp-server:out", (data) =>

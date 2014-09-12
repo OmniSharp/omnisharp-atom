@@ -22,12 +22,11 @@ module.exports =
           position.Column && position.Column - 1
         ]
 
+
     createStatusEntry = =>
       @testStatusStatusBar = new AtomSharperStatusBarView
       @outputView = new AtomSharperDockView
       @completion = new AtomSharperCompletion
-
-      atom.on("omni-sharp-server:close", => @outputView.destroy())
 
     if atom.workspaceView.statusBar
       createStatusEntry()

@@ -7,6 +7,48 @@ module.exports =
   class OmniSharpServer
     instance = null
 
+    # MVVM relies on evaling expressions that we are not allowed to do
+    # in the sandboxed atom editor so all states needs to be truethy
+    # there is a loophole package to enable Function/parse/eval but
+    # I did not get it to work
+
+    @vm:
+      isNotLoading: true
+      isLoading: false
+      isOff: true
+      isOn: false
+      isNotReady: true
+      isReady: false
+      isNotError: true
+      isError: false
+
+      isLoadingOrReady: false
+
+      state: "off"
+      previousState: "off"
+
+    atom.on "omni-sharp-server:state-change", (state) =>
+      @vm.previousState = @vm.state
+      @vm.state = state
+
+      @vm.isLoading = state == "loading"
+      @vm.isNotLoading = state != "loading"
+
+      @vm.isOn = state == "on"
+      @vm.isOff = state == "off"
+
+      @vm.isReady = state == "ready"
+      @vm.isNotReady = !@vm.isReady
+
+      @vm.isLoadingOrReady = state == "ready" || state == "loading"
+
+      #if we recieve off after error prefer to stay in error mode
+      @vm.isError = state == "error" || (state == "off" && @vm.previousState == "error")
+      @vm.isNotError = !@vm.isError
+
+      @vm.iconText = if @vm.isError then "omni error occured" else ""
+
+
     class OmniSharpServerInstance
       packageDir = atom.packages.packageDirPaths[0];
       location = "#{packageDir}/atom-sharper/server/OmniSharp/bin/Debug/OmniSharp.exe"
@@ -22,15 +64,29 @@ module.exports =
           serverArguments.unshift location
 
         @child = spawn(executablePath, serverArguments)
-        @child.stdout.on 'data', @out
         atom.emit("omni-sharp-server:start", @child.pid)
+        atom.emit "omni-sharp-server:state-change", "loading"
+        @child.stdout.on 'data', @out
         @child.stderr.on 'data', @err
         @child.on 'close', @close
 
-      out: (data) => atom.emit("omni-sharp-server:out", data.toString())
-      err: (data) => atom.emit("omni-sharp-server:err", data.toString())
+      out: (data) =>
+        s = data.toString()
+        if s.match(/Solution has finished loading/)?.length > 0
+          atom.emit "omni-sharp-server:ready", @child.pid
+          atom.emit "omni-sharp-server:state-change", "ready"
+
+        if s.match(/Detected an OmniSharp instance already running on port/)?.length > 0
+          atom.emit "omni-sharp-server:error"
+          atom.emit "omni-sharp-server:state-change", "error"
+          @stop()
+
+        atom.emit "omni-sharp-server:out", s
+
+      err: (data) => atom.emit "omni-sharp-server:err", data.toString()
       close: (data) =>
         atom.emit("omni-sharp-server:close", data)
+        atom.emit "omni-sharp-server:state-change", "off"
         @port = null
 
       getPortNumber: ->

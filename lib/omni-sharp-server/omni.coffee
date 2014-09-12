@@ -29,6 +29,8 @@ module.exports =
         query: query
 
     @req: (path, event, d) =>
+      return if OmniSharpServer.vm.isNotReady
+
       context = @getEditorRequestContext()
       r =
         column: context.column
