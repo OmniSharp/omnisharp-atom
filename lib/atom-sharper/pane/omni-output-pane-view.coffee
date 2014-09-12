@@ -11,10 +11,15 @@ module.exports =
 class OmniOutputPaneView extends View
   @content: ->
     @div class: 'omni-output-pane-view', =>
-      @pre 'v-repeat': 'l :output', '{{ l.message | ansi-to-html }}'
+      @ul class: 'background-message centered', 'v-class': 'hide: isLoadingOrReady', =>
+        @li =>
+          @span 'Omnisharp server is turned off'
+          @kbd class: 'key-binding text-highlight', '⌃⌥O'
+      @div class: 'messages-container', 'v-class': 'hide: isOff', =>
+        @pre 'v-repeat': 'l :output', '{{ l.message | ansi-to-html }}'
 
   initialize: ->
-    scrollToBottom= _.throttle (=>this[0].lastElementChild?.scrollIntoViewIfNeeded()), 100
+    scrollToBottom= _.throttle (=>this.find(".messages-container")[0].lastElementChild?.scrollIntoViewIfNeeded()), 100
     Vue.filter 'ansi-to-html', (value) =>
       scrollToBottom()
       @convert ?= new Convert()

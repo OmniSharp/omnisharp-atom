@@ -10,6 +10,7 @@
 '.workspace':
   'esc': 'atom-sharper:hide'
   'ctrl-alt-o': 'atom-sharper:toggle'
+  'ctrl-alt-x': 'atom-sharper:show-omni'
   'ctrl-alt-e': 'atom-sharper:show-errors'
   'ctrl-alt-b': 'atom-sharper:show-build'
   'ctrl-alt-d': 'atom-sharp:go-to-definition'

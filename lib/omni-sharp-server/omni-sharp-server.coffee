@@ -16,6 +16,7 @@ module.exports =
       isNotLoading: true
       isLoading: false
       isOff: true
+      isNotOff: false
       isOn: false
       isNotReady: true
       isReady: false
@@ -36,6 +37,7 @@ module.exports =
 
       @vm.isOn = state == "on"
       @vm.isOff = state == "off"
+      @vm.isNotOff = state != "off"
 
       @vm.isReady = state == "ready"
       @vm.isNotReady = !@vm.isReady

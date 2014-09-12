@@ -12,7 +12,9 @@ class ErrorPaneView extends View
   @content: ->
     @div class: 'error-output-pane', outlet: 'atomSharpErrorPane', =>
       @ul class: 'background-message centered', 'v-class': 'hide: isLoadingOrReady', =>
-        @li 'Omnisharp server is turned off'
+        @li =>
+          @span 'Omnisharp server is turned off'
+          @kbd class: 'key-binding text-highlight', '⌃⌥O'
       @ul class: 'background-message centered', 'v-class': 'hide: isNotLoading', =>
         @li =>
           @progress class: 'inline-block'

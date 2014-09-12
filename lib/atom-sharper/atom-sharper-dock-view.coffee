@@ -59,6 +59,7 @@ class AtomSharperDockView extends View
     atom.workspaceView.command "atom-sharper:hide", => @hide()
     atom.workspaceView.command "atom-sharper:show-errors", => @selectPane "errors"
     atom.workspaceView.command "atom-sharper:show-build", => @selectPane "build"
+    atom.workspaceView.command "atom-sharper:show-omni", => @selectPane "omni"
 
     @on 'core:cancel core:close', =>
       console.log "esc?"
@@ -89,6 +90,7 @@ class AtomSharperDockView extends View
     h = @fixedHeight + (@fixedTop - pageY)
     $(".atom-sharper-pane").height(h)
     this.find(".atom-sharper-output").height(h-@fixedButtonBarHeight-@statusBarHeight)
+    this.find(".messages-container").height(h-@fixedButtonBarHeight-@statusBarHeight)
 
 
   destroy: ->
