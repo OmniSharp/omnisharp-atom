@@ -1,9 +1,7 @@
 #!/bin/bash
-
+rm -rf node_modules
+npm install
 git submodule update --init --recursive
 cd server
-<<<<<<< HEAD
-git pull origin master
-=======
->>>>>>> origin/master
 xbuild /p:Platform="Any CPU"
+cd ..

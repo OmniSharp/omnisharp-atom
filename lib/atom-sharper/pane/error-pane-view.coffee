@@ -22,8 +22,8 @@ class ErrorPaneView extends View
         @thead =>
           @th 'line'
           @th 'column'
-          @th 'file'
-          @th 'error'
+          @th 'message'
+          @th 'filename'
         @tbody =>
           @tr
             'v-repeat': 'errors',
