@@ -2,7 +2,6 @@ OmniSharpServer = require './omni-sharp-server'
 rp = require "request-promise"
 Url = require "url"
 _ = require "underscore"
-
 module.exports =
 
   class Omni
@@ -29,6 +28,8 @@ module.exports =
         query: query
 
     @req: (path, event, d) =>
+      return if OmniSharpServer.vm.isNotReady
+
       context = @getEditorContext()
       return unless context
       rp

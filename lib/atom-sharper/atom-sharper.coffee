@@ -29,12 +29,11 @@ module.exports =
 
     atom.on "atom-sharper:error", (err) -> console.error err
 
+
     createStatusEntry = =>
       @testStatusStatusBar = new AtomSharperStatusBarView
       @outputView = new AtomSharperDockView
       @completion = new AtomSharperCompletion
-
-      atom.on("omni-sharp-server:close", => @outputView.destroy())
 
     if atom.workspaceView.statusBar
       createStatusEntry()

@@ -4,15 +4,22 @@ Convert = require 'ansi-to-html'
 Vue = require 'vue'
 _ = require 'underscore'
 
+OmniSharpServer = require '../../omni-sharp-server/omni-sharp-server'
+
 module.exports =
 # Internal: A tool-panel view for the test result output.
 class OmniOutputPaneView extends View
   @content: ->
     @div class: 'omni-output-pane-view', =>
-      @pre 'v-repeat': 'l :output', '{{ l.message | ansi-to-html }}'
+      @ul class: 'background-message centered', 'v-class': 'hide: isLoadingOrReady', =>
+        @li =>
+          @span 'Omnisharp server is turned off'
+          @kbd class: 'key-binding text-highlight', '⌃⌥O'
+      @div class: 'messages-container', 'v-class': 'hide: isOff', =>
+        @pre 'v-repeat': 'l :output', '{{ l.message | ansi-to-html }}'
 
   initialize: ->
-    scrollToBottom= _.throttle (=>this[0].lastElementChild?.scrollIntoViewIfNeeded()), 100
+    scrollToBottom= _.throttle (=>this.find(".messages-container")[0].lastElementChild?.scrollIntoViewIfNeeded()), 100
     Vue.filter 'ansi-to-html', (value) =>
       scrollToBottom()
       @convert ?= new Convert()
@@ -21,7 +28,7 @@ class OmniOutputPaneView extends View
 
     @vm = new Vue
       el: this[0]
-      data:
+      data:_ .extend OmniSharpServer.vm,
         output: []
 
     atom.on "omni-sharp-server:out", (data) =>

@@ -56,15 +56,27 @@ class AtomSharperDockView extends View
         selectPane: ({target}) => @selectPane $(target).attr "pane"
 
     atom.workspaceView.command "atom-sharper:toggle-output", => @toggle()
+    atom.workspaceView.command "atom-sharper:hide", => @hide()
+    atom.workspaceView.command "atom-sharper:show-errors", => @selectPane "errors"
+    atom.workspaceView.command "atom-sharper:show-build", => @selectPane "build"
+    atom.workspaceView.command "atom-sharper:show-omni", => @selectPane "omni"
+
+    @on 'core:cancel core:close', =>
+      console.log "esc?"
+      @hide()
 
     @on 'mousedown', '.atom-sharper-output-resizer', (e) => @resizeStarted(e)
 
-  selectPane: (pane) => @vm.selected = pane
+  selectPane: (pane) =>
+    @vm.selected = pane
+    @show()
+    this.find("button.selected").focus()
 
   resizeStarted: =>
     @fixedTop = @resizeHandle.offset().top
     @fixedHeight = $(".atom-sharper-pane").height()
     @fixedButtonBarHeight = this.find(".btn-group").height()
+    @statusBarHeight = atom.workspaceView.statusBar.height()
     $(document).on('mousemove', @resizePane)
     $(document).on('mouseup', @resizeStopped)
 
@@ -74,19 +86,20 @@ class AtomSharperDockView extends View
 
   resizePane: ({pageY, which}) =>
     return @resizeStopped() unless which is 1
+    console.log @statusBarHeight
     h = @fixedHeight + (@fixedTop - pageY)
     $(".atom-sharper-pane").height(h)
-    this.find(".atom-sharper-output").height(h-@fixedButtonBarHeight)
+    this.find(".atom-sharper-output").height(h-@fixedButtonBarHeight-@statusBarHeight)
+    this.find(".messages-container").height(h-@fixedButtonBarHeight-@statusBarHeight)
 
 
   destroy: ->
     @detach()
 
+
+  show: -> atom.workspaceView.prependToBottom(this) unless @hasParent()
+  hide: -> @detach()
   # Internal: Toggle the visibilty of the test-status output view.
   #
   # Returns nothing.
-  toggle: ->
-    if @hasParent()
-      @detach()
-    else
-      atom.workspaceView.prependToBottom(this) unless @hasParent()
+  toggle: -> if @hasParent() then @hide() else @show()

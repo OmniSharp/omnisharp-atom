@@ -8,6 +8,9 @@
 # For more detailed documentation see
 # https://atom.io/docs/latest/advanced/keymaps
 '.workspace':
+  'esc': 'atom-sharper:hide'
   'ctrl-alt-o': 'atom-sharper:toggle'
-  'ctrl-alt-r': 'atom-sharper:request'
+  'ctrl-alt-x': 'atom-sharper:show-omni'
+  'ctrl-alt-e': 'atom-sharper:show-errors'
+  'ctrl-alt-b': 'atom-sharper:show-build'
   'ctrl-alt-d': 'atom-sharper:go-to-definition'
