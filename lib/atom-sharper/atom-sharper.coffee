@@ -13,6 +13,12 @@ module.exports =
     atom.workspaceView.command "atom-sharper:toggle", => @toggle()
     atom.workspaceView.command "atom-sharper:request", _.debounce(Omni.syntaxErrors, 200)
     atom.workspaceView.command "editor:display-updated", _.debounce(Omni.syntaxErrors, 200)
+
+    atom.workspaceView.eachEditorView (editorView) =>
+      editorView.on "symbols-view:go-to-declaration", () =>
+        @navigateToWord = atom.workspace.getActiveEditor()?.getWordUnderCursor()
+        Omni.goToDefinition()
+
     atom.workspaceView.command "atom-sharper:go-to-definition", =>
       @navigateToWord = atom.workspace.getActiveEditor()?.getWordUnderCursor()
       Omni.goToDefinition()
