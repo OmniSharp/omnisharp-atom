@@ -9,13 +9,11 @@ module.exports =
   atomSharpView: null
 
   activate: (state) ->
-    #atom.config.setDefaults('test-status', autorun: true)
     atom.workspaceView.command "atom-sharper:toggle", => @toggle()
-    atom.workspaceView.command "atom-sharper:request", _.debounce(Omni.syntaxErrors, 200)
-    atom.workspaceView.command "editor:display-updated", _.debounce(Omni.syntaxErrors, 200)
     atom.workspaceView.command "atom-sharper:go-to-definition", =>
       @navigateToWord = atom.workspace.getActiveEditor()?.getWordUnderCursor()
       Omni.goToDefinition()
+    atom.workspaceView.command "atom-sharper:find-usages", => Omni.findUsages()
 
     atom.on "omni:navigate-to", (position) =>
       if position.FileName?
@@ -28,7 +26,7 @@ module.exports =
         atom.emit "atom-sharper:error", "Can't navigate to '#{ @navigateToWord }'"
 
     atom.on "atom-sharper:error", (err) -> console.error err
-
+    @registerEditorEvents()
 
     createStatusEntry = =>
       @testStatusStatusBar = new AtomSharperStatusBarView
@@ -39,6 +37,13 @@ module.exports =
       createStatusEntry()
     else
       atom.packages.once 'activated', createStatusEntry
+
+  registerEditorEvents: ->
+    atom.workspace.eachEditor (editor) =>
+      if editor.getGrammar().name isnt 'C#'
+          return
+      buffer = editor.getBuffer()
+      buffer.on 'changed', _.debounce(Omni.syntaxErrors, 200)
 
   toggle: ->
     OmniSharpServer.get().toggle()

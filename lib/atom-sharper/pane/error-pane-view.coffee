@@ -44,6 +44,8 @@ class ErrorPaneView extends View
         gotoError: ({targetVM}) -> atom.emit "omni:navigate-to", targetVM.$data
 
     atom.on "omni:syntax-errors", (data) => @vm.errors = data.Errors
+    atom.on "omni:find-usages", (data) => @vm.errors =
+      ({FileName:item.FileName, Message:item.Text, Line:item.Line, Column:item.Column} for item in data.QuickFixes)
 
   destroy: ->
     @detach()
