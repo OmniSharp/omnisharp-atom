@@ -6,11 +6,11 @@ _ = require 'underscore'
 OmniSharpServer = require '../../omni-sharp-server/omni-sharp-server'
 
 module.exports =
-# Internal: A tool-panel view for the test result output.
-class ErrorPaneView extends View
+# Internal: A tool-panel view for find usages/implementations
+class FindPaneView extends View
 
   @content: ->
-    @div class: 'error-output-pane', outlet: 'atomSharpErrorPane', =>
+    @div class: 'error-output-pane', outlet: 'atomSharpFindPane', =>
       @ul class: 'background-message centered', 'v-class': 'hide: isLoadingOrReady', =>
         @li =>
           @span 'Omnisharp server is turned off'
@@ -32,7 +32,7 @@ class ErrorPaneView extends View
             =>
               @td '{{Line}}'
               @td '{{Column}}'
-              @td '{{Message}}'
+              @td '{{Text}}'
               @td '{{FileName}}'
 
   initialize: ->
@@ -43,7 +43,7 @@ class ErrorPaneView extends View
       methods:
         gotoError: ({targetVM}) -> atom.emit "omni:navigate-to", targetVM.$data
 
-    atom.on "omni:syntax-errors", (data) => @vm.errors = data.Errors
+    atom.on "omni:find-usages", (data) => @vm.errors = data.QuickFixes
 
   destroy: ->
     @detach()

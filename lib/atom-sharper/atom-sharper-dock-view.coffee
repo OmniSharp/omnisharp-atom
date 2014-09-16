@@ -4,6 +4,7 @@ Convert = require 'ansi-to-html'
 Vue = require 'vue'
 
 ErrorPaneView = require './pane/error-pane-view'
+FindPaneView = require './pane/find-pane-view'
 OmniOutputPaneView = require './pane/omni-output-pane-view'
 
 module.exports =
@@ -27,11 +28,13 @@ class AtomSharperDockView extends View
           @div class: 'btn-toolbar pull-left', =>
             @div class: 'btn-group btn-toggle', =>
               btn "errors", "Errors"
+              btn "find", "Find"
               btn "build", "Build output"
               btn "omni", "Omnisharp output"
         #tab content panels
         @div 'v-attr' : 'class: selected | content-selected omni', outlet: 'omniOutput'
         @div 'v-attr' : 'class: selected | content-selected errors', outlet: 'errorsOutput'
+        @div 'v-attr' : 'class: selected | content-selected find', outlet: 'findOutput'
         @div 'v-attr' : 'class: selected | content-selected build'
 
   # Internal: Initialize the test-status output view and event handlers.
@@ -46,6 +49,7 @@ class AtomSharperDockView extends View
       "atom-sharper-output #{expectedValue}-output #{selected}"
 
     @errorsOutput.append(new ErrorPaneView())
+    @findOutput.append(new FindPaneView())
     @omniOutput.append(new OmniOutputPaneView())
 
     @vm = new Vue
@@ -58,6 +62,7 @@ class AtomSharperDockView extends View
     atom.workspaceView.command "atom-sharper:toggle-output", => @toggle()
     atom.workspaceView.command "atom-sharper:hide", => @hide()
     atom.workspaceView.command "atom-sharper:show-errors", => @selectPane "errors"
+    atom.workspaceView.command "atom-sharper:show-find", => @selectPane "find"
     atom.workspaceView.command "atom-sharper:show-build", => @selectPane "build"
     atom.workspaceView.command "atom-sharper:show-omni", => @selectPane "omni"
 
@@ -86,7 +91,6 @@ class AtomSharperDockView extends View
 
   resizePane: ({pageY, which}) =>
     return @resizeStopped() unless which is 1
-    console.log @statusBarHeight
     h = @fixedHeight + (@fixedTop - pageY)
     $(".atom-sharper-pane").height(h)
     this.find(".atom-sharper-output").height(h-@fixedButtonBarHeight-@statusBarHeight)
