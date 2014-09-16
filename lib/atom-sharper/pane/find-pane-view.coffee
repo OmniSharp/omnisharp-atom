@@ -26,8 +26,8 @@ class FindPaneView extends View
           @th 'filename'
         @tbody =>
           @tr
-            'v-repeat': 'errors',
-            'v-on': 'click: gotoError',
+            'v-repeat': 'usages',
+            'v-on': 'click: gotoUsage',
             data='{{$index}}',
             =>
               @td '{{Line}}'
@@ -39,11 +39,11 @@ class FindPaneView extends View
     @vm = new Vue
       el: this[0]
       data: _.extend OmniSharpServer.vm,
-        errors: []
+        usages: []
       methods:
-        gotoError: ({targetVM}) -> atom.emit "omni:navigate-to", targetVM.$data
+        gotoUsage: ({targetVM}) -> atom.emit "omni:navigate-to", targetVM.$data
 
-    atom.on "omni:find-usages", (data) => @vm.errors = data.QuickFixes
+    atom.on "omni:find-usages", (data) => @vm.usages = data.QuickFixes
 
   destroy: ->
     @detach()
