@@ -13,7 +13,10 @@ module.exports =
     atom.workspaceView.command "atom-sharper:go-to-definition", =>
       @navigateToWord = atom.workspace.getActiveEditor()?.getWordUnderCursor()
       Omni.goToDefinition()
-    atom.workspaceView.command "atom-sharper:find-usages", => Omni.findUsages()
+
+    atom.workspaceView.command "atom-sharper:find-usages", =>
+      Omni.findUsages()
+      @outputView.selectPane "find"
 
     atom.on "omni:navigate-to", (position) =>
       if position.FileName?
