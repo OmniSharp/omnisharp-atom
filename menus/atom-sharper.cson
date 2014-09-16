@@ -1,7 +1,9 @@
 # See https://atom.io/docs/latest/creating-a-package#menus for more details
 'context-menu':
   '.overlayer':
-      'Enable atom-sharp': 'atom-sharper:toggle'
+      'atom-sharp':
+        'Enable atom-sharp': 'atom-sharper:toggle'
+        'Find Usages': 'atom-sharper:find-usages'
 
 'menu': [
   {
@@ -10,6 +12,7 @@
       'label': 'atom-sharper'
       'submenu': [
         { 'label': 'Toggle', 'command': 'atom-sharper:toggle' }
+        { 'label': 'Find Usages', 'command': 'atom-sharper:find-usages' }
       ]
     ]
   }

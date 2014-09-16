@@ -32,6 +32,7 @@ module.exports =
 
       context = @getEditorContext()
       return unless context
+
       rp
         uri: @_uri path
         method: "POST"
@@ -42,7 +43,10 @@ module.exports =
         json
       .catch (data) -> console.error data.statusCode?, data.options?.uri
 
-    @syntaxErrors: => @req "syntaxErrors", "syntax-errors"
+    @syntaxErrors: =>
+      @req "syntaxErrors", "syntax-errors"
+
+    @findUsages: => @req "findUsages", "find-usages"
 
     @goToDefinition: => @req "gotoDefinition", "navigate-to"
 
