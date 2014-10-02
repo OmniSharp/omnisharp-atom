@@ -11,12 +11,14 @@
   },
   "dependencies": {
     "ansi-to-html": "~0.1.0",
-    "request-promise" : "~0.1.2",
-    "bluebird" : "~2.3.2",
-    "vue": "~0.10.6",
-    "underscore": "~1.7.0",
     "autocomplete-plus-async": "git+https://github.com/HaxeIDE/atom-autocomplete-plus-async.git",
-    "jquery": "^2.1.1"
+    "bluebird": "~2.3.2",
+    "event-kit": "git+https://github.com/atom/event-kit",
+    "fs-plus": "^2.3.1",
+    "jquery": "^2.1.1",
+    "request-promise": "~0.1.2",
+    "underscore": "~1.7.0",
+    "vue": "~0.10.6"
   },
   "devDependencies": {
     "coffeelint": "^1.6.0",

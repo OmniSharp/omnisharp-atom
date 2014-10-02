@@ -2,6 +2,7 @@
 Convert = require 'ansi-to-html'
 Vue = require 'vue'
 _ = require 'underscore'
+fs = require 'fs'
 
 OmniSharpServer = require '../../omni-sharp-server/omni-sharp-server'
 
