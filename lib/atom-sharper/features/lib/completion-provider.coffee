@@ -1,9 +1,9 @@
-Omni = require '../omni-sharp-server/omni'
+Omni = require '../../../omni-sharp-server/omni'
 
 {Provider, Suggestion} = require 'autocomplete-plus-async'
 
 module.exports =
-  class AtomSharperCompletionProvider extends Provider
+  class CompletionProvider extends Provider
 
     buildSuggestions: (cb) ->
       wordRegex = /[A-Z_0-9]+/i

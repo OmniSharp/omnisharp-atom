@@ -3,13 +3,13 @@
 Convert = require 'ansi-to-html'
 Vue = require 'vue'
 
-ErrorPaneView = require './pane/error-pane-view'
-FindPaneView = require './pane/find-pane-view'
-OmniOutputPaneView = require './pane/omni-output-pane-view'
+ErrorPaneView = require './error-pane-view'
+FindPaneView = require './find-pane-view'
+OmniOutputPaneView = require './omni-output-pane-view'
 
 module.exports =
 # Internal: A tool-panel view for the test result output.
-class AtomSharperDockView extends View
+class DockView extends View
 
   # Internal: Initialize test-status output view DOM contents.
   @content: ->

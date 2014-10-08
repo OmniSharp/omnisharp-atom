@@ -1,64 +1,75 @@
-AtomSharperStatusBarView = require './atom-sharper-status-bar-view'
-AtomSharperDockView = require './atom-sharper-dock-view'
-AtomSharperCompletion = require "./atom-sharper-completion"
+_ = require "underscore"
+fs = require 'fs-plus'
+{Emitter} = require 'event-kit/src/event-kit'
+
+StatusBarView = require './views/status-bar-view'
+DockView = require './views/dock-view'
+
 OmniSharpServer = require '../omni-sharp-server/omni-sharp-server'
 Omni = require '../omni-sharp-server/omni'
-_ = require "underscore"
 
 module.exports =
-  atomSharpView: null
 
   activate: (state) ->
     atom.workspaceView.command "atom-sharper:toggle", => @toggle()
-    atom.workspaceView.command "atom-sharper:go-to-definition", =>
-      @navigateToWord = atom.workspace.getActiveEditor()?.getWordUnderCursor()
-      Omni.goToDefinition()
 
-    atom.workspaceView.command "atom-sharper:find-usages", =>
-      Omni.findUsages()
-      @outputView.selectPane "find"
+    @emitter = new Emitter
+    @loadFeatures()
+    @features.iterate 'activate', state
+    @subscribeToEvents()
 
-    atom.on "omni:navigate-to", (position) =>
-      if position.FileName?
-        atom.workspace.open(position.FileName).then (editor) ->
-          editor.setCursorBufferPosition [
-            position.Line && position.Line - 1
-            position.Column && position.Column - 1
-          ]
-      else
-        atom.emit "atom-sharper:error", "Can't navigate to '#{ @navigateToWord }'"
+  # events
+  onEditor: (callback) ->
+    @emitter.on 'atom-sharper-editor', callback
 
-    atom.on "atom-sharper:error", (err) -> console.error err
-    @registerEditorEvents()
+  getPackageDir: ->
+    _.find(atom.packages.packageDirPaths, (packagePath) -> fs.existsSync("#{packagePath}/atom-sharper"))
 
-    createStatusEntry = =>
-      @testStatusStatusBar = new AtomSharperStatusBarView
-      @outputView = new AtomSharperDockView
-      @completion = new AtomSharperCompletion
+  loadFeatures: ->
+    self = this
+    packageDir = @getPackageDir()
+    featureDir = "#{packageDir}/atom-sharper/lib/atom-sharper/features"
+    featureFiles = _.filter(fs.readdirSync(featureDir), (file) -> not fs.statSync("#{featureDir}/#{file}").isDirectory())
 
+    @features = _.map(featureFiles, (feature) ->
+      { name: feature.replace('.coffee', ''), path: "./features/#{feature}" }
+    )
+
+    loadFeature = (feature) ->
+      feature._class = require feature.path
+      feature._obj = new feature._class(self)
+
+    loadFeature feature for feature in @features
+
+    @features.iterate = (funcName) =>
+      args = Array.prototype.slice.call arguments, 1
+      feature._obj[funcName]?.apply feature, args for feature in @features
+
+  subscribeToEvents: ->
     if atom.workspaceView.statusBar
-      createStatusEntry()
-    else
-      atom.packages.once 'activated', createStatusEntry
+      @buildStatusBarAndDock()
 
-  registerEditorEvents: ->
-    atom.workspace.eachEditor (editor) =>
-      if editor.getGrammar().name isnt 'C#'
-          return
-      buffer = editor.getBuffer()
-      buffer.on 'changed', _.debounce(Omni.syntaxErrors, 200)
+    @observePackagesActivated = atom.packages.onDidActivateAll () =>
+      @buildStatusBarAndDock()
+
+    @observeEditors = atom.workspace.observeTextEditors (editor) =>
+      if editor.getGrammar().name is 'C#'
+        @emitter.emit 'atom-sharper-editor', editor
+
+  buildStatusBarAndDock: ->
+    @statusBar = new StatusBarView
+    @outputView = new DockView
 
   toggle: ->
     OmniSharpServer.get().toggle()
 
   deactivate: ->
-    OmniSharpServer.get().stop()
-    @testStatusStatusBar?.destroy()
-    @testStatusStatusBar = null
+    @emitter.dispose()
+    @observeEditors.dispose()
+    @observePackagesActivated.dispose()
+
+    @features = null
+
     @outputView?.destroy()
     @outputView = null
-
-    @completion?.deactivate()
-    @completion = null
-
-  serialize: -> atomSharpViewState: @atomSharpView?.serialize()
+    OmniSharpServer.get().stop()
