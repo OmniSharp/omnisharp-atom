@@ -16,6 +16,10 @@ cd atom-sharper
 ```
 
 Install the autocomplete-plus-async package using the Atom package manager
+or `apm install autocomplete-plus-async` from the command line
+
+Install the language-csharp package using the Atom package manager
+or `apm install language-csharp` from the command line
 
 ## To use
 

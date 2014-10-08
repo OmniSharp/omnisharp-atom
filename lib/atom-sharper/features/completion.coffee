@@ -1,7 +1,7 @@
-AtomSharperCompletionProvider = require "./atom-sharper-completion-provider"
+CompletionProvider = require "./lib/completion-provider"
 
 module.exports =
-class AtomSharperCompletion
+class Completion
   editorSubscription: null
   autocomplete: null
   providers: []
@@ -14,7 +14,7 @@ class AtomSharperCompletion
   registerProviders: ->
     @editorSubscription = atom.workspaceView.eachEditorView (editorView) =>
       if editorView.attached and not editorView.mini
-        provider = new AtomSharperCompletionProvider editorView
+        provider = new CompletionProvider editorView
 
         @autocomplete.registerProviderForEditorView provider, editorView
 

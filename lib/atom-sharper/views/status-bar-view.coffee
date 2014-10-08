@@ -1,9 +1,9 @@
 {View} = require 'atom'
 Vue = require 'vue'
-OmniSharpServer = require '../omni-sharp-server/omni-sharp-server'
+OmniSharpServer = require '../../omni-sharp-server/omni-sharp-server'
 
 module.exports =
-class AtomSharperStatusBarView extends View
+class StatusBarView extends View
 
   # Internal: Initialize test-status status bar view DOM contents.
   @content: ->
