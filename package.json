@@ -13,7 +13,7 @@
     "ansi-to-html": "~0.1.0",
     "request-promise" : "~0.1.2",
     "bluebird" : "~2.3.2",
-    "event-kit": "git+https://github.com/atom/event-kit",
+    "event-kit": "0.7.2",
     "fs-plus": "^2.3.1",
     "vue": "~0.10.6",
     "underscore": "~1.7.0",

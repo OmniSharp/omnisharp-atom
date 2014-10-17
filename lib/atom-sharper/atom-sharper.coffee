@@ -1,6 +1,6 @@
 _ = require "underscore"
 fs = require 'fs-plus'
-{Emitter} = require 'event-kit/src/event-kit'
+{Emitter} = require 'event-kit'
 
 StatusBarView = require './views/status-bar-view'
 DockView = require './views/dock-view'
