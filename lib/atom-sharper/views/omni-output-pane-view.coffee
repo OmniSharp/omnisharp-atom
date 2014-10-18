@@ -11,12 +11,12 @@ module.exports =
 class OmniOutputPaneView extends View
   @content: ->
     @div class: 'omni-output-pane-view', =>
-      @ul class: 'background-message centered', 'v-class': 'hide: isLoadingOrReady', =>
+      @ul class: 'background-message centered', 'v-class': 'hide: initialized', =>
         @li =>
           @span 'Omnisharp server is turned off'
           @kbd class: 'key-binding text-highlight', '⌃⌥O'
-      @div class: 'messages-container', 'v-class': 'hide: isOff', =>
-        @pre 'v-repeat': 'l :output', '{{ l.message | ansi-to-html }}'
+      @div class: 'messages-container', 'v-class': 'hide: uninitialized', =>
+        @pre 'v-class': 'text-error: l.isError', 'v-repeat': 'l :output', '{{ l.message | ansi-to-html }}'
 
   initialize: ->
     scrollToBottom= _.throttle (=>this.find(".messages-container")[0].lastElementChild?.scrollIntoViewIfNeeded()), 100
@@ -29,6 +29,8 @@ class OmniOutputPaneView extends View
     @vm = new Vue
       el: this[0]
       data:_ .extend OmniSharpServer.vm,
+        uninitialized: true
+        initialized: false
         output: []
 
     atom.on "omni-sharp-server:out", (data) =>
@@ -39,6 +41,8 @@ class OmniOutputPaneView extends View
       @vm.output.push {message: data, isError: true}
       console.log data
     atom.on "omni-sharp-server:start", (pid) =>
+      @vm.uninitialized = false
+      @vm.initialized = true
       @vm.output = []
       @vm.output.push message:"Started Omnisharp server (#{pid})"
 
