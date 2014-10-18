@@ -1,7 +1,7 @@
 fs = require('fs')
 spawn = require('child_process').spawn
 BrowserWindow = require('remote').require('browser-window')
-
+OmnisharpLocation = require('omnisharp-server-binaries');
 
 module.exports =
   class OmniSharpServer
@@ -53,7 +53,8 @@ module.exports =
 
     class OmniSharpServerInstance
       packageDir = atom.packages.packageDirPaths[0];
-      location = "#{packageDir}/atom-sharper/server/OmniSharp/bin/Debug/OmniSharp.exe"
+      #location = "#{packageDir}/atom-sharper/server/OmniSharp/bin/Debug/OmniSharp.exe"
+      location = OmnisharpLocation
 
       start: () ->
         useMono = process.platform isnt "win32"
@@ -64,6 +65,9 @@ module.exports =
 
         if useMono
           serverArguments.unshift location
+
+        console.log serverArguments
+
 
         @child = spawn(executablePath, serverArguments)
         atom.emit("omni-sharp-server:start", @child.pid)
