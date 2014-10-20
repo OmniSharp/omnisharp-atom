@@ -1,6 +1,6 @@
 Omni = require '../../../omni-sharp-server/omni'
 
-{Provider, Suggestion} = require 'autocomplete-plus-async'
+{Provider, Suggestion} = require 'autocomplete-plus-async-plus'
 
 module.exports =
   class CompletionProvider extends Provider
