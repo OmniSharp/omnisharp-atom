@@ -1,7 +1,7 @@
 {
   "name": "atom-sharper",
   "main": "./lib/atom-sharper/atom-sharper",
-  "version": "0.1.2",
+  "version": "0.1.3",
   "description": "Brings the wonderful omnisharp server to powercharge atom's C# development experience",
   "activationEvents": [],
   "repository": "https://github.com/Mpdreamz/atom-sharper",
