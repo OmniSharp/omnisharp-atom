@@ -1,25 +1,23 @@
 # atom-sharper package
 ###(The hackable IDE)
 
-![atom-sharper](atom-sharper.gif)
+![atom-sharper](https://github.com/Mpdreamz/atom-sharper/raw/master/atom-sharper.gif)
 
 ## Installation
 
-Right now, there isn't an official Atom package so you'll need to do the following :-
+From the packages settings inside Atom:
 
-Install npm if you don't have it already.
+* install "Autocomplete plus async" package first!
+* install "Atom sharper" package
+* install "Language C#" package (optional)
+
+From the commandline:
+
 ```
-cd ~/.atom/packages # or cd %HOMEPATH%\.atom\packages for Windows
-git clone https://github.com/Mpdreamz/atom-sharper.git
-cd atom-sharper
-./build.sh or ./build.bat (on Windows this assumes that you have msbuild in your PATH)
+apm install autocomplete-plus-async
+apm install atom-sharper
+apm install language-csharp
 ```
-
-Install the autocomplete-plus-async package using the Atom package manager
-or `apm install autocomplete-plus-async` from the command line
-
-Install the language-csharp package using the Atom package manager
-or `apm install language-csharp` from the command line
 
 ## To use
 
