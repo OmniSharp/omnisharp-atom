@@ -27,7 +27,7 @@ module.exports =
         port: port
         pathname: path
         query: query
-        
+
     @req: (path, event, d) =>
       @_req(path, event, d)
       .catch (data) ->
@@ -44,12 +44,14 @@ module.exports =
         method: "POST"
         form: _.extend({}, context, d)
       .then (data) ->
+        console.log data
         json = JSON.parse(data)
         atom.emit "omni:#{event}", json
         json
 
-    @syntaxErrors: =>
-      @req "syntaxErrors", "syntax-errors"
+    @syntaxErrors: => @req "syntaxErrors", "syntax-errors"
+
+    @codecheck: => @req "codecheck", "quick-fixes"
 
     @findUsages: => @req "findUsages", "find-usages"
 

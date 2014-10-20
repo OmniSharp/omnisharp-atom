@@ -101,6 +101,11 @@
 @green-color: @syntax-color-added;
 @blue-color: @syntax-color-renamed;
 
+.highlight-blue .region {
+  background-image: url('atom://atom-sharper/stylesheets/wiggle-blue.png');
+  background-repeat: repeat-x;
+  background-position: bottom;
+}
 .highlight-red .region {
   background-image: url('atom://atom-sharper/stylesheets/wiggle.png');
   background-repeat: repeat-x;
@@ -109,7 +114,9 @@
 
 .gutter {
   .gutter-red {
-    color: @text-color-highlight !important;
     background-color: @background-color-error !important;
+  }
+  .gutter-blue {
+    background-color: @background-color-info !important;
   }
 }
