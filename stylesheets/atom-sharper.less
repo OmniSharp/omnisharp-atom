@@ -93,3 +93,23 @@
     color: @text-color-error;
   }
 }
+
+
+
+
+@red-color: @syntax-color-removed;
+@green-color: @syntax-color-added;
+@blue-color: @syntax-color-renamed;
+
+.highlight-red .region {
+  background-image: url('atom://atom-sharper/stylesheets/wiggle.png');
+  background-repeat: repeat-x;
+  background-position: bottom;
+}
+
+.gutter {
+  .gutter-red {
+    color: @text-color-highlight !important;
+    background-color: @background-color-error !important;
+  }
+}
