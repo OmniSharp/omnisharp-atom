@@ -17,9 +17,9 @@
     "fs-plus": "^2.3.1",
     "vue": "~0.10.6",
     "underscore": "~1.7.0",
-    "autocomplete-plus-async": "git+https://github.com/HaxeIDE/atom-autocomplete-plus-async.git",
+    "autocomplete-plus-async-plus": "latest",
     "jquery": "^2.1.1",
-    "omnisharp-server-binaries": "^0.1.3"
+    "omnisharp-server-binaries": "latest"
   },
   "devDependencies": {
     "coffeelint": "^1.6.0",
