@@ -22,6 +22,7 @@ module.exports =
       word = data.substring(end+1);
       Omni.autocomplete(word)
         .then (completions) =>
+          completions ?= []
           suggestions =
             (new Suggestion(this, word:item.CompletionText, label:item.DisplayText, prefix:word) for item in completions)
           cb(suggestions)

@@ -39,7 +39,6 @@ class OmniOutputPaneView extends View
     atom.on "omni-sharp-server:err", (data) =>
       @vm.output.$remove(0) if @vm.output.length >= 1000
       @vm.output.push {message: data, isError: true}
-      console.log data
     atom.on "omni-sharp-server:start", (pid) =>
       @vm.uninitialized = false
       @vm.initialized = true

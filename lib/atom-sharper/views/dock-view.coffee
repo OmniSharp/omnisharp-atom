@@ -67,7 +67,6 @@ class DockView extends View
     atom.workspaceView.command "atom-sharper:show-omni", => @selectPane "omni"
 
     @on 'core:cancel core:close', =>
-      console.log "esc?"
       @hide()
 
     @on 'mousedown', '.atom-sharper-output-resizer', (e) => @resizeStarted(e)

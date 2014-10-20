@@ -2,6 +2,7 @@ OmniSharpServer = require './omni-sharp-server'
 rp = require "request-promise"
 Url = require "url"
 _ = require "underscore"
+Promise = require("bluebird");
 module.exports =
 
   class Omni
@@ -26,12 +27,17 @@ module.exports =
         port: port
         pathname: path
         query: query
-
+        
     @req: (path, event, d) =>
-      return if OmniSharpServer.vm.isNotReady
+      @_req(path, event, d)
+      .catch (data) ->
+        console.error data.statusCode?, data.options?.uri if typeof data isnt 'string'
+
+    @_req: (path, event, d) =>
+      return Promise.reject "omnisharp not ready" if OmniSharpServer.vm.isNotReady
 
       context = @getEditorContext()
-      return unless context
+      return Promise.reject "no editor context found" unless context
 
       rp
         uri: @_uri path
@@ -41,7 +47,6 @@ module.exports =
         json = JSON.parse(data)
         atom.emit "omni:#{event}", json
         json
-      .catch (data) -> console.error data.statusCode?, data.options?.uri
 
     @syntaxErrors: =>
       @req "syntaxErrors", "syntax-errors"

@@ -70,9 +70,6 @@ module.exports =
         if useMono
           serverArguments.unshift location
 
-        console.log serverArguments
-
-
         @child = spawn(executablePath, serverArguments)
         atom.emit("omni-sharp-server:start", @child.pid)
         atom.emit "omni-sharp-server:state-change", "loading"
