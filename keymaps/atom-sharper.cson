@@ -13,4 +13,5 @@
   'ctrl-alt-x': 'atom-sharper:show-omni'
   'ctrl-alt-e': 'atom-sharper:show-errors'
   'ctrl-alt-b': 'atom-sharper:show-build'
-  'ctrl-alt-d': 'atom-sharper:go-to-definition'
+  'ctrl-F12': 'atom-sharper:go-to-definition'
+  'shift-F12': 'atom-sharper:find-usages'

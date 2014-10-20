@@ -13,6 +13,7 @@
       'submenu': [
         { 'label': 'Toggle', 'command': 'atom-sharper:toggle' }
         { 'label': 'Find Usages', 'command': 'atom-sharper:find-usages' }
+        { 'label': 'Go to definition', 'command': 'atom-sharper:go-to-definition' }
       ]
     ]
   }

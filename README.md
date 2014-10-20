@@ -23,7 +23,12 @@ apm install language-csharp
 
 - Open the root of your solution within Atom
 - Press Ctrl-Alt-o - this starts the OmniSharp server
-- Ctrl-Alt-D - Go to definition
-- Enjoy!
 
-Completions appear as you type. To select an item, press the TAB key.
+When the flame icon in the bottom left corner turns green, the server has started!
+
+# Features
+
+- `ctrl-F12` Go to definition
+- `shift-F12` Find usages
+- Completions appear as you type. To select an item, press the TAB key.
+- Enjoy!
