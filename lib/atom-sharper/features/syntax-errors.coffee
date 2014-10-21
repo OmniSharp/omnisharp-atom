@@ -17,6 +17,8 @@ module.exports =
     detectSyntaxErrorsIn: (editor) ->
       @decorations[editor.id] = [];
       buffer = editor.getBuffer()
+
+
       buffer.on 'changed', _.debounce(Omni.codecheck, 200)
       atom.on "omni:quick-fixes", _.debounce(_.bind(@drawDecorations, this, editor), 100)
 
@@ -32,7 +34,9 @@ module.exports =
       end: left + 1 + right
 
     drawDecorations: (editor, {QuickFixes}) ->
-      console.log QuickFixes
+      quickFixPath = _.first(_.pluck(QuickFixes, "FileName"));
+      path = editor.buffer.file.path
+      return if path != quickFixPath
 
       _.each @decorations[editor.id], (decoration) => decoration.getMarker().destroy()
 

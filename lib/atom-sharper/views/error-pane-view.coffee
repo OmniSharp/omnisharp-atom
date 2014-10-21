@@ -32,7 +32,7 @@ class ErrorPaneView extends View
             =>
               @td '{{Line}}'
               @td '{{Column}}'
-              @td '{{Message}}'
+              @td '{{Text}}'
               @td '{{FileName}}'
 
   initialize: ->
@@ -43,7 +43,7 @@ class ErrorPaneView extends View
       methods:
         gotoError: ({targetVM}) -> atom.emit "omni:navigate-to", targetVM.$data
 
-    atom.on "omni:syntax-errors", (data) => @vm.errors = data.Errors
+    atom.on "omni:quick-fixes", (data) => @vm.errors = data.QuickFixes
 
   destroy: ->
     @detach()
