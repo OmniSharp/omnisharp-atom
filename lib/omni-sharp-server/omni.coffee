@@ -44,7 +44,6 @@ module.exports =
         method: "POST"
         form: _.extend({}, context, d)
       .then (data) ->
-        console.log data
         json = JSON.parse(data)
         atom.emit "omni:#{event}", json
         json

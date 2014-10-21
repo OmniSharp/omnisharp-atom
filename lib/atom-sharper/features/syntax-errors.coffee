@@ -20,16 +20,31 @@ module.exports =
       buffer.on 'changed', _.debounce(Omni.codecheck, 200)
       atom.on "omni:quick-fixes", _.debounce(_.bind(@drawDecorations, this, editor), 100)
 
+
+    getWordAt: (str, pos) =>
+      while pos < str.length && /\W/.test str[pos]
+        ++pos
+
+      left = str.slice(0, pos + 1).search /\W(?!.*\W)/
+      right = str.slice(pos).search /(\W|$)/
+
+      start: left + 1
+      end: left + 1 + right
+
     drawDecorations: (editor, {QuickFixes}) ->
+      console.log QuickFixes
+
       _.each @decorations[editor.id], (decoration) => decoration.getMarker().destroy()
 
       ranges = _.map QuickFixes, (error) =>
         line = error.Line - 1
-        column = error.Column
-        text = editor.lineTextForBufferRow(line)
+        column = error.Column - 1
+
+        text = editor.lineTextForBufferRow line
+        {start, end} = @getWordAt text, column
 
         type: error.LogLevel
-        range: new Range([line, column], [line, column + 2])
+        range: new Range([line, start], [line, end])
         message: error.Message
 
       decorations = _.map ranges, ({type, range}) =>
