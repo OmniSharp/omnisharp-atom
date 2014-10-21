@@ -34,7 +34,7 @@ module.exports =
 
       decorations = _.map ranges, ({type, range}) =>
         color = switch
-          when type == 'Warning' then "blue"
+          when type == 'Warning' then "green"
           when type == 'Error' then "red"
           else "unknown"
 
