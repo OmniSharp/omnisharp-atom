@@ -3,12 +3,13 @@ rp = require "request-promise"
 Url = require "url"
 _ = require "underscore"
 Promise = require("bluebird");
+
 module.exports =
 
   class Omni
 
-    @getEditorContext: ->
-      editor = atom.workspace.getActiveEditor()
+    @getEditorContext: (editor) ->
+      editor = editor || atom.workspace.getActiveEditor()
       return unless editor
       marker = editor.getCursorBufferPosition()
 
@@ -28,15 +29,15 @@ module.exports =
         pathname: path
         query: query
 
-    @req: (path, event, d) =>
-      @_req(path, event, d)
+    @req: (path, event, d, editor) =>
+      @_req(path, event, d, editor)
       .catch (data) ->
         console.error data.statusCode?, data.options?.uri if typeof data isnt 'string'
 
-    @_req: (path, event, d) =>
+    @_req: (path, event, d, editor) =>
       return Promise.reject "omnisharp not ready" if OmniSharpServer.vm.isNotReady
 
-      context = @getEditorContext()
+      context = @getEditorContext(editor)
       return Promise.reject "no editor context found" unless context
 
       rp
@@ -50,7 +51,8 @@ module.exports =
 
     @syntaxErrors: => @req "syntaxErrors", "syntax-errors"
 
-    @codecheck: => @req "codecheck", "quick-fixes"
+    @codecheck: (buffer, editor) =>
+      @req "codecheck", "quick-fixes", null, editor
 
     @findUsages: => @req "findUsages", "find-usages"
 

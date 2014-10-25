@@ -54,6 +54,8 @@ module.exports =
 
       @vm.iconText = if @vm.isError then "omni error occured" else ""
 
+      atom.emit "omni-sharp-server:state-change-complete", state
+
 
     class OmniSharpServerInstance
       packageDir = atom.packages.packageDirPaths[0];

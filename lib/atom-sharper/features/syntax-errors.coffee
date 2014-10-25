@@ -9,19 +9,26 @@ module.exports =
     constructor: (atomSharper) ->
       @atomSharper = atomSharper
       @decorations = {}
+      @editors = []
 
     activate: =>
       @editorSubscription = @atomSharper.onEditor (editor) =>
         @detectSyntaxErrorsIn editor
 
-    detectSyntaxErrorsIn: (editor) ->
+      atom.on 'omni-sharp-server:state-change-complete', @codeCheckAllExistingEditors
+
+    detectSyntaxErrorsIn: (editor) =>
       @decorations[editor.id] = [];
       buffer = editor.getBuffer()
 
-
       buffer.on 'changed', _.debounce(Omni.codecheck, 200)
-      atom.on "omni:quick-fixes", _.debounce(_.bind(@drawDecorations, this, editor), 100)
+      atom.on "omni:quick-fixes", _.bind(@drawDecorations, this)
 
+      @editors.push editor
+
+    codeCheckAllExistingEditors: (state) =>
+      if state == 'ready'
+        Omni.codecheck null, editor for editor in @editors
 
     getWordAt: (str, pos) =>
       while pos < str.length && /\W/.test str[pos]
@@ -33,9 +40,14 @@ module.exports =
       start: left + 1
       end: left + 1 + right
 
-    drawDecorations: (editor, {QuickFixes}) ->
+    drawDecorations: ({QuickFixes}) ->
       quickFixPath = _.first(_.pluck(QuickFixes, "FileName"));
-      path = editor.buffer.file.path
+
+      editor = _.find @editors, (editor) ->
+        editor.buffer.file.path == quickFixPath
+
+      path = editor?.buffer.file.path
+
       return if path != quickFixPath
 
       _.each @decorations[editor.id], (decoration) => decoration.getMarker().destroy()
