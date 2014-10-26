@@ -35,7 +35,7 @@ class ErrorPaneView extends View
               @td '{{Text}}'
               @td '{{FileName}}'
 
-  initialize: ->
+  initialize: =>
     @vm = new Vue
       el: this[0]
       data: _.extend OmniSharpServer.vm,
@@ -43,7 +43,17 @@ class ErrorPaneView extends View
       methods:
         gotoError: ({targetVM}) -> atom.emit "omni:navigate-to", targetVM.$data
 
-    atom.on "omni:quick-fixes", (data) => @vm.errors = data.QuickFixes
+    atom.on "omni:quick-fixes", (data) =>
+      @displayQuickFixes data.QuickFixes
+
+  displayQuickFixes: (quickFixes) =>
+    existingErrorsCount = @vm.errors.length
+
+    while existingErrorsCount--
+      if @vm.errors[existingErrorsCount].FileName == quickFixes[0]?.FileName
+        @vm.errors.splice existingErrorsCount, 1
+
+    @vm.errors.unshift quickFix for quickFix in quickFixes
 
   destroy: ->
     @detach()
