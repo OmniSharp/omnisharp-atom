@@ -22,6 +22,10 @@ module.exports =
   onEditor: (callback) ->
     @emitter.on 'atom-sharper-editor', callback
 
+  onEditorDestroyed: (callback) ->
+    @emitter.on 'atom-sharper-editor-destroyed', (filePath) ->
+      callback filePath
+
   getPackageDir: ->
     _.find(atom.packages.packageDirPaths, (packagePath) -> fs.existsSync("#{packagePath}/atom-sharper"))
 
@@ -55,6 +59,10 @@ module.exports =
     @observeEditors = atom.workspace.observeTextEditors (editor) =>
       if editor.getGrammar().name is 'C#'
         @emitter.emit 'atom-sharper-editor', editor
+
+        editorFilePath = editor.buffer.file.path
+        editor.onDidDestroy () =>
+          @emitter.emit 'atom-sharper-editor-destroyed', editorFilePath
 
   buildStatusBarAndDock: ->
     @statusBar = new StatusBarView

@@ -17,12 +17,18 @@ module.exports =
 
       atom.on 'omni-sharp-server:state-change-complete', @codeCheckAllExistingEditors
 
+      # todo - remove emit here and subscribe directly from error-pane-view
+      @editorDestroyedSubscription = @atomSharper.onEditorDestroyed (filePath) =>
+        atom.emit 'atom-sharper:clear-syntax-errors', filePath
+
     detectSyntaxErrorsIn: (editor) =>
       @decorations[editor.id] = [];
       buffer = editor.getBuffer()
 
       buffer.on 'changed', _.debounce(Omni.codecheck, 200)
       atom.on "omni:quick-fixes", _.bind(@drawDecorations, this)
+
+      Omni.codecheck null, editor
 
       @editors.push editor
 
