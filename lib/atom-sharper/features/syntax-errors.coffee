@@ -19,6 +19,11 @@ module.exports =
 
       # todo - remove emit here and subscribe directly from error-pane-view
       @editorDestroyedSubscription = @atomSharper.onEditorDestroyed (filePath) =>
+        editorsCount = @editors.length
+        while editorsCount--
+          if @editors[editorsCount].buffer.file.path == filePath
+            @editors.splice editorsCount, 1
+
         atom.emit 'atom-sharper:clear-syntax-errors', filePath
 
     detectSyntaxErrorsIn: (editor) =>
@@ -37,6 +42,12 @@ module.exports =
         Omni.codecheck null, editor for editor in @editors
 
     getWordAt: (str, pos) =>
+      if str == undefined
+        return {
+          start: pos
+          end: pos
+        }
+
       while pos < str.length && /\W/.test str[pos]
         ++pos
 
@@ -67,7 +78,7 @@ module.exports =
 
         type: error.LogLevel
         range: new Range([line, start], [line, end])
-        message: error.Message
+        message: error.Text
 
       decorations = _.map ranges, ({type, range}) =>
         color = switch
@@ -83,10 +94,6 @@ module.exports =
         [gutter, line]
 
       @decorations[editor.id] = _.flatten decorations
-
-      #@decorationsByEditorId[editor.id] ?= {}
-      #@decorationsByEditorId[editor.id][type] = decoration
-
 
     deactivate: ->
       @editorSubscription.destroy()
