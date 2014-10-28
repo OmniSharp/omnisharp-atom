@@ -1,7 +1,7 @@
 {
   "name": "omnisharp-atom",
   "main": "./lib/omnisharp-atom/omnisharp-atom",
-  "version": "0.1.4",
+  "version": "0.1.5",
   "description": "Brings the wonderful omnisharp server to powercharge atom's C# development experience",
   "activationEvents": [],
   "repository": "https://github.com/OmniSharp/omnisharp-atom",
