@@ -9,7 +9,7 @@ From the packages settings inside Atom:
 
 * install "Autocomplete plus async" package first!
 * install "Atom sharper" package
-* install "Language C#" package (optional)
+* install "Language C#" package
 
 From the commandline:
 
