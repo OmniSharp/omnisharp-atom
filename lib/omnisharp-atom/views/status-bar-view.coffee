@@ -7,7 +7,7 @@ class StatusBarView extends View
 
   # Internal: Initialize test-status status bar view DOM contents.
   @content: ->
-    @a href:'#', 'v-on' : 'click: toggle', outlet:  'omni-meter', class: 'inline-block atom-sharper-button', =>
+    @a href:'#', 'v-on' : 'click: toggle', outlet:  'omni-meter', class: 'inline-block omnisharp-atom-button', =>
       @span
         class: 'icon icon-flame',
         'v-class': 'text-subtle: isOff, text-success: isReady, text-error: isError',
@@ -25,7 +25,7 @@ class StatusBarView extends View
     atom.workspaceView.statusBar.prependLeft(this)
 
   toggle: =>
-    atom.workspaceView.trigger 'atom-sharper:toggle-output'
+    atom.workspaceView.trigger 'omnisharp-atom:toggle-output'
     @vm.isOpen = !@vm.isOpen
 
   # Returns nothing.

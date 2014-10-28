@@ -24,7 +24,7 @@ module.exports =
           if @editors[editorsCount].buffer.file.path == filePath
             @editors.splice editorsCount, 1
 
-        atom.emit 'atom-sharper:clear-syntax-errors', filePath
+        atom.emit 'omnisharp-atom:clear-syntax-errors', filePath
 
     detectSyntaxErrorsIn: (editor) =>
       @decorations[editor.id] = [];

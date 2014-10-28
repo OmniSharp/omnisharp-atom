@@ -46,7 +46,7 @@ class ErrorPaneView extends View
     atom.on "omni:quick-fixes", (data) =>
       @displayQuickFixes data.QuickFixes
 
-    atom.on 'atom-sharper:clear-syntax-errors', (filePath) =>
+    atom.on 'omnisharp-atom:clear-syntax-errors', (filePath) =>
       @removeErrorsFor filePath
 
   removeErrorsFor: (filePath) =>

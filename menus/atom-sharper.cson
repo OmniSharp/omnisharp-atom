@@ -2,18 +2,18 @@
 'context-menu':
   '.overlayer':
       'atom-sharp':
-        'Enable atom-sharp': 'atom-sharper:toggle'
-        'Find Usages': 'atom-sharper:find-usages'
+        'Enable atom-sharp': 'omnisharp-atom:toggle'
+        'Find Usages': 'omnisharp-atom:find-usages'
 
 'menu': [
   {
     'label': 'Packages'
     'submenu': [
-      'label': 'atom-sharper'
+      'label': 'omnisharp-atom'
       'submenu': [
-        { 'label': 'Toggle', 'command': 'atom-sharper:toggle' }
-        { 'label': 'Find Usages', 'command': 'atom-sharper:find-usages' }
-        { 'label': 'Go to definition', 'command': 'atom-sharper:go-to-definition' }
+        { 'label': 'Toggle', 'command': 'omnisharp-atom:toggle' }
+        { 'label': 'Find Usages', 'command': 'omnisharp-atom:find-usages' }
+        { 'label': 'Go to definition', 'command': 'omnisharp-atom:go-to-definition' }
       ]
     ]
   }

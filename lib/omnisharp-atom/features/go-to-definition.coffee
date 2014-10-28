@@ -15,7 +15,7 @@ module.exports =
         editorView.on "symbols-view:go-to-declaration", () ->
           goToDef()
 
-      atom.workspaceView.command "atom-sharper:go-to-definition", () ->
+      atom.workspaceView.command "omnisharp-atom:go-to-definition", () ->
         goToDef()
 
       atom.on "omni:navigate-to", (position) =>
@@ -26,4 +26,4 @@ module.exports =
               position.Column && position.Column - 1
             ]
         else
-          atom.emit "atom-sharper:error", "Can't navigate to '#{ @navigateToWord }'"
+          atom.emit "omnisharp-atom:error", "Can't navigate to '#{ @navigateToWord }'"

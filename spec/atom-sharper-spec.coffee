@@ -15,7 +15,7 @@ describe 'AtomSharper', ->
       atom.packages.activatePackage('status-bar')
 
     waitsForPromise ->
-      atom.packages.activatePackage('atom-sharper')
+      atom.packages.activatePackage('omnisharp-atom')
 
     waitsFor ->
       statusBar = atom.workspaceView.statusBar
@@ -25,19 +25,19 @@ describe 'AtomSharper', ->
   describe 'when the package is activated', ->
 
     it 'should display the atom sharper button in the status bar', ->
-      expect(statusBar.find('.atom-sharper-button')).toExist()
+      expect(statusBar.find('.omnisharp-atom-button')).toExist()
 
     it 'should not display the atom sharper pane', ->
-      expect(atom.workspaceView.find('.atom-sharper-pane')).not.toExist()
+      expect(atom.workspaceView.find('.omnisharp-atom-pane')).not.toExist()
 
     describe 'when the atom sharper button is clicked', ->
 
       beforeEach ->
-        if atom.workspaceView.find('.atom-sharper-pane').length is 0
-          statusBar.find('.atom-sharper-button')[0].click()
+        if atom.workspaceView.find('.omnisharp-atom-pane').length is 0
+          statusBar.find('.omnisharp-atom-button')[0].click()
 
       it 'should display the atom sharper pane', ->
-        expect(atom.workspaceView.find('.atom-sharper-pane')).toExist()
+        expect(atom.workspaceView.find('.omnisharp-atom-pane')).toExist()
 
       it 'should display the omnisharp server status', ->
         messageSelector = '.omni-output-pane-view ul>li:first-child>span'
@@ -49,7 +49,7 @@ describe 'AtomSharper', ->
     describe 'when you toggle atomsharper on', ->
 
       beforeEach ->
-        atom.workspaceView.trigger 'atom-sharper:toggle'
+        atom.workspaceView.trigger 'omnisharp-atom:toggle'
 
       it 'should start the omnisharp server', ->
         expect(OmniSharpServer.vm.isNotOff).toBeTruthy()

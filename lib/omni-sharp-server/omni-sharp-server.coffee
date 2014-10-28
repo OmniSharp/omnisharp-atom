@@ -59,7 +59,7 @@ module.exports =
 
     class OmniSharpServerInstance
       packageDir = atom.packages.packageDirPaths[0];
-      #location = "#{packageDir}/atom-sharper/server/OmniSharp/bin/Debug/OmniSharp.exe"
+      #location = "#{packageDir}/omnisharp-atom/server/OmniSharp/bin/Debug/OmniSharp.exe"
       location = OmnisharpLocation
 
       start: () ->

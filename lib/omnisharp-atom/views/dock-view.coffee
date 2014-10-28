@@ -20,8 +20,8 @@ class DockView extends View
         'pane' : view
         text
 
-    @div class: 'tool-panel panel-bottom atom-sharper-pane', outlet: 'pane', =>
-      @div class: 'atom-sharper-output-resizer', outlet: 'resizeHandle'
+    @div class: 'tool-panel panel-bottom omnisharp-atom-pane', outlet: 'pane', =>
+      @div class: 'omnisharp-atom-output-resizer', outlet: 'resizeHandle'
       #header
       @div class: "inset-panel", =>
         @div class: "panel-heading clearfix", =>
@@ -46,7 +46,7 @@ class DockView extends View
 
     Vue.filter 'content-selected', (value, expectedValue) =>
       selected = if value == expectedValue then "" else "hide"
-      "atom-sharper-output #{expectedValue}-output #{selected}"
+      "omnisharp-atom-output #{expectedValue}-output #{selected}"
 
     @errorsOutput.append(new ErrorPaneView())
     @findOutput.append(new FindPaneView())
@@ -59,17 +59,17 @@ class DockView extends View
       methods:
         selectPane: ({target}) => @selectPane $(target).attr "pane"
 
-    atom.workspaceView.command "atom-sharper:toggle-output", => @toggle()
-    atom.workspaceView.command "atom-sharper:hide", => @hide()
-    atom.workspaceView.command "atom-sharper:show-errors", => @selectPane "errors"
-    atom.workspaceView.command "atom-sharper:show-find", => @selectPane "find"
-    atom.workspaceView.command "atom-sharper:show-build", => @selectPane "build"
-    atom.workspaceView.command "atom-sharper:show-omni", => @selectPane "omni"
+    atom.workspaceView.command "omnisharp-atom:toggle-output", => @toggle()
+    atom.workspaceView.command "omnisharp-atom:hide", => @hide()
+    atom.workspaceView.command "omnisharp-atom:show-errors", => @selectPane "errors"
+    atom.workspaceView.command "omnisharp-atom:show-find", => @selectPane "find"
+    atom.workspaceView.command "omnisharp-atom:show-build", => @selectPane "build"
+    atom.workspaceView.command "omnisharp-atom:show-omni", => @selectPane "omni"
 
     @on 'core:cancel core:close', =>
       @hide()
 
-    @on 'mousedown', '.atom-sharper-output-resizer', (e) => @resizeStarted(e)
+    @on 'mousedown', '.omnisharp-atom-output-resizer', (e) => @resizeStarted(e)
 
   selectPane: (pane) =>
     @vm.selected = pane
@@ -78,7 +78,7 @@ class DockView extends View
 
   resizeStarted: =>
     @fixedTop = @resizeHandle.offset().top
-    @fixedHeight = $(".atom-sharper-pane").height()
+    @fixedHeight = $(".omnisharp-atom-pane").height()
     @fixedButtonBarHeight = this.find(".btn-group").height()
     @statusBarHeight = atom.workspaceView.statusBar.height()
     $(document).on('mousemove', @resizePane)
@@ -91,8 +91,8 @@ class DockView extends View
   resizePane: ({pageY, which}) =>
     return @resizeStopped() unless which is 1
     h = @fixedHeight + (@fixedTop - pageY)
-    $(".atom-sharper-pane").height(h)
-    this.find(".atom-sharper-output").height(h-@fixedButtonBarHeight-@statusBarHeight)
+    $(".omnisharp-atom-pane").height(h)
+    this.find(".omnisharp-atom-output").height(h-@fixedButtonBarHeight-@statusBarHeight)
     this.find(".messages-container").height(h-@fixedButtonBarHeight-@statusBarHeight)
 
 

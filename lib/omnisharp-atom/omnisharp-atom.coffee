@@ -11,7 +11,7 @@ Omni = require '../omni-sharp-server/omni'
 module.exports =
 
   activate: (state) ->
-    atom.workspaceView.command "atom-sharper:toggle", => @toggle()
+    atom.workspaceView.command "omnisharp-atom:toggle", => @toggle()
 
     @emitter = new Emitter
     @loadFeatures()
@@ -20,19 +20,19 @@ module.exports =
 
   # events
   onEditor: (callback) ->
-    @emitter.on 'atom-sharper-editor', callback
+    @emitter.on 'omnisharp-atom-editor', callback
 
   onEditorDestroyed: (callback) ->
-    @emitter.on 'atom-sharper-editor-destroyed', (filePath) ->
+    @emitter.on 'omnisharp-atom-editor-destroyed', (filePath) ->
       callback filePath
 
   getPackageDir: ->
-    _.find(atom.packages.packageDirPaths, (packagePath) -> fs.existsSync("#{packagePath}/atom-sharper"))
+    _.find(atom.packages.packageDirPaths, (packagePath) -> fs.existsSync("#{packagePath}/omnisharp-atom"))
 
   loadFeatures: ->
     self = this
     packageDir = @getPackageDir()
-    featureDir = "#{packageDir}/atom-sharper/lib/atom-sharper/features"
+    featureDir = "#{packageDir}/omnisharp-atom/lib/omnisharp-atom/features"
     featureFiles = _.filter(fs.readdirSync(featureDir), (file) -> not fs.statSync("#{featureDir}/#{file}").isDirectory())
 
     @features = _.map(featureFiles, (feature) ->
@@ -58,11 +58,11 @@ module.exports =
 
     @observeEditors = atom.workspace.observeTextEditors (editor) =>
       if editor.getGrammar().name is 'C#'
-        @emitter.emit 'atom-sharper-editor', editor
+        @emitter.emit 'omnisharp-atom-editor', editor
 
         editorFilePath = editor.buffer.file.path
         editor.onDidDestroy () =>
-          @emitter.emit 'atom-sharper-editor-destroyed', editorFilePath
+          @emitter.emit 'omnisharp-atom-editor-destroyed', editorFilePath
 
   buildStatusBarAndDock: ->
     @statusBar = new StatusBarView
