@@ -9,14 +9,14 @@ From the packages settings inside Atom:
 
 * install "Language C#" package
 * install "Autocomplete plus async" package first!
-* install "Omnisharp Atom" package
+* install "Atom Sharper" package
 
 From the commandline:
 
 ```
 apm install language-csharp
 apm install autocomplete-plus-async
-apm install omnisharp-atom
+apm install atom-sharper
 ```
 
 ## To use
