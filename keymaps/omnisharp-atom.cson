@@ -4,7 +4,7 @@
 #
 # Below is a basic keybinding which registers on all platforms by applying to
 # the root workspace element.
-
+#
 # For more detailed documentation see
 # https://atom.io/docs/latest/advanced/keymaps
 '.workspace':
@@ -15,3 +15,5 @@
   'ctrl-alt-b': 'omnisharp-atom:show-build'
   'ctrl-F12': 'omnisharp-atom:go-to-definition'
   'shift-F12': 'omnisharp-atom:find-usages'
+  'ctrl-alt-u': 'omnisharp-atom:fix-usings'
+  'ctrl-alt-m': 'omnisharp-atom:code-format'

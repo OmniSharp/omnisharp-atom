@@ -1,7 +1,7 @@
 {WorkspaceView} = require 'atom'
 OmniSharpServer = require '../lib/omni-sharp-server/omni-sharp-server'
 
-describe 'AtomSharper', ->
+describe 'OmniSharp Atom', ->
   statusBar = null
 
   beforeEach ->

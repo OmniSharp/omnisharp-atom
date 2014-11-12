@@ -58,6 +58,10 @@ module.exports =
 
     @goToDefinition: => @req "gotoDefinition", "navigate-to"
 
+    @fixUsings: => @req "fixUsings", "code-format"
+
+    @codeFormat: => @req "codeFormat", "code-format"
+
     @autocomplete: (wordToComplete) =>
       data =
         wordToComplete: wordToComplete
