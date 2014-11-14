@@ -4,6 +4,7 @@
       'atom-sharp':
         'Enable atom-sharp': 'omnisharp-atom:toggle'
         'Find Usages': 'omnisharp-atom:find-usages'
+        'Rename': 'omnisharp-atom:rename'
 
 'menu': [
   {
@@ -14,6 +15,7 @@
         { 'label': 'Toggle', 'command': 'omnisharp-atom:toggle' }
         { 'label': 'Find Usages', 'command': 'omnisharp-atom:find-usages' }
         { 'label': 'Go to definition', 'command': 'omnisharp-atom:go-to-definition' }
+        { 'label': 'Rename', 'command', 'omnisharp-atom:rename'}
       ]
     ]
   }
