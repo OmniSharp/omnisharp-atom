@@ -68,3 +68,9 @@ module.exports =
         wantDocumentationForEveryCompletionResult: false
 
       @req "autocomplete", "autocomplete", data
+
+    @rename: (wordToRename) =>
+      data =
+        renameTo: wordToRename
+
+      @req "rename", "rename", data
