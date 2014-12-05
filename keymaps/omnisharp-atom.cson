@@ -13,7 +13,7 @@
   'ctrl-alt-x': 'omnisharp-atom:show-omni'
   'ctrl-alt-e': 'omnisharp-atom:show-errors'
   'ctrl-alt-b': 'omnisharp-atom:show-build'
-  'ctrl-F12': 'omnisharp-atom:go-to-definition'
+  'alt-F12': 'omnisharp-atom:go-to-definition'
   'shift-F12': 'omnisharp-atom:find-usages'
   'ctrl-alt-u': 'omnisharp-atom:fix-usings'
   'ctrl-alt-m': 'omnisharp-atom:code-format'

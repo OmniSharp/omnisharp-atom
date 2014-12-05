@@ -16,6 +16,8 @@
         { 'label': 'Find Usages', 'command': 'omnisharp-atom:find-usages' }
         { 'label': 'Go to definition', 'command': 'omnisharp-atom:go-to-definition' }
         { 'label': 'Rename', 'command': 'omnisharp-atom:rename'}
+        { 'label': 'Fix Usings', 'command': 'omnisharp-atom:fix-usings' }
+        { 'label': 'Code Format', 'command': 'omnisharp-atom:code-format' }
       ]
     ]
   }
