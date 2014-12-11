@@ -45,9 +45,14 @@ module.exports =
         method: "POST"
         form: _.extend({}, context, d)
       .then (data) ->
-        json = JSON.parse(data)
-        atom.emit "omni:#{event}", json
-        json
+        try
+          parsedData = JSON.parse(data)
+        catch
+          parsedData = data
+        finally
+          atom.emit "omni:#{event}", parsedData
+
+        parsedData
 
     @syntaxErrors: => @req "syntaxErrors", "syntax-errors"
 
