@@ -6,6 +6,7 @@ module.exports =
 
     activate: =>
       atom.workspaceView.command "omnisharp-atom:build", ->
+        atom.workspaceView.trigger "omnisharp-atom:show-build"
         Omni.build()
 
       atom.on "omni:build-command", (command) =>

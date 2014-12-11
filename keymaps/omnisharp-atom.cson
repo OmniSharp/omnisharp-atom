@@ -18,3 +18,4 @@
   'ctrl-alt-u': 'omnisharp-atom:fix-usings'
   'ctrl-alt-m': 'omnisharp-atom:code-format'
   'alt-r': 'omnisharp-atom:rename'
+  'ctrl-shift-b': 'omnisharp-atom:build'
