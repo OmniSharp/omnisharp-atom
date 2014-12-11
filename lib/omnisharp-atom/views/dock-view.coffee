@@ -5,6 +5,7 @@ Vue = require 'vue'
 
 ErrorPaneView = require './error-pane-view'
 FindPaneView = require './find-pane-view'
+BuildOutputPaneView = require './build-output-pane-view'
 OmniOutputPaneView = require './omni-output-pane-view'
 
 module.exports =
@@ -35,7 +36,7 @@ class DockView extends View
         @div 'v-attr' : 'class: selected | content-selected omni', outlet: 'omniOutput'
         @div 'v-attr' : 'class: selected | content-selected errors', outlet: 'errorsOutput'
         @div 'v-attr' : 'class: selected | content-selected find', outlet: 'findOutput'
-        @div 'v-attr' : 'class: selected | content-selected build'
+        @div 'v-attr' : 'class: selected | content-selected build', outlet: 'buildOutput'
 
   # Internal: Initialize the test-status output view and event handlers.
   initialize: ->
@@ -50,6 +51,7 @@ class DockView extends View
 
     @errorsOutput.append(new ErrorPaneView())
     @findOutput.append(new FindPaneView())
+    @buildOutput.append(new BuildOutputPaneView())
     @omniOutput.append(new OmniOutputPaneView())
 
     @vm = new Vue

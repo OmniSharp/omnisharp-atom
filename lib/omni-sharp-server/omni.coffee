@@ -67,6 +67,8 @@ module.exports =
 
     @codeFormat: => @req "codeFormat", "code-format"
 
+    @build: => @req "buildcommand", "build-command"
+
     @autocomplete: (wordToComplete) =>
       data =
         wordToComplete: wordToComplete
