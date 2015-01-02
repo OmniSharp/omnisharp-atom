@@ -15,11 +15,11 @@ class BuildOutputPaneView extends View
           'v-repeat': 'l :output',
           'v-on': 'click: navigate'
           'v-attr': 'data-nav: l.nav'
-          '{{ l.message | ansi-to-html }}'
+          '{{ l.message | build-output-ansi-to-html }}'
 
   initialize: ->
     scrollToBottom= _.throttle (=>this.find(".messages-container")[0].lastElementChild?.scrollIntoViewIfNeeded()), 100
-    Vue.filter 'ansi-to-html', (value) =>
+    Vue.filter 'build-output-ansi-to-html', (value) =>
       scrollToBottom()
       @convert ?= new Convert()
       v = @convert.toHtml value
@@ -36,25 +36,8 @@ class BuildOutputPaneView extends View
             atom.emit "omni:navigate-to", nav
 
     atom.on "omnisharp-atom:build-message", (data) =>
-      linkPattern = /(.*)\((\d*),(\d*)\)/g
-      navMatches = linkPattern.exec(data)
-      isLink = false
-      nav = false
-
-      if navMatches.length == 4
-        isLink = true
-        nav =
-          FileName: navMatches[1]
-          Line: navMatches[2]
-          Column: navMatches[3]
-
-      logMessage =
-        message: data
-        isLink: isLink
-        nav: JSON.stringify(nav)
-
-      @vm.output.$remove(0) if @vm.output.length >= 1000
-      @vm.output.push logMessage
+      buildMessages = data.split('\n')
+      @processMessage message for message in buildMessages
 
     atom.on "omnisharp-atom:build-err", (data) =>
       @vm.output.$remove(0) if @vm.output.length >= 1000
@@ -71,6 +54,27 @@ class BuildOutputPaneView extends View
       else
         @vm.output.push message: 'Build failed!', isError: true
 
+  processMessage: (data) =>
+    linkPattern = /(.*)\((\d*),(\d*)\)/g
+    navMatches = linkPattern.exec(data)
+    isLink = false
+    nav = false
+
+    if navMatches?.length == 4
+      isLink = true
+      nav =
+        FileName: navMatches[1]
+        Line: navMatches[2]
+        Column: navMatches[3]
+
+    logMessage =
+      message: data
+      isLink: isLink
+      nav: JSON.stringify(nav)
+      isError: isLink
+
+    @vm.output.$remove(0) if @vm.output.length >= 1000
+    @vm.output.push logMessage
 
   destroy: ->
     @detach()
