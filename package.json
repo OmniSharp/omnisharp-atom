@@ -11,15 +11,16 @@
   },
   "dependencies": {
     "ansi-to-html": "~0.1.0",
-    "request-promise": "~0.1.2",
+    "autocomplete-plus-async-plus": "latest",
     "bluebird": "~2.3.2",
     "event-kit": "0.7.2",
+    "find-free-port": "^1.0.1",
     "fs-plus": "^2.3.1",
-    "vue": "~0.10.6",
-    "underscore": "~1.7.0",
-    "autocomplete-plus-async-plus": "latest",
     "jquery": "^2.1.1",
-    "omnisharp-server-binaries": "latest"
+    "omnisharp-server-binaries": "latest",
+    "request-promise": "~0.1.2",
+    "underscore": "~1.7.0",
+    "vue": "~0.10.6"
   },
   "devDependencies": {
     "coffeelint": "^1.6.0",

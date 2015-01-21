@@ -39,11 +39,11 @@ class OmniOutputPaneView extends View
     atom.on "omni-sharp-server:err", (data) =>
       @vm.output.$remove(0) if @vm.output.length >= 1000
       @vm.output.push {message: data, isError: true}
-    atom.on "omni-sharp-server:start", (pid) =>
+    atom.on "omni-sharp-server:start", (pid, port) =>
       @vm.uninitialized = false
       @vm.initialized = true
       @vm.output = []
-      @vm.output.push message:"Started Omnisharp server (#{pid})"
+      @vm.output.push message:"Started Omnisharp server (pid:#{pid}, port:#{port})"
 
   destroy: ->
     @detach()

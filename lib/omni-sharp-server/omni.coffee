@@ -21,7 +21,7 @@ module.exports =
       context
 
     @_uri: (path, query) =>
-      port = OmniSharpServer.get().getPortNumber()
+      port = OmniSharpServer.get().port
       Url.format
         hostname: "localhost"
         protocol: "http"
