@@ -43,7 +43,7 @@ class OmniOutputPaneView extends View
       @vm.uninitialized = false
       @vm.initialized = true
       @vm.output = []
-      @vm.output.push message:"Started Omnisharp server (pid:#{pid}, port:#{port})"
+      @vm.output.push message:"Starting Omnisharp server (pid:#{pid}, port:#{port})"
 
   destroy: ->
     @detach()

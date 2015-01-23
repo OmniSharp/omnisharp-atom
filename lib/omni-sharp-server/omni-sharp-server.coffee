@@ -83,6 +83,7 @@ module.exports =
           @child.stdout.on 'data', @out
           @child.stderr.on 'data', @err
           @child.on 'close', @close
+          @child.on 'error', @err
 
       out: (data) =>
         s = data.toString()
@@ -97,7 +98,10 @@ module.exports =
 
         atom.emit "omni-sharp-server:out", s
 
-      err: (data) => atom.emit "omni-sharp-server:err", data.toString()
+      err: (data) =>
+        friendlyMessage = @parseError(data)
+        atom.emit "omni-sharp-server:err", friendlyMessage
+
       close: (data) =>
         atom.emit "omni-sharp-server:close", data
         atom.emit "omni-sharp-server:state-change", "off"
@@ -108,6 +112,12 @@ module.exports =
         @child = null
 
       toggle: () -> if @child then @stop() else @start()
+
+      parseError: (data) ->
+        message = data.toString()
+        if data.code == 'ENOENT' and data.path == 'mono'
+          message = 'mono could not be found, please ensure it is installed and in your path'
+        message
 
     @get: () ->
       instance ?= new OmniSharpServerInstance()
