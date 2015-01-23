@@ -14,7 +14,7 @@
     "autocomplete-plus-async-plus": "latest",
     "bluebird": "~2.3.2",
     "event-kit": "0.7.2",
-    "find-free-port": "^1.0.1",
+    "freeport": "^1.0.4",
     "fs-plus": "^2.3.1",
     "jquery": "^2.1.1",
     "omnisharp-server-binaries": "latest",

@@ -2,7 +2,7 @@ fs = require('fs')
 spawn = require('child_process').spawn
 BrowserWindow = require('remote').require('browser-window')
 OmnisharpLocation = require('omnisharp-server-binaries')
-findFreePort = require('find-free-port')
+findFreePort = require('freeport')
 
 module.exports =
   class OmniSharpServer
@@ -67,7 +67,10 @@ module.exports =
         useMono = process.platform isnt "win32"
         executablePath = if useMono then "mono" else location
 
-        findFreePort 2000, (err, port) =>
+        findFreePort (err, port) =>
+          if err
+            return console.error "error finding freeport: ", err
+
           @port = port
           serverArguments = [ "-s", atom?.project?.path, "-p", port]
 
