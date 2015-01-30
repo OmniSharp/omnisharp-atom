@@ -11,19 +11,25 @@
   },
   "dependencies": {
     "ansi-to-html": "~0.1.0",
-    "request-promise": "~0.1.2",
     "bluebird": "~2.3.2",
     "event-kit": "0.7.2",
+    "freeport": "^1.0.4",
     "fs-plus": "^2.3.1",
-    "vue": "~0.10.6",
-    "underscore": "~1.7.0",
     "jquery": "^2.1.1",
-    "omnisharp-server-binaries": "latest"
+    "omnisharp-server-binaries": "latest",
+    "request-promise": "~0.1.2",
+    "semver": "^4.2.0",
+    "underscore": "~1.7.0",
+    "vue": "~0.10.6"
   },
   "devDependencies": {
     "coffeelint": "^1.6.0",
     "grunt": "^0.4.5",
     "grunt-coffeelint": "0.0.13",
     "grunt-contrib-watch": "^0.6.1"
+  },
+  "apmPackageDependencies": {
+    "autocomplete-plus": "2.0.2",
+    "language-csharp": "0.3.0"
   }
 }

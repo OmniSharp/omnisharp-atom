@@ -1,7 +1,8 @@
 fs = require('fs')
 spawn = require('child_process').spawn
 BrowserWindow = require('remote').require('browser-window')
-OmnisharpLocation = require('omnisharp-server-binaries');
+OmnisharpLocation = require('omnisharp-server-binaries')
+findFreePort = require('freeport')
 
 module.exports =
   class OmniSharpServer
@@ -65,19 +66,24 @@ module.exports =
       start: () ->
         useMono = process.platform isnt "win32"
         executablePath = if useMono then "mono" else location
-        port = @getPortNumber()
 
-        serverArguments = [ "-s", atom?.project?.path, "-p", port]
+        findFreePort (err, port) =>
+          if err
+            return console.error "error finding freeport: ", err
 
-        if useMono
-          serverArguments.unshift location
+          @port = port
+          serverArguments = [ "-s", atom?.project?.path, "-p", port]
 
-        @child = spawn(executablePath, serverArguments)
-        atom.emit("omni-sharp-server:start", @child.pid)
-        atom.emit "omni-sharp-server:state-change", "loading"
-        @child.stdout.on 'data', @out
-        @child.stderr.on 'data', @err
-        @child.on 'close', @close
+          if useMono
+            serverArguments.unshift location
+
+          @child = spawn(executablePath, serverArguments)
+          atom.emit "omni-sharp-server:start", @child.pid, port
+          atom.emit "omni-sharp-server:state-change", "loading"
+          @child.stdout.on 'data', @out
+          @child.stderr.on 'data', @err
+          @child.on 'close', @close
+          @child.on 'error', @err
 
       out: (data) =>
         s = data.toString()
@@ -92,26 +98,26 @@ module.exports =
 
         atom.emit "omni-sharp-server:out", s
 
-      err: (data) => atom.emit "omni-sharp-server:err", data.toString()
+      err: (data) =>
+        friendlyMessage = @parseError(data)
+        atom.emit "omni-sharp-server:err", friendlyMessage
+
       close: (data) =>
-        atom.emit("omni-sharp-server:close", data)
+        atom.emit "omni-sharp-server:close", data
         atom.emit "omni-sharp-server:state-change", "off"
         @port = null
-
-      getPortNumber: ->
-        if @port
-          return @port
-        windows = BrowserWindow.getAllWindows()
-        currentWindow = BrowserWindow.getFocusedWindow().getProcessId()
-        index = windows.findIndex (w) => w.getProcessId() ==  currentWindow
-        @port = 2000 + index
-        @port
 
       stop: () ->
         @child?.kill "SIGKILL"
         @child = null
 
       toggle: () -> if @child then @stop() else @start()
+
+      parseError: (data) ->
+        message = data.toString()
+        if data.code == 'ENOENT' and data.path == 'mono'
+          message = 'mono could not be found, please ensure it is installed and in your path'
+        message
 
     @get: () ->
       instance ?= new OmniSharpServerInstance()

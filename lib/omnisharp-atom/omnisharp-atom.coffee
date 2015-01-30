@@ -1,6 +1,8 @@
-_ = require "underscore"
+_ = require 'underscore'
 fs = require 'fs-plus'
 {Emitter} = require 'event-kit'
+
+dependencyChecker = require './dependency-checker'
 
 StatusBarView = require './views/status-bar-view'
 DockView = require './views/dock-view'
@@ -11,14 +13,14 @@ Omni = require '../omni-sharp-server/omni'
 module.exports =
 
   activate: (state) ->
-    atom.workspaceView.command "omnisharp-atom:toggle", => @toggle()
+    atom.workspaceView.command 'omnisharp-atom:toggle', => @toggle()
 
-    @emitter = new Emitter
-    @loadFeatures()
-    @features.iterate 'activate', state
-    @subscribeToEvents()
+    if dependencyChecker.findAllDeps(@getPackageDir())
+      @emitter = new Emitter
+      @loadFeatures()
+      @features.iterate 'activate', state
+      @subscribeToEvents()
 
-  # events
   onEditor: (callback) ->
     @emitter.on 'omnisharp-atom-editor', callback
 
@@ -69,7 +71,12 @@ module.exports =
     @outputView = new DockView
 
   toggle: ->
-    OmniSharpServer.get().toggle()
+    dependencyErrors = dependencyChecker.errors()
+
+    if dependencyErrors.length == 0
+      OmniSharpServer.get().toggle()
+    else
+      alert missingDependency for missingDependency in dependencyErrors
 
   deactivate: ->
     @emitter.dispose()
