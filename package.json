@@ -29,7 +29,7 @@
     "grunt-contrib-watch": "^0.6.1"
   },
   "apmPackageDependencies": {
-    "autocomplete-plus": "^2.0.2",
-    "language-csharp": "^0.3.0"
+    "autocomplete-plus": ">=2.0.2",
+    "language-csharp": ">=0.3.0"
   }
 }
