@@ -24,7 +24,7 @@ module.exports =
       else
         @dependencyErrors.push "Omnisharp Atom needs the package `#{packageName}` (version #{version}) to be installed"
 
-    @dependencyErrors.length == 0
+    hasErrors = @dependencyErrors.length == 0
 
   errors: () ->
     @dependencyErrors

@@ -14,12 +14,13 @@ module.exports =
 
   activate: (state) ->
     atom.workspaceView.command 'omnisharp-atom:toggle', => @toggle()
-
     if dependencyChecker.findAllDeps(@getPackageDir())
       @emitter = new Emitter
       @loadFeatures()
       @features.iterate 'activate', state
       @subscribeToEvents()
+    else
+      console.error missingDependency for missingDependency in dependencyChecker.errors()
 
   onEditor: (callback) ->
     @emitter.on 'omnisharp-atom-editor', callback
