@@ -89,7 +89,7 @@ module.exports =
         marker = editor.markBufferRange(range, invalidate: 'never')
         markerL = editor.markBufferRange(range, invalidate: 'never')
 
-        gutter = editor.decorateMarker(marker, type: "gutter", class: "gutter-#{color}")
+        gutter = editor.decorateMarker(marker, type: "line-number", class: "gutter-#{color}")
         line = editor.decorateMarker(markerL, type: "highlight", class: "highlight-#{color}")
         [gutter, line]
 

@@ -110,31 +110,31 @@
 @green-color: @syntax-color-added;
 @blue-color: @syntax-color-renamed;
 
-.highlight-green .region {
-  background-image: url('atom://omnisharp-atom/stylesheets/wiggle-green.png');
-  background-repeat: repeat-x;
-  background-position: bottom;
-  margin-top: 3px;
-}
-.highlight-red .region {
-  background-image: url('atom://omnisharp-atom/stylesheets/wiggle.png');
-  background-repeat: repeat-x;
-  background-position: bottom;
-  margin-top: 3px;
-}
+atom-text-editor::shadow
+{
+  .highlight-green .region {
+    background-image: url('atom://omnisharp-atom/styles/wiggle-green.png');
+    background-repeat: repeat-x;
+    background-position: bottom;
+    margin-top: 3px;
+  }
+  .highlight-red .region {
+    background-image: url('atom://omnisharp-atom/styles/wiggle.png');
+    background-repeat: repeat-x;
+    background-position: bottom;
+    margin-top: 3px;
+  }
 
-.gutter {
   .gutter-red {
-
-  background-color: rgba(red(@background-color-error), green(@background-color-error), blue(@background-color-error), 0.3) !important;
-  background-image: url('atom://omnisharp-atom/stylesheets/wiggle.png');
-  background-repeat: repeat-x;
-  background-position: bottom;
+    background-color: rgba(red(@background-color-error), green(@background-color-error), blue(@background-color-error), 0.3) !important;
+    background-image: url('atom://omnisharp-atom/styles/wiggle.png');
+    background-repeat: repeat-x;
+    background-position: bottom;
   }
   .gutter-green {
-  background-color: rgba(red(@background-color-success), green(@background-color-success), blue(@background-color-success), 0.3) !important;
-  background-image: url('atom://omnisharp-atom/stylesheets/wiggle-green.png');
-  background-repeat: repeat-x;
-  background-position: bottom;
+    background-color: rgba(red(@background-color-success), green(@background-color-success), blue(@background-color-success), 0.3) !important;
+    background-image: url('atom://omnisharp-atom/styles/wiggle-green.png');
+    background-repeat: repeat-x;
+    background-position: bottom;
   }
 }
