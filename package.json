@@ -30,6 +30,6 @@
   },
   "apmPackageDependencies": {
     "autocomplete-plus": "^2.0.2",
-    "language-csharp": "^0.3.0"
+    "language-csharp": ">=0.3.0"
   }
 }
