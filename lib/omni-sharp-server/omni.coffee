@@ -42,8 +42,9 @@ module.exports =
 
       rp
         uri: @_uri path
-        method: "POST"
-        form: _.extend({}, context, d)
+        method: "POST",
+        json: true,
+        body: _.extend({}, context, d)
       .then (data) ->
         try
           parsedData = JSON.parse(data)
