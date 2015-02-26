@@ -74,6 +74,7 @@ module.exports =
       data =
         wordToComplete: wordToComplete
         wantDocumentationForEveryCompletionResult: false
+        wantKind: true
 
       @req "autocomplete", "autocomplete", data
 
