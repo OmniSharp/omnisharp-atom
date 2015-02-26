@@ -7,7 +7,7 @@
 #
 # For more detailed documentation see
 # https://atom.io/docs/latest/advanced/keymaps
-'.workspace':
+'atom-workspace':
   'esc': 'omnisharp-atom:hide'
   'ctrl-alt-o': 'omnisharp-atom:toggle'
   'ctrl-alt-x': 'omnisharp-atom:show-omni'
