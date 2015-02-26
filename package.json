@@ -23,6 +23,13 @@
     "vue": "~0.10.6",
     "atom-space-pen-views": "^2.0.3"
   },
+  "consumedServices": {
+    "status-bar": {
+      "versions": {
+        "^0.58.0": "consumeStatusBar"
+      }
+    }
+  },
   "devDependencies": {
     "coffeelint": "^1.6.0",
     "grunt": "^0.4.5",

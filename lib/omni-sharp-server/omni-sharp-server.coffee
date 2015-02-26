@@ -1,7 +1,7 @@
 fs = require('fs')
 spawn = require('child_process').spawn
 BrowserWindow = require('remote').require('browser-window')
-OmnisharpLocation = require('omnisharp-server-binaries')
+OmnisharpLocation = require('omnisharp-server-roslyn-binaries')
 findFreePort = require('freeport')
 
 module.exports =

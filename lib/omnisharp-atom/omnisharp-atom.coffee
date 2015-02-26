@@ -1,6 +1,7 @@
 _ = require 'underscore'
 fs = require 'fs-plus'
-{Emitter} = require 'event-kit'
+{Emitter} = require 'atom'
+{$} = require 'atom'
 
 dependencyChecker = require './dependency-checker'
 
@@ -13,7 +14,7 @@ Omni = require '../omni-sharp-server/omni'
 module.exports =
 
   activate: (state) ->
-    atom.workspaceView.command 'omnisharp-atom:toggle', => @toggle()
+    atom.commands.add 'atom-workspace', 'omnisharp-atom:toggle', => @toggle()
     if dependencyChecker.findAllDeps(@getPackageDir())
       @emitter = new Emitter
       @loadFeatures()
@@ -53,12 +54,6 @@ module.exports =
       feature._obj[funcName]?.apply feature, args for feature in @features
 
   subscribeToEvents: ->
-    if atom.workspaceView.statusBar
-      @buildStatusBarAndDock()
-
-    @observePackagesActivated = atom.packages.onDidActivateAll () =>
-      @buildStatusBarAndDock()
-
     @observeEditors = atom.workspace.observeTextEditors (editor) =>
       if editor.getGrammar().name is 'C#'
         @emitter.emit 'omnisharp-atom-editor', editor
@@ -85,7 +80,15 @@ module.exports =
     @observePackagesActivated.dispose()
 
     @features = null
-
+    
+    @statusBarView?.destroy()
     @outputView?.destroy()
+    
     @outputView = null
     OmniSharpServer.get().stop()
+    
+  consumeStatusBar: (statusBar) ->
+    @statusBarView = new StatusBarView statusBar
+    @outputView = new DockView
+
+    

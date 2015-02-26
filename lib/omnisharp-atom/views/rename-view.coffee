@@ -1,4 +1,5 @@
-{View, EditorView} = require 'atom-space-pen-views'
+{View} = require 'atom-space-pen-views'
+{EditorView} = require 'atom'
 
 Omni = require '../../omni-sharp-server/omni'
 

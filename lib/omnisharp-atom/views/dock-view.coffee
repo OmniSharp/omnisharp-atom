@@ -11,7 +11,6 @@ OmniOutputPaneView = require './omni-output-pane-view'
 module.exports =
 # Internal: A tool-panel view for the test result output.
 class DockView extends View
-
   # Internal: Initialize test-status output view DOM contents.
   @content: ->
     btn = (view, text) =>
@@ -61,17 +60,21 @@ class DockView extends View
       methods:
         selectPane: ({target}) => @selectPane $(target).attr "pane"
 
-    atom.workspaceView.command "omnisharp-atom:toggle-output", => @toggle()
-    atom.workspaceView.command "omnisharp-atom:hide", => @hide()
-    atom.workspaceView.command "omnisharp-atom:show-errors", => @selectPane "errors"
-    atom.workspaceView.command "omnisharp-atom:show-find", => @selectPane "find"
-    atom.workspaceView.command "omnisharp-atom:show-build", => @selectPane "build"
-    atom.workspaceView.command "omnisharp-atom:show-omni", => @selectPane "omni"
+    
+    atom.commands.add 'atom-workspace', "omnisharp-atom:toggle-output", => @toggle()
+    atom.commands.add 'atom-workspace', "omnisharp-atom:hide", => @hide()
+    atom.commands.add 'atom-workspace', "omnisharp-atom:show-errors", => @selectPane "errors"
+    atom.commands.add 'atom-workspace', "omnisharp-atom:show-find", => @selectPane "find"
+    atom.commands.add 'atom-workspace', "omnisharp-atom:show-build", => @selectPane "build"
+    atom.commands.add 'atom-workspace', "omnisharp-atom:show-omni", => @selectPane "omni"
 
     @on 'core:cancel core:close', =>
       @hide()
 
     @on 'mousedown', '.omnisharp-atom-output-resizer', (e) => @resizeStarted(e)
+    
+    #init the panel, but hide it
+    @panel = atom.workspace.addBottomPanel(item: this, visible: false)
 
   selectPane: (pane) =>
     @vm.selected = pane
@@ -102,9 +105,8 @@ class DockView extends View
     @detach()
 
 
-  show: -> atom.workspaceView.prependToBottom(this) unless @hasParent()
-  hide: -> @detach()
-  # Internal: Toggle the visibilty of the test-status output view.
-  #
-  # Returns nothing.
-  toggle: -> if @hasParent() then @hide() else @show()
+  hide: -> 
+    @panel.hide()
+    
+  toggle: -> 
+    if @panel.visible then @panel.hide() else @panel.show()
