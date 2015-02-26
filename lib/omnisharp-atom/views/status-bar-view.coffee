@@ -1,4 +1,4 @@
-{View} = require 'atom'
+{View} = require 'atom-space-pen-views'
 Vue = require 'vue'
 OmniSharpServer = require '../../omni-sharp-server/omni-sharp-server'
 

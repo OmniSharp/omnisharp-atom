@@ -20,7 +20,8 @@
     "request-promise": "~0.1.2",
     "semver": "^4.2.0",
     "underscore": "~1.7.0",
-    "vue": "~0.10.6"
+    "vue": "~0.10.6",
+    "atom-space-pen-views": "^2.0.3"
   },
   "devDependencies": {
     "coffeelint": "^1.6.0",
