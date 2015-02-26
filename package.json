@@ -16,7 +16,7 @@
     "freeport": "^1.0.4",
     "fs-plus": "^2.3.1",
     "jquery": "^2.1.1",
-    "omnisharp-server-binaries": "latest",
+    "omnisharp-server-roslyn-binaries": "latest",
     "request-promise": "~0.1.2",
     "semver": "^4.2.0",
     "underscore": "~1.7.0",
