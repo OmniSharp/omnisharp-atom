@@ -3,7 +3,7 @@ Omni = require '../../../omni-sharp-server/omni'
 module.exports =
   class CompletionProvider
     selector: '.source.cs'
-    blacklist: '.comment'
+    blacklist: 'source.cs .comment'
     requestHandler: (options) ->
       return new Promise (resolve) ->
         wordRegex = /[A-Z_0-9]+/i

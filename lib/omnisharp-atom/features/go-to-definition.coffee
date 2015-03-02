@@ -6,16 +6,17 @@ module.exports =
 
     goToDefinition: ->
       if OmniSharpServer.vm.isReady
-        @navigateToWord = atom.workspace.getActiveEditor()?.getWordUnderCursor()
+        @navigateToWord = atom.workspace.getActiveTextEditor()?.getWordUnderCursor()
         Omni.goToDefinition()
 
     activate: =>
       goToDef = @goToDefinition
-      atom.workspaceView.eachEditorView (editorView) ->
-        editorView.on "symbols-view:go-to-declaration", () ->
+
+      @disposable = atom.workspace.observeTextEditors (editor) ->
+        editor.on "symbols-view:go-to-declaration", () -> #this doesn't work
           goToDef()
 
-      atom.workspaceView.command "omnisharp-atom:go-to-definition", () ->
+      atom.commands.add "atom-text-editor", "omnisharp-atom:go-to-definition", () ->
         goToDef()
 
       atom.on "omni:navigate-to", (position) =>
@@ -27,3 +28,6 @@ module.exports =
             ]
         else
           atom.emit "omnisharp-atom:error", "Can't navigate to '#{ @navigateToWord }'"
+
+    deactivate: =>
+        @disposable.dispose()

@@ -30,6 +30,14 @@
       }
     }
   },
+  "providedServices": {
+    "autocomplete.provider": {
+      "description": "A C# Roslyn powered autocomplete-plus provider.",
+      "versions": {
+        "1.0.0": "provideAutocomplete"
+      }
+    }
+  },
   "devDependencies": {
     "coffeelint": "^1.6.0",
     "grunt": "^0.4.5",
