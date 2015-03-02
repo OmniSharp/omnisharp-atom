@@ -58,7 +58,10 @@ module.exports =
 
     drawDecorations: ({QuickFixes}) ->
       #short out if we have no quickfixes
-      return if QuickFixes.length is 0
+      if QuickFixes.length is 0
+        #todo: we have no errors, but we don't know what editor we're on
+        #so we have no reference as to what editor to clear
+        return
 
       quickFixPath = _.first(_.pluck(QuickFixes, "FileName"));
 
