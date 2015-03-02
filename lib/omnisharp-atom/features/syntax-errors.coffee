@@ -29,7 +29,6 @@ module.exports =
     detectSyntaxErrorsIn: (editor) =>
       @decorations[editor.id] = [];
       buffer = editor.getBuffer()
-
       buffer.on 'changed', _.debounce(Omni.codecheck, 200)
       atom.on "omni:quick-fixes", _.bind(@drawDecorations, this)
 
@@ -58,10 +57,14 @@ module.exports =
       end: left + 1 + right
 
     drawDecorations: ({QuickFixes}) ->
+      #short out if we have no quickfixes
+      return if QuickFixes.length is 0
+
       quickFixPath = _.first(_.pluck(QuickFixes, "FileName"));
 
       editor = _.find @editors, (editor) ->
         editor.buffer.file.path == quickFixPath
+
 
       path = editor?.buffer.file.path
 

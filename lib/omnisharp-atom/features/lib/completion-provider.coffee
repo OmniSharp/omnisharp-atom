@@ -31,8 +31,9 @@ module.exports =
             resolve(suggestions)
 
     renderLabel = (item) ->
-      if item.Kind is 'NamedType' or item.Kind is 'Parameter' then return
-
+      # we don't have icons for this type of comment
+      if item.Kind is 'NamedType' or item.Kind is 'Parameter' or item.Kind is 'Local' then return
+      #todo: move additional styling to css
       return '<img height="16px" width="16px" src="atom://omnisharp-atom/styles/icons/autocomplete_' + item.Kind.toLowerCase()  + '@3x.png" /> '
 
     htmlEscape = (str) ->
