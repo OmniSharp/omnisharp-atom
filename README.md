@@ -7,14 +7,12 @@
 
 From the packages settings inside Atom:
 
-* install "Language C#" package
 * install "Autocomplete plus" package first!
 * install "Omnisharp Atom" package
 
 From the commandline:
 
 ```
-apm install language-csharp
 apm install autocomplete-plus
 apm install omnisharp-atom
 ```
