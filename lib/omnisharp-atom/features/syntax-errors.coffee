@@ -2,6 +2,7 @@ _ = require 'underscore'
 OmniSharpServer = require '../../omni-sharp-server/omni-sharp-server'
 Omni = require '../../omni-sharp-server/omni'
 {Range} = require 'atom'
+rp = require "request-promise"
 
 module.exports =
   class SyntaxErrors
@@ -12,10 +13,14 @@ module.exports =
       @editors = []
 
     activate: =>
+
       @editorSubscription = @atomSharper.onEditor (editor) =>
         @detectSyntaxErrorsIn editor
 
       atom.on 'omni-sharp-server:state-change-complete', @codeCheckAllExistingEditors
+
+      @atomSharper.onEditor (editor) =>
+        @registerEventHandlerOnEditor editor
 
       # todo - remove emit here and subscribe directly from error-pane-view
       @editorDestroyedSubscription = @atomSharper.onEditorDestroyed (filePath) =>
@@ -26,15 +31,25 @@ module.exports =
 
         atom.emit 'omnisharp-atom:clear-syntax-errors', filePath
 
+    registerEventHandlerOnEditor: (editor) =>
+      #what's the current editor?
+      console.log "made it"
+      textBuffer = editor.getBuffer()
+      textBuffer.onDidStopChanging =>
+        Omni.codecheck(null, editor).then (data) ->
+          console.log data
+          #@drawDecorations
+
+
     detectSyntaxErrorsIn: (editor) =>
-      @decorations[editor.id] = [];
-      buffer = editor.getBuffer()
-      buffer.on 'changed', _.debounce(Omni.codecheck, 200)
-      atom.on "omni:quick-fixes", _.bind(@drawDecorations, this)
+      #@decorations[editor.id] = [];
+      #buffer = editor.getBuffer()
+      #buffer.on 'changed', _.debounce(Omni.codecheck, 200)
+      #atom.on "omni:quick-fixes", _.bind(@drawDecorations, this)
 
-      Omni.codecheck null, editor
+      #Omni.codecheck null, editor
 
-      @editors.push editor
+      #@editors.push editor
 
     codeCheckAllExistingEditors: (state) =>
       if state == 'ready'
@@ -56,7 +71,7 @@ module.exports =
       start: left + 1
       end: left + 1 + right
 
-    drawDecorations: ({QuickFixes}) ->
+    drawDecorations: ({QuickFixes}, editor) ->
       #short out if we have no quickfixes
       if QuickFixes.length is 0
         #todo: we have no errors, but we don't know what editor we're on
@@ -65,8 +80,8 @@ module.exports =
 
       quickFixPath = _.first(_.pluck(QuickFixes, "FileName"));
 
-      editor = _.find @editors, (editor) ->
-        editor.buffer.file.path == quickFixPath
+      #editor = _.find @editors, (editor) ->
+    #    editor.buffer.file.path == quickFixPath
 
 
       path = editor?.buffer.file.path
