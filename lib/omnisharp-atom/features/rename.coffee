@@ -5,10 +5,10 @@ Omni = require '../../omni-sharp-server/omni'
 module.exports =
   class Rename
     renameView: null
-    
+
     activate: =>
       @renameView = new RenameView()
-      atom.workspaceView.command 'omnisharp-atom:rename', => @rename()
+      atom.commands.add 'atom-text-editor', 'omnisharp-atom:rename', => @rename()
 
       atom.on 'omnisharp-atom:rename:exec', (newName) =>
         Omni.rename newName
@@ -17,8 +17,8 @@ module.exports =
         @applyChanges changes.Changes
 
     rename: ->
-      wordToRename = atom.workspace.getActiveEditor()?.getWordUnderCursor()
-      atom.workspaceView.append(@renameView)
+      wordToRename = atom.workspace.getActiveTextEditor()?.getWordUnderCursor()
+      atom.workspace.addTopPanel(item: @renameView)
       @renameView.configure wordToRename
 
     applyChanges: (changes) ->

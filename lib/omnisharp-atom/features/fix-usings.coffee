@@ -4,5 +4,5 @@ module.exports =
   class FixUsings
 
     activate: =>
-      atom.workspaceView.command "omnisharp-atom:fix-usings", ->
+      atom.commands.add 'atom-workspace', "omnisharp-atom:fix-usings", ->
         Omni.fixUsings()

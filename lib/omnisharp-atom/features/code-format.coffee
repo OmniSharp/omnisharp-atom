@@ -4,7 +4,7 @@ module.exports =
   class CodeFormat
 
     activate: =>
-      atom.workspaceView.command "omnisharp-atom:code-format", ->
+      atom.commands.add 'atom-workspace', 'omnisharp-atom:code-format', ->
         Omni.codeFormat()
 
       atom.on "omni:code-format", (d) =>

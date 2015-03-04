@@ -1,4 +1,4 @@
-{View} = require 'atom'
+{View} = require 'atom-space-pen-views'
 Vue = require 'vue'
 OmniSharpServer = require '../../omni-sharp-server/omni-sharp-server'
 
@@ -15,17 +15,18 @@ class StatusBarView extends View
       @progress class: 'inline-block', 'v-class': 'hide: isNotLoading'
 
   # Internal: Initialize the status bar view and event handlers.
-  initialize: ->
+  initialize: (statusBar) ->
 
     @vm = new Vue
       el: this[0]
       data: OmniSharpServer.vm
       methods:
         toggle: @toggle
-    atom.workspaceView.statusBar.prependLeft(this)
+        
+    statusBar.addLeftTile(item: this, priority: -1000);
 
   toggle: =>
-    atom.workspaceView.trigger 'omnisharp-atom:toggle-output'
+    atom.commands.dispatch(atom.views.getView(atom.workspace), 'omnisharp-atom:toggle-output')
     @vm.isOpen = !@vm.isOpen
 
   # Returns nothing.
