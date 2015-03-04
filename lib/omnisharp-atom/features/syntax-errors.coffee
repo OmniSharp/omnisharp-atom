@@ -27,8 +27,6 @@ module.exports =
       textBuffer = editor.getBuffer()
       textBuffer.onDidStopChanging =>
         return if OmniSharpServer.vm.isOff
-
-        #todo: don't fire this if omnisharp isn't loaded.
         Omni.codecheck(null, editor).then (data) =>
           @drawDecorations data, editor
 
