@@ -19,7 +19,7 @@ module.exports =
 
       @editorDestroyedSubscription = @atomSharper.onEditorDestroyed (filePath) =>
         #todo: what do we need to do with regards to cleanup? Should we be destroying
-        #all markers?
+        #all markers? We need the actual editor anyway, not the filePath
 
 
     registerEventHandlerOnEditor: (editor) =>

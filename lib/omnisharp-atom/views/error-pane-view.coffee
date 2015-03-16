@@ -43,8 +43,8 @@ class ErrorPaneView extends View
       methods:
         gotoError: ({targetVM}) -> atom.emit "omni:navigate-to", targetVM.$data
 
-    atom.on "omni:quick-fixes", (data) =>
-      @displayQuickFixes data.QuickFixes
+    atom.on "omni:quick-fixes", (data, editor) =>
+      @displayQuickFixes data.QuickFixes, editor
 
     atom.on 'omnisharp-atom:clear-syntax-errors', (filePath) =>
       @removeErrorsFor filePath
@@ -57,8 +57,8 @@ class ErrorPaneView extends View
         @vm.errors.splice existingErrorsCount, 1
 
 
-  displayQuickFixes: (quickFixes) =>
-    @removeErrorsFor quickFixes[0]?.FileName
+  displayQuickFixes: (quickFixes, editor) =>
+    @removeErrorsFor editor.buffer.file.path
     @vm.errors.unshift quickFix for quickFix in quickFixes
 
   destroy: ->

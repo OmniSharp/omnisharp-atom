@@ -51,7 +51,7 @@ module.exports =
         catch
           parsedData = data
         finally
-          atom.emit "omni:#{event}", parsedData
+          atom.emit "omni:#{event}",  parsedData, editor
 
         parsedData
 
