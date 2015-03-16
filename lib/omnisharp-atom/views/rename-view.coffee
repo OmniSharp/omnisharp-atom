@@ -1,4 +1,5 @@
-{View, EditorView} = require 'atom'
+{View} = require 'atom-space-pen-views'
+{TextEditorView} = require 'atom-space-pen-views'
 
 Omni = require '../../omni-sharp-server/omni'
 
@@ -9,22 +10,22 @@ module.exports =
     @content: ->
       @div class: 'rename overlay from-top', =>
         @p outlet: 'message', class: 'icon icon-diff-renamed', 'Rename to:'
-        @subview 'miniEditor', new EditorView({mini: true})
+        @subview 'miniEditor', new TextEditorView({mini: true})
 
     initialize: ->
       @on 'core:confirm', => @rename()
       @on 'core:cancel', => @destroy()
 
     configure: (wordToRename) ->
-      @miniEditor.getEditor().setText wordToRename
-      @miniEditor.getEditor().selectAll()
+      @miniEditor.setText wordToRename
+      #@miniEditor.selectAll()
       @miniEditor.focus()
 
     rename: ->
-      Omni.rename @miniEditor.getEditor().getText()
+      Omni.rename @miniEditor.getText()
       @destroy()
 
     destroy: ->
-      @miniEditor.getEditor().setText ''
+      @miniEditor.setText ''
       @detach()
-      atom.workspaceView.focus()
+      #atom.workspaceView.focus()

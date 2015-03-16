@@ -16,11 +16,27 @@
     "freeport": "^1.0.4",
     "fs-plus": "^2.3.1",
     "jquery": "^2.1.1",
-    "omnisharp-server-binaries": "latest",
+    "omnisharp-server-roslyn-binaries": "latest",
     "request-promise": "~0.1.2",
     "semver": "^4.2.0",
     "underscore": "~1.7.0",
-    "vue": "~0.10.6"
+    "vue": "~0.10.6",
+    "atom-space-pen-views": "^2.0.3"
+  },
+  "consumedServices": {
+    "status-bar": {
+      "versions": {
+        "^0.58.0": "consumeStatusBar"
+      }
+    }
+  },
+  "providedServices": {
+    "autocomplete.provider": {
+      "description": "A C# Roslyn powered autocomplete-plus provider.",
+      "versions": {
+        "1.0.0": "provideAutocomplete"
+      }
+    }
   },
   "devDependencies": {
     "coffeelint": "^1.6.0",

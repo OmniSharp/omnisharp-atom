@@ -2,6 +2,7 @@ _ = require 'underscore'
 OmniSharpServer = require '../../omni-sharp-server/omni-sharp-server'
 Omni = require '../../omni-sharp-server/omni'
 {Range} = require 'atom'
+rp = require "request-promise"
 
 module.exports =
   class SyntaxErrors
@@ -9,37 +10,25 @@ module.exports =
     constructor: (atomSharper) ->
       @atomSharper = atomSharper
       @decorations = {}
-      @editors = []
+
 
     activate: =>
-      @editorSubscription = @atomSharper.onEditor (editor) =>
-        @detectSyntaxErrorsIn editor
 
-      atom.on 'omni-sharp-server:state-change-complete', @codeCheckAllExistingEditors
+      @atomSharper.onEditor (editor) =>
+        @registerEventHandlerOnEditor editor
 
-      # todo - remove emit here and subscribe directly from error-pane-view
       @editorDestroyedSubscription = @atomSharper.onEditorDestroyed (filePath) =>
-        editorsCount = @editors.length
-        while editorsCount--
-          if @editors[editorsCount].buffer.file.path == filePath
-            @editors.splice editorsCount, 1
+        #todo: what do we need to do with regards to cleanup? Should we be destroying
+        #all markers?
 
-        atom.emit 'omnisharp-atom:clear-syntax-errors', filePath
 
-    detectSyntaxErrorsIn: (editor) =>
-      @decorations[editor.id] = [];
-      buffer = editor.getBuffer()
+    registerEventHandlerOnEditor: (editor) =>
 
-      buffer.on 'changed', _.debounce(Omni.codecheck, 200)
-      atom.on "omni:quick-fixes", _.bind(@drawDecorations, this)
-
-      Omni.codecheck null, editor
-
-      @editors.push editor
-
-    codeCheckAllExistingEditors: (state) =>
-      if state == 'ready'
-        Omni.codecheck null, editor for editor in @editors
+      textBuffer = editor.getBuffer()
+      textBuffer.onDidStopChanging =>
+        return if OmniSharpServer.vm.isOff
+        Omni.codecheck(null, editor).then (data) =>
+          @drawDecorations data, editor
 
     getWordAt: (str, pos) =>
       if str == undefined
@@ -57,17 +46,18 @@ module.exports =
       start: left + 1
       end: left + 1 + right
 
-    drawDecorations: ({QuickFixes}) ->
-      quickFixPath = _.first(_.pluck(QuickFixes, "FileName"));
 
-      editor = _.find @editors, (editor) ->
-        editor.buffer.file.path == quickFixPath
-
-      path = editor?.buffer.file.path
-
-      return if path != quickFixPath
-
+    destroyDecorationsInEditor: (editor) =>
       _.each @decorations[editor.id], (decoration) => decoration.getMarker().destroy()
+
+
+    drawDecorations: ({QuickFixes}, editor) ->
+
+      #clear all existing decorations for this editor.
+      @destroyDecorationsInEditor editor
+      #short out if we have no quickfixes
+      if QuickFixes.length is 0
+        return
 
       ranges = _.map QuickFixes, (error) =>
         line = error.Line - 1

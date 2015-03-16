@@ -1,5 +1,5 @@
-{View}  = require 'atom'
-{$} = require 'atom'
+{View}  = require 'atom-space-pen-views'
+{$} = require 'atom-space-pen-views'
 Convert = require 'ansi-to-html'
 Vue = require 'vue'
 _ = require 'underscore'
