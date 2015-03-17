@@ -42,19 +42,20 @@ class LinterCSharp extends Linter
 
         Omni.codecheck(null, @editor).then (data) =>
 
-          console.log(data)
-
           errors = _.map data.QuickFixes, (error) =>
             line = error.Line-1
             column = error.Column-1
             text = @editor.lineTextForBufferRow line
             {start, end} = @getWordAt text, column
+            level = error.LogLevel.toLowerCase()
+            if level == "hidden"
+              level = "info"
 
             return {
                 message: error.Text,
                 line: line,
                 col: column,
-                level: error.LogLevel.toLowerCase(),
+                level: level,
                 range: new Rng([line, start], [line, end]),
                 linter: @linterName
             }
