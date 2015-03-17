@@ -55,7 +55,8 @@ class LinterCSharp extends Linter
                 line: line,
                 col: column,
                 level: error.LogLevel.toLowerCase(),
-                range: new Rng([line, start], [line, end])
+                range: new Rng([line, start], [line, end]),
+                linter: "CSharp"
             }
 
 
