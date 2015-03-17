@@ -23,7 +23,7 @@ module.exports =
 
 
     registerEventHandlerOnEditor: (editor) =>
-
+      return
       textBuffer = editor.getBuffer()
       textBuffer.onDidStopChanging =>
         return if OmniSharpServer.vm.isOff
