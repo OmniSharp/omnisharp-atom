@@ -9,7 +9,7 @@ class LinterCSharp extends Linter
 
     @syntax: ['source.cs']
 
-    linterName: "CSharp"
+    linterName: "C#"
 
 
 
@@ -56,7 +56,7 @@ class LinterCSharp extends Linter
                 col: column,
                 level: error.LogLevel.toLowerCase(),
                 range: new Rng([line, start], [line, end]),
-                linter: "CSharp"
+                linter: @linterName
             }
 
 
