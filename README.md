@@ -16,6 +16,7 @@ From the commandline:
 ```
 apm install language-csharp
 apm install autocomplete-plus
+apm install linter
 apm install omnisharp-atom
 ```
 
