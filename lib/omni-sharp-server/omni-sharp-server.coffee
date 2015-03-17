@@ -64,7 +64,7 @@ module.exports =
       location = OmnisharpLocation
 
       start: () ->
-        useMono = process.platform isnt "win32"
+        useMono = false #process.platform isnt "win32"
         executablePath = if useMono then "mono" else location
 
         findFreePort (err, port) =>
