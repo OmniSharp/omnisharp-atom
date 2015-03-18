@@ -63,10 +63,13 @@
 .omnisharp-atom-output {
   overflow-y: scroll;
   height:150px;
+  font-size:12px;
   position:relative;
   .error-table {
     width:100%;
     line-height: 1.42;
+    color: @text-color-highlight;
+
     th {
       .border-flip(@tool-panel-background-color);
       border-top: 1px solid transparent;
@@ -75,6 +78,12 @@
     }
     tr.selected {
       background-color: @background-color-selected;
+    }
+    tr.Warning {
+      color: @text-color-warning;
+    }
+    tr.Error {
+      color: @text-color-error;
     }
     tr:hover {
       background-color: @background-color-selected;

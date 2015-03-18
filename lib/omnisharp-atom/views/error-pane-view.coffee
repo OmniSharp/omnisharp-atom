@@ -28,6 +28,7 @@ class ErrorPaneView extends View
           @tr
             'v-repeat': 'errors',
             'v-on': 'click: gotoError',
+            'class': '{{LogLevel}}',
             data='{{$index}}',
             =>
               @td '{{Line}}'

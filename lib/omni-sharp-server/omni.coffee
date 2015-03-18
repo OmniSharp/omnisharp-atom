@@ -51,6 +51,7 @@ module.exports =
           parsedData = data
         finally
           atom.emit "omni:#{event}", parsedData
+          console.log "omni:#{event}", parsedData
 
         parsedData
 
