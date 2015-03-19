@@ -8,6 +8,7 @@
 From the packages settings inside Atom:
 
 * install "Language C#" package
+* install "Linter" package
 * install "Autocomplete plus" package first!
 * install "Omnisharp Atom" package
 
