@@ -9,6 +9,8 @@
   "engines": {
     "atom": ">0.50.0"
   },
+  "linter-package": true,
+  "linter-implementation": "omnisharp-atom/linter",
   "dependencies": {
     "ansi-to-html": "~0.1.0",
     "bluebird": "~2.3.2",

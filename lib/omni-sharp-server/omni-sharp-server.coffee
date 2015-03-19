@@ -64,7 +64,7 @@ module.exports =
       location = OmnisharpLocation
 
       start: () ->
-        useMono = process.platform isnt "win32"
+        useMono = false #process.platform isnt "win32"
         executablePath = if useMono then "mono" else location
 
         findFreePort (err, port) =>
@@ -72,7 +72,7 @@ module.exports =
             return console.error "error finding freeport: ", err
 
           @port = port
-          serverArguments = [ "-s", atom?.project?.getPaths()[0], "-p", port]
+          serverArguments = [ "-s", "#{atom?.project?.getPaths()[0]}", "-p", port]
 
           if useMono
             serverArguments.unshift location
