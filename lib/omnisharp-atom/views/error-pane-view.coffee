@@ -59,6 +59,10 @@ class ErrorPaneView extends View
 
 
   displayQuickFixes: (quickFixes) =>
+    if quickFixes.length == 0
+      @vm.errors = [];
+      return
+
     @removeErrorsFor quickFixes[0]?.FileName
     @vm.errors.unshift quickFix for quickFix in quickFixes
 
