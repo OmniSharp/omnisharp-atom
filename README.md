@@ -26,7 +26,7 @@ When the flame icon in the bottom left corner turns green, the server has starte
 
 # Features
 
-- `ctrl-F12` Go to definition
+- `alt-F12` Go to definition
 - `shift-F12` Find usages
 - Completions appear as you type. To select an item, press the TAB key.
 - Editor addornments (squigglies) appear for errors and code hints as you type.
