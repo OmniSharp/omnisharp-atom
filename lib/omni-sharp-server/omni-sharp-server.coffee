@@ -65,7 +65,7 @@ module.exports =
 
       start: () ->
         useMono = process.platform isnt "win32"
-        executablePath = if useMono then "mono" else location
+        executablePath = location
 
         findFreePort (err, port) =>
           if err
@@ -73,9 +73,6 @@ module.exports =
 
           @port = port
           serverArguments = [ "-s", atom?.project?.getPaths()[0], "-p", port]
-
-          if useMono
-            serverArguments.unshift location
 
           @child = spawn(executablePath, serverArguments)
           atom.emit "omni-sharp-server:start", @child.pid, port
