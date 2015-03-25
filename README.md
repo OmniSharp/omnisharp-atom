@@ -7,7 +7,6 @@
 
 From the packages settings inside Atom:
 
-* install "Language C#" package
 * install "Linter" package
 * install "Autocomplete plus" package first!
 * install "Omnisharp Atom" package
@@ -15,7 +14,6 @@ From the packages settings inside Atom:
 From the commandline:
 
 ```
-apm install language-csharp
 apm install autocomplete-plus
 apm install linter
 apm install omnisharp-atom
@@ -30,7 +28,7 @@ When the flame icon in the bottom left corner turns green, the server has starte
 
 # Features
 
-- `ctrl-F12` Go to definition
+- `alt-F12` Go to definition
 - `shift-F12` Find usages
 - Completions appear as you type. To select an item, press the TAB key.
 - Editor addornments (squigglies) appear for errors and code hints as you type.
