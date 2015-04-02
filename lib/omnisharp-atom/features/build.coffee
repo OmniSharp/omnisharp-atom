@@ -10,7 +10,7 @@ module.exports =
         Omni.build()
 
       atom.on "omni:build-command", (command) =>
-        pattern = /[\w\/:=_\-\.]+|"[\w\s\/:=_\-\.]*"/g
+        pattern = /[\w\\\/:=_\-\.]+|"[\w\\\s\/:=_\-\.]*"/g
         args = command.match(pattern)
         buildCommand = args.shift()
 
