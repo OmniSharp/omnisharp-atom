@@ -22,8 +22,7 @@ class StatusBarView extends View
       data: OmniSharpServer.vm
       methods:
         toggle: @toggle
-        
-    statusBar.addLeftTile(item: this, priority: -1000);
+    @statusBarTitle = statusBar.addLeftTile(item: this, priority: -1000);
 
   toggle: =>
     atom.commands.dispatch(atom.views.getView(atom.workspace), 'omnisharp-atom:toggle-output')
@@ -32,3 +31,5 @@ class StatusBarView extends View
   # Returns nothing.
   destroy: ->
     @detach()
+    @statusBarTile?.destroy()
+    @statusBarTile = null
