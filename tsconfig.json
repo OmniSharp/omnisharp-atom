@@ -1,0 +1,51 @@
+{
+    "version": "1.4.1",
+    "compilerOptions": {
+        "target": "es5",
+        "module": "commonjs",
+        "declaration": false,
+        "noImplicitAny": false,
+        "removeComments": true,
+        "noLib": false
+    },
+    "formatCodeOptions": {
+        "indentSize": 4,
+        "tabSize": 4,
+        "newLineCharacter": "\r\n",
+        "convertTabsToSpaces": true,
+        "insertSpaceAfterCommaDelimiter": true,
+        "insertSpaceAfterSemicolonInForStatements": true,
+        "insertSpaceBeforeAndAfterBinaryOperators": true,
+        "insertSpaceAfterKeywordsInControlFlowStatements": true,
+        "insertSpaceAfterFunctionKeywordForAnonymousFunctions": false,
+        "insertSpaceAfterOpeningAndBeforeClosingNonemptyParenthesis": false,
+        "placeOpenBraceOnNewLineForFunctions": false,
+        "placeOpenBraceOnNewLineForControlBlocks": false
+    },
+    "compileOnSave": false,
+    "filesGlob": [
+        "./**/*.ts",
+        "!./node_modules/**/*.ts"
+    ],
+    "files": [
+        "./lib/omni-sharp-server/omni-sharp-server.ts",
+        "./lib/omni-sharp-server/omni.ts",
+        "./lib/omnisharp-atom/dependency-checker.ts",
+        "./lib/omnisharp-atom/omnisharp-atom.ts",
+        "./lib/typings.d.ts",
+        "./typings/atom/atom.d.ts",
+        "./typings/bluebird/bluebird.d.ts",
+        "./typings/emissary/emissary.d.ts",
+        "./typings/jquery/jquery.d.ts",
+        "./typings/lodash/lodash.d.ts",
+        "./typings/mixto/mixto.d.ts",
+        "./typings/node/node.d.ts",
+        "./typings/pathwatcher/pathwatcher.d.ts",
+        "./typings/q/Q.d.ts",
+        "./typings/semver/semver.d.ts",
+        "./typings/space-pen/space-pen.d.ts",
+        "./typings/status-bar/status-bar.d.ts",
+        "./typings/text-buffer/text-buffer.d.ts",
+        "./typings/tsd.d.ts"
+    ]
+}
