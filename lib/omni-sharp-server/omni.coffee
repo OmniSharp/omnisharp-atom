@@ -1,7 +1,7 @@
 OmniSharpServer = require './omni-sharp-server'
 rp = require "request-promise"
 Url = require "url"
-_ = require "underscore"
+_ = require "lodash"
 Promise = require("bluebird");
 
 module.exports =
