@@ -31,6 +31,7 @@
         "./lib/omni-sharp-server/omni-sharp-server.ts",
         "./lib/omni-sharp-server/omni.ts",
         "./lib/omnisharp-atom/dependency-checker.ts",
+        "./lib/omnisharp-atom/features/lib/completion-provider.ts",
         "./lib/omnisharp-atom/omnisharp-atom.ts",
         "./lib/typings.d.ts",
         "./typings/atom/atom.d.ts",

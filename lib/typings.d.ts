@@ -62,4 +62,11 @@ declare module OmniSharp {
         previousState: string;
         iconText: string;
     }
+
+    interface ICompletionResult {
+        word: string;
+        prefix: string;
+        renderLabelAsHtml: boolean;
+        label: string;
+    }
 }

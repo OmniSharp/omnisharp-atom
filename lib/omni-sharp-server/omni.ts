@@ -3,7 +3,7 @@ import Url = require("url")
 import _ = require("lodash")
 import Promise = require("bluebird")
 // TODO: Make .d.ts and submit to DefinitelyTyped?
-var request = require("request-promise")
+var request : (options:any) => Promise<any> = require("request-promise")
 
 class Omni {
     public static getEditorContext(editor: AtomCore.IEditor) {
@@ -34,7 +34,7 @@ class Omni {
         })
     }
 
-    public static req(path: string, event: string, d?: any, editor?: AtomCore.IEditor) {
+    public static req(path: string, event: string, d?: any, editor?: AtomCore.IEditor) : Promise<any> {
         return Omni._req(path, event, d, editor)
             .catch(data => {
             var ref;
@@ -44,7 +44,7 @@ class Omni {
         })
     }
 
-    private static _req(path: string, event: string, d, editor: AtomCore.IEditor) {
+    private static _req(path: string, event: string, d, editor: AtomCore.IEditor) : Promise<any> {
         if (OmniSharpServer.vm.isNotReady) {
             return Promise.reject("omnisharp not ready");
         }
