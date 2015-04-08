@@ -6,11 +6,11 @@ _ = require 'lodash'
 OmniSharpServer = require '../../omni-sharp-server/omni-sharp-server'
 
 module.exports =
-# Internal: A tool-panel view for the test result output.
-class ErrorPaneView extends View
+# Internal: A tool-panel view for find usages/implementations
+class FindPaneView extends View
 
   @content: ->
-    @div class: 'error-output-pane', outlet: 'atomSharpErrorPane', =>
+    @div class: 'error-output-pane', outlet: 'atomSharpFindPane', =>
       @ul class: 'background-message centered', 'v-class': 'hide: isLoadingOrReady', =>
         @li =>
           @span 'Omnisharp server is turned off'
@@ -26,9 +26,8 @@ class ErrorPaneView extends View
           @th 'filename'
         @tbody =>
           @tr
-            'v-repeat': 'errors',
-            'v-on': 'click: gotoError',
-            'class': '{{LogLevel}}',
+            'v-repeat': 'usages',
+            'v-on': 'click: gotoUsage',
             data='{{$index}}',
             =>
               @td '{{Line}}'
@@ -36,35 +35,15 @@ class ErrorPaneView extends View
               @td '{{Text}}'
               @td '{{FileName}}'
 
-  initialize: =>
+  initialize: ->
     @vm = new Vue
       el: this[0]
       data: _.extend OmniSharpServer.vm,
-        errors: []
+        usages: []
       methods:
-        gotoError: ({targetVM}) -> atom.emit "omni:navigate-to", targetVM.$data
+        gotoUsage: ({targetVM}) -> atom.emit "omni:navigate-to", targetVM.$data
 
-    atom.on "omni:quick-fixes", (data) =>
-      @displayQuickFixes data.QuickFixes
-
-    atom.on 'omnisharp-atom:clear-syntax-errors', (filePath) =>
-      @removeErrorsFor filePath
-
-  removeErrorsFor: (filePath) =>
-    existingErrorsCount = @vm.errors.length
-
-    while existingErrorsCount--
-      if @vm.errors[existingErrorsCount].FileName == filePath
-        @vm.errors.splice existingErrorsCount, 1
-
-
-  displayQuickFixes: (quickFixes) =>
-    if quickFixes.length == 0
-      @vm.errors = [];
-      return
-
-    @removeErrorsFor quickFixes[0]?.FileName
-    @vm.errors.unshift quickFix for quickFix in quickFixes
+    atom.on "omni:find-usages", (data) => @vm.usages = data.QuickFixes
 
   destroy: ->
     @detach()
