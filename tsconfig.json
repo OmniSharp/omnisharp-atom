@@ -33,6 +33,8 @@
         "./lib/omnisharp-atom/dependency-checker.ts",
         "./lib/omnisharp-atom/features/lib/completion-provider.ts",
         "./lib/omnisharp-atom/omnisharp-atom.ts",
+        "./lib/omnisharp-atom/views/dock-view.ts",
+        "./lib/omnisharp-atom/views/status-bar-view.ts",
         "./lib/typings.d.ts",
         "./typings/atom/atom.d.ts",
         "./typings/bluebird/bluebird.d.ts",
@@ -47,6 +49,7 @@
         "./typings/space-pen/space-pen.d.ts",
         "./typings/status-bar/status-bar.d.ts",
         "./typings/text-buffer/text-buffer.d.ts",
-        "./typings/tsd.d.ts"
+        "./typings/tsd.d.ts",
+        "./typings/vue/vue.d.ts"
     ]
 }

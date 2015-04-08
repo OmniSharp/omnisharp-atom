@@ -22,7 +22,8 @@ class OmniSharpServer {
         isLoadingOrReadyOrError: false,
         state: "off",
         previousState: "off",
-        iconText: ""
+        iconText: "",
+        isOpen: false
     }
 
     private _instance: OmniSharpServerInstance;

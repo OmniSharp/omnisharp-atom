@@ -43,6 +43,9 @@
     },
     "semver/semver.d.ts": {
       "commit": "437e1f1f2e0d229a94ee766d128f8550f462274b"
+    },
+    "vue/vue.d.ts": {
+      "commit": "437e1f1f2e0d229a94ee766d128f8550f462274b"
     }
   }
 }

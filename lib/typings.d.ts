@@ -11,11 +11,25 @@ declare module AtomCore {
         dispatch(target: Node, commandName: string, detail?: any): void;
     }
 
+    interface IViewProviderSpec {
+        modelConstructor<T>(): T;
+        viewConstructor?<T extends HTMLElement>(): T;
+        createView?<T extends HTMLElement>(): T;
+    }
+
+    interface IViewRegistry {
+        addViewProvider(providerSpec: IViewProviderSpec);
+        getView(object: AtomCore.IPane);
+        getView(object: AtomCore.IEditor);
+        getView(object: AtomCore.IWorkspace);
+    }
+
     // Currently atom.d.ts does not declare it is an emitter.
     // It currently is but Emissary might be going away.
     //    see: https://github.com/atom/emissary
     interface IAtom extends Emissary.IEmitter {
         commands: ICommandRegistry;
+        views: IViewRegistry;
     }
 
     interface IWorkspace {
@@ -61,6 +75,7 @@ declare module OmniSharp {
         state: string;
         previousState: string;
         iconText: string;
+        isOpen: boolean;
     }
 
     interface ICompletionResult {
