@@ -46,6 +46,9 @@
     },
     "vue/vue.d.ts": {
       "commit": "437e1f1f2e0d229a94ee766d128f8550f462274b"
+    },
+    "jasmine/jasmine.d.ts": {
+      "commit": "954c64c100478ebb0b3cd1d9949237c2ee6c2a9d"
     }
   }
 }

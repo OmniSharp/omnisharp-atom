@@ -17,9 +17,7 @@ class Feature implements OmniSharp.IFeature {
     private _instance: any;
 
     constructor(atom: OmniSharpAtom, feature: string) {
-        this.name = feature.replace('.ts', '')
-        // TODO: Remove when all features are .st
-            .replace('.coffee', '');;
+        this.name = feature.replace('.ts', '');
         this.path = "./features/" + feature;
 
         var _cls = require(this.path);
