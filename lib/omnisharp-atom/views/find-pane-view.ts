@@ -1,49 +1,88 @@
-{View}  = require 'atom-space-pen-views'
-Convert = require 'ansi-to-html'
-Vue = require 'vue'
-_ = require 'lodash'
+var spacePenViews = require('atom-space-pen-views')
+var View = <any>spacePenViews.View;
+var Convert = require('ansi-to-html')
+import Vue = require('vue')
+import _ = require('lodash')
+import OmniSharpServer = require('../../omni-sharp-server/omni-sharp-server')
 
-OmniSharpServer = require '../../omni-sharp-server/omni-sharp-server'
+// Internal: A tool-panel view for find usages/implementations
+class FindPaneView extends View {
+    private vm: { usages:any[] };
 
-module.exports =
-# Internal: A tool-panel view for find usages/implementations
-class FindPaneView extends View
+    public static content() {
+        return this.div({
+            "class": 'error-output-pane',
+            outlet: 'atomSharpFindPane'
+        }, () => {
+                this.ul({
+                    "class": 'background-message centered',
+                    'v-class': 'hide: isLoadingOrReady'
+                }, () => {
+                        return this.li(() => {
+                            this.span('Omnisharp server is turned off');
+                            return this.kbd({
+                                "class": 'key-binding text-highlight'
+                            }, '⌃⌥O');
+                        });
+                    });
+                this.ul({
+                    "class": 'background-message centered',
+                    'v-class': 'hide: isNotLoading'
+                }, () => {
+                        return this.li(() => {
+                            return this.progress({
+                                "class": 'inline-block'
+                            });
+                        });
+                    });
+                return this.table({
+                    "class": 'error-table',
+                    'v-class': 'hide: isNotReady'
+                }, () => {
+                        this.thead(() => {
+                            this.th('line');
+                            this.th('column');
+                            this.th('message');
+                            return this.th('filename');
+                        });
+                        return this.tbody(() => {
+                            var data;
+                            return this.tr({
+                                'v-repeat': 'usages',
+                                'v-on': 'click: gotoUsage'
+                            }, data = '{{$index}}', () => {
+                                    this.td('{{Line}}');
+                                    this.td('{{Column}}');
+                                    this.td('{{Text}}');
+                                    return this.td('{{FileName}}');
+                                });
+                        });
+                    });
+            });
+    }
 
-  @content: ->
-    @div class: 'error-output-pane', outlet: 'atomSharpFindPane', =>
-      @ul class: 'background-message centered', 'v-class': 'hide: isLoadingOrReady', =>
-        @li =>
-          @span 'Omnisharp server is turned off'
-          @kbd class: 'key-binding text-highlight', '⌃⌥O'
-      @ul class: 'background-message centered', 'v-class': 'hide: isNotLoading', =>
-        @li =>
-          @progress class: 'inline-block'
-      @table class: 'error-table', 'v-class': 'hide: isNotReady', =>
-        @thead =>
-          @th 'line'
-          @th 'column'
-          @th 'message'
-          @th 'filename'
-        @tbody =>
-          @tr
-            'v-repeat': 'usages',
-            'v-on': 'click: gotoUsage',
-            data='{{$index}}',
-            =>
-              @td '{{Line}}'
-              @td '{{Column}}'
-              @td '{{Text}}'
-              @td '{{FileName}}'
+    public initialize() {
 
-  initialize: ->
-    @vm = new Vue
-      el: this[0]
-      data: _.extend OmniSharpServer.vm,
-        usages: []
-      methods:
-        gotoUsage: ({targetVM}) -> atom.emit "omni:navigate-to", targetVM.$data
+        var viewModel = new Vue({
+            el: this[0],
+            data: _.extend(OmniSharpServer.vm, {
+                usages: []
+            }),
+            methods: {
+                gotoUsage: (arg) => {
+                    var targetVM;
+                    targetVM = arg.targetVM;
+                    return atom.emit("omni:navigate-to", targetVM.$data);
+                }
+            }
+        });
+        this.vm = <any>viewModel;
 
-    atom.on "omni:find-usages", (data) => @vm.usages = data.QuickFixes
+        return atom.on("omni:find-usages", (data) => this.vm.usages = data.QuickFixes);
+    }
 
-  destroy: ->
-    @detach()
+    public destroy() {
+        this.detach();
+    }
+}
+export = FindPaneView;
