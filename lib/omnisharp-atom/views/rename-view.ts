@@ -1,31 +1,46 @@
-{View} = require 'atom-space-pen-views'
-{TextEditorView} = require 'atom-space-pen-views'
+var spacePenViews = require('atom-space-pen-views')
+var View = <any>spacePenViews.View;
+var TextEditorView = <any>spacePenViews.TextEditorView;
 
-Omni = require '../../omni-sharp-server/omni'
+import Omni = require('../../omni-sharp-server/omni')
 
-module.exports =
-  class RenameView extends View
-    wordToRename: null
+class RenameView extends View {
+    private wordToRename = null;
+    private miniEditor: AtomCore.IEditor;
 
-    @content: ->
-      @div class: 'rename overlay from-top', =>
-        @p outlet: 'message', class: 'icon icon-diff-renamed', 'Rename to:'
-        @subview 'miniEditor', new TextEditorView({mini: true})
+    public static content() {
+        return this.div({
+            "class": 'rename overlay from-top'
+        }, () => {
+                this.p({
+                    outlet: 'message',
+                    "class": 'icon icon-diff-renamed'
+                }, 'Rename to:');
+                return this.subview('miniEditor',
+                    new TextEditorView({
+                        mini: true
+                    }));
+            });
+    }
 
-    initialize: ->
-      @on 'core:confirm', => @rename()
-      @on 'core:cancel', => @destroy()
+    public initialize() {
+        this.on('core:confirm', () => this.rename());
+        return this.on('core:cancel', () => this.destroy());
+    }
 
-    configure: (wordToRename) ->
-      @miniEditor.setText wordToRename
-      #@miniEditor.selectAll()
-      @miniEditor.focus()
+    public configure(wordToRename) {
+        this.miniEditor.setText(wordToRename);
+        return this.miniEditor.focus();
+    }
 
-    rename: ->
-      Omni.rename @miniEditor.getText()
-      @destroy()
+    public rename() {
+        Omni.rename(this.miniEditor.getText());
+        return this.destroy();
+    }
 
-    destroy: ->
-      @miniEditor.setText ''
-      @detach()
-      #atom.workspaceView.focus()
+    public destroy() {
+        this.miniEditor.setText('');
+        return this.detach();
+    }
+}
+export = RenameView
