@@ -97,17 +97,11 @@ class OmniSharpAtom {
     }
 
     public toggle() {
-        var dependencyErrors, i, len, missingDependency, results;
-        dependencyErrors = dependencyChecker.errors();
+        var dependencyErrors = dependencyChecker.errors();
         if (dependencyErrors.length === 0) {
             return OmniSharpServer.get().toggle();
         } else {
-            results = [];
-            for (i = 0, len = dependencyErrors.length; i < len; i++) {
-                missingDependency = dependencyErrors[i];
-                results.push(alert(missingDependency));
-            }
-            return results;
+            return _.map(dependencyErrors, missingDependency => alert(missingDependency));
         }
     }
 

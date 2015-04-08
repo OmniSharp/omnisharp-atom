@@ -36,7 +36,7 @@ class StatusBarView extends View {
             el: this[0],
             data: OmniSharpServer.vm,
             methods: {
-                toggle: this.toggle
+                toggle: () => this.toggle()
             }
         });
         this.vm = <any>viewModel;
