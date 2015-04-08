@@ -36,8 +36,8 @@ class OmniSharpAtom {
     private features: OmniSharp.IFeature[];
     private observeEditors: {dispose: Function};
     private emitter: Emissary.IEmitter;
-    private statusBarView;
-    private outputView;
+    public statusBarView;
+    public outputView;
     private autoCompleteProvider;
     private statusBar;
 
