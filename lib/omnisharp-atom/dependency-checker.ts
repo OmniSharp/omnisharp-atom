@@ -23,8 +23,9 @@ export function findAllDeps(packageDir) {
             dependencyErrors.push("Omnisharp Atom needs the package `"+packageName+"` (version "+version+") to be installed");
         }
 
-        return dependencyErrors.length == 0;
     });
+
+    return dependencyErrors.length == 0;
 }
 
 export function errors() {

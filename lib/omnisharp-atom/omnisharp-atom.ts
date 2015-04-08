@@ -46,7 +46,7 @@ class OmniSharpAtom {
 
         if (dependencyChecker.findAllDeps(this.getPackageDir())) {
             this.emitter = new Emitter;
-            this.loadFeatures();
+            this.features = this.loadFeatures();
 
             _.each(this.features, x => x.invoke('activate', state));
             return this.subscribeToEvents();
