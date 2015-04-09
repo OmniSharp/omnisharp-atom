@@ -53,7 +53,7 @@ class LinterCSharp extends Linter
 
             return {
                 message: error.Text,
-                line: line,
+                line: line + 1,
                 col: column,
                 level: level,
                 range: new Rng([line, start], [line, end]),
