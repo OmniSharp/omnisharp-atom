@@ -1,4 +1,4 @@
-/// <reference path="../typings/jasmine/jasmine.d.ts" />
+/// <reference path="tsd.d.ts" />
 var WorkspaceView = require('atom').WorkspaceView;
 import OmniSharpServer = require('../lib/omni-sharp-server/omni-sharp-server')
 
