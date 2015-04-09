@@ -12,7 +12,7 @@ class Build {
         });
 
         atom.on("omni:build-command", (command) => {
-            var pattern = /[\w\/:=_\-\.]+|"[\w\s\/:=_\-\.]*"/g;
+            var pattern = /[\w\\\/:=_\-\.]+|"[\w\\\s\/:=_\-\.]*"/g;
             var args = command.match(pattern);
             var buildCommand = args.shift();
             var projectPath = args[args.length - 1];
