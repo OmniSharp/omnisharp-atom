@@ -9,9 +9,9 @@ From the packages settings inside Atom:
 
 * install "Linter" package
 * install "Autocomplete plus" package first!
-* install "Omnisharp Atom" package
+* install "OmniSharp Atom" package
 
-From the commandline:
+From the command-line:
 
 ```
 apm install autocomplete-plus
@@ -31,5 +31,5 @@ When the flame icon in the bottom left corner turns green, the server has starte
 - `alt-F12` Go to definition
 - `shift-F12` Find usages
 - Completions appear as you type. To select an item, press the TAB key.
-- Editor addornments (squigglies) appear for errors and code hints as you type.
+- Editor adornments (squigglies) appear for errors and code hints as you type.
 - Enjoy!
