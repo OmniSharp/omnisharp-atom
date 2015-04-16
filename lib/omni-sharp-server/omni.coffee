@@ -30,21 +30,23 @@ module.exports =
         query: query
 
     @req: (path, event, d, editor) =>
-      @_req(path, event, d, editor)
+      context = @getEditorContext(editor)
+      return Promise.reject "no editor context found" unless context
+
+      fullData = _.extend({}, context, d)
+
+      @_req(path, event, fullData, editor)
       .catch (data) ->
         console.error data.statusCode?, data.options?.uri if typeof data isnt 'string'
 
-    @_req: (path, event, d, editor) =>
+    @_req: (path, event, fullData, editor) =>
       return Promise.reject "omnisharp not ready" if OmniSharpServer.vm.isNotReady
-
-      context = @getEditorContext(editor)
-      return Promise.reject "no editor context found" unless context
 
       rp
         uri: @_uri path
         method: "POST",
         json: true,
-        body: _.extend({}, context, d)
+        body: fullData
       .then (data) ->
         try
           parsedData = JSON.parse(data)
@@ -57,31 +59,14 @@ module.exports =
         parsedData
 
     @reql: (path, event, d, editor) =>
-      @_reql(path, event, d, editor)
-      .catch (data) ->
-        console.error data.statusCode?, data.options?.uri if typeof data isnt 'string'
-
-    @_reql: (path, event, d, editor) =>
-      return Promise.reject "omnisharp not ready" if OmniSharpServer.vm.isNotReady
-
       context = @getEditorContext(editor)
       return Promise.reject "no editor context found" unless context
 
-      rp
-        uri: @_uri path
-        method: "POST",
-        json: true,
-        body: _.extend([], [context], d)
-      .then (data) ->
-        try
-          parsedData = JSON.parse(data)
-        catch
-          parsedData = data
-        finally
-          atom.emit "omni:#{event}", parsedData
-          console.log "omni:#{event}", parsedData
+      fullData = _.extend([], [context], d)
 
-        parsedData
+      @_req(path, event, fullData, editor)
+      .catch (data) ->
+        console.error data.statusCode?, data.options?.uri if typeof data isnt 'string'
 
     @syntaxErrors: => @req "syntaxErrors", "syntax-errors"
 
