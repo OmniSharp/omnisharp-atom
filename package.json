@@ -3,7 +3,7 @@
   "main": "./lib/omnisharp-atom/omnisharp-atom",
   "version": "0.2.1",
   "description": "Brings the wonderful OmniSharp server to powercharge Atom's C# development experience",
-  "activationEvents": [],
+  "activationCommands": [],
   "repository": "https://github.com/OmniSharp/omnisharp-atom",
   "license": "MIT",
   "engines": {
@@ -26,7 +26,7 @@
   "consumedServices": {
     "status-bar": {
       "versions": {
-        "^0.58.0": "consumeStatusBar"
+        "^1.0.0": "consumeStatusBar"
       }
     }
   },
