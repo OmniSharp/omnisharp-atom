@@ -9,6 +9,8 @@
   "engines": {
     "atom": ">0.50.0"
   },
+  "linter-package": true,
+  "linter-implementation": "omnisharp-atom/linter",
   "dependencies": {
     "ansi-to-html": "~0.1.0",
     "atom-space-pen-views": "^2.0.3",
@@ -46,6 +48,7 @@
   },
   "apmPackageDependencies": {
     "autocomplete-plus": "^2.0.2",
-    "language-csharp": ">=0.3.0"
+    "language-csharp": ">=0.3.0",
+    "linter": ">=0.12.0"
   }
 }

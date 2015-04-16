@@ -3,7 +3,6 @@
 Convert = require 'ansi-to-html'
 Vue = require 'vue'
 
-ErrorPaneView = require './error-pane-view'
 FindPaneView = require './find-pane-view'
 BuildOutputPaneView = require './build-output-pane-view'
 OmniOutputPaneView = require './omni-output-pane-view'
@@ -27,13 +26,11 @@ class DockView extends View
         @div class: "panel-heading clearfix", =>
           @div class: 'btn-toolbar pull-left', =>
             @div class: 'btn-group btn-toggle', =>
-              btn "errors", "Errors"
               btn "find", "Find"
               btn "build", "Build output"
               btn "omni", "Omnisharp output"
         #tab content panels
         @div 'v-attr' : 'class: selected | content-selected omni', outlet: 'omniOutput'
-        @div 'v-attr' : 'class: selected | content-selected errors', outlet: 'errorsOutput'
         @div 'v-attr' : 'class: selected | content-selected find', outlet: 'findOutput'
         @div 'v-attr' : 'class: selected | content-selected build', outlet: 'buildOutput'
 
@@ -48,7 +45,6 @@ class DockView extends View
       selected = if value == expectedValue then "" else "hide"
       "omnisharp-atom-output #{expectedValue}-output #{selected}"
 
-    @errorsOutput.append(new ErrorPaneView())
     @findOutput.append(new FindPaneView())
     @buildOutput.append(new BuildOutputPaneView())
     @omniOutput.append(new OmniOutputPaneView())
@@ -60,10 +56,9 @@ class DockView extends View
       methods:
         selectPane: ({target}) => @selectPane $(target).attr "pane"
 
-    
+
     atom.commands.add 'atom-workspace', "omnisharp-atom:toggle-output", => @toggle()
     atom.commands.add 'atom-workspace', "omnisharp-atom:hide", => @hide()
-    atom.commands.add 'atom-workspace', "omnisharp-atom:show-errors", => @selectPane "errors"
     atom.commands.add 'atom-workspace', "omnisharp-atom:show-find", => @selectPane "find"
     atom.commands.add 'atom-workspace', "omnisharp-atom:show-build", => @selectPane "build"
     atom.commands.add 'atom-workspace', "omnisharp-atom:show-omni", => @selectPane "omni"
@@ -72,7 +67,7 @@ class DockView extends View
       @hide()
 
     @on 'mousedown', '.omnisharp-atom-output-resizer', (e) => @resizeStarted(e)
-    
+
     #init the panel, but hide it
     @panel = atom.workspace.addBottomPanel(item: this, visible: false)
 
@@ -105,8 +100,8 @@ class DockView extends View
     @detach()
 
 
-  hide: -> 
+  hide: ->
     @panel.hide()
-    
-  toggle: -> 
+
+  toggle: ->
     if @panel.visible then @panel.hide() else @panel.show()
