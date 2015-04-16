@@ -2,7 +2,7 @@
 {$} = require 'atom-space-pen-views'
 Convert = require 'ansi-to-html'
 Vue = require 'vue'
-_ = require 'underscore'
+_ = require 'lodash'
 
 module.exports =
 # Internal: A tool-panel view for the build result output.

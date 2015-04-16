@@ -1,4 +1,4 @@
-_ = require 'underscore'
+_ = require 'lodash'
 OmniSharpServer = require '../../omni-sharp-server/omni-sharp-server'
 Omni = require '../../omni-sharp-server/omni'
 {Range} = require 'atom'

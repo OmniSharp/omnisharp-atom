@@ -1,4 +1,4 @@
-_ = require 'underscore'
+_ = require 'lodash'
 semver = require 'semver'
 fs = require 'fs-plus'
 
