@@ -56,6 +56,33 @@ module.exports =
 
         parsedData
 
+    @reql: (path, event, d, editor) =>
+      @_reql(path, event, d, editor)
+      .catch (data) ->
+        console.error data.statusCode?, data.options?.uri if typeof data isnt 'string'
+
+    @_reql: (path, event, d, editor) =>
+      return Promise.reject "omnisharp not ready" if OmniSharpServer.vm.isNotReady
+
+      context = @getEditorContext(editor)
+      return Promise.reject "no editor context found" unless context
+
+      rp
+        uri: @_uri path
+        method: "POST",
+        json: true,
+        body: _.extend([], [context], d)
+      .then (data) ->
+        try
+          parsedData = JSON.parse(data)
+        catch
+          parsedData = data
+        finally
+          atom.emit "omni:#{event}", parsedData
+          console.log "omni:#{event}", parsedData
+
+        parsedData
+
     @syntaxErrors: => @req "syntaxErrors", "syntax-errors"
 
     @codecheck: (buffer, editor) =>
@@ -70,6 +97,8 @@ module.exports =
     @codeFormat: => @req "codeFormat", "code-format"
 
     @build: => @req "buildcommand", "build-command"
+
+    @packageRestore: => @reql "filesChanged", "package-restore"
 
     @autocomplete: (wordToComplete) =>
       data =
