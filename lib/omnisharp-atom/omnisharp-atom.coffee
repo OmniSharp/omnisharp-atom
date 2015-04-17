@@ -32,6 +32,13 @@ module.exports =
     @emitter.on 'omnisharp-atom-editor-destroyed', (filePath) ->
       callback filePath
 
+  onConfigEditor: (callback) ->
+    @emitter.on 'omnisharp-atom-config-editor', callback
+
+  onConfigEditorDestroyed: (callback) ->
+    @emitter.on 'omnisharp-atom-config-editor-destroyed', (filePath) ->
+      callback filePath
+
   getPackageDir: ->
     _.find(atom.packages.packageDirPaths, (packagePath) -> fs.existsSync("#{packagePath}/omnisharp-atom"))
 
@@ -57,12 +64,21 @@ module.exports =
 
   subscribeToEvents: ->
     @observeEditors = atom.workspace.observeTextEditors (editor) =>
-      if editor.getGrammar().name is 'C#'
+      grammarName = editor.getGrammar().name
+
+      if grammarName is 'C#'
         @emitter.emit 'omnisharp-atom-editor', editor
 
         editorFilePath = editor.buffer.file.path
         editor.onDidDestroy () =>
           @emitter.emit 'omnisharp-atom-editor-destroyed', editorFilePath
+
+      else if grammarName is 'JSON'
+        @emitter.emit 'omnisharp-atom-config-editor', editor
+
+        feditorFilePath = editor.buffer.file.path
+        editor.onDidDestroy () =>
+          @emitter.emit 'omnisharp-atom-config-editor-destroyed', feditorFilePath
 
   buildStatusBarAndDock: ->
     @statusBar = new StatusBarView

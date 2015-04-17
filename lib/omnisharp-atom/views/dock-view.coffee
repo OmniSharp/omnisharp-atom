@@ -60,7 +60,7 @@ class DockView extends View
       methods:
         selectPane: ({target}) => @selectPane $(target).attr "pane"
 
-    
+
     atom.commands.add 'atom-workspace', "omnisharp-atom:toggle-output", => @toggle()
     atom.commands.add 'atom-workspace', "omnisharp-atom:hide", => @hide()
     atom.commands.add 'atom-workspace', "omnisharp-atom:show-errors", => @selectPane "errors"
@@ -72,7 +72,7 @@ class DockView extends View
       @hide()
 
     @on 'mousedown', '.omnisharp-atom-output-resizer', (e) => @resizeStarted(e)
-    
+
     #init the panel, but hide it
     @panel = atom.workspace.addBottomPanel(item: this, visible: false)
 
@@ -105,8 +105,8 @@ class DockView extends View
     @detach()
 
 
-  hide: -> 
+  hide: ->
     @panel.hide()
-    
-  toggle: -> 
+
+  toggle: ->
     if @panel.visible then @panel.hide() else @panel.show()
