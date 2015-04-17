@@ -1,4 +1,4 @@
-_ = require 'underscore'
+_ = require 'lodash'
 RenameView = require '../views/rename-view'
 Omni = require '../../omni-sharp-server/omni'
 
