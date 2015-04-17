@@ -64,6 +64,8 @@ module.exports =
 
     @goToDefinition: => @req "gotoDefinition", "navigate-to"
 
+    @goToImplementation: => @req "findimplementations", "navigate-to-implementation"
+
     @fixUsings: => @req "fixUsings", "code-format"
 
     @codeFormat: => @req "codeFormat", "code-format"
