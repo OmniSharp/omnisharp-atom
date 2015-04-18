@@ -1,4 +1,4 @@
-// Type definitions for atom-keymap (v5.1.0)
+// Type definitions for atom-keymap (v5.1.2)
 // Project: https://github.com/atom/atom-keymap
 // Definitions by: david-driscoll <https://github.com/david-driscoll/>
 // Definitions: https://github.com/borisyankov/DefinitelyTyped
@@ -353,11 +353,6 @@ both partial and exact matches.
          * This field or method was marked private by atomdoc. Use with caution.
          */
         dispatchCommandEvent(command? : any, target? : any, keyboardEvent? : any) : any;
-    
-        /**
-         * This field or method was not documented by atomdoc, assume it is private. Use with caution.
-         */
-        isValidSelector(selector? : any) : any;
     
         /**
          * Chromium does not bubble events dispatched on detached targets, which makes

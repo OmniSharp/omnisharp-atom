@@ -1,4 +1,4 @@
-// Type definitions for status-bar (v0.67.0)
+// Type definitions for status-bar (v0.69.0)
 // Project: https://github.com/atom/status-bar
 // Definitions by: david-driscoll <https://github.com/david-driscoll/>
 // Definitions: https://github.com/borisyankov/DefinitelyTyped
@@ -225,7 +225,7 @@ declare module StatusBar {
         /**
          * This field or method was not documented by atomdoc, assume it is private. Use with caution.
          */
-        initialize(state? : any) : any;
+        initialize() : any;
     
         /**
          * This field or method was not documented by atomdoc, assume it is private. Use with caution.

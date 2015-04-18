@@ -1,4 +1,4 @@
-// Type definitions for scandal (v2.0.0)
+// Type definitions for scandal (v2.0.3)
 // Project: https://github.com/atom/scandal
 // Definitions by: david-driscoll <https://github.com/david-driscoll/>
 // Definitions: https://github.com/borisyankov/DefinitelyTyped
@@ -304,6 +304,11 @@ declare module Scandal {
          * This field or method was not documented by atomdoc, assume it is private. Use with caution.
          */
         stat(filePath? : any) : any;
+    
+        /**
+         * This field or method was not documented by atomdoc, assume it is private. Use with caution.
+         */
+        isInternalSymlink(filePath? : any) : any;
     
         /**
          * This field or method was not documented by atomdoc, assume it is private. Use with caution.

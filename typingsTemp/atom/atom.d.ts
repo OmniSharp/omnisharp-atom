@@ -1,4 +1,4 @@
-// Type definitions for Atom (v0.191.0)
+// Type definitions for Atom (v0.193.0)
 // Project: https://atom.io/
 // Definitions by: vvakame <https://github.com/vvakame/>
 // Definitions: https://github.com/borisyankov/DefinitelyTyped
@@ -54,7 +54,7 @@ declare module Atom {
         Returns the path where the state for the current window will be
 located if it exists.
          */
-        static getStatePath(paths? : any, mode? : any) : any;
+        static getStateKey(paths? : any, mode? : any) : any;
     
         /**
          * Get the directory path to Atom's configuration area.
@@ -64,11 +64,9 @@ located if it exists.
         static getConfigDirPath() : any;
     
         /**
-         * Get the path to Atom's storage directory.
-         * This field or method was marked private by atomdoc. Use with caution.
-        Returns the absolute path to ~/.atom/storage
+         * This field or method was not documented by atomdoc, assume it is private. Use with caution.
          */
-        static getStorageDirPath() : any;
+        static getStorageFolder() : any;
     
         /**
          * 
@@ -761,8 +759,7 @@ Work around for https://github.com/atom/atom-shell/issues/473
         constructor(options? : any);
     
         /**
-         * Opens a new window based on the options provided. 
-         * This field or method was marked private by atomdoc. Use with caution.
+         * This field or method was not documented by atomdoc, assume it is private. Use with caution.
          */
         openWithOptions(pathsToOpen? : any, urlsToOpen? : any, test? : any, pidToKillWhenClosed? : any, devMode? : any, safeMode? : any, apiPreviewMode? : any, newWindow? : any, specDirectory? : any, logFile? : any) : any;
     
@@ -857,7 +854,7 @@ Work around for https://github.com/atom/atom-shell/issues/473
         focusedWindow() : AtomWindow;
     
         /**
-         * Opens multiple paths, in existing windows if possible.
+         * Opens a single path, in an existing window if possible.
          * 
          * options -
          *   :pathToOpen - The file path to open
@@ -871,7 +868,7 @@ Work around for https://github.com/atom/atom-shell/issues/473
         openPath(pathToOpen? : any, pidToKillWhenClosed? : any, newWindow? : any, devMode? : any, safeMode? : any, apiPreviewMode? : any, window? : any) : any;
     
         /**
-         * Opens a single path, in an existing window if possible.
+         * Opens multiple paths, in existing windows if possible.
          * 
          * options -
          *   :pathsToOpen - The array of file paths to open
@@ -902,6 +899,16 @@ Work around for https://github.com/atom/atom-shell/issues/473
          * This field or method was marked private by atomdoc. Use with caution.
          */
         killProcess(pid? : any) : any;
+    
+        /**
+         * This field or method was not documented by atomdoc, assume it is private. Use with caution.
+         */
+        saveState() : any;
+    
+        /**
+         * This field or method was not documented by atomdoc, assume it is private. Use with caution.
+         */
+        loadState() : any;
     
         /**
          * Open an atom:// url.
@@ -4298,9 +4305,9 @@ row is a comment.
         isLineCommentedAtBufferRow(bufferRow? : any) : boolean;
     
         /**
-         * Find a row range for a 'paragraph' around specified bufferRow.
-         * Right now, a paragraph is a block of text bounded by and empty line or a
-         * block of text that is not the same type (comments next to source code). 
+         * Find a row range for a 'paragraph' around specified bufferRow. A paragraph
+         * is a block of text bounded by and empty line or a block of text that is not
+         * the same type (comments next to source code). 
          * This field or method was marked private by atomdoc. Use with caution.
          */
         rowRangeForParagraphAtBufferRow(bufferRow? : any) : any;
@@ -4381,6 +4388,11 @@ row is a comment.
          * This field or method was not documented by atomdoc, assume it is private. Use with caution.
          */
         foldEndRegexForScopeDescriptor(scopeDescriptor? : any) : any;
+    
+        /**
+         * This field or method was not documented by atomdoc, assume it is private. Use with caution.
+         */
+        commentStartAndEndStringsForScope(scope? : any) : any;
     
     }
 
@@ -5745,7 +5757,7 @@ added menu items.
         /**
          * This field or method was not documented by atomdoc, assume it is private. Use with caution.
          */
-        constructor(container? : any, orientation? : any, children? : any);
+        constructor(container? : any, orientation? : any, children? : any, flexScale? : any);
     
         /**
          * This field or method was not documented by atomdoc, assume it is private. Use with caution.
@@ -5756,6 +5768,16 @@ added menu items.
          * This field or method was not documented by atomdoc, assume it is private. Use with caution.
          */
         serializeParams() : any;
+    
+        /**
+         * This field or method was not documented by atomdoc, assume it is private. Use with caution.
+         */
+        getFlexScale() : any;
+    
+        /**
+         * This field or method was not documented by atomdoc, assume it is private. Use with caution.
+         */
+        setFlexScale(flexScale? : any) : any;
     
         /**
          * This field or method was not documented by atomdoc, assume it is private. Use with caution.
@@ -5820,7 +5842,22 @@ added menu items.
         /**
          * This field or method was not documented by atomdoc, assume it is private. Use with caution.
          */
+        onDidChangeFlexScale(fn? : any) : any;
+    
+        /**
+         * This field or method was not documented by atomdoc, assume it is private. Use with caution.
+         */
+        observeFlexScale(fn? : any) : any;
+    
+        /**
+         * This field or method was not documented by atomdoc, assume it is private. Use with caution.
+         */
         addChild(child? : any, index? : any) : any;
+    
+        /**
+         * This field or method was not documented by atomdoc, assume it is private. Use with caution.
+         */
+        adjustFlexScale() : any;
     
         /**
          * This field or method was not documented by atomdoc, assume it is private. Use with caution.
@@ -6411,6 +6448,32 @@ added menu items.
          * This field or method was not documented by atomdoc, assume it is private. Use with caution.
          */
         setContainer(container? : any) : any;
+    
+        /**
+         * This field or method was not documented by atomdoc, assume it is private. Use with caution.
+         */
+        setFlexScale(flexScale? : any) : any;
+    
+        /**
+         * This field or method was not documented by atomdoc, assume it is private. Use with caution.
+         */
+        getFlexScale() : any;
+    
+        /**
+         * Invoke the given callback when the pane resize
+         * 
+         * the callback will be invoked when pane's flexScale property changes
+        @param callback? - {Function} to be called when the pane is resized
+        Returns a {Disposable} on which '.dispose()' can be called to unsubscribe.
+         */
+        onDidChangeFlexScale(callback? : Function) : EventKit.Disposable;
+    
+        /**
+         * Invoke the given callback with all current and future items.
+        @param callback? - {Function} to be called with current and future items.
+        Returns a {Disposable} on which `.dispose()` can be called to unsubscribe.
+         */
+        observeFlexScale(callback? : Function) : EventKit.Disposable;
     
         /**
          * Invoke the given callback when the pane is activated.
@@ -7261,6 +7324,11 @@ unsubscribe.
          */
         getScopeChain() : any;
     
+        /**
+         * This field or method was not documented by atomdoc, assume it is private. Use with caution.
+         */
+        toString() : any;
+    
     }
 
     /**
@@ -8050,6 +8118,38 @@ unsubscribe.
          * This field or method was not documented by atomdoc, assume it is private. Use with caution.
          */
         getGoalScreenRange() : any;
+    
+    }
+
+    /**
+     * StorageFolder
+     * This class was not documented by atomdoc, assume it is private. Use with caution.
+     */
+    class StorageFolder {
+        /**
+         * This field or method was not documented by atomdoc, assume it is private. Use with caution.
+         */
+        constructor(containingPath? : any);
+    
+        /**
+         * This field or method was not documented by atomdoc, assume it is private. Use with caution.
+         */
+        store(name? : string, object? : any) : any;
+    
+        /**
+         * This field or method was not documented by atomdoc, assume it is private. Use with caution.
+         */
+        load(name? : string) : any;
+    
+        /**
+         * This field or method was not documented by atomdoc, assume it is private. Use with caution.
+         */
+        pathForKey(name? : string) : any;
+    
+        /**
+         * This field or method was not documented by atomdoc, assume it is private. Use with caution.
+         */
+        getPath() : any;
     
     }
 
@@ -13072,30 +13172,6 @@ unregister the callback.
         Returns an {Array} of {TextEditorView}s.
          */
         getEditorViews() : TextEditorView[];
-    
-        /**
-         * Deprecated
-         * This field or method was marked private by atomdoc. Use with caution.
-         */
-        deprecateViewEvents() : any;
-    
-        /**
-         * Deprecated 
-         * This field or method was marked private by atomdoc. Use with caution.
-         */
-        eachPane(callback? : any) : any;
-    
-        /**
-         * Deprecated 
-         * This field or method was marked private by atomdoc. Use with caution.
-         */
-        getPanes() : any;
-    
-        /**
-         * Deprecated 
-         * This field or method was marked private by atomdoc. Use with caution.
-         */
-        getActivePane() : any;
     
         /**
          * Call {Workspace::getActivePaneItem} instead. 
