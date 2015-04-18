@@ -8,8 +8,8 @@ class Rename {
     public activate() {
         this.renameView = new RenameView();
         atom.commands.add('atom-text-editor', 'omnisharp-atom:rename', () => this.rename());
-        atom.on('omnisharp-atom:rename:exec', (newName) => Omni.rename(newName));
-        atom.on('omni:rename', (changes) => this.applyChanges(changes.Changes));
+        atom.emitter.on('omnisharp-atom:rename:exec', (newName) => Omni.rename(newName));
+        atom.emitter.on('omni:rename', (changes) => this.applyChanges(changes.Changes));
     }
 
     public rename() {
@@ -22,7 +22,7 @@ class Rename {
         return this.renameView.configure(wordToRename);
     }
 
-    public applyChanges(changes) {
+    public applyChanges(changes: any[]) {
         return _.each(changes, (change) => atom.workspace.open(change.FileName, undefined)
             .then((editor) => editor.setText(change.Buffer)))
     }

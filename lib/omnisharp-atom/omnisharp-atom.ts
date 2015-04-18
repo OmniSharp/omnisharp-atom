@@ -33,7 +33,7 @@ class Feature implements OmniSharp.IFeature {
 class OmniSharpAtom {
     private features: OmniSharp.IFeature[];
     private observeEditors: {dispose: Function};
-    private emitter: Emissary.IEmitter;
+    private emitter: EventKit.Emitter;
     public statusBarView;
     public outputView;
     private autoCompleteProvider;
@@ -47,13 +47,13 @@ class OmniSharpAtom {
             this.features = this.loadFeatures();
 
             _.each(this.features, x => x.invoke('activate', state));
-            return this.subscribeToEvents();
+            this.subscribeToEvents();
         } else {
-            return _.map(dependencyChecker.errors() || [], missingDependency => console.error(missingDependency))
+            _.map(dependencyChecker.errors() || [], missingDependency => console.error(missingDependency))
         }
     }
 
-    public onEditor(callback: Function) {
+    public onEditor(callback: (...args: any[]) => void) {
         return this.emitter.on('omnisharp-atom-editor', callback);
     }
 
@@ -62,7 +62,7 @@ class OmniSharpAtom {
     }
 
     public getPackageDir() {
-        return _.find(atom.packages.packageDirPaths, function(packagePath) {
+        return _.find(atom.packages.getPackageDirPaths(), function(packagePath) {
             return fs.existsSync(packagePath + "/omnisharp-atom");
         });
     }
@@ -79,7 +79,7 @@ class OmniSharpAtom {
         return features;
     }
     public subscribeToEvents() {
-        return this.observeEditors = atom.workspace.observeTextEditors((editor: AtomCore.IEditor) => {
+        return this.observeEditors = atom.workspace.observeTextEditors((editor: Atom.TextEditor) => {
             var editorFilePath;
             if (editor.getGrammar().name === 'C#') {
                 this.emitter.emit('omnisharp-atom-editor', editor);

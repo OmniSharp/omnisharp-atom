@@ -1,13 +1,13 @@
-var spacePenViews = require('atom-space-pen-views')
-var View = <any>spacePenViews.View;
+import spacePenViews = require('atom-space-pen-views')
+var $ = spacePenViews.jQuery;
 var Convert = require('ansi-to-html')
 import Vue = require('vue')
 import _ = require('lodash')
 import OmniSharpServer = require('../../omni-sharp-server/omni-sharp-server')
 
 // Internal: A tool-panel view for the test result output.
-class OmniOutputPaneView extends View {
-    private vm : {uninitialized: boolean; initialized: boolean; output: any[] };
+class OmniOutputPaneView extends spacePenViews.View {
+    private vm : {uninitialized: boolean; initialized: boolean; output: OmniSharp.VueArray<any> };
     private convert: typeof Convert;
 
     public static content() {
@@ -61,7 +61,7 @@ class OmniOutputPaneView extends View {
             })
         });
         this.vm = <any>viewModel;
-        atom.on("omni-sharp-server:out", (data) => {
+        atom.emitter.on("omni-sharp-server:out", (data) => {
             if (this.vm.output.length >= 1000) {
                 this.vm.output.$remove(0);
             }
@@ -69,7 +69,7 @@ class OmniOutputPaneView extends View {
                 message: data
             });
         });
-        atom.on("omni-sharp-server:err", (data) => {
+        atom.emitter.on("omni-sharp-server:err", (data) => {
             if (this.vm.output.length >= 1000) {
                 this.vm.output.$remove(0);
             }
@@ -78,10 +78,10 @@ class OmniOutputPaneView extends View {
                 isError: true
             });
         });
-        return atom.on("omni-sharp-server:start", (pid, port) => {
+        return atom.emitter.on("omni-sharp-server:start", (pid, port) => {
             this.vm.uninitialized = false;
             this.vm.initialized = true;
-            this.vm.output = [];
+            this.vm.output = <OmniSharp.VueArray<any>> [];
             return this.vm.output.push({
                 message: "Starting Omnisharp server (pid:" + pid + ", port:" + port + ")"
             });

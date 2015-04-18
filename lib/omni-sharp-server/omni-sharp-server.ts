@@ -37,7 +37,7 @@ class OmniSharpServer {
 var server = new OmniSharpServer();
 export = server;
 
-atom.on("omni-sharp-server:state-change", (state) => {
+atom.emitter.on("omni-sharp-server:state-change", (state) => {
     server.vm.previousState = server.vm.state;
     server.vm.state = state;
     server.vm.isOn = state === "on";
@@ -54,11 +54,11 @@ atom.on("omni-sharp-server:state-change", (state) => {
     server.vm.isLoadingOrReady = state === "ready" || state === "loading";
     server.vm.isLoadingOrReadyOrError = server.vm.isLoadingOrReady || server.vm.isError;
     server.vm.iconText = server.vm.isError ? "omni error occured" : "";
-    return atom.emit("omni-sharp-server:state-change-complete", state);
+    return atom.emitter.emit("omni-sharp-server:state-change-complete", state);
 })
 
 class OmniSharpServerInstance {
-    public packageDir = atom.packages.packageDirPaths[0];
+    public packageDir = atom.packages.getPackageDirPaths()[0];
     public location = OmnisharpLocation;
     public child;
     public port;
@@ -75,8 +75,8 @@ class OmniSharpServerInstance {
             this.port = port;
             var serverArguments = ["-s", typeof atom !== "undefined" && atom !== null ? (ref = atom.project) != null ? ref.getPaths()[0] : void 0 : void 0, "-p", port];
             this.child = spawn(executablePath, serverArguments);
-            atom.emit("omni-sharp-server:start", this.child.pid, port);
-            atom.emit("omni-sharp-server:state-change", "loading");
+            atom.emitter.emit("omni-sharp-server:start", this.child.pid, port);
+            atom.emitter.emit("omni-sharp-server:state-change", "loading");
             this.child.stdout.on('data', this.out);
             this.child.stderr.on('data', this.err);
             this.child.on('close', this.close);
@@ -89,28 +89,28 @@ class OmniSharpServerInstance {
 
         var ref = s.match(/Solution has finished loading/);
         if ((ref != null ? ref.length : 0) > 0) {
-            atom.emit("omni-sharp-server:ready", this.child.pid);
-            atom.emit("omni-sharp-server:state-change", "ready");
+            atom.emitter.emit("omni-sharp-server:ready", this.child.pid);
+            atom.emitter.emit("omni-sharp-server:state-change", "ready");
         }
 
         var ref = s.match(/Detected an OmniSharp instance already running on port/);
         if ((ref != null ? ref.length : 0) > 0) {
-            atom.emit("omni-sharp-server:error");
-            atom.emit("omni-sharp-server:state-change", "error");
+            atom.emitter.emit("omni-sharp-server:error");
+            atom.emitter.emit("omni-sharp-server:state-change", "error");
             this.stop();
         }
 
-        return atom.emit("omni-sharp-server:out", s);
+        return atom.emitter.emit("omni-sharp-server:out", s);
     }
 
     public err = (data) => {
         var friendlyMessage = this.parseError(data);
-        return atom.emit("omni-sharp-server:err", friendlyMessage);
+        return atom.emitter.emit("omni-sharp-server:err", friendlyMessage);
     }
 
     public close = (data) => {
-        atom.emit("omni-sharp-server:close", data);
-        atom.emit("omni-sharp-server:state-change", "off");
+        atom.emitter.emit("omni-sharp-server:close", data);
+        atom.emitter.emit("omni-sharp-server:state-change", "off");
         return this.port = null;
     }
 

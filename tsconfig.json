@@ -25,8 +25,8 @@
     "compileOnSave": false,
     "filesGlob": [
         "./**/*.ts",
-        "!./spec/typings.d.ts",
-        "!./typings/**/*.ts",
+        "!./typings/**/*.d.ts",
+        "!./typingsTemp/**/*.d.ts",
         "!./node_modules/**/*.ts"
     ],
     "files": [

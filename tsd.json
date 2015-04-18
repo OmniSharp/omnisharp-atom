@@ -5,28 +5,10 @@
   "path": "typings",
   "bundle": "tsd.d.ts",
   "installed": {
-    "atom/atom.d.ts": {
-      "commit": "65ea56c919fd95dcd0ca3c59c9aa5eaa99c86885"
-    },
     "q/Q.d.ts": {
       "commit": "65ea56c919fd95dcd0ca3c59c9aa5eaa99c86885"
     },
     "jquery/jquery.d.ts": {
-      "commit": "65ea56c919fd95dcd0ca3c59c9aa5eaa99c86885"
-    },
-    "space-pen/space-pen.d.ts": {
-      "commit": "65ea56c919fd95dcd0ca3c59c9aa5eaa99c86885"
-    },
-    "emissary/emissary.d.ts": {
-      "commit": "65ea56c919fd95dcd0ca3c59c9aa5eaa99c86885"
-    },
-    "pathwatcher/pathwatcher.d.ts": {
-      "commit": "65ea56c919fd95dcd0ca3c59c9aa5eaa99c86885"
-    },
-    "text-buffer/text-buffer.d.ts": {
-      "commit": "65ea56c919fd95dcd0ca3c59c9aa5eaa99c86885"
-    },
-    "status-bar/status-bar.d.ts": {
       "commit": "65ea56c919fd95dcd0ca3c59c9aa5eaa99c86885"
     },
     "bluebird/bluebird.d.ts": {

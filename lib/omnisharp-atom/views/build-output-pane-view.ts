@@ -1,13 +1,12 @@
-var spacePenViews = require('atom-space-pen-views')
-var View = <any>spacePenViews.View;
-var $: JQueryStatic = <any>spacePenViews.$;
+import spacePenViews = require('atom-space-pen-views')
+var $ = spacePenViews.jQuery;
 var Convert = require('ansi-to-html')
 import Vue = require('vue')
 import _ = require('lodash')
 
 // Internal: A tool- panel view for the build result output.
-class BuildOutputPaneView extends View {
-    public vm: { output: any[] };
+class BuildOutputPaneView extends spacePenViews.View {
+    public vm: { output: OmniSharp.VueArray<any> };
     public convert : typeof Convert;
 
     public static content() {
@@ -27,7 +26,7 @@ class BuildOutputPaneView extends View {
 
     public initialize() {
         var scrollToBottom = _.throttle(() => {
-            var item = this.find(".messages-container")[0].lastElementChild;
+            var item : any = this.find(".messages-container")[0].lastElementChild;
             if (item != null)
                 return item.scrollIntoViewIfNeeded();
         }, 100);
@@ -50,19 +49,19 @@ class BuildOutputPaneView extends View {
                 navigate: function(e) {
                     var nav = JSON.parse(e.srcElement.attributes['data-nav'].value);
                     if (nav) {
-                        return atom.emit("omni:navigate-to", nav);
+                        return atom.emitter.emit("omni:navigate-to", nav);
                     }
                 }
             }
         });
         this.vm = <any>viewModel;
 
-        atom.on("omnisharp-atom:build-message", data => {
+        atom.emitter.on("omnisharp-atom:build-message", data => {
             var buildMessages = data.split('\n');
             return _.map(buildMessages, message => this.processMessage(message));
         });
 
-        atom.on("omnisharp-atom:build-err", data => {
+        atom.emitter.on("omnisharp-atom:build-err", data => {
             if (this.vm.output.length >= 1000) {
                 this.vm.output.$remove(0);
             }
@@ -72,8 +71,8 @@ class BuildOutputPaneView extends View {
             });
         });
 
-        atom.on("omnisharp-atom:building", command => {
-            this.vm.output = [];
+        atom.emitter.on("omnisharp-atom:building", command => {
+            this.vm.output = <OmniSharp.VueArray<any>>[];
             this.vm.output.push({
                 message: 'OmniSharp Atom building...'
             });
@@ -82,7 +81,7 @@ class BuildOutputPaneView extends View {
             });
         });
 
-        return atom.on("omnisharp-atom:build-exitcode", exitCode => {
+        return atom.emitter.on("omnisharp-atom:build-exitcode", exitCode => {
             if (exitCode === 0) {
                 return this.vm.output.push({
                     message: 'Build succeeded!'
