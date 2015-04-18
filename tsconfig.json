@@ -42,6 +42,7 @@
         "./lib/omnisharp-atom/features/lib/completion-provider.ts",
         "./lib/omnisharp-atom/features/rename.ts",
         "./lib/omnisharp-atom/features/syntax-errors.ts",
+        "./lib/omnisharp-atom/linter.ts",
         "./lib/omnisharp-atom/omnisharp-atom.ts",
         "./lib/omnisharp-atom/views/build-output-pane-view.ts",
         "./lib/omnisharp-atom/views/dock-view.ts",

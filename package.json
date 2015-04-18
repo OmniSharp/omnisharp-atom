@@ -9,6 +9,8 @@
   "engines": {
     "atom": ">0.50.0"
   },
+  "linter-package": true,
+  "linter-implementation": "omnisharp-atom/linter",
   "scripts": {
     "postinstall": "tsd reinstall"
   },

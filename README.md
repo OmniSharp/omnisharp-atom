@@ -8,12 +8,14 @@
 From the packages settings inside Atom:
 
 * install "Autocomplete plus" package first!
+* install "Linter" package
 * install "OmniSharp Atom" package
 
 From the command-line:
 
 ```
 apm install autocomplete-plus
+apm install linter
 apm install omnisharp-atom
 ```
 
