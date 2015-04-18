@@ -1,7 +1,7 @@
 OmniSharpServer = require './omni-sharp-server'
 rp = require "request-promise"
 Url = require "url"
-_ = require "underscore"
+_ = require "lodash"
 Promise = require("bluebird");
 
 module.exports =
@@ -51,8 +51,7 @@ module.exports =
         catch
           parsedData = data
         finally
-          atom.emit "omni:#{event}", parsedData
-          console.log "omni:#{event}", parsedData
+          atom.emit "omni:#{event}",  parsedData, editor
 
         parsedData
 
