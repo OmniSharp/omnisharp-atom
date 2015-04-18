@@ -1,12 +1,12 @@
-var spacePenViews = require('atom-space-pen-views')
-var View = <any>spacePenViews.View;
+import spacePenViews = require('atom-space-pen-views')
+var $ = spacePenViews.jQuery;
 var Convert = require('ansi-to-html')
 import Vue = require('vue')
 import _ = require('lodash')
 import OmniSharpServer = require('../../omni-sharp-server/omni-sharp-server')
 
 // Internal: A tool-panel view for find usages/implementations
-class FindPaneView extends View {
+class FindPaneView extends spacePenViews.View {
     private vm: { usages:any[] };
 
     public static content() {
@@ -72,13 +72,13 @@ class FindPaneView extends View {
                 gotoUsage: (arg) => {
                     var targetVM;
                     targetVM = arg.targetVM;
-                    return atom.emit("omni:navigate-to", targetVM.$data);
+                    return atom.emitter.emit("omni:navigate-to", targetVM.$data);
                 }
             }
         });
         this.vm = <any>viewModel;
 
-        return atom.on("omni:find-usages", (data) => this.vm.usages = data.QuickFixes);
+        return atom.emitter.on("omni:find-usages", (data) => this.vm.usages = data.QuickFixes);
     }
 
     public destroy() {

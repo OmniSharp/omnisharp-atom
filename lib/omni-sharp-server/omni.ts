@@ -6,8 +6,8 @@ import Promise = require("bluebird")
 var request : (options:any) => Promise<any> = require("request-promise")
 
 class Omni {
-    public static getEditorContext(editor: AtomCore.IEditor) {
-        editor = editor || atom.workspace.getActiveEditor();
+    public static getEditorContext(editor: Atom.TextEditor) {
+        editor = editor || atom.workspace.getActiveTextEditor();
         if (!editor) {
             return;
         }
@@ -16,7 +16,7 @@ class Omni {
         var buffer = (<any>editor.buffer.getLines()).join('\n');
         return {
             column: marker.column + 1,
-            filename: editor.getUri(),
+            filename: editor.getURI(),
             line: marker.row + 1,
             // TODO: Update atom.d.ts?
             buffer: buffer
@@ -34,7 +34,7 @@ class Omni {
         })
     }
 
-    public static req(path: string, event: string, d?: any, editor?: AtomCore.IEditor) : Promise<any> {
+    public static req(path: string, event: string, d?: any, editor?: Atom.TextEditor) : Promise<any> {
         return Omni._req(path, event, d, editor)
             .catch(data => {
             var ref;
@@ -44,7 +44,7 @@ class Omni {
         })
     }
 
-    private static _req(path: string, event: string, d, editor: AtomCore.IEditor) : Promise<any> {
+    private static _req(path: string, event: string, d, editor: Atom.TextEditor) : Promise<any> {
         if (OmniSharpServer.vm.isNotReady) {
             return Promise.reject("omnisharp not ready");
         }
@@ -66,8 +66,7 @@ class Omni {
             } catch (_error) {
                 parsedData = data;
             } finally {
-                // TODO: Add to atom.d.ts?
-                atom.emit("omni:" + event, parsedData);
+                atom.emitter.emit("omni:" + event, parsedData);
                 console.log("omni:" + event, parsedData);
             }
             return parsedData;

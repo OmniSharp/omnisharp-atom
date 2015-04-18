@@ -4,8 +4,8 @@ class CodeFormat {
 
     public activate() {
         atom.commands.add('atom-workspace', 'omnisharp-atom:code-format', () => Omni.codeFormat())
-        atom.on("omni:code-format", (d) => {
-            var editor = atom.workspace.getActiveEditor();
+        atom.emitter.on("omni:code-format", (d) => {
+            var editor = atom.workspace.getActiveTextEditor();
             if (editor) {
                 editor.setText(d.Buffer);
             }

@@ -1,12 +1,12 @@
-var spacePenViews = require('atom-space-pen-views')
-var View = <any>spacePenViews.View;
+import spacePenViews = require('atom-space-pen-views')
+var $ = spacePenViews.jQuery;
 var Convert = require('ansi-to-html')
 import Vue = require('vue')
 import _ = require('lodash')
 import OmniSharpServer = require('../../omni-sharp-server/omni-sharp-server')
 
 // Internal: A tool-panel view for the test result output.
-class ErrorPaneView extends View {
+class ErrorPaneView extends spacePenViews.View {
     public vm: { errors: any[] };
 
     public static content() {
@@ -72,15 +72,15 @@ class ErrorPaneView extends View {
                 // TODO: gotoError: ({targetVM}}) => {
                 gotoError: (arg) => {
                     var targetVM = arg.targetVM;
-                    return atom.emit("omni:navigate-to", targetVM.$data);
+                    return atom.emitter.emit("omni:navigate-to", targetVM.$data);
                 }
             }
         });
         this.vm = <any>viewModel;
 
-        atom.on("omni:quick-fixes", data => this.displayQuickFixes(data.QuickFixes));
+        atom.emitter.on("omni:quick-fixes", data => this.displayQuickFixes(data.QuickFixes));
 
-        return atom.on('omnisharp-atom:clear-syntax-errors', filePath => this.removeErrorsFor(filePath));
+        return atom.emitter.on('omnisharp-atom:clear-syntax-errors', filePath => this.removeErrorsFor(filePath));
     }
 
     public removeErrorsFor = (filePath) => {

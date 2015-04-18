@@ -33,7 +33,8 @@ class CompletionProvider {
                     label: this.renderLabel(item)
                 }));
 
-                return resolve(result);
+                // TODO: reoslve issue in bluebird.d.ts
+                return resolve(<any>result);
             });
         })
     }

@@ -1,12 +1,12 @@
-var spacePenViews = require('atom-space-pen-views')
-var View = <any>spacePenViews.View;
+import spacePenViews = require('atom-space-pen-views')
+var $ = spacePenViews.jQuery;
 var TextEditorView = <any>spacePenViews.TextEditorView;
 
 import Omni = require('../../omni-sharp-server/omni')
 
-class RenameView extends View {
+class RenameView extends spacePenViews.View {
     private wordToRename = null;
-    private miniEditor: AtomCore.IEditor;
+    private miniEditor: spacePenViews.TextEditorView;
 
     public static content() {
         return this.div({
@@ -17,7 +17,7 @@ class RenameView extends View {
                     "class": 'icon icon-diff-renamed'
                 }, 'Rename to:');
                 return this.subview('miniEditor',
-                    new TextEditorView({
+                    new spacePenViews.TextEditorView({
                         mini: true
                     }));
             });

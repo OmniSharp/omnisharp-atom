@@ -1,15 +1,15 @@
-var spacePenViews = require('atom-space-pen-views')
-var View = <any>spacePenViews.View;
-var $: JQueryStatic = <any>spacePenViews.$;
+import spacePenViews = require('atom-space-pen-views')
+var $ = spacePenViews.jQuery;
 var Convert = require('ansi-to-html')
 import Vue = require('vue')
 
+import omnisharpAtom = require("../omnisharp-atom");
 import ErrorPaneView = require('./error-pane-view')
 import FindPaneView = require('./find-pane-view')
 import BuildOutputPaneView = require('./build-output-pane-view')
 import OmniOutputPaneView = require('./omni-output-pane-view')
 
-class DockView extends View {
+class DockView extends spacePenViews.View {
     private errorsOutput;
     private findOutput;
     private buildOutput;
@@ -20,6 +20,7 @@ class DockView extends View {
     private fixedHeight: number;
     private fixedButtonBarHeight: number;
     private statusBarHeight: number;
+    private resizeHandle: JQuery;
 
     // Internal: Initialize test-status output view DOM contents.
     public static content() {
@@ -113,14 +114,14 @@ class DockView extends View {
 
         this.vm = <any>viewModel;
 
-        atom.commands.add('atom-workspace', "omnisharp-atom:toggle-output", () => this.toggle());
-        atom.commands.add('atom-workspace', "omnisharp-atom:hide", () => this.hide());
+        atom.commands.add('atom-workspace', "omnisharp-atom:toggle-output", () => this.toggleView());
+        atom.commands.add('atom-workspace', "omnisharp-atom:hide", () => this.hideView());
         atom.commands.add('atom-workspace', "omnisharp-atom:show-errors", () => this.selectPane("errors"));
         atom.commands.add('atom-workspace', "omnisharp-atom:show-find", () => this.selectPane("find"));
         atom.commands.add('atom-workspace', "omnisharp-atom:show-build", () => this.selectPane("build"));
         atom.commands.add('atom-workspace', "omnisharp-atom:show-omni", () => this.selectPane("omni"));
 
-        this.on('core:cancel core:close', () => this.hide());
+        this.on('core:cancel core:close', () => this.hideView());
 
         this.on('mousedown', '.omnisharp-atom-output-resizer', e => this.resizeStarted(e));
 
@@ -137,11 +138,11 @@ class DockView extends View {
         this.find("button.selected").focus();
     }
 
-    public resizeStarted = () => {
+    public resizeStarted = (event: JQueryEventObject) => {
         this.fixedTop = this.resizeHandle.offset().top;
         this.fixedHeight = $(".omnisharp-atom-pane").height();
         this.fixedButtonBarHeight = this.find(".btn-group").height();
-        this.statusBarHeight = atom.workspaceView.statusBar.height();
+        this.statusBarHeight = omnisharpAtom.statusBarView.height();
         $(document).on('mousemove', this.resizePane);
         $(document).on('mouseup', this.resizeStopped);
     }
@@ -164,7 +165,7 @@ class DockView extends View {
         var h = this.fixedHeight + (this.fixedTop - pageY);
         $(".omnisharp-atom-pane").height(h);
         this.find(".omnisharp-atom-output").height(h - this.fixedButtonBarHeight - this.statusBarHeight);
-        return this.find(".messages-container").height(h - this.fixedButtonBarHeight - this.statusBarHeight);
+        this.find(".messages-container").height(h - this.fixedButtonBarHeight - this.statusBarHeight);
     }
 
 
@@ -172,11 +173,12 @@ class DockView extends View {
         this.detach();
     }
 
-    public hide() {
+    public hideView() {
         this.panel.hide();
+        return this;
     }
 
-    public toggle() {
+    public toggleView() {
         if (this.panel.visible) {
             this.panel.hide();
         } else {

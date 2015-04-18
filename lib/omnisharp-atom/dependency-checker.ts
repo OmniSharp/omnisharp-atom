@@ -13,7 +13,7 @@ export function findAllDeps(packageDir) {
     var availablePackageMetaData = atom.packages.getAvailablePackageMetadata();
 
     _.each(packageDependencies, (version:string, packageName:string) => {
-        var matchingPackage = _.find(availablePackageMetaData, (availablePackage) => availablePackage.name == packageName);
+        var matchingPackage : any = _.find(availablePackageMetaData, (availablePackage: any) => availablePackage.name == packageName);
 
         if (matchingPackage) {
             if (!semver.satisfies(matchingPackage.version, version)) {

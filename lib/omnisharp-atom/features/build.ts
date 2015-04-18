@@ -11,7 +11,7 @@ class Build {
             return Omni.build();
         });
 
-        atom.on("omni:build-command", (command) => {
+        atom.emitter.on("omni:build-command", (command) => {
             var pattern = /[\w\\\/:=_\-\.]+|"[\w\\\s\/:=_\-\.]*"/g;
             var args = command.match(pattern);
             var buildCommand = args.shift();
@@ -20,7 +20,7 @@ class Build {
             args[args.length - 1] = projectPath.substring(1, projectPath.length - 1);
 
             this.build = spawn(buildCommand, args);
-            atom.emit("omnisharp-atom:building", command);
+            atom.emitter.emit("omnisharp-atom:building", command);
             this.build.stdout.on('data', this.out);
             this.build.stderr.on('data', this.err);
             return this.build.on('close', this.close);
@@ -28,12 +28,12 @@ class Build {
     }
 
     public out = (data) =>
-        atom.emit("omnisharp-atom:build-message", data.toString())
+        atom.emitter.emit("omnisharp-atom:build-message", data.toString())
 
     public err = (data) =>
-        atom.emit("omnisharp-atom:build-err", data.toString())
+        atom.emitter.emit("omnisharp-atom:build-err", data.toString())
 
     public close = (exitCode) =>
-        atom.emit("omnisharp-atom:build-exitcode", exitCode)
+        atom.emitter.emit("omnisharp-atom:build-exitcode", exitCode)
 }
 export = Build

@@ -1,9 +1,9 @@
-var spacePenViews = require('atom-space-pen-views')
-var View = <any>spacePenViews.View;
+import spacePenViews = require('atom-space-pen-views')
+var $ = spacePenViews.jQuery;
 import Vue = require('vue')
 import OmniSharpServer = require('../../omni-sharp-server/omni-sharp-server')
 
-class StatusBarView extends View {
+class StatusBarView extends spacePenViews.View {
     private vm: OmniSharp.vm;
 
     constructor(...args: any[]) {
@@ -36,7 +36,7 @@ class StatusBarView extends View {
             el: this[0],
             data: OmniSharpServer.vm,
             methods: {
-                toggle: () => this.toggle()
+                toggle: () => this.toggleView()
             }
         });
         this.vm = <any>viewModel;
@@ -46,7 +46,7 @@ class StatusBarView extends View {
         });
     }
 
-    public toggle() {
+    public toggleView() {
         atom.commands.dispatch(atom.views.getView(atom.workspace), 'omnisharp-atom:toggle-output');
         return this.vm.isOpen = !this.vm.isOpen;
     }
