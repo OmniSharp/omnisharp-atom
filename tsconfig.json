@@ -30,6 +30,7 @@
         "!./node_modules/**/*.ts"
     ],
     "files": [
+        "./lib/models.d.ts",
         "./lib/omni-sharp-server/omni-sharp-server.ts",
         "./lib/omni-sharp-server/omni.ts",
         "./lib/omnisharp-atom/dependency-checker.ts",
@@ -41,12 +42,10 @@
         "./lib/omnisharp-atom/features/go-to-definition.ts",
         "./lib/omnisharp-atom/features/lib/completion-provider.ts",
         "./lib/omnisharp-atom/features/rename.ts",
-        "./lib/omnisharp-atom/features/syntax-errors.ts",
         "./lib/omnisharp-atom/linter.ts",
         "./lib/omnisharp-atom/omnisharp-atom.ts",
         "./lib/omnisharp-atom/views/build-output-pane-view.ts",
         "./lib/omnisharp-atom/views/dock-view.ts",
-        "./lib/omnisharp-atom/views/error-pane-view.ts",
         "./lib/omnisharp-atom/views/find-pane-view.ts",
         "./lib/omnisharp-atom/views/omni-output-pane-view.ts",
         "./lib/omnisharp-atom/views/rename-view.ts",

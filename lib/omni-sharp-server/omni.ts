@@ -3,7 +3,7 @@ import Url = require("url")
 import _ = require("lodash")
 import Promise = require("bluebird")
 // TODO: Make .d.ts and submit to DefinitelyTyped?
-var request : (options:any) => Promise<any> = require("request-promise")
+var request: (options: any) => Promise<string> = require("request-promise")
 
 class Omni {
     public static getEditorContext(editor: Atom.TextEditor) {
@@ -23,7 +23,7 @@ class Omni {
         }
     }
 
-    private static _uri(path: string, query? : string) {
+    private static _uri(path: string, query?: string) {
         var port = OmniSharpServer.get().port;
         return Url.format({
             hostname: "localhost",
@@ -34,31 +34,34 @@ class Omni {
         })
     }
 
-    public static req(path: string, event: string, d?: any, editor?: Atom.TextEditor) : Promise<any> {
-        return Omni._req(path, event, d, editor)
-            .catch(data => {
+    public static req<TResponse, TRequest>(path: string, event: string, data?: TRequest, editor?: Atom.TextEditor): Promise<TResponse> {
+        var result = Omni._req<TResponse, TRequest>(path, event, data, editor);
+
+        result.catch(data => {
             var ref;
             if (typeof data !== 'string') {
-                return console.error(data.statusCode != null, (ref = data.options) != null ? ref.uri : void 0);
+                console.error(data.statusCode != null, (ref = data.options) != null ? ref.uri : void 0);
             }
         })
+
+        return result;
     }
 
-    private static _req(path: string, event: string, d, editor: Atom.TextEditor) : Promise<any> {
+    private static _req<TResponse, TRequest>(path: string, event: string, data : TRequest, editor: Atom.TextEditor): Promise<TResponse> {
         if (OmniSharpServer.vm.isNotReady) {
-            return Promise.reject("omnisharp not ready");
+            return Promise.reject<any>("omnisharp not ready");
         }
 
         var context = Omni.getEditorContext(editor);
         if (!context) {
-            return Promise.reject("no editor context found");
+            return Promise.reject<any>("no editor context found");
         }
 
         return request({
             uri: Omni._uri(path),
             method: "POST",
             json: true,
-            body: _.extend({}, context, d)
+            body: _.extend({}, context, data)
         }).then(function(data) {
             var parsedData;
             try {
@@ -69,7 +72,7 @@ class Omni {
                 atom.emitter.emit("omni:" + event, parsedData);
                 console.log("omni:" + event, parsedData);
             }
-            return parsedData;
+            return <TResponse>parsedData;
         })
     }
 
@@ -78,15 +81,15 @@ class Omni {
     }
 
     public static codecheck(buffer, editor) {
-        return Omni.req("codecheck", "quick-fixes", null, editor);
+        return Omni.req<OmniSharp.Request, OmniSharp.QuickFixResponse>("codecheck", "quick-fixes", null, editor);
     }
 
     public static findUsages() {
-        return Omni.req("findUsages", "find-usages");
+        return Omni.req<OmniSharp.Request, OmniSharp.QuickFixResponse>("findUsages", "find-usages");
     }
 
     public static goToDefinition() {
-        return Omni.req("gotoDefinition", "navigate-to");
+        return Omni.req<OmniSharp.Request, OmniSharp.GotoDefinitionResponse>("gotoDefinition", "navigate-to");
     }
 
     public static fixUsings() {
@@ -94,20 +97,20 @@ class Omni {
     }
 
     public static codeFormat() {
-        return Omni.req("codeFormat", "code-format");
+        return Omni.req<OmniSharp.Request, OmniSharp.CodeFormatResponse>("codeFormat", "code-format");
     }
 
     public static build() {
         return Omni.req("buildcommand", "build-command");
     }
 
-    public static autocomplete(wordToComplete) {
-        var data = {
+    public static autocomplete(wordToComplete: string) {
+        var data : OmniSharp.AutoCompleteRequest = {
             wordToComplete: wordToComplete,
             wantDocumentationForEveryCompletionResult: false,
             wantKind: true
         };
-        return Omni.req("autocomplete", "autocomplete", data);
+        return Omni.req<OmniSharp.AutoCompleteRequest, OmniSharp.AutoCompleteResponse>("autocomplete", "autocomplete", data);
     }
 
     public static rename(wordToRename) {

@@ -1,4 +1,4 @@
-
+/// <reference path="./models.d.ts" />
 /// <reference path="../typingsTemp/atom/atom.d.ts" />
 
 declare module OmniSharp {
