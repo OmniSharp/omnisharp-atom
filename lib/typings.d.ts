@@ -1,55 +1,5 @@
 
-/// <reference path="../typings/emissary/emissary.d.ts" />
-/// <reference path="../typings/atom/atom.d.ts" />
-
-declare module AtomCore {
-    // TODO: Submit to definitely typed
-    interface ICommandRegistry {
-        add(target:string, commandName:string, callback: (event: Event) => void);
-        add(target:string, commands: { [command: string]: (event: Event) => void });
-        findCommands({target: Node}): Array<{ name: string, displayName:string }>;
-        dispatch(target: Node, commandName: string, detail?: any): void;
-    }
-
-    interface IViewProviderSpec {
-        modelConstructor<T>(): T;
-        viewConstructor?<T extends HTMLElement>(): T;
-        createView?<T extends HTMLElement>(): T;
-    }
-
-    interface IViewRegistry {
-        addViewProvider(providerSpec: IViewProviderSpec);
-        getView(object: AtomCore.IPane);
-        getView(object: AtomCore.IEditor);
-        getView(object: AtomCore.IWorkspace);
-    }
-
-    // Currently atom.d.ts does not declare it is an emitter.
-    // It currently is but Emissary might be going away.
-    //    see: https://github.com/atom/emissary
-    interface IAtom extends Emissary.IEmitter {
-        commands: ICommandRegistry;
-        views: IViewRegistry;
-    }
-
-    interface IWorkspace {
-        observeTextEditors(callback: (editor:AtomCore.IEditor) => { dipose: Function; });
-    }
-
-    interface IGrammar {
-        name: string;
-    }
-
-    interface IEditor {
-        onDidDestroy(callback: () => void);
-    }
-}
-
-declare module Emissary {
-    interface IEmitter {
-        dispose() :void;
-    }
-}
+/// <reference path="../typingsTemp/atom/atom.d.ts" />
 
 declare module OmniSharp {
     interface IFeature {
@@ -83,5 +33,9 @@ declare module OmniSharp {
         prefix: string;
         renderLabelAsHtml: boolean;
         label: string;
+    }
+
+    interface VueArray<T> extends Array<T> {
+        $remove(index:number);
     }
 }
