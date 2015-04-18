@@ -4,13 +4,13 @@ var Convert = require('ansi-to-html')
 import Vue = require('vue')
 
 import omnisharpAtom = require("../omnisharp-atom");
-import ErrorPaneView = require('./error-pane-view')
 import FindPaneView = require('./find-pane-view')
 import BuildOutputPaneView = require('./build-output-pane-view')
 import OmniOutputPaneView = require('./omni-output-pane-view')
 
+
 class DockView extends spacePenViews.View {
-    private errorsOutput;
+
     private findOutput;
     private buildOutput;
     private omniOutput;
@@ -52,7 +52,6 @@ class DockView extends spacePenViews.View {
                                         return this.div({
                                             "class": 'btn-group btn-toggle'
                                         }, () => {
-                                                btn("errors", "Errors");
                                                 btn("find", "Find");
                                                 btn("build", "Build output");
                                                 return btn("omni", "Omnisharp output");
@@ -93,7 +92,6 @@ class DockView extends spacePenViews.View {
             return "omnisharp-atom-output " + expectedValue + "-output " + selected;
         });
 
-        this.errorsOutput.append(new ErrorPaneView());
         this.findOutput.append(new FindPaneView());
         this.buildOutput.append(new BuildOutputPaneView());
         this.omniOutput.append(new OmniOutputPaneView());
@@ -116,7 +114,6 @@ class DockView extends spacePenViews.View {
 
         atom.commands.add('atom-workspace', "omnisharp-atom:toggle-output", () => this.toggleView());
         atom.commands.add('atom-workspace', "omnisharp-atom:hide", () => this.hideView());
-        atom.commands.add('atom-workspace', "omnisharp-atom:show-errors", () => this.selectPane("errors"));
         atom.commands.add('atom-workspace', "omnisharp-atom:show-find", () => this.selectPane("find"));
         atom.commands.add('atom-workspace', "omnisharp-atom:show-build", () => this.selectPane("build"));
         atom.commands.add('atom-workspace', "omnisharp-atom:show-omni", () => this.selectPane("omni"));
