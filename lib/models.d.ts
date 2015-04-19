@@ -1,208 +1,208 @@
 declare module OmniSharp {
     interface AspNet5Project {
-        path?: string;
-        name?: string;
-        commands?: { [ key: string ]: string };
-        configurations?: string[];
-        projectSearchPaths?: string[];
-        frameworks?: string[];
-        globalJsonPath?: string;
-        sourceFiles?: string[];
+        Path?: string;
+        Name?: string;
+        Commands?: { [ key: string ]: string };
+        Configurations?: string[];
+        ProjectSearchPaths?: string[];
+        Frameworks?: string[];
+        GlobalJsonPath?: string;
+        SourceFiles?: string[];
     }
 
     interface AspNet5WorkspaceInformation {
-        projects?: AspNet5Project[];
-        runtimePath?: string;
-        designTimeHostPort?: number;
+        Projects?: AspNet5Project[];
+        RuntimePath?: string;
+        DesignTimeHostPort?: number;
     }
 
-    interface AutoCompleteRequest {
-        wantDocumentationForEveryCompletionResult?: boolean;
-        wantImportableTypes?: boolean;
-        wantMethodHeader?: boolean;
-        wantSnippet?: boolean;
-        wantReturnType?: boolean;
-        wantKind?: boolean;
+    interface AutoCompleteRequest extends Request {
+        WantDocumentationForEveryCompletionResult?: boolean;
+        WantImportableTypes?: boolean;
+        WantMethodHeader?: boolean;
+        WantSnippet?: boolean;
+        WantReturnType?: boolean;
+        WantKind?: boolean;
     }
 
     interface AutoCompleteResponse {
-        completionText?: string;
-        description?: string;
-        displayText?: string;
-        requiredNamespaceImport?: string;
-        methodHeader?: string;
-        returnType?: string;
-        snippet?: string;
-        kind?: string;
+        CompletionText?: string;
+        Description?: string;
+        DisplayText?: string;
+        RequiredNamespaceImport?: string;
+        MethodHeader?: string;
+        ReturnType?: string;
+        Snippet?: string;
+        Kind?: string;
     }
 
     interface ChangeBufferRequest {
-        fileName?: string;
-        startLine?: number;
-        startColumn?: number;
-        endLine?: number;
-        endColumn?: number;
-        newText?: string;
+        FileName?: string;
+        StartLine?: number;
+        StartColumn?: number;
+        EndLine?: number;
+        EndColumn?: number;
+        NewText?: string;
     }
 
-    interface CodeActionRequest {
-        codeAction?: number;
-        wantsTextChanges?: boolean;
-        selectionStartColumn?: number;
-        selectionStartLine?: number;
-        selectionEndColumn?: number;
-        selectionEndLine?: number;
+    interface CodeActionRequest extends Request {
+        CodeAction?: number;
+        WantsTextChanges?: boolean;
+        SelectionStartColumn?: number;
+        SelectionStartLine?: number;
+        SelectionEndColumn?: number;
+        SelectionEndLine?: number;
     }
 
     interface CodeFormatResponse {
-        buffer?: string;
+        Buffer?: string;
     }
 
-    interface DiagnosticLocation {
-        logLevel?: string;
+    interface DiagnosticLocation extends QuickFix {
+        LogLevel?: string;
     }
 
     interface FileMemberElement {
-        childNodes?: FileMemberElement[];
-        location?: QuickFix;
-        kind?: string;
-        projects?: string[];
+        ChildNodes?: FileMemberElement[];
+        Location?: QuickFix;
+        Kind?: string;
+        Projects?: string[];
     }
 
     interface FindSymbolsRequest {
-        filter?: string;
+        Filter?: string;
     }
 
-    interface FindUsagesRequest {
-        onlyThisFile?: boolean;
-        excludeDefinition?: boolean;
+    interface FindUsagesRequest extends Request {
+        OnlyThisFile?: boolean;
+        ExcludeDefinition?: boolean;
     }
 
-    interface FormatAfterKeystrokeRequest {
-        character?: string;
+    interface FormatAfterKeystrokeRequest extends Request {
+        Character?: string;
     }
 
-    interface FormatRangeRequest {
-        endLine?: number;
-        endColumn?: number;
+    interface FormatRangeRequest extends Request {
+        EndLine?: number;
+        EndColumn?: number;
     }
 
     interface FormatRangeResponse {
-        changes?: LinePositionSpanTextChange[];
+        Changes?: LinePositionSpanTextChange[];
     }
 
     interface GetCodeActionsResponse {
-        codeActions?: string[];
+        CodeActions?: string[];
     }
 
     interface GetTestCommandResponse {
-        directory?: string;
-        testCommand?: string;
+        Directory?: string;
+        TestCommand?: string;
     }
 
     interface GotoDefinitionResponse {
-        fileName?: string;
-        line?: number;
-        column?: number;
+        FileName?: string;
+        Line?: number;
+        Column?: number;
     }
 
     interface LinePositionSpanTextChange {
-        newText?: string;
-        startLine?: number;
-        startColumn?: number;
-        endLine?: number;
-        endColumn?: number;
+        NewText?: string;
+        StartLine?: number;
+        StartColumn?: number;
+        EndLine?: number;
+        EndColumn?: number;
     }
 
     interface ModifiedFileResponse {
-        fileName?: string;
-        buffer?: string;
-        changes?: LinePositionSpanTextChange[];
+        FileName?: string;
+        Buffer?: string;
+        Changes?: LinePositionSpanTextChange[];
     }
 
     interface MSBuildProject {
-        projectGuid?: string;
-        path?: string;
-        assemblyName?: string;
-        targetPath?: string;
-        targetFramework?: string;
-        sourceFiles?: string[];
+        ProjectGuid?: string;
+        Path?: string;
+        AssemblyName?: string;
+        TargetPath?: string;
+        TargetFramework?: string;
+        SourceFiles?: string[];
     }
 
     interface MsBuildWorkspaceInformation {
-        solutionPath?: string;
-        projects?: MSBuildProject[];
+        SolutionPath?: string;
+        Projects?: MSBuildProject[];
     }
 
     interface NavigateResponse {
-        line?: number;
-        column?: number;
+        Line?: number;
+        Column?: number;
     }
 
     interface ProjectInformationResponse {
-        msBuildProject?: MSBuildProject;
-        aspNet5Project?: AspNet5Project;
+        MsBuildProject?: MSBuildProject;
+        AspNet5Project?: AspNet5Project;
     }
 
     interface QuickFix {
-        fileName?: string;
-        line?: number;
-        column?: number;
-        endLine?: number;
-        endColumn?: number;
-        text?: string;
-        projects?: string[];
+        FileName?: string;
+        Line?: number;
+        Column?: number;
+        EndLine?: number;
+        EndColumn?: number;
+        Text?: string;
+        Projects?: string[];
     }
 
     interface QuickFixResponse {
-        quickFixes?: QuickFix[];
+        QuickFixes?: QuickFix[];
     }
 
-    interface RenameRequest {
-        wantsTextChanges?: boolean;
-        renameTo?: string;
+    interface RenameRequest extends Request {
+        WantsTextChanges?: boolean;
+        RenameTo?: string;
     }
 
     interface RenameResponse {
-        changes?: ModifiedFileResponse[];
-        errorMessage?: string;
+        Changes?: ModifiedFileResponse[];
+        ErrorMessage?: string;
     }
 
     interface Request {
-        line?: number;
-        column?: number;
-        buffer?: string;
+        Line?: number;
+        Column?: number;
+        Buffer?: string;
     }
 
     interface RunCodeActionResponse {
-        text?: string;
-        changes?: LinePositionSpanTextChange[];
+        Text?: string;
+        Changes?: LinePositionSpanTextChange[];
     }
 
-    interface SymbolLocation {
-        kind?: string;
+    interface SymbolLocation extends QuickFix {
+        Kind?: string;
     }
 
-    interface TestCommandRequest {
-        type?: any;
+    interface TestCommandRequest extends Request {
+        Type?: any;
     }
 
     interface TestCommandResponse {
-        testCommand?: string;
+        TestCommand?: string;
     }
 
-    interface TypeLookupRequest {
-        includeDocumentation?: boolean;
+    interface TypeLookupRequest extends Request {
+        IncludeDocumentation?: boolean;
     }
 
     interface TypeLookupResponse {
-        type?: string;
-        documentation?: string;
+        Type?: string;
+        Documentation?: string;
     }
 
     interface WorkspaceInformationResponse {
-        aspNet5?: AspNet5WorkspaceInformation;
-        msBuild?: MsBuildWorkspaceInformation;
+        AspNet5?: AspNet5WorkspaceInformation;
+        MSBuild?: MsBuildWorkspaceInformation;
     }
 
 

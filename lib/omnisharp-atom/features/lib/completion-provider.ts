@@ -26,7 +26,7 @@ class CompletionProvider {
                     completions = [];
                 }
 
-                var result = _.map(completions, (item : any) => ({
+                var result = _.map(completions, (item) => ({
                     word: item.CompletionText,
                     prefix: word,
                     renderLabelAsHtml: true,

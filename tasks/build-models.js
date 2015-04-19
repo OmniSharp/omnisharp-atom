@@ -11,6 +11,8 @@ var enumerableRegex = /IEnumerable<(.*?)>/;
 var getterSetterRegex = /^\s*public (.*?) \{ get; set; \}/;
 var getterRegex = /^\s*public (.*?) \{ get; \}/;
 
+var inheritsRegex = /class .*? \: (.*?)$/;
+
 function inferPropertyType(property) {
     var dictionary = property.match(dictionaryRegex);
     if (dictionary) {
@@ -49,6 +51,7 @@ module.exports = function() {
         var name = file.replace('.cs','.d.ts');
         var modelName = name.replace('.d.ts', '');
         var content = fs.readFileSync(modelLocation + '/' + file).toString('utf-8').split('\n');
+        var inheritsFrom = '';
 
         while (content.length) {
             var row = content.shift();
@@ -57,15 +60,22 @@ module.exports = function() {
                 var property = result[1].split(' ');
 
                 var propertyName = property.pop();
-                propertyName = _.camelCase(propertyName);
+                propertyName = propertyName;
                 var type = property.join(' ');
 
                 properties.push(propertyName + (_.endsWith(type, '?') ? '?' : '?') + ': ' + inferPropertyType(type));
             }
+
+            var inherits = row.match(inheritsRegex);
+            if (inherits) {
+                inheritsFrom = inherits[1];
+                if (inheritsFrom .indexOf('IComparable') > -1)
+                    inheritsFrom = '';
+            }
         }
 
         var lines = [];
-        lines.push('interface ' + modelName + ' {');
+        lines.push('interface ' + modelName + (inheritsFrom && ' extends ' + inheritsFrom || '') +' {');
         properties.forEach(function(property) {
             lines.push('    ' + property + ';');
         });

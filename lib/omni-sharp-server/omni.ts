@@ -34,8 +34,8 @@ class Omni {
         })
     }
 
-    public static req<TResponse, TRequest>(path: string, event: string, data?: TRequest, editor?: Atom.TextEditor): Promise<TResponse> {
-        var result = Omni._req<TResponse, TRequest>(path, event, data, editor);
+    public static req<TRequest, TResponse>(path: string, event: string, data?: TRequest, editor?: Atom.TextEditor): Promise<TResponse> {
+        var result = Omni._req<TRequest, TResponse>(path, event, data, editor);
 
         result.catch(data => {
             var ref;
@@ -47,7 +47,7 @@ class Omni {
         return result;
     }
 
-    private static _req<TResponse, TRequest>(path: string, event: string, data : TRequest, editor: Atom.TextEditor): Promise<TResponse> {
+    private static _req<TRequest, TResponse>(path: string, event: string, data : TRequest, editor: Atom.TextEditor): Promise<TResponse> {
         if (OmniSharpServer.vm.isNotReady) {
             return Promise.reject<any>("omnisharp not ready");
         }
@@ -110,7 +110,7 @@ class Omni {
             wantDocumentationForEveryCompletionResult: false,
             wantKind: true
         };
-        return Omni.req<OmniSharp.AutoCompleteRequest, OmniSharp.AutoCompleteResponse>("autocomplete", "autocomplete", data);
+        return Omni.req<OmniSharp.AutoCompleteRequest, OmniSharp.AutoCompleteResponse[]>("autocomplete", "autocomplete", data);
     }
 
     public static rename(wordToRename) {

@@ -1,5 +1,5 @@
 var linterPath = atom.packages.resolvePackagePath("linter");
-var Linter = require(`${linterPath}/lib/linter`);
+var Linter = { Linter: <typeof Linter.Linter>require(`${linterPath}/lib/linter`) };
 import OmniSharpServer = require('../omni-sharp-server/omni-sharp-server');
 import Omni = require('../omni-sharp-server/omni');
 import _ = require('lodash');
@@ -14,20 +14,13 @@ interface LinterError {
     linter: string; // linter name
 }
 
-interface OmnisharpError {
-    Line: number; //startline
-    Column: number;
-    LogLevel: string;
-    Text: string;
-}
-
-class LinterCSharp extends Linter {
+class LinterCSharp extends Linter.Linter {
 
     static linterName: string = "C#";
     static syntax: string = "source.cs";
     static regex: string = "";
 
-    constructor(private editor) {
+    constructor(public editor) {
         super(editor);
     }
 
@@ -66,7 +59,7 @@ class LinterCSharp extends Linter {
 
         Omni.codecheck(null, this.editor).then(data => {
 
-            var errors = _.map(data.QuickFixes, (error: OmnisharpError) : LinterError => {
+            var errors = _.map(data.QuickFixes, (error : OmniSharp.DiagnosticLocation) : LinterError => {
                 var line = error.Line-1;
                 var column = error.Column-1;
                 var text = this.editor.lineTextForBufferRow(line);

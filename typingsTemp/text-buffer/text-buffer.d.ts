@@ -707,7 +707,7 @@ start point plus the given row and column deltas.
     
         /**
          * Call this with the result of {Range::serialize} to construct a new Range.
-        @param array? - {array} of params to pass to the {::constructor} 
+        @param array? - {Array} of params to pass to the {::constructor} 
          */
         static deserialize(array? : any[]) : any;
     
