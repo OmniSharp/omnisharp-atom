@@ -2,7 +2,7 @@
 'context-menu':
   'atom-text-editor': [
     {
-      label: 'omnisharp-atom'
+      label: 'OmniSharp'
       submenu: [
         { 'label': 'Toggle', 'command': 'omnisharp-atom:toggle' }
         { 'label': 'Find Usages', 'command': 'omnisharp-atom:find-usages' }
@@ -14,12 +14,12 @@
       ]
     }
   ]
-  
+
 'menu': [
   {
     'label': 'Packages'
     'submenu': [
-      'label': 'omnisharp-atom'
+      'label': 'OmniSharp'
       'submenu': [
         { 'label': 'Toggle', 'command': 'omnisharp-atom:toggle' }
         { 'label': 'Find Usages', 'command': 'omnisharp-atom:find-usages' }
