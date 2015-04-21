@@ -18,44 +18,44 @@ declare module SpacePen {
     
         /**
          * Add the given subview wired to an outlet with the given name
-        @param name? - {String} name of the subview
-        @param view? - DOM element or jQuery node subview 
+         * @param name? - {String} name of the subview
+         * @param view? - DOM element or jQuery node subview 
          */
-        static subview(name? : string, view? : any) : any;
+        static subview(name? : string, view? : View) : View;
     
         /**
          * Add a text node with the given text content
-        @param string? - {String} text contents of the node 
+         * @param string? - {String} text contents of the node 
          */
         static text(string? : string) : string;
     
         /**
          * Add a new tag with the given name
-        @param tagName? - {String} name of the tag like 'li', etc
-        @param args? - other arguments 
+         * @param tagName? - {String} name of the tag like 'li', etc
+         * @param args? - other arguments 
          */
         static tag(tagName? : string, args? : any) : any;
     
         /**
          * Add new child DOM nodes from the given raw HTML string.
-        @param string? - {String} HTML content 
+         * @param string? - {String} HTML content 
          */
         static raw(string? : string) : any;
     
         /**
          * This field or method was not documented by atomdoc, assume it is private. Use with caution.
          */
-        static pushBuilder() : any;
+        static pushBuilder() : Builder;
     
         /**
          * This field or method was not documented by atomdoc, assume it is private. Use with caution.
          */
-        static popBuilder() : any;
+        static popBuilder() : Builder;
     
         /**
          * This field or method was not documented by atomdoc, assume it is private. Use with caution.
          */
-        static buildHtml(fn? : any) : any;
+        static buildHtml(fn? : any) : string;
     
         /**
          * This field or method was not documented by atomdoc, assume it is private. Use with caution.
@@ -75,7 +75,7 @@ declare module SpacePen {
         /**
          * This field or method was not documented by atomdoc, assume it is private. Use with caution.
          */
-        buildHtml(params? : any) : any;
+        buildHtml(params? : any) : string;
     
         /**
          * This field or method was not documented by atomdoc, assume it is private. Use with caution.
@@ -102,8 +102,8 @@ declare module SpacePen {
     
         /**
          * Preempt events registered with jQuery's `::on`.
-        @param eventName? - A event name {String}.
-        @param handler? - A {Function} to execute when the eventName is triggered. 
+         * @param eventName? - A event name {String}.
+         * @param handler? - A {Function} to execute when the eventName is triggered. 
          */
         preempt(eventName? : string, handler? : Function) : any;
     
@@ -2242,7 +2242,7 @@ declare module SpacePen {
         /**
          * This field or method was not documented by atomdoc, assume it is private. Use with caution.
          */
-        buildHtml() : any;
+        buildHtml() : string;
     
         /**
          * This field or method was not documented by atomdoc, assume it is private. Use with caution.
@@ -2272,7 +2272,7 @@ declare module SpacePen {
         /**
          * This field or method was not documented by atomdoc, assume it is private. Use with caution.
          */
-        subview(outletName? : string, subview? : any) : any;
+        subview(outletName? : string, subview? : View) : View;
     
         /**
          * This field or method was not documented by atomdoc, assume it is private. Use with caution.

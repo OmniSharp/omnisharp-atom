@@ -18,28 +18,25 @@ declare module FirstMate {
     
         /**
          * Invoke the given callback when a grammar is added to the registry.
-        @param callback? - {Function} to call when a grammar is added.
-        Returns a {Disposable} on which `.dispose()` can be called to unsubscribe.
+         * @param callback? - {Function} to call when a grammar is added.
          */
         onDidAddGrammar(callback? : Function) : EventKit.Disposable;
     
         /**
          * Invoke the given callback when a grammar is updated due to a grammar
          * it depends on being added or removed from the registry.
-        @param callback? - {Function} to call when a grammar is updated.
-        Returns a {Disposable} on which `.dispose()` can be called to unsubscribe.
+         * @param callback? - {Function} to call when a grammar is updated.
          */
         onDidUpdateGrammar(callback? : Function) : EventKit.Disposable;
     
         /**
          * Get all the grammars in this registry.
-        Returns a non-empty {Array} of {Grammar} instances.
          */
         getGrammars() : Grammar[];
     
         /**
          * Get a grammar with the given scope name.
-        @param scopeName? - A {String} such as `"source.js"`.
+         * @param scopeName? - A {String} such as `"source.js"`.
          */
         grammarForScopeName(scopeName? : string) : string;
     
@@ -47,71 +44,66 @@ declare module FirstMate {
          * Add a grammar to this registry.
          * 
          * A 'grammar-added' event is emitted after the grammar is added.
-        @param grammar? - The {Grammar} to add. This should be a value previously returned from {::readGrammar} or {::readGrammarSync}.
-        Returns a {Disposable} on which `.dispose()` can be called to remove the
-grammar.
+         * @param grammar? - The {Grammar} to add. This should be a value previously returned from {::readGrammar} or {::readGrammarSync}.
          */
-        addGrammar(grammar? : Grammar) : EventKit.Disposable;
+        addGrammar(grammar? : Grammar) : Grammar;
     
         /**
          * This field or method was not documented by atomdoc, assume it is private. Use with caution.
          */
-        removeGrammar(grammar? : any) : any;
+        removeGrammar(grammar? : Grammar) : Grammar;
     
         /**
          * Remove the grammar with the given scope name.
-        @param scopeName? - A {String} such as `"source.js"`.
+         * @param scopeName? - A {String} such as `"source.js"`.
          */
         removeGrammarForScopeName(scopeName? : string) : string;
     
         /**
          * Read a grammar synchronously but don't add it to the registry.
-        @param grammarPath? - A {String} absolute file path to a grammar file.
+         * @param grammarPath? - A {String} absolute file path to a grammar file.
         Returns a {Grammar}.
          */
         readGrammarSync(grammarPath? : string) : Grammar;
     
         /**
          * Read a grammar asynchronously but don't add it to the registry.
-        @param grammarPath? - A {String} absolute file path to a grammar file.
-        @param callback? - A {Function} to call when read with the following arguments:
-        Returns .
+         * @param grammarPath? - A {String} absolute file path to a grammar file.
+         * @param callback? - A {Function} to call when read with the following arguments:
          */
-        readGrammar(grammarPath? : string, callback? : Function) : any;
+        readGrammar(grammarPath? : string, callback? : Function) : Grammar;
     
         /**
          * Read a grammar synchronously and add it to this registry.
-        @param grammarPath? - A {String} absolute file path to a grammar file.
+         * @param grammarPath? - A {String} absolute file path to a grammar file.
         Returns a {Grammar}.
          */
         loadGrammarSync(grammarPath? : string) : Grammar;
     
         /**
          * Read a grammar asynchronously and add it to the registry.
-        @param grammarPath? - A {String} absolute file path to a grammar file.
-        @param callback? - A {Function} to call when loaded with the following arguments:
-        Returns .
+         * @param grammarPath? - A {String} absolute file path to a grammar file.
+         * @param callback? - A {Function} to call when loaded with the following arguments:
          */
-        loadGrammar(grammarPath? : string, callback? : Function) : any;
+        loadGrammar(grammarPath? : string, callback? : Function) : Grammar;
     
         /**
          * Get the grammar override for the given file path.
-        @param filePath? - A {String} file path.
+         * @param filePath? - A {String} file path.
         Returns a {Grammar} or .
          */
         grammarOverrideForPath(filePath? : string) : Grammar;
     
         /**
          * Set the grammar override for the given file path.
-        @param filePath? - A non-empty {String} file path.
-        @param scopeName? - A {String} such as `"source.js"`.
-        Returns a {Grammar} or .
+         * @param filePath? - A non-empty {String} file path.
+         * @param scopeName? - A {String} such as `"source.js"`.
          */
-        setGrammarOverrideForPath(filePath? : string, scopeName? : string) : Grammar;
+        setGrammarOverrideForPath(filePath? : string, scopeName? : string) : void;
     
         /**
          * Remove the grammar override for the given file path.
-        @param filePath? - A {String} file path.
+         * @param filePath? - A {String} file path.
         Returns .
          */
         clearGrammarOverrideForPath(filePath? : string) : any;
@@ -127,16 +119,15 @@ grammar.
          * 
          * This picks the best match by checking the file path and contents against
          * each grammar.
-        @param filePath? - A {String} file path.
-        @param fileContents? - A {String} of text for the file path.
-        Returns a {Grammar}, never null.
+         * @param filePath? - A {String} file path.
+         * @param fileContents? - A {String} of text for the file path.
          */
         selectGrammar(filePath? : string, fileContents? : string) : Grammar;
     
         /**
          * This field or method was not documented by atomdoc, assume it is private. Use with caution.
          */
-        createToken(value? : any, scopes? : any) : any;
+        createToken(value? : any, scopes? : Atom.Scope[]) : Atom.Token;
     
         /**
          * This field or method was not documented by atomdoc, assume it is private. Use with caution.
@@ -146,7 +137,7 @@ grammar.
         /**
          * This field or method was not documented by atomdoc, assume it is private. Use with caution.
          */
-        createGrammar(grammarPath? : any, object? : any) : any;
+        createGrammar(grammarPath? : any, object? : any) : Grammar;
     
     }
 
@@ -172,23 +163,22 @@ grammar.
         /**
          * Invoke the given callback when this grammar is updated due to a
          * grammar it depends on being added or removed from the registry.
-        @param callback? - {Function} to call when this grammar is updated.
-        Returns a {Disposable} on which `.dispose()` can be called to unsubscribe.
+         * @param callback? - {Function} to call when this grammar is updated.
          */
         onDidUpdate(callback? : Function) : EventKit.Disposable;
     
         /**
          * Tokenize all lines in the given text.
-        @param text? - A {String} containing one or more lines.
+         * @param text? - A {String} containing one or more lines.
         Returns an {Array} of token arrays for each line tokenized.
          */
         tokenizeLines(text? : string) : any[];
     
         /**
          * Tokenize the line of text.
-        @param line? - A {String} of text to tokenize.
-        @param ruleStack? - An optional {Array} of rules previously returned from this method. This should be null when tokenizing the first line in the file.
-        @param firstLine? - A optional {Boolean} denoting whether this is the first line in the file which defaults to `false`. This should be `true` when tokenizing the first line in the file.
+         * @param line? - A {String} of text to tokenize.
+         * @param ruleStack? - An optional {Array} of rules previously returned from this method. This should be null when tokenizing the first line in the file.
+         * @param firstLine? - A optional {Boolean} denoting whether this is the first line in the file which defaults to `false`. This should be `true` when tokenizing the first line in the file.
         Returns an {Object} containing the following properties:
 
 * `token` An {Array} of tokens covering the entire line of text.
@@ -201,22 +191,22 @@ grammar.
         /**
          * This field or method was not documented by atomdoc, assume it is private. Use with caution.
          */
-        activate() : any;
+        activate() : void;
     
         /**
          * This field or method was not documented by atomdoc, assume it is private. Use with caution.
          */
-        deactivate() : any;
+        deactivate() : void;
     
         /**
          * This field or method was not documented by atomdoc, assume it is private. Use with caution.
          */
-        clearRules() : any;
+        clearRules() : Rule[];
     
         /**
          * This field or method was not documented by atomdoc, assume it is private. Use with caution.
          */
-        getInitialRule() : any;
+        getInitialRule() : Rule;
     
         /**
          * This field or method was not documented by atomdoc, assume it is private. Use with caution.
@@ -226,7 +216,7 @@ grammar.
         /**
          * This field or method was not documented by atomdoc, assume it is private. Use with caution.
          */
-        addIncludedGrammarScope(scope? : any) : any;
+        addIncludedGrammarScope(scope? : Atom.Scope) : Atom.Scope;
     
         /**
          * This field or method was not documented by atomdoc, assume it is private. Use with caution.
@@ -251,17 +241,17 @@ grammar.
         /**
          * This field or method was not documented by atomdoc, assume it is private. Use with caution.
          */
-        createToken(value? : any, scopes? : any) : any;
+        createToken(value? : any, scopes? : Atom.Scope[]) : Atom.Token;
     
         /**
          * This field or method was not documented by atomdoc, assume it is private. Use with caution.
          */
-        createRule(options? : any) : any;
+        createRule(options? : any) : Rule;
     
         /**
          * This field or method was not documented by atomdoc, assume it is private. Use with caution.
          */
-        createPattern(options? : any) : any;
+        createPattern(options? : any) : Pattern;
     
         /**
          * This field or method was not documented by atomdoc, assume it is private. Use with caution.
@@ -271,8 +261,10 @@ grammar.
         /**
          * This field or method was not documented by atomdoc, assume it is private. Use with caution.
          */
-        scopesFromStack(stack? : any, rule? : any, endPatternMatch? : any) : any;
+        scopesFromStack(stack? : any, rule? : Rule, endPatternMatch? : any) : any;
     
+    
+        name: string;
     }
 
     /**
@@ -283,22 +275,22 @@ grammar.
         /**
          * This field or method was not documented by atomdoc, assume it is private. Use with caution.
          */
-        grammar: any /* default */;
+        grammar: Grammar;
     
         /**
          * This field or method was not documented by atomdoc, assume it is private. Use with caution.
          */
-        constructor(grammar? : any, injections? : any);
+        constructor(grammar? : Grammar, injections? : Injections);
     
         /**
          * This field or method was not documented by atomdoc, assume it is private. Use with caution.
          */
-        getScanner(injection? : any) : any;
+        getScanner(injection? : any) : Scanner;
     
         /**
          * This field or method was not documented by atomdoc, assume it is private. Use with caution.
          */
-        getScanners(ruleStack? : any) : any;
+        getScanners(ruleStack? : any) : Scanner[];
     
     }
 
@@ -327,7 +319,7 @@ grammar.
         /**
          * This field or method was not documented by atomdoc, assume it is private. Use with caution.
          */
-        grammar: any /* default */;
+        grammar: Grammar;
     
         /**
          * This field or method was not documented by atomdoc, assume it is private. Use with caution.
@@ -337,12 +329,12 @@ grammar.
         /**
          * This field or method was not documented by atomdoc, assume it is private. Use with caution.
          */
-        constructor(grammar? : any, registry? : any, options? : any);
+        constructor(grammar? : Grammar, registry? : any, options? : any);
     
         /**
          * This field or method was not documented by atomdoc, assume it is private. Use with caution.
          */
-        getRegex(firstLine? : any, position? : any, anchorPosition? : any) : any;
+        getRegex(firstLine? : any, position? : TextBuffer.Point | { row: number; column: number } | [number, number], anchorPosition? : TextBuffer.Point | { row: number; column: number } | [number, number]) : any;
     
         /**
          * This field or method was not documented by atomdoc, assume it is private. Use with caution.
@@ -362,12 +354,12 @@ grammar.
         /**
          * This field or method was not documented by atomdoc, assume it is private. Use with caution.
          */
-        ruleForInclude(baseGrammar? : any, name? : string) : any;
+        ruleForInclude(baseGrammar? : Grammar, name? : string) : any;
     
         /**
          * This field or method was not documented by atomdoc, assume it is private. Use with caution.
          */
-        getIncludedPatterns(baseGrammar? : any, included? : any) : any;
+        getIncludedPatterns(baseGrammar? : Grammar, included? : any) : Pattern[];
     
         /**
          * This field or method was not documented by atomdoc, assume it is private. Use with caution.
@@ -377,12 +369,12 @@ grammar.
         /**
          * This field or method was not documented by atomdoc, assume it is private. Use with caution.
          */
-        handleMatch(stack? : any, line? : any, captureIndices? : any, rule? : any, endPatternMatch? : any) : any;
+        handleMatch(stack? : any, line? : any, captureIndices? : any, rule? : Rule, endPatternMatch? : any) : any;
     
         /**
          * This field or method was not documented by atomdoc, assume it is private. Use with caution.
          */
-        getTokensForCaptureRule(rule? : any, line? : any, captureStart? : any, captureEnd? : any, scopes? : any, stack? : any) : any;
+        getTokensForCaptureRule(rule? : Rule, line? : any, captureStart? : any, captureEnd? : any, scopes? : Atom.Scope[], stack? : any) : Rule;
     
         /**
          * Get the tokens for the capture indices.
@@ -399,7 +391,7 @@ grammar.
          * This field or method was marked private by atomdoc. Use with caution.
         Returns a non-null but possibly empty array of tokens
          */
-        getTokensForCaptureIndices(line? : any, currentCaptureIndices? : any, allCaptureIndices? : any, scopes? : any, stack? : any) : any;
+        getTokensForCaptureIndices(line? : any, currentCaptureIndices? : any, allCaptureIndices? : any, scopes? : Atom.Scope[], stack? : any) : any;
     
     }
 
@@ -411,7 +403,7 @@ grammar.
         /**
          * This field or method was not documented by atomdoc, assume it is private. Use with caution.
          */
-        grammar: any /* default */;
+        grammar: Grammar;
     
         /**
          * This field or method was not documented by atomdoc, assume it is private. Use with caution.
@@ -431,7 +423,7 @@ grammar.
         /**
          * This field or method was not documented by atomdoc, assume it is private. Use with caution.
          */
-        endPattern: any /* default */;
+        endPattern: Pattern;
     
         /**
          * This field or method was not documented by atomdoc, assume it is private. Use with caution.
@@ -441,27 +433,27 @@ grammar.
         /**
          * This field or method was not documented by atomdoc, assume it is private. Use with caution.
          */
-        constructor(grammar? : any, registry? : any, options? : (scopeName? : string,contentScopeName? : string,patterns? : any,endPattern? : any,applyEndPatternLast? : any) => any);
+        constructor(grammar? : Grammar, registry? : any, options? : (scopeName? : string,contentScopeName? : string,patterns? : Pattern[],endPattern? : Pattern,applyEndPatternLast? : any) => any);
     
         /**
          * This field or method was not documented by atomdoc, assume it is private. Use with caution.
          */
-        getIncludedPatterns(baseGrammar? : any, included? : any) : any;
+        getIncludedPatterns(baseGrammar? : Grammar, included? : any) : Pattern[];
     
         /**
          * This field or method was not documented by atomdoc, assume it is private. Use with caution.
          */
-        clearAnchorPosition() : any;
+        clearAnchorPosition() : TextBuffer.Point;
     
         /**
          * This field or method was not documented by atomdoc, assume it is private. Use with caution.
          */
-        getScanner(baseGrammar? : any) : any;
+        getScanner(baseGrammar? : Scanner) : Scanner;
     
         /**
          * This field or method was not documented by atomdoc, assume it is private. Use with caution.
          */
-        scanInjections(ruleStack? : any, line? : any, position? : any, firstLine? : any) : any;
+        scanInjections(ruleStack? : any, line? : any, position? : TextBuffer.Point | { row: number; column: number } | [number, number], firstLine? : any) : Injections;
     
         /**
          * This field or method was not documented by atomdoc, assume it is private. Use with caution.
@@ -471,12 +463,12 @@ grammar.
         /**
          * This field or method was not documented by atomdoc, assume it is private. Use with caution.
          */
-        findNextMatch(ruleStack? : any, line? : any, position? : any, firstLine? : any) : any;
+        findNextMatch(ruleStack? : any, line? : any, position? : TextBuffer.Point | { row: number; column: number } | [number, number], firstLine? : any) : any;
     
         /**
          * This field or method was not documented by atomdoc, assume it is private. Use with caution.
          */
-        getNextTokens(ruleStack? : any, line? : any, position? : any, firstLine? : any) : any;
+        getNextTokens(ruleStack? : any, line? : any, position? : TextBuffer.Point | { row: number; column: number } | [number, number], firstLine? : any) : Atom.Token[];
     
         /**
          * This field or method was not documented by atomdoc, assume it is private. Use with caution.
@@ -493,24 +485,24 @@ grammar.
         /**
          * This field or method was not documented by atomdoc, assume it is private. Use with caution.
          */
-        patterns: any /* default */;
+        patterns: Pattern[];
     
         /**
          * This field or method was not documented by atomdoc, assume it is private. Use with caution.
          */
-        constructor(patterns? : any);
+        constructor(patterns? : Pattern[]);
     
         /**
          * Create a new {OnigScanner} with the given options. 
          * This field or method was marked private by atomdoc. Use with caution.
          */
-        createScanner(firstLine? : any, position? : any, anchorPosition? : any) : any;
+        createScanner(firstLine? : any, position? : TextBuffer.Point | { row: number; column: number } | [number, number], anchorPosition? : TextBuffer.Point | { row: number; column: number } | [number, number]) : Scanner;
     
         /**
          * Get the {OnigScanner} for the given position and options. 
          * This field or method was marked private by atomdoc. Use with caution.
          */
-        getScanner(firstLine? : any, position? : any, anchorPosition? : any) : any;
+        getScanner(firstLine? : any, position? : TextBuffer.Point | { row: number; column: number } | [number, number], anchorPosition? : TextBuffer.Point | { row: number; column: number } | [number, number]) : Scanner;
     
         /**
          * Find the next match on the line start at the given position
@@ -521,7 +513,7 @@ grammar.
          * anchorPosition - numeric position of the last anchored match.
         Returns an Object with details about the match or null if no match found.
          */
-        findNextMatch(line? : any, firstLine? : any, position? : any, anchorPosition? : any) : any;
+        findNextMatch(line? : any, firstLine? : any, position? : TextBuffer.Point | { row: number; column: number } | [number, number], anchorPosition? : TextBuffer.Point | { row: number; column: number } | [number, number]) : any;
     
         /**
          * Handle the given match by calling `handleMatch` on the
@@ -534,7 +526,7 @@ grammar.
          * endPatternMatch - true if the rule's end pattern matched.
         Returns an array of tokens representing the match.
          */
-        handleMatch(match? : any, stack? : any, line? : any, rule? : any, endPatternMatch? : any) : any;
+        handleMatch(match? : any, stack? : any, line? : any, rule? : Rule, endPatternMatch? : any) : any;
     
     }
 
@@ -551,12 +543,12 @@ grammar.
         /**
          * This field or method was not documented by atomdoc, assume it is private. Use with caution.
          */
-        matches(scope? : any) : any;
+        matches(scope? : Atom.Scope) : any;
     
         /**
          * This field or method was not documented by atomdoc, assume it is private. Use with caution.
          */
-        toCssSelector() : any;
+        toCssSelector() : ScopedPropertyStore.Selector;
     
     }
 
@@ -578,7 +570,7 @@ grammar.
         /**
          * This field or method was not documented by atomdoc, assume it is private. Use with caution.
          */
-        toCssSelector() : any;
+        toCssSelector() : ScopedPropertyStore.Selector;
     
     }
 
@@ -595,12 +587,12 @@ grammar.
         /**
          * This field or method was not documented by atomdoc, assume it is private. Use with caution.
          */
-        matches(scope? : any) : any;
+        matches(scope? : Atom.Scope) : any;
     
         /**
          * This field or method was not documented by atomdoc, assume it is private. Use with caution.
          */
-        toCssSelector() : any;
+        toCssSelector() : ScopedPropertyStore.Selector;
     
     }
 
@@ -617,12 +609,12 @@ grammar.
         /**
          * This field or method was not documented by atomdoc, assume it is private. Use with caution.
          */
-        matches(scopes? : any) : any;
+        matches(scopes? : Atom.Scope[]) : any;
     
         /**
          * This field or method was not documented by atomdoc, assume it is private. Use with caution.
          */
-        toCssSelector() : any;
+        toCssSelector() : ScopedPropertyStore.Selector;
     
     }
 
@@ -649,12 +641,12 @@ grammar.
         /**
          * This field or method was not documented by atomdoc, assume it is private. Use with caution.
          */
-        matches(scopes? : any) : any;
+        matches(scopes? : Atom.Scope[]) : any;
     
         /**
          * This field or method was not documented by atomdoc, assume it is private. Use with caution.
          */
-        toCssSelector() : any;
+        toCssSelector() : ScopedPropertyStore.Selector;
     
     }
 
@@ -681,12 +673,12 @@ grammar.
         /**
          * This field or method was not documented by atomdoc, assume it is private. Use with caution.
          */
-        matches(scopes? : any) : any;
+        matches(scopes? : Atom.Scope[]) : any;
     
         /**
          * This field or method was not documented by atomdoc, assume it is private. Use with caution.
          */
-        toCssSelector() : any;
+        toCssSelector() : ScopedPropertyStore.Selector;
     
     }
 
@@ -708,12 +700,12 @@ grammar.
         /**
          * This field or method was not documented by atomdoc, assume it is private. Use with caution.
          */
-        matches(scopes? : any) : any;
+        matches(scopes? : Atom.Scope[]) : any;
     
         /**
          * This field or method was not documented by atomdoc, assume it is private. Use with caution.
          */
-        toCssSelector() : any;
+        toCssSelector() : ScopedPropertyStore.Selector;
     
     }
 
@@ -730,12 +722,12 @@ grammar.
         /**
          * This field or method was not documented by atomdoc, assume it is private. Use with caution.
          */
-        matches(scopes? : any) : any;
+        matches(scopes? : Atom.Scope[]) : any;
     
         /**
          * This field or method was not documented by atomdoc, assume it is private. Use with caution.
          */
-        toCssSelector() : any;
+        toCssSelector() : ScopedPropertyStore.Selector;
     
     }
 
@@ -759,14 +751,13 @@ grammar.
          * This field or method was marked private by atomdoc. Use with caution.
         Returns a {Boolean}.
          */
-        matches(scopes? : any) : boolean;
+        matches(scopes? : Atom.Scope[]) : boolean;
     
         /**
          * Convert this TextMate scope selector to a CSS selector.
          * This field or method was marked private by atomdoc. Use with caution.
-        Returns a {String}.
          */
-        toCssSelector() : string;
+        toCssSelector() : ScopedPropertyStore.Selector;
     
     }
 

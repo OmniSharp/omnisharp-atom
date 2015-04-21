@@ -29,8 +29,8 @@ declare module Pathwatcher {
     
         /**
          * Configures a new Directory instance, no files are accessed.
-        @param directoryPath? - A {String} containing the absolute path to the directory
-        @param symlink? - A {Boolean} indicating if the path is a symlink. (default: false) 
+         * @param directoryPath? - A {String} containing the absolute path to the directory
+         * @param symlink? - A {Boolean} indicating if the path is a symlink. (default: false) 
          */
         constructor(directoryPath? : string, symlink? : boolean);
     
@@ -42,8 +42,7 @@ declare module Pathwatcher {
     
         /**
          * Invoke the given callback when the directory's contents change.
-        @param callback? - {Function} to be called when the directory's contents change.
-        Returns a {Disposable} on which `.dispose()` can be called to unsubscribe.
+         * @param callback? - {Function} to be called when the directory's contents change.
          */
         onDidChange(callback? : Function) : EventKit.Disposable;
     
@@ -74,7 +73,7 @@ declare module Pathwatcher {
          * Return a {Boolean}, true if this {Directory} is the root directory
          * of the filesystem, or false if it isn't. 
          */
-        isRoot() : any;
+        isRoot() : boolean;
     
         /**
          * 
@@ -117,17 +116,15 @@ URI is falsy.
         /**
          * Traverse within this Directory to a child File. This method doesn't
          * actually check to see if the File exists, it just creates the File object.
-        Returns a {File}.
          */
-        getFile(filename? : any) : File;
+        getFile(filename? : string) : File;
     
         /**
          * Traverse within this a Directory to a child Directory. This method
          * doesn't actually check to see if the Directory exists, it just creates the
          * Directory object.
-        Returns a {Directory}.
          */
-        getSubdirectory(dirname? : any) : Directory;
+        getSubdirectory(dirname? : string) : Directory;
     
         /**
          * Reads file entries in this directory from disk synchronously.
@@ -137,7 +134,7 @@ URI is falsy.
     
         /**
          * Reads file entries in this directory from disk asynchronously.
-        @param callback? - A {Function} to call with the following arguments:
+         * @param callback? - A {Function} to call with the following arguments:
          */
         getEntries(callback? : Function) : any;
     
@@ -158,7 +155,7 @@ URI is falsy.
          * Does given full path start with the given prefix? 
          * This field or method was marked private by atomdoc. Use with caution.
          */
-        isPathPrefixOf(prefix? : any, fullPath? : any) : any;
+        isPathPrefixOf(prefix? : any, fullPath? : any) : boolean;
     
     }
 
@@ -175,7 +172,7 @@ URI is falsy.
         /**
          * This field or method was not documented by atomdoc, assume it is private. Use with caution.
          */
-        encoding: any /* default */;
+        encoding: string;
     
         /**
          * This field or method was not documented by atomdoc, assume it is private. Use with caution.
@@ -189,8 +186,8 @@ URI is falsy.
     
         /**
          * Configures a new File instance, no files are accessed.
-        @param filePath? - A {String} containing the absolute path to the file
-        @param symlink? - A {Boolean} indicating if the path is a symlink (default: false). 
+         * @param filePath? - A {String} containing the absolute path to the file
+         * @param symlink? - A {Boolean} indicating if the path is a symlink (default: false). 
          */
         constructor(filePath? : string, symlink? : boolean);
     
@@ -205,21 +202,19 @@ it already existed.
     
         /**
          * Invoke the given callback when the file's contents change.
-        @param callback? - {Function} to be called when the file's contents change.
-        Returns a {Disposable} on which `.dispose()` can be called to unsubscribe.
+         * @param callback? - {Function} to be called when the file's contents change.
          */
         onDidChange(callback? : Function) : EventKit.Disposable;
     
         /**
          * Invoke the given callback when the file's path changes.
-        @param callback? - {Function} to be called when the file's path changes.
+         * @param callback? - {Function} to be called when the file's path changes.
          */
-        onDidRename(callback? : Function) : string;
+        onDidRename(callback? : Function) : EventKit.Disposable;
     
         /**
          * Invoke the given callback when the file is deleted.
-        @param callback? - {Function} to be called when the file is deleted.
-        Returns a {Disposable} on which `.dispose()` can be called to unsubscribe.
+         * @param callback? - {Function} to be called when the file is deleted.
          */
         onDidDelete(callback? : Function) : EventKit.Disposable;
     
@@ -227,9 +222,9 @@ it already existed.
          * Invoke the given callback when there is an error with the watch.
          * When your callback has been invoked, the file will have unsubscribed from
          * the file watches.
-        @param callback? - {Function} callback
+         * @param callback? - {Function} callback
          */
-        onWillThrowWatchError(callback? : Function) : any;
+        onWillThrowWatchError(callback? : Function) : EventKit.Disposable;
     
         /**
          * This field or method was not documented by atomdoc, assume it is private. Use with caution.
@@ -269,13 +264,13 @@ it already existed.
         /**
          * This field or method was not documented by atomdoc, assume it is private. Use with caution.
          */
-        setDigest(contents? : any) : any;
+        setDigest(contents? : any) : void;
     
         /**
          * Sets the file's character set encoding name.
-        @param encoding? - The {String} encoding to use (default: 'utf8') 
+         * @param encoding? - The {String} encoding to use (default: 'utf8') 
          */
-        setEncoding(encoding? : string) : any;
+        setEncoding(encoding? : string) : void;
     
         getEncoding() : string;
     
@@ -285,7 +280,7 @@ it already existed.
          * Sets the path for the file. 
          * This field or method was marked private by atomdoc. Use with caution.
          */
-        setPath(path? : any) : any;
+        setPath(path? : any) : void;
     
         getRealPathSync() : string;
     
@@ -314,21 +309,21 @@ it already existed.
     
         /**
          * Reads the contents of the file.
-        @param flushCache? - A {Boolean} indicating whether to require a direct read or if a cached copy is acceptable.
+         * @param flushCache? - A {Boolean} indicating whether to require a direct read or if a cached copy is acceptable.
         Returns a promise that resovles to a String.
          */
         read(flushCache? : boolean) : any;
     
         /**
          * Overwrites the file with the given text.
-        @param text? - The {String} text to write to the underlying file.
+         * @param text? - The {String} text to write to the underlying file.
         Returns a {Promise} that resolves when the file has been written.
          */
         write(text? : string) : Q.Promise<any>;
     
         /**
          * Overwrites the file with the given text.
-        @param text? - The {String} text to write to the underlying file.
+         * @param text? - The {String} text to write to the underlying file.
         Returns .
          */
         writeSync(text? : string) : any;
@@ -336,7 +331,7 @@ it already existed.
         /**
          * This field or method was not documented by atomdoc, assume it is private. Use with caution.
          */
-        writeFile(filePath? : any, contents? : any) : any;
+        writeFile(filePath? : any, contents? : any) : File;
     
         /**
          * Writes the text to specified path.
@@ -420,7 +415,7 @@ it already existed.
         /**
          * This field or method was not documented by atomdoc, assume it is private. Use with caution.
          */
-        isWatchingParent: any /* default */;
+        isWatchingParent: boolean;
     
         /**
          * This field or method was not documented by atomdoc, assume it is private. Use with caution.
@@ -430,7 +425,7 @@ it already existed.
         /**
          * This field or method was not documented by atomdoc, assume it is private. Use with caution.
          */
-        handleWatcher: any /* default */;
+        handleWatcher: HandleWatcher;
     
         /**
          * This field or method was not documented by atomdoc, assume it is private. Use with caution.

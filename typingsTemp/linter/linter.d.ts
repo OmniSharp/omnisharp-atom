@@ -14,17 +14,17 @@ declare module Linter {
         /**
          * This field or method was not documented by atomdoc, assume it is private. Use with caution.
          */
-        config: any /* default */;
+        config: Atom.Config;
     
         /**
          * Activate the plugin setting up StatusBarView and dicovering linters 
          */
-        activate() : any;
+        activate() : void;
     
         /**
          * deactivate the plugin and unregister all subscriptions 
          */
-        deactivate() : any;
+        deactivate() : void;
     
     }
 
@@ -41,7 +41,7 @@ declare module Linter {
         /**
          * This field or method was not documented by atomdoc, assume it is private. Use with caution.
          */
-        render(messages? : any, editor? : any) : any;
+        render(messages? : any, editor? : Atom.TextEditor) : any;
     
     }
 
@@ -64,22 +64,22 @@ declare module Linter {
         /**
          * This field or method was not documented by atomdoc, assume it is private. Use with caution.
          */
-        editor: any /* default */;
+        editor: Atom.TextEditor;
     
         /**
          * This field or method was not documented by atomdoc, assume it is private. Use with caution.
          */
-        statusBarView: any /* default */;
+        statusBarView: SpacePen.View;
     
         /**
          * This field or method was not documented by atomdoc, assume it is private. Use with caution.
          */
-        statusBarSummaryView: any /* default */;
+        statusBarSummaryView: SpacePen.View;
     
         /**
          * This field or method was not documented by atomdoc, assume it is private. Use with caution.
          */
-        inlineView: any /* default */;
+        inlineView: SpacePen.View;
     
         /**
          * This field or method was not documented by atomdoc, assume it is private. Use with caution.
@@ -89,7 +89,7 @@ declare module Linter {
         /**
          * This field or method was not documented by atomdoc, assume it is private. Use with caution.
          */
-        linters: any /* default */;
+        linters: Linter[];
     
         /**
          * This field or method was not documented by atomdoc, assume it is private. Use with caution.
@@ -99,7 +99,7 @@ declare module Linter {
         /**
          * This field or method was not documented by atomdoc, assume it is private. Use with caution.
          */
-        tempFile: any /* default */;
+        tempFile: Pathwatcher.File;
     
         /**
          * This field or method was not documented by atomdoc, assume it is private. Use with caution.
@@ -113,14 +113,14 @@ declare module Linter {
          * statusBarView - shared StatusBarView between all linters
          * linters - global linter set to utilize for linting 
          */
-        constructor(editor? : any, statusBarView? : any, statusBarSummaryView? : any, inlineView? : any, allLinters ? : any);
+        constructor(editor? : Atom.TextEditor, statusBarView? : any, statusBarSummaryView? : any, inlineView? : any, allLinters ? : any);
     
         /**
          * Initialize new linters (used on grammar change)
          * 
          * linters - global linter set to utilize for linting 
          */
-        initLinters() : any;
+        initLinters() : Linter[];
     
         /**
          * register config modifications handlers 
@@ -149,12 +149,12 @@ declare module Linter {
         /**
          * Destroy all markers (and associated decorations) 
          */
-        destroyMarkers() : any;
+        destroyMarkers() : void;
     
         /**
          * Create marker from message 
          */
-        createMarker(message? : any) : any;
+        createMarker(message? : any) : Atom.Marker;
     
         /**
          * Pidgeonhole messages onto lines. Each line gets only one message,
@@ -171,7 +171,7 @@ declare module Linter {
         /**
          * Update the views for new messages 
          */
-        updateViews() : any;
+        updateViews() : void;
     
         /**
          * remove this view and unregister all its subscriptions 
@@ -180,8 +180,7 @@ declare module Linter {
     
         /**
          * Invoke the given callback when the editor is destroyed.
-        @param callback? - {Function} to be called when the editor is destroyed.
-        Returns a {Disposable} on which `.dispose()` can be called to unsubscribe.
+         * @param callback? - {Function} to be called when the editor is destroyed.
          */
         onDidDestroy(callback? : Function) : EventKit.Disposable;
     
@@ -200,7 +199,7 @@ declare module Linter {
         /**
          * This field or method was not documented by atomdoc, assume it is private. Use with caution.
          */
-        editor: any /* default */;
+        editor: Atom.TextEditor;
     
         /**
          * A string or array containing the command line (with arguments) used to
@@ -254,7 +253,7 @@ declare module Linter {
         /**
          * This field or method was not documented by atomdoc, assume it is private. Use with caution.
          */
-        isNodeExecutable: any /* default */;
+        isNodeExecutable: boolean;
     
         /**
          * what does this mean? 
@@ -264,12 +263,12 @@ declare module Linter {
         /**
          * Construct a linter passing it's base editor 
          */
-        constructor(editor? : any);
+        constructor(editor? : Atom.TextEditor);
     
         /**
          * This field or method was not documented by atomdoc, assume it is private. Use with caution.
          */
-        destroy() : any;
+        destroy() : void;
     
         /**
          * Exists mostly so we can use statSync without slowing down linting.
@@ -302,7 +301,7 @@ declare module Linter {
          * 
          * Override this if you don't intend to use base command execution logic 
          */
-        lintFile(filePath? : any, callback? : any) : any;
+        lintFile(filePath? : any, callback? : any) : Pathwatcher.File;
     
         /**
          * process the string result of a linter execution using the regex
@@ -342,17 +341,17 @@ declare module Linter {
         /**
          * This field or method was not documented by atomdoc, assume it is private. Use with caution.
          */
-        lineLengthForRow(row? : number) : any;
+        lineLengthForRow(row? : number) : number;
     
         /**
          * This field or method was not documented by atomdoc, assume it is private. Use with caution.
          */
-        getEditorScopesForPosition(position? : any) : any;
+        getEditorScopesForPosition(position? : TextBuffer.Point | { row: number; column: number } | [number, number]) : TextBuffer.Point;
     
         /**
          * This field or method was not documented by atomdoc, assume it is private. Use with caution.
          */
-        getGetRangeForScopeAtPosition(innerMostScope? : any, position? : any) : any;
+        getGetRangeForScopeAtPosition(innerMostScope? : Atom.Scope, position? : TextBuffer.Point | { row: number; column: number } | [number, number]) : TextBuffer.Range;
     
         /**
          * This is the logic by which we automatically determine the range
@@ -375,7 +374,7 @@ declare module Linter {
          *   colEnd: column to end highlight (optional) 
          * This field or method was marked private by atomdoc. Use with caution.
          */
-        computeRange(match? : any) : any;
+        computeRange(match? : any) : TextBuffer.Range;
     
     }
 
@@ -392,7 +391,7 @@ declare module Linter {
          * Render the view 
          * This field or method was marked private by atomdoc. Use with caution.
          */
-        render(messages? : any, editor? : any) : any;
+        render(messages? : any, editor? : Atom.TextEditor) : any;
     
     }
 
@@ -404,12 +403,12 @@ declare module Linter {
         /**
          * This field or method was not documented by atomdoc, assume it is private. Use with caution.
          */
-        static content(messages? : any, editor? : any, info? : any, warning? : any, error? : any) : any;
+        static content(messages? : any, editor? : Atom.TextEditor, info? : any, warning? : any, error? : any) : any;
     
         /**
          * This field or method was not documented by atomdoc, assume it is private. Use with caution.
          */
-        initialize(messages? : any, editor? : any) : any;
+        initialize(messages? : any, editor? : Atom.TextEditor) : any;
     
         /**
          * This field or method was not documented by atomdoc, assume it is private. Use with caution.
@@ -445,7 +444,7 @@ declare module Linter {
         /**
          * This field or method was not documented by atomdoc, assume it is private. Use with caution.
          */
-        computeMessages(messages? : any, position? : any, currentLine? : any, limitOnErrorRange? : any) : any;
+        computeMessages(messages? : any, position? : TextBuffer.Point | { row: number; column: number } | [number, number], currentLine? : any, limitOnErrorRange? : TextBuffer.Range) : any;
     
         /**
          * This field or method was not documented by atomdoc, assume it is private. Use with caution.
@@ -456,7 +455,7 @@ declare module Linter {
          * Render the view 
          * This field or method was marked private by atomdoc. Use with caution.
          */
-        render(messages? : any, editor? : any) : any;
+        render(messages? : any, editor? : Atom.TextEditor) : any;
     
     }
 

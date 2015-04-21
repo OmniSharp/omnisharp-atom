@@ -20,22 +20,22 @@ declare module StatusBar {
         /**
          * This field or method was not documented by atomdoc, assume it is private. Use with caution.
          */
-        destroy() : any;
+        destroy() : void;
     
         /**
          * This field or method was not documented by atomdoc, assume it is private. Use with caution.
          */
-        subscribeToActiveTextEditor() : any;
+        subscribeToActiveTextEditor() : Atom.TextEditor;
     
         /**
          * This field or method was not documented by atomdoc, assume it is private. Use with caution.
          */
-        getActiveTextEditor() : any;
+        getActiveTextEditor() : Atom.TextEditor;
     
         /**
          * This field or method was not documented by atomdoc, assume it is private. Use with caution.
          */
-        updatePosition() : any;
+        updatePosition() : TextBuffer.Point;
     
     }
 
@@ -57,7 +57,7 @@ declare module StatusBar {
         /**
          * This field or method was not documented by atomdoc, assume it is private. Use with caution.
          */
-        destroy() : any;
+        destroy() : void;
     
         /**
          * This field or method was not documented by atomdoc, assume it is private. Use with caution.
@@ -67,17 +67,17 @@ declare module StatusBar {
         /**
          * This field or method was not documented by atomdoc, assume it is private. Use with caution.
          */
-        update() : any;
+        update() : void;
     
         /**
          * This field or method was not documented by atomdoc, assume it is private. Use with caution.
          */
-        updateBufferHasModifiedText(isModified? : any) : string;
+        updateBufferHasModifiedText(isModified? : boolean) : void;
     
         /**
          * This field or method was not documented by atomdoc, assume it is private. Use with caution.
          */
-        updatePathText() : string;
+        updatePathText() : void;
     
     }
 
@@ -119,7 +119,7 @@ declare module StatusBar {
         /**
          * This field or method was not documented by atomdoc, assume it is private. Use with caution.
          */
-        destroy() : any;
+        destroy() : void;
     
         /**
          * This field or method was not documented by atomdoc, assume it is private. Use with caution.
@@ -139,12 +139,12 @@ declare module StatusBar {
         /**
          * This field or method was not documented by atomdoc, assume it is private. Use with caution.
          */
-        update() : any;
+        update() : void;
     
         /**
          * This field or method was not documented by atomdoc, assume it is private. Use with caution.
          */
-        updateBranchText(repo? : any) : string;
+        updateBranchText(repo? : any) : void;
     
         /**
          * This field or method was not documented by atomdoc, assume it is private. Use with caution.
@@ -154,12 +154,12 @@ declare module StatusBar {
         /**
          * This field or method was not documented by atomdoc, assume it is private. Use with caution.
          */
-        updateAheadBehindCount(repo? : any) : any;
+        updateAheadBehindCount(repo? : any) : void;
     
         /**
          * This field or method was not documented by atomdoc, assume it is private. Use with caution.
          */
-        updateStatusText(repo? : any) : string;
+        updateStatusText(repo? : any) : void;
     
     }
 
@@ -193,22 +193,22 @@ declare module StatusBar {
         /**
          * This field or method was not documented by atomdoc, assume it is private. Use with caution.
          */
-        destroy() : any;
+        destroy() : void;
     
         /**
          * This field or method was not documented by atomdoc, assume it is private. Use with caution.
          */
-        subscribeToActiveTextEditor() : any;
+        subscribeToActiveTextEditor() : Atom.TextEditor;
     
         /**
          * This field or method was not documented by atomdoc, assume it is private. Use with caution.
          */
-        getActiveTextEditor() : any;
+        getActiveTextEditor() : Atom.TextEditor;
     
         /**
          * This field or method was not documented by atomdoc, assume it is private. Use with caution.
          */
-        updateCount() : any;
+        updateCount() : void;
     
     }
 
@@ -230,27 +230,27 @@ declare module StatusBar {
         /**
          * This field or method was not documented by atomdoc, assume it is private. Use with caution.
          */
-        destroy() : any;
+        destroy() : void;
     
         /**
          * This field or method was not documented by atomdoc, assume it is private. Use with caution.
          */
-        addLeftTile(options? : any) : any;
+        addLeftTile(options? : any) : Tile;
     
         /**
          * This field or method was not documented by atomdoc, assume it is private. Use with caution.
          */
-        addRightTile(options? : any) : any;
+        addRightTile(options? : any) : Tile;
     
         /**
          * This field or method was not documented by atomdoc, assume it is private. Use with caution.
          */
-        getLeftTiles() : any;
+        getLeftTiles() : Tile[];
     
         /**
          * This field or method was not documented by atomdoc, assume it is private. Use with caution.
          */
-        getRightTiles() : any;
+        getRightTiles() : Tile[];
     
         /**
          * This field or method was not documented by atomdoc, assume it is private. Use with caution.
@@ -342,7 +342,7 @@ declare module StatusBar {
         /**
          * This field or method was not documented by atomdoc, assume it is private. Use with caution.
          */
-        destroy() : any;
+        destroy() : void;
     
     }
 

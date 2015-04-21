@@ -20,7 +20,7 @@ declare module ScopedPropertyStore {
         /**
          * This field or method was not documented by atomdoc, assume it is private. Use with caution.
          */
-        selector: any /* default */;
+        selector: Selector;
     
         /**
          * This field or method was not documented by atomdoc, assume it is private. Use with caution.
@@ -30,12 +30,12 @@ declare module ScopedPropertyStore {
         /**
          * This field or method was not documented by atomdoc, assume it is private. Use with caution.
          */
-        constructor(source? : any, selector? : any, properties? : any);
+        constructor(source? : any, selector? : Selector, properties? : any);
     
         /**
          * This field or method was not documented by atomdoc, assume it is private. Use with caution.
          */
-        matches(scope? : any) : any;
+        matches(scope? : Atom.Scope) : any;
     
         /**
          * This field or method was not documented by atomdoc, assume it is private. Use with caution.
@@ -70,8 +70,8 @@ declare module ScopedPropertyStore {
     
         /**
          * Add scoped properties to be queried with {::get}
-        @param source? - A string describing these properties to allow them to be removed later.
-        @param propertiesBySelector? - An {Object} containing CSS-selectors mapping to {Objects} containing properties. For example: `{'.foo .bar': {x: 1, y: 2}`
+         * @param source? - A string describing these properties to allow them to be removed later.
+         * @param propertiesBySelector? - An {Object} containing CSS-selectors mapping to {Objects} containing properties. For example: `{'.foo .bar': {x: 1, y: 2}`
         Returns a {Disposable} on which you can call `.dispose()` to remove the
 added properties.
          */
@@ -79,9 +79,9 @@ added properties.
     
         /**
          * Get the value of a previously stored key-path in a given scope.
-        @param scopeChain? - This describes a location in the document. It uses the same syntax as selectors, with each space-separated component representing one element.
-        @param keyPath? - A `.` separated string of keys to traverse in the properties.
-        @param options? - {Object}
+         * @param scopeChain? - This describes a location in the document. It uses the same syntax as selectors, with each space-separated component representing one element.
+         * @param keyPath? - A `.` separated string of keys to traverse in the properties.
+         * @param options? - {Object}
         Returns the property value or `` if none is found.
          */
         getPropertyValue(scopeChain? : any, keyPath? : any, options? : Object) : any;
@@ -93,43 +93,41 @@ added properties.
     
         /**
          * Get *all* properties for a given source.
-        @param source? - {String}
+         * @param source? - {String}
         Returns an {Object} in the format {scope: {property: value}}
          */
         propertiesForSource(source? : string) : Object;
     
         /**
          * Get *all* properties matching the given source and scopeSelector.
-        @param source? - {String}
-        @param scopeSelector? - {String} `scopeSelector` is matched exactly.
-        Returns an {Object} in the format {property: value}
+         * @param source? - {String}
+         * @param scopeSelector? - {String} `scopeSelector` is matched exactly.
          */
-        propertiesForSourceAndSelector(source? : string, scopeSelector? : string) : Object;
+        propertiesForSourceAndSelector(source? : string, scopeSelector? : string) : Selector;
     
         /**
          * Get *all* properties matching the given scopeSelector.
-        @param scopeSelector? - {String} `scopeSelector` is matched exactly.
-        Returns an {Object} in the format {property: value}
+         * @param scopeSelector? - {String} `scopeSelector` is matched exactly.
          */
-        propertiesForSelector(scopeSelector? : string) : Object;
+        propertiesForSelector(scopeSelector? : string) : Selector;
     
         /**
          * Remove all properties for a given source.
-        @param source? - {String} 
+         * @param source? - {String} 
          */
         removePropertiesForSource(source? : string) : any;
     
         /**
          * Remove all properties for a given source.
-        @param source? - {String}
-        @param scopeSelector? - {String} `scopeSelector` is matched exactly. 
+         * @param source? - {String}
+         * @param scopeSelector? - {String} `scopeSelector` is matched exactly. 
          */
-        removePropertiesForSourceAndSelector(source? : string, scopeSelector? : string) : any;
+        removePropertiesForSourceAndSelector(source? : string, scopeSelector? : string) : Selector;
     
         /**
          * This field or method was not documented by atomdoc, assume it is private. Use with caution.
          */
-        mergeMatchingPropertySets(propertySets? : any) : any;
+        mergeMatchingPropertySets(propertySets? : PropertySet[]) : PropertySet[];
     
         /**
          * This field or method was not documented by atomdoc, assume it is private. Use with caution.
@@ -144,7 +142,7 @@ added properties.
         /**
          * This field or method was not documented by atomdoc, assume it is private. Use with caution.
          */
-        addPropertySet(propertySet? : any) : any;
+        addPropertySet(propertySet? : PropertySet) : PropertySet;
     
         /**
          * This field or method was not documented by atomdoc, assume it is private. Use with caution.
@@ -166,17 +164,17 @@ added properties.
         /**
          * This field or method was not documented by atomdoc, assume it is private. Use with caution.
          */
-        static parsePseudoSelectors(selectorComponent? : any) : any;
+        static parsePseudoSelectors(selectorComponent? : any) : Selector[];
     
         /**
          * This field or method was not documented by atomdoc, assume it is private. Use with caution.
          */
-        selector: any /* default */;
+        selector: Selector;
     
         /**
          * This field or method was not documented by atomdoc, assume it is private. Use with caution.
          */
-        constructor(selector? : any, options? : any);
+        constructor(selector? : Selector, options? : any);
     
         /**
          * This field or method was not documented by atomdoc, assume it is private. Use with caution.
@@ -186,7 +184,7 @@ added properties.
         /**
          * This field or method was not documented by atomdoc, assume it is private. Use with caution.
          */
-        selectorComponentMatchesScope(selectorComponent? : any, scope? : any) : any;
+        selectorComponentMatchesScope(selectorComponent? : any, scope? : Atom.Scope) : Atom.Scope;
     
         /**
          * This field or method was not documented by atomdoc, assume it is private. Use with caution.
@@ -196,7 +194,7 @@ added properties.
         /**
          * This field or method was not documented by atomdoc, assume it is private. Use with caution.
          */
-        isEqual(other? : any) : any;
+        isEqual(other? : any) : boolean;
     
         /**
          * This field or method was not documented by atomdoc, assume it is private. Use with caution.

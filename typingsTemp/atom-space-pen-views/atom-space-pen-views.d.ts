@@ -62,7 +62,7 @@ declare module AtomSpacePenViews {
          * This method must be overridden by subclasses.
          * 
          * This is called when the item is about to appended to the list view.
-        @param item? - The model item being rendered. This will always be one of the items previously passed to {::setItems}.
+         * @param item? - The model item being rendered. This will always be one of the items previously passed to {::setItems}.
         Returns a String of HTML, DOM element, jQuery object, or View.
          */
         viewForItem(item? : any) : any;
@@ -71,7 +71,7 @@ declare module AtomSpacePenViews {
          * Callback function for when an item is selected.
          * 
          * This method must be overridden by subclasses.
-        @param item? - The selected model item. This will always be one of the items previously passed to {::setItems}.
+         * @param item? - The selected model item. This will always be one of the items previously passed to {::setItems}.
         Returns a DOM element, jQuery object, or {View}.
          */
         confirmed(item? : any) : SpacePen.View;
@@ -81,9 +81,9 @@ declare module AtomSpacePenViews {
          * 
          * This should be model items not actual views. {::viewForItem} will be
          * called to render the item when it is being appended to the list view.
-        @param items? - The {Array} of model items to display in the list (default: []). 
+         * @param items? - The {Array} of model items to display in the list (default: []). 
          */
-        setItems(items? : any[]) : any;
+        setItems(items? : any[]) : void;
     
         /**
          * Get the model item that is currently selected in the list view.
@@ -117,9 +117,9 @@ declare module AtomSpacePenViews {
     
         /**
          * Set the maximum numbers of items to display in the list.
-        @param maxItems? - The maximum {Number} of items to display. 
+         * @param maxItems? - The maximum {Number} of items to display. 
          */
-        setMaxItems(maxItems? : number) : any;
+        setMaxItems(maxItems? : number) : void;
     
         /**
          * Populate the list view with the model items previously set by
@@ -131,22 +131,22 @@ declare module AtomSpacePenViews {
     
         /**
          * Set the error message to display.
-        @param message? - The {String} error message (default: ''). 
+         * @param message? - The {String} error message (default: ''). 
          */
-        setError(message? : string) : any;
+        setError(message? : string) : void;
     
         /**
          * Set the loading message to display.
-        @param message? - The {String} loading message (default: ''). 
+         * @param message? - The {String} loading message (default: ''). 
          */
-        setLoading(message? : string) : any;
+        setLoading(message? : string) : void;
     
         /**
          * Get the message to display when there are no items.
          * 
          * Subclasses may override this method to customize the message.
-        @param itemCount? - The {Number} of items in the array specified to {::setItems}
-        @param filteredItemCount? - The {Number} of items that pass the fuzzy filter test.
+         * @param itemCount? - The {Number} of items in the array specified to {::setItems}
+         * @param filteredItemCount? - The {Number} of items that pass the fuzzy filter test.
         Returns a {String} message (default: 'No matches found').
          */
         getEmptyMessage(itemCount? : number, filteredItemCount? : number) : string;
@@ -174,22 +174,22 @@ declare module AtomSpacePenViews {
          * Private
          * This field or method was marked private by atomdoc. Use with caution.
          */
-        selectPreviousItemView() : any;
+        selectPreviousItemView() : SpacePen.View;
     
         /**
          * This field or method was not documented by atomdoc, assume it is private. Use with caution.
          */
-        selectNextItemView() : any;
+        selectNextItemView() : SpacePen.View;
     
         /**
          * This field or method was not documented by atomdoc, assume it is private. Use with caution.
          */
-        selectItemView(view? : any) : any;
+        selectItemView(view? : SpacePen.View) : SpacePen.View;
     
         /**
          * This field or method was not documented by atomdoc, assume it is private. Use with caution.
          */
-        scrollToItemView(view? : any) : any;
+        scrollToItemView(view? : SpacePen.View) : SpacePen.View;
     
         /**
          * This field or method was not documented by atomdoc, assume it is private. Use with caution.
@@ -199,12 +199,12 @@ declare module AtomSpacePenViews {
         /**
          * This field or method was not documented by atomdoc, assume it is private. Use with caution.
          */
-        getSelectedItemView() : any;
+        getSelectedItemView() : SpacePen.View;
     
         /**
          * This field or method was not documented by atomdoc, assume it is private. Use with caution.
          */
-        confirmSelection() : any;
+        confirmSelection() : Atom.Selection;
     
         /**
          * This field or method was not documented by atomdoc, assume it is private. Use with caution.
@@ -227,13 +227,12 @@ declare module AtomSpacePenViews {
         /**
          * This field or method was not documented by atomdoc, assume it is private. Use with caution.
          */
-        setModel(model? : any) : any;
+        setModel(model? : Atom.Model) : void;
     
         /**
          * Get the underlying editor model for this view.
-        Returns a `TextEditor`
          */
-        getModel() : any;
+        getModel() : Atom.Model;
     
         /**
          * Get the text of the editor.
@@ -243,7 +242,7 @@ declare module AtomSpacePenViews {
         /**
          * Set the text of the editor as a `String`. 
          */
-        setText(text? : string) : string;
+        setText(text? : string) : void;
     
         /**
          * Determine whether the editor is or contains the active element.

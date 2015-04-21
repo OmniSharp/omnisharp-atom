@@ -19,14 +19,14 @@ declare module Scandal {
         /**
          * Construct a {ChunkedExecutor}
          * This field or method was marked private by atomdoc. Use with caution.
-        @param pathQueue? - {Array} of paths
-        @param execPathFn? - {Function} that will execute on each path
+         * @param pathQueue? - {Array} of paths
+         * @param execPathFn? - {Function} that will execute on each path
          */
         constructor(pathQueue? : any[], execPathFn? : Function);
     
         /**
          * Begin execution of the `pathQueue`
-        @param doneCallback? - {Function} callback that will be called when execution is finished. 
+         * @param doneCallback? - {Function} callback that will be called when execution is finished. 
          */
         execute(doneCallback? : Function) : any;
     
@@ -34,7 +34,7 @@ declare module Scandal {
          * Push a new path on the queue
          * 
          * May or may not execute immediately.
-        @param filePath? - {String} path to a file 
+         * @param filePath? - {String} path to a file 
          */
         push(filePath? : string) : any;
     
@@ -89,7 +89,7 @@ declare module Scandal {
         /**
          * This field or method was not documented by atomdoc, assume it is private. Use with caution.
          */
-        isBinaryFile() : any;
+        isBinaryFile() : boolean;
     
         /**
          * This field or method was not documented by atomdoc, assume it is private. Use with caution.
@@ -106,12 +106,12 @@ declare module Scandal {
         /**
          * This field or method was not documented by atomdoc, assume it is private. Use with caution.
          */
-        scanner: any /* default */;
+        scanner: FirstMate.Scanner;
     
         /**
          * This field or method was not documented by atomdoc, assume it is private. Use with caution.
          */
-        constructor(scanner? : any, execPathFn? : any);
+        constructor(scanner? : FirstMate.Scanner, execPathFn? : any);
     
         /**
          * This field or method was not documented by atomdoc, assume it is private. Use with caution.
@@ -137,7 +137,7 @@ declare module Scandal {
         /**
          * This field or method was not documented by atomdoc, assume it is private. Use with caution.
          */
-        static MINIMATCH_OPTIONS: any /* default */;
+        static MINIMATCH_OPTIONS: boolean;
     
         /**
          * This field or method was not documented by atomdoc, assume it is private. Use with caution.
@@ -146,46 +146,44 @@ declare module Scandal {
     
         /**
          * Construct a {PathFilter}
-        @param rootPath? - {String} top level directory to scan. eg. `/Users/ben/somedir`
-        @param options? - {Object} options hash
-        @param inclusions? - {Array} of patterns to include. Uses minimatch with a couple  additions: `['dirname']` and `['dirname/']` will match all paths in  directory dirname.
-        @param exclusions? - {Array} of patterns to exclude. Same matcher as inclusions.
-        @param includeHidden? - {Boolean} default false; true includes hidden files 
-        @param excludeVcsIgnores? - {Boolean}; default false; true to exclude paths  defined in a .gitignore. Uses git-utils to check ignred files.
+         * @param rootPath? - {String} top level directory to scan. eg. `/Users/ben/somedir`
+         * @param options? - {Object} options hash
+         * @param inclusions? - {Array} of patterns to include. Uses minimatch with a couple  additions: `['dirname']` and `['dirname/']` will match all paths in  directory dirname.
+         * @param exclusions? - {Array} of patterns to exclude. Same matcher as inclusions.
+         * @param includeHidden? - {Boolean} default false; true includes hidden files 
+         * @param excludeVcsIgnores? - {Boolean}; default false; true to exclude paths  defined in a .gitignore. Uses git-utils to check ignred files.
          */
-        constructor(rootPath? : string, options? : (inclusions? : any[],exclusions? : any[],includeHidden? : boolean,excludeVcsIgnores? : boolean) => Object);
+        constructor(rootPath? : string, options? : { inclusions? : any[],exclusions? : any[],includeHidden? : boolean,excludeVcsIgnores? : boolean });
     
         /**
          * Test if the `filepath` is accepted as a file based on the
          * constructing options.
-        @param filepath? - {String} path to a file. File should be a file and should exist
-        Returns {Boolean} true if the file is accepted
+         * @param filepath? - {String} path to a file. File should be a file and should exist
          */
         isFileAccepted(filepath? : string) : boolean;
     
         /**
          * Test if the `filepath` is accepted as a directory based on the
          * constructing options.
-        @param filepath? - {String} path to a directory. File should be a directory and should exist
-        Returns {Boolean} true if the directory is accepted
+         * @param filepath? - {String} path to a directory. File should be a directory and should exist
          */
         isDirectoryAccepted(filepath? : string) : boolean;
     
         /**
          * This field or method was not documented by atomdoc, assume it is private. Use with caution.
          */
-        isPathAccepted(fileOrDirectory? : any, filepath? : any) : any;
+        isPathAccepted(fileOrDirectory? : Pathwatcher.Directory, filepath? : any) : boolean;
     
         /**
          * Private Methods
          * This field or method was marked private by atomdoc. Use with caution.
          */
-        isPathIgnored(fileOrDirectory? : any, filepath? : any) : any;
+        isPathIgnored(fileOrDirectory? : Pathwatcher.Directory, filepath? : any) : boolean;
     
         /**
          * This field or method was not documented by atomdoc, assume it is private. Use with caution.
          */
-        isPathIncluded(fileOrDirectory? : any, filepath? : any) : any;
+        isPathIncluded(fileOrDirectory? : Pathwatcher.Directory, filepath? : any) : boolean;
     
         /**
          * This field or method was not documented by atomdoc, assume it is private. Use with caution.
@@ -195,7 +193,7 @@ declare module Scandal {
         /**
          * This field or method was not documented by atomdoc, assume it is private. Use with caution.
          */
-        createMatchers(patterns? : any, deepMatch? : any) : any;
+        createMatchers(patterns? : FirstMate.Pattern[], deepMatch? : any) : any;
     
     }
 
@@ -227,7 +225,7 @@ declare module Scandal {
         /**
          * This field or method was not documented by atomdoc, assume it is private. Use with caution.
          */
-        _transform(chunk? : any, encoding? : any, done? : any) : any;
+        _transform(chunk? : any, encoding? : string, done? : any) : any;
     
     }
 
@@ -275,8 +273,8 @@ declare module Scandal {
     
         /**
          * Create a {PathScanner} object.
-        @param rootPath? - {String} top level directory to scan. eg. `/Users/ben/somedir`
-        @param options? - {Object} options hash
+         * @param rootPath? - {String} top level directory to scan. eg. `/Users/ben/somedir`
+         * @param options? - {Object} options hash
          */
         constructor(rootPath? : string, options? : Object);
     
@@ -298,7 +296,7 @@ declare module Scandal {
         /**
          * This field or method was not documented by atomdoc, assume it is private. Use with caution.
          */
-        processFile(filePath? : any) : any;
+        processFile(filePath? : any) : Pathwatcher.File;
     
         /**
          * This field or method was not documented by atomdoc, assume it is private. Use with caution.
@@ -308,7 +306,7 @@ declare module Scandal {
         /**
          * This field or method was not documented by atomdoc, assume it is private. Use with caution.
          */
-        isInternalSymlink(filePath? : any) : any;
+        isInternalSymlink(filePath? : any) : boolean;
     
         /**
          * This field or method was not documented by atomdoc, assume it is private. Use with caution.
@@ -347,17 +345,17 @@ declare module Scandal {
          * Will search with a {ChunkedExecutor} so as not to immediately exhaust all
          * the available file descriptors. The {ChunkedExecutor} will execute 20 paths
          * concurrently.
-        @param regex? - {RegExp} search pattern
-        @param paths? - {Array} of {String} file paths to search
-        @param doneCallback? - called when searching the entire array of paths has finished
+         * @param regex? - {RegExp} search pattern
+         * @param paths? - {Array} of {String} file paths to search
+         * @param doneCallback? - called when searching the entire array of paths has finished
          */
         searchPaths(regex? : RegExp, paths? : any[], doneCallback? : any) : any;
     
         /**
          * Search a file path for a regex
-        @param regex? - {RegExp} search pattern
-        @param filePath? - {String} file path to search
-        @param doneCallback? - called when searching the entire array of paths has finished
+         * @param regex? - {RegExp} search pattern
+         * @param filePath? - {String} file path to search
+         * @param doneCallback? - called when searching the entire array of paths has finished
          */
         searchPath(regex? : RegExp, filePath? : string, doneCallback? : any) : any;
     
