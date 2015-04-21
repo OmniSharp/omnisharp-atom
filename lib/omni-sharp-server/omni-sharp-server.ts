@@ -189,7 +189,7 @@ class OmniSharpServerInstance {
         return new Promise<TResponse>((resolve, reject) => {
             this._outstandingRequests[sequence] = { resolve: resolve, reject: reject };
 
-            this.child.stdin.write(JSON.stringify(packet) + '\n');
+            this.child.stdin.write(JSON.stringify(packet) + '\n', 'ascii');
         })
     }
 
