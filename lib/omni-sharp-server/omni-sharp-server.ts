@@ -4,9 +4,10 @@ var BrowserWindow = require('remote').require('browser-window')
 var OmnisharpLocation = require('omnisharp-server-roslyn-binaries')
 var findFreePort = require('freeport')
 import _ = require('lodash')
+import Promise = require("bluebird");
 
 class OmniSharpServer {
-    public vm : OmniSharp.vm = {
+    public vm: OmniSharp.vm = {
         isNotLoading: true,
         isLoading: false,
         isOff: true,
@@ -60,38 +61,37 @@ atom.emitter.on("omni-sharp-server:state-change", (state) => {
 class OmniSharpServerInstance {
     public packageDir = atom.packages.getPackageDirPaths()[0];
     public location = OmnisharpLocation;
-    public child;
+    public child: child_process.ChildProcess;
     public port;
+    private _seq = 0;
 
     public start() {
         var executablePath, useMono;
         useMono = process.platform !== "win32";
         executablePath = this.location;
-        return findFreePort((err, port) => {
+        findFreePort((err, port) => {
             var ref;
             if (err) {
                 return console.error("error finding freeport: ", err);
             }
             this.port = port;
-            var serverArguments = ["-s", typeof atom !== "undefined" && atom !== null ? (ref = atom.project) != null ? ref.getPaths()[0] : void 0 : void 0, "-p", port];
+
+
+            var path = atom && atom.project && atom.project.getPaths()[0] || void 0;
+            var serverArguments = ["--stdio", "-s", path, "-p", port, "--hostPID", process.pid];
             this.child = spawn(executablePath, serverArguments);
             atom.emitter.emit("omni-sharp-server:start", this.child.pid, port);
             atom.emitter.emit("omni-sharp-server:state-change", "loading");
-            this.child.stdout.on('data', this.out);
-            this.child.stderr.on('data', this.err);
+            this.child.stdout.on('data', this.serverStart);
+            this.child.stderr.on('data', this.serverErr);
+            this.child.stdout.on('data', this.serverResponse);
             this.child.on('close', this.close);
-            return this.child.on('error', this.err);
+            this.child.on('error', this.serverErr);
         })
     }
 
-    public out = (data) => {
+    private serverStart = (data) => {
         var s = data.toString();
-
-        var ref = s.match(/Solution has finished loading/);
-        if ((ref != null ? ref.length : 0) > 0) {
-            atom.emitter.emit("omni-sharp-server:ready", this.child.pid);
-            atom.emitter.emit("omni-sharp-server:state-change", "ready");
-        }
 
         var ref = s.match(/Detected an OmniSharp instance already running on port/);
         if ((ref != null ? ref.length : 0) > 0) {
@@ -99,13 +99,98 @@ class OmniSharpServerInstance {
             atom.emitter.emit("omni-sharp-server:state-change", "error");
             this.stop();
         }
-
-        return atom.emitter.emit("omni-sharp-server:out", s);
     }
 
-    public err = (data) => {
+    private _outstandingRequests: { [seq: number]: { resolve: (thenable: any | Promise.Thenable<any>) => void; reject: (error: any) => void; } } = {}
+    private _partialResult: string;
+
+    // TODO: Review if this is the best way...
+    private serverResponse = (data: any) => {
+        var result :string = data.toString();
+        if (this._partialResult) {
+            result = this._partialResult + result;
+        }
+
+        var results = result.split('\n');
+
+        _.each(results, (res, index) =>  {
+            if (_.startsWith(res.trim(), "{") && _.endsWith(res.trim(), "}")) {
+                this.handleResponse(res)
+            } else if (index === results.length - 1) {
+                this._partialResult = res;
+            } else {
+                console.log('wtf...');
+            }
+
+        });
+    }
+
+    private handleResponse(data: string) {
+        try {
+            var packet: OmniSharp.Protocol.Packet = JSON.parse(data.toString());
+        } catch (_error) {
+            atom.emitter.emit("omni-sharp-server:out", 'failed with: ' + data.toString());
+        }
+
+        if (!packet) {
+            // TODO: Log error?
+            return;
+        }
+
+        // enum?
+        if (packet.Type === "response") {
+            var response: OmniSharp.Protocol.ResponsePacket<any> = packet;
+            var outstandingRequest = this._outstandingRequests[response.Request_seq];
+            if (response.Success) {
+                if (outstandingRequest) {
+                    outstandingRequest.resolve(response.Body);
+                } else {
+                    // TODO: using .Command go find stuff
+                }
+            } else {
+                if (outstandingRequest) {
+                    outstandingRequest.reject(response.Message);
+                } else {
+                    // TODO: make notification?
+                }
+            }
+
+            if (outstandingRequest) {
+                delete this._outstandingRequests[response.Request_seq];
+            }
+        } else if (packet.Type === "event") {
+            var event : OmniSharp.Protocol.EventPacket<any> = packet;
+
+            if (event.Event === "started") {
+                atom.emitter.emit("omni-sharp-server:ready", this.child.pid);
+                atom.emitter.emit("omni-sharp-server:state-change", "ready");
+            }
+
+            // TODO: make friend with colors and stuff
+            atom.emitter.emit("omni-sharp-server:out", event.Body && event.Body.Message || event.Event || '');
+        }
+    }
+
+    private serverErr = (data) => {
         var friendlyMessage = this.parseError(data);
+
+        // TODO: make friend with colors and stuff
         return atom.emitter.emit("omni-sharp-server:err", friendlyMessage);
+    }
+
+    public request<TRequest extends OmniSharp.Models.Request, TResponse>(command: string, request: TRequest): Promise<TResponse> {
+        var sequence = this._seq++;
+        var packet: OmniSharp.Protocol.RequestPacket<TRequest> = {
+            Command: command,
+            Seq: sequence,
+            Arguments: request
+        };
+
+        return new Promise<TResponse>((resolve, reject) => {
+            this._outstandingRequests[sequence] = { resolve: resolve, reject: reject };
+
+            this.child.stdin.write(JSON.stringify(packet) + '\n');
+        })
     }
 
     public close = (data) => {
