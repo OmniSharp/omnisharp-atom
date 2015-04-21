@@ -3,7 +3,7 @@ Linter = require "#{linterPath}/lib/linter"
 Rng = require("atom").Range;
 OmniSharpServer = require '../omni-sharp-server/omni-sharp-server'
 Omni = require '../omni-sharp-server/omni'
-_ = require 'underscore'
+_ = require 'lodash'
 
 class LinterCSharp extends Linter
 

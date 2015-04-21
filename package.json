@@ -3,11 +3,12 @@
   "main": "./lib/omnisharp-atom/omnisharp-atom",
   "version": "0.2.1",
   "description": "Brings the wonderful OmniSharp server to powercharge Atom's C# development experience",
+  "keywords": ["c#", ".net", "asp.net", "omnisharp"],
   "activationCommands": [],
   "repository": "https://github.com/OmniSharp/omnisharp-atom",
   "license": "MIT",
   "engines": {
-    "atom": ">0.50.0"
+    "atom": ">=0.192.0 <2.0.0"
   },
   "linter-package": true,
   "linter-implementation": "omnisharp-atom/linter",
