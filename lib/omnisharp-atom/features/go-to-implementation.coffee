@@ -4,6 +4,9 @@ Omni = require '../../omni-sharp-server/omni'
 module.exports =
   class GoToImplementation
 
+    constructor: (atomSharper) ->
+      @atomSharper = atomSharper
+
     goToImplementation: ->
       if OmniSharpServer.vm.isReady
         @navigateToWord = atom.workspace.getActiveTextEditor()?.getWordUnderCursor()
@@ -28,7 +31,9 @@ module.exports =
 
           atom.emit "omni:navigate-to", position
 
-        else atom.emit "omni:find-usages", quickFixes
+        else
+          atom.emit "omni:find-usages", quickFixes
+          @atomSharper.outputView.selectPane "find"
 
     deactivate: =>
         @disposable.dispose()
