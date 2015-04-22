@@ -40,6 +40,7 @@ class Omni {
         var fullData = <TRequest>_.extend({}, context, data);
         var result = Omni._req<TRequest, TResponse>(path, event, fullData, editor);
 
+        result.catch(function(data) {
             var ref;
             if (typeof data !== 'string') {
                 console.error(data.statusCode != null, (ref = data.options) != null ? ref.uri : void 0);
