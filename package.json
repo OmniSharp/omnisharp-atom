@@ -34,7 +34,8 @@
     "omnisharp-server-roslyn-binaries": "latest",
     "request-promise": "~0.1.2",
     "semver": "^4.2.0",
-    "tsd": "~0.6.0-beta.5"
+    "tsd": "~0.6.0-beta.5",
+    "vue": "~0.10.6"
   },
   "consumedServices": {
     "status-bar": {
