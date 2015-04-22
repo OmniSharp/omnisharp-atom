@@ -1,9 +1,14 @@
 {
   "name": "omnisharp-atom",
   "main": "./lib/omnisharp-atom/omnisharp-atom",
-  "version": "0.2.1",
+  "version": "0.3.0",
   "description": "Brings the wonderful OmniSharp server to powercharge Atom's C# development experience",
-  "keywords": ["c#", ".net", "asp.net", "omnisharp"],
+  "keywords": [
+    "c#",
+    ".net",
+    "asp.net",
+    "omnisharp"
+  ],
   "activationCommands": [],
   "repository": "https://github.com/OmniSharp/omnisharp-atom",
   "license": "MIT",

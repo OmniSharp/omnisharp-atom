@@ -30,21 +30,23 @@ module.exports =
         query: query
 
     @req: (path, event, d, editor) =>
-      @_req(path, event, d, editor)
+      context = @getEditorContext(editor)
+      return Promise.reject "no editor context found" unless context
+
+      fullData = _.extend({}, context, d)
+
+      @_req(path, event, fullData, editor)
       .catch (data) ->
         console.error data.statusCode?, data.options?.uri if typeof data isnt 'string'
 
-    @_req: (path, event, d, editor) =>
+    @_req: (path, event, fullData, editor) =>
       return Promise.reject "omnisharp not ready" if OmniSharpServer.vm.isNotReady
-
-      context = @getEditorContext(editor)
-      return Promise.reject "no editor context found" unless context
 
       rp
         uri: @_uri path
         method: "POST",
         json: true,
-        body: _.extend({}, context, d)
+        body: fullData
       .then (data) ->
         try
           parsedData = JSON.parse(data)
@@ -54,6 +56,16 @@ module.exports =
           atom.emit "omni:#{event}",  parsedData, editor
 
         parsedData
+
+    @reql: (path, event, d, editor) =>
+      context = @getEditorContext(editor)
+      return Promise.reject "no editor context found" unless context
+
+      fullData = _.extend([], [context], d)
+
+      @_req(path, event, fullData, editor)
+      .catch (data) ->
+        console.error data.statusCode?, data.options?.uri if typeof data isnt 'string'
 
     @syntaxErrors: => @req "syntaxErrors", "syntax-errors"
 
@@ -71,6 +83,8 @@ module.exports =
     @codeFormat: => @req "codeFormat", "code-format"
 
     @build: => @req "buildcommand", "build-command"
+
+    @packageRestore: => @reql "filesChanged", "package-restore"
 
     @autocomplete: (wordToComplete) =>
       data =
