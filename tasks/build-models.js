@@ -10,6 +10,7 @@ var enumerableRegex = /IEnumerable<(.*?)>/;
 
 var getterSetterRegex = /^\s*public (.*?) \{ get; set; \}/;
 var getterRegex = /^\s*public (.*?) \{ get; \}/;
+var filepathRegex = /^\s*public string FileName$/;
 
 var inheritsRegex = /class .*? \: (.*?)$/;
 
@@ -55,7 +56,7 @@ module.exports = function() {
 
         while (content.length) {
             var row = content.shift();
-            var result = row.match(getterSetterRegex) || row.match(getterRegex);
+            var result = row.match(getterSetterRegex) || row.match(getterRegex) || (row.match(filepathRegex) && ['', 'string FileName']);
             if (result) {
                 var property = result[1].split(' ');
 

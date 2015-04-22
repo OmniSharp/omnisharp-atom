@@ -30,4 +30,5 @@ declare module PropertyAccessors {
 
 }
 declare module "property-accessors" {
+    export = PropertyAccessors.PropertyAccessors;
 }

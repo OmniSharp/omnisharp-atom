@@ -17,12 +17,12 @@ declare module TextBuffer {
         /**
          * This field or method was not documented by atomdoc, assume it is private. Use with caution.
          */
-        oldRange: Range;
+        oldRange: TextBuffer.Range;
     
         /**
          * This field or method was not documented by atomdoc, assume it is private. Use with caution.
          */
-        newRange: Range;
+        newRange: TextBuffer.Range;
     
         /**
          * This field or method was not documented by atomdoc, assume it is private. Use with caution.
@@ -100,17 +100,17 @@ declare module TextBuffer {
         /**
          * This field or method was not documented by atomdoc, assume it is private. Use with caution.
          */
-        undoStack: any /* default */;
+        undoStack: void;
     
         /**
          * This field or method was not documented by atomdoc, assume it is private. Use with caution.
          */
-        redoStack: any /* default */;
+        redoStack: void;
     
         /**
          * This field or method was not documented by atomdoc, assume it is private. Use with caution.
          */
-        currentTransaction: any /* default */;
+        currentTransaction: Transaction;
     
         /**
          * This field or method was not documented by atomdoc, assume it is private. Use with caution.
@@ -125,7 +125,7 @@ declare module TextBuffer {
         /**
          * This field or method was not documented by atomdoc, assume it is private. Use with caution.
          */
-        constructor(buffer? : any, undoStack? : any, redoStack? : any);
+        constructor(buffer? : any, undoStack? : void, redoStack? : void);
     
         /**
          * Used by {Serializable} during serialization 
@@ -149,12 +149,12 @@ declare module TextBuffer {
         /**
          * This field or method was not documented by atomdoc, assume it is private. Use with caution.
          */
-        undo() : any;
+        undo() : void;
     
         /**
          * This field or method was not documented by atomdoc, assume it is private. Use with caution.
          */
-        redo() : any;
+        redo() : void;
     
         /**
          * This field or method was not documented by atomdoc, assume it is private. Use with caution.
@@ -164,37 +164,37 @@ declare module TextBuffer {
         /**
          * This field or method was not documented by atomdoc, assume it is private. Use with caution.
          */
-        beginTransaction(groupingInterval? : any) : any;
+        beginTransaction(groupingInterval? : any) : Transaction;
     
         /**
          * This field or method was not documented by atomdoc, assume it is private. Use with caution.
          */
-        commitTransaction() : any;
+        commitTransaction() : Transaction;
     
         /**
          * This field or method was not documented by atomdoc, assume it is private. Use with caution.
          */
-        abortTransaction() : any;
+        abortTransaction() : Transaction;
     
         /**
          * This field or method was not documented by atomdoc, assume it is private. Use with caution.
          */
-        createCheckpoint() : any;
+        createCheckpoint() : Checkpoint;
     
         /**
          * This field or method was not documented by atomdoc, assume it is private. Use with caution.
          */
-        revertToCheckpoint(checkpoint? : any) : any;
+        revertToCheckpoint(checkpoint? : Checkpoint) : Checkpoint;
     
         /**
          * This field or method was not documented by atomdoc, assume it is private. Use with caution.
          */
-        groupChangesSinceCheckpoint(checkpoint? : any) : any;
+        groupChangesSinceCheckpoint(checkpoint? : Checkpoint) : Checkpoint;
     
         /**
          * This field or method was not documented by atomdoc, assume it is private. Use with caution.
          */
-        isTransacting() : any;
+        isTransacting() : boolean;
     
         /**
          * This field or method was not documented by atomdoc, assume it is private. Use with caution.
@@ -220,7 +220,7 @@ declare module TextBuffer {
         /**
          * This field or method was not documented by atomdoc, assume it is private. Use with caution.
          */
-        markers: any /* default */;
+        markers: Atom.Marker[];
     
         /**
          * This field or method was not documented by atomdoc, assume it is private. Use with caution.
@@ -230,7 +230,7 @@ declare module TextBuffer {
         /**
          * This field or method was not documented by atomdoc, assume it is private. Use with caution.
          */
-        constructor(buffer? : any, markers? : any);
+        constructor(buffer? : any, markers? : Atom.Marker[]);
     
         /**
          * Builds the ::intervals indexing structure, which allows for quick retrieval
@@ -259,17 +259,17 @@ declare module TextBuffer {
         /**
          * This field or method was not documented by atomdoc, assume it is private. Use with caution.
          */
-        markPosition(position? : any, properties? : any) : any;
+        markPosition(position? : Point, properties? : any) : Point;
     
         /**
          * This field or method was not documented by atomdoc, assume it is private. Use with caution.
          */
-        getMarker(id? : any) : any;
+        getMarker(id? : any) : Atom.Marker;
     
         /**
          * This field or method was not documented by atomdoc, assume it is private. Use with caution.
          */
-        getMarkers() : any;
+        getMarkers() : Atom.Marker[];
     
         /**
          * This field or method was not documented by atomdoc, assume it is private. Use with caution.
@@ -279,22 +279,22 @@ declare module TextBuffer {
         /**
          * This field or method was not documented by atomdoc, assume it is private. Use with caution.
          */
-        findMarkers(params? : any) : any;
+        findMarkers(params? : any) : Atom.Marker[];
     
         /**
          * This field or method was not documented by atomdoc, assume it is private. Use with caution.
          */
-        createMarker(params? : any) : any;
+        createMarker(params? : any) : Atom.Marker;
     
         /**
          * This field or method was not documented by atomdoc, assume it is private. Use with caution.
          */
-        removeMarker(id? : any) : any;
+        removeMarker(id? : any) : Atom.Marker;
     
         /**
          * This field or method was not documented by atomdoc, assume it is private. Use with caution.
          */
-        recordMarkerPatch(patch? : any) : any;
+        recordMarkerPatch(patch? : any) : MarkerPatch;
     
         /**
          * This field or method was not documented by atomdoc, assume it is private. Use with caution.
@@ -417,15 +417,13 @@ declare module TextBuffer {
     
         /**
          * Invoke the given callback when the marker is destroyed.
-        @param callback? - {Function} to be called when the marker is destroyed.
-        Returns a {Disposable} on which `.dispose()` can be called to unsubscribe.
+         * @param callback? - {Function} to be called when the marker is destroyed.
          */
         onDidDestroy(callback? : Function) : EventKit.Disposable;
     
         /**
          * Invoke the given callback when the state of the marker changes.
-        @param callback? - {Function} to be called when the marker changes.
-        Returns a {Disposable} on which `.dispose()` can be called to unsubscribe.
+         * @param callback? - {Function} to be called when the marker changes.
          */
         onDidChange(callback? : Function) : EventKit.Disposable;
     
@@ -433,8 +431,8 @@ declare module TextBuffer {
     
         /**
          * Sets the range of the marker.
-        @param range? - A {Range} or range-compatible {Array}. The range will be clipped before it is assigned.
-        @param properties? - {Object} properties to associate with the marker.
+         * @param range? - A {Range} or range-compatible {Array}. The range will be clipped before it is assigned.
+         * @param properties? - {Object} properties to associate with the marker.
          */
         setRange(range? : Range, properties? : Object) : Range;
     
@@ -442,20 +440,20 @@ declare module TextBuffer {
     
         /**
          * Sets the head position of the marker.
-        @param position? - A {Point} or point-compatible {Array}. The position will be clipped before it is assigned.
-        @param properties? - {Object} properties to associate with the marker. 
+         * @param position? - A {Point} or point-compatible {Array}. The position will be clipped before it is assigned.
+         * @param properties? - {Object} properties to associate with the marker. 
          */
-        setHeadPosition(position? : Point, properties? : Object) : any;
+        setHeadPosition(position? : Point, properties? : Object) : Point;
     
         getTailPosition() : Point;
     
         /**
          * Sets the head position of the marker. If the marker doesn't have a
          * tail, it will after calling this method.
-        @param position? - A {Point} or point-compatible {Array}. The position will be clipped before it is assigned.
-        @param properties? - {Object} properties to associate with the marker. 
+         * @param position? - A {Point} or point-compatible {Array}. The position will be clipped before it is assigned.
+         * @param properties? - {Object} properties to associate with the marker. 
          */
-        setTailPosition(position? : Point, properties? : Object) : any;
+        setTailPosition(position? : Point, properties? : Object) : Point;
     
         getStartPosition() : Point;
     
@@ -465,7 +463,7 @@ declare module TextBuffer {
          * Removes the marker's tail. After calling the marker's head position
          * will be reported as its current tail position until the tail is planted
          * again.
-        @param properties? - {Object} properties to associate with the marker. 
+         * @param properties? - {Object} properties to associate with the marker. 
          */
         clearTail(properties? : Object) : any;
     
@@ -473,7 +471,7 @@ declare module TextBuffer {
          * Plants the marker's tail at the current head position. After calling
          * the marker's tail position will be its head position at the time of the
          * call, regardless of where the marker's head is moved.
-        @param properties? - {Object} properties to associate with the marker. 
+         * @param properties? - {Object} properties to associate with the marker. 
          */
         plantTail(properties? : Object) : any;
     
@@ -483,13 +481,11 @@ declare module TextBuffer {
     
         /**
          * Is the marker valid?
-        Returns a {Boolean}.
          */
         isValid() : boolean;
     
         /**
          * Is the marker destroyed?
-        Returns a {Boolean}.
          */
         isDestroyed() : boolean;
     
@@ -508,22 +504,22 @@ declare module TextBuffer {
         /**
          * Merges an {Object} containing new properties into the marker's
          * existing properties.
-        @param properties? - {Object} 
+         * @param properties? - {Object} 
          */
-        setProperties(properties? : Object) : any;
+        setProperties(properties? : Object) : void;
     
         /**
          * Creates and returns a new {Marker} with the same properties as this
          * marker.
-        @param params? - {Object} 
+         * @param params? - {Object} 
          */
-        copy(params? : Object) : any;
+        copy(params? : Object) : Marker;
     
         /**
          * Destroys the marker, causing it to emit the 'destroyed' event. Once
          * destroyed, a marker cannot be restored by undo/redo operations. 
          */
-        destroy() : any;
+        destroy() : void;
     
         /**
          * This field or method was not documented by atomdoc, assume it is private. Use with caution.
@@ -532,7 +528,7 @@ declare module TextBuffer {
     
         /**
          * Compares this marker to another based on their ranges.
-        @param other? - {Marker} 
+         * @param other? - {Marker} 
          */
         compare(other? : Marker) : any;
     
@@ -567,14 +563,14 @@ The parameters are the same as {MarkerManager::findMarkers}.
         /**
          * This field or method was not documented by atomdoc, assume it is private. Use with caution.
          */
-        update(options? : (range? : Range,reversed? : any,tailed? : any,valid? : any,properties? : any) => any, textChanged? : any) : any;
+        update(options? : (range? : Range,reversed? : any,tailed? : any,valid? : any,properties? : any) => any, textChanged? : any) : void;
     
         /**
          * Updates the interval index on the marker manager with the marker's current
          * range. 
          * This field or method was marked private by atomdoc. Use with caution.
          */
-        updateIntervals() : any;
+        updateIntervals() : void;
     
         /**
          * This field or method was not documented by atomdoc, assume it is private. Use with caution.
@@ -594,8 +590,8 @@ The parameters are the same as {MarkerManager::findMarkers}.
     class Point {
         /**
          * Convert any point-compatible object to a {Point}.
-        @param object? - This can be an object that's already a {Point}, in which case it's simply returned, or an array containing two {Number}s representing the row and column.
-        @param copy? - An optional boolean indicating whether to force the copying of objects that are already points.
+         * @param object? - This can be an object that's already a {Point}, in which case it's simply returned, or an array containing two {Number}s representing the row and column.
+         * @param copy? - An optional boolean indicating whether to force the copying of objects that are already points.
         Returns: A {Point} based on the given object.
          */
         static fromObject(object? : Point, copy? : any) : Point;
@@ -614,8 +610,8 @@ The parameters are the same as {MarkerManager::findMarkers}.
     
         /**
          * Construct a {Point} object
-        @param row? - {Number} row
-        @param column? - {Number} column 
+         * @param row? - {Number} row
+         * @param column? - {Number} column 
          */
         constructor(row? : number, column? : number);
     
@@ -632,7 +628,7 @@ The parameters are the same as {MarkerManager::findMarkers}.
         /**
          * Build and return a new point by adding the rows and columns of
          * the given point.
-        @param other? - A {Point} whose row and column will be added to this point's row and column to build the returned point.
+         * @param other? - A {Point} whose row and column will be added to this point's row and column to build the returned point.
         Returns a {Point}.
          */
         translate(other? : Point) : Point;
@@ -646,7 +642,7 @@ The parameters are the same as {MarkerManager::findMarkers}.
          * the new point from traversing in "typewriter space". At the end of every row
          * traversed, a carriage return occurs that returns the columns to 0 before
          * continuing the traversal.
-        @param other? - A {Point} providing the rows and columns to traverse by.
+         * @param other? - A {Point} providing the rows and columns to traverse by.
         Returns a {Point}.
          */
         traverse(other? : Point) : Point;
@@ -682,8 +678,8 @@ The parameters are the same as {MarkerManager::findMarkers}.
     class Range {
         /**
          * Convert any range-compatible object to a {Range}.
-        @param object? - This can be an object that's already a {Range}, in which case it's simply returned, or an array containing two {Point}s or point-compatible arrays.
-        @param copy? - An optional boolean indicating whether to force the copying of objects that are already ranges.˚
+         * @param object? - This can be an object that's already a {Range}, in which case it's simply returned, or an array containing two {Point}s or point-compatible arrays.
+         * @param copy? - An optional boolean indicating whether to force the copying of objects that are already ranges.˚
         Returns: A {Range} based on the given object.
          */
         static fromObject(object? : Range, copy? : any) : Range;
@@ -697,9 +693,9 @@ The parameters are the same as {MarkerManager::findMarkers}.
         /**
          * 
          * This field or method was marked private by atomdoc. Use with caution.
-        @param startPoint? - A {Point} or point-compatible {Array}
-        @param rowDelta? - A {Number} indicating how many rows to add to the start point to get the end point.
-        @param columnDelta? - A {Number} indicating how many rows to columns to the start point to get the end point. 
+         * @param startPoint? - A {Point} or point-compatible {Array}
+         * @param rowDelta? - A {Number} indicating how many rows to add to the start point to get the end point.
+         * @param columnDelta? - A {Number} indicating how many rows to columns to the start point to get the end point. 
         Returns a {Range} that starts at the given point and ends at the
 start point plus the given row and column deltas.
          */
@@ -707,7 +703,7 @@ start point plus the given row and column deltas.
     
         /**
          * Call this with the result of {Range::serialize} to construct a new Range.
-        @param array? - {Array} of params to pass to the {::constructor} 
+         * @param array? - {Array} of params to pass to the {::constructor} 
          */
         static deserialize(array? : any[]) : any;
     
@@ -716,7 +712,7 @@ start point plus the given row and column deltas.
          */
         constructor(pointA? : any, pointB? : any);
     
-        copy() : any;
+        copy() : Range;
     
         negate() : any;
     
@@ -724,7 +720,6 @@ start point plus the given row and column deltas.
     
         /**
          * Is the start position of this range equal to the end position?
-        Returns a {Boolean}.
          */
         isEmpty() : boolean;
     
@@ -736,7 +731,7 @@ start point plus the given row and column deltas.
          */
         getRowCount() : number;
     
-        getRows() : any;
+        getRows() : number[];
     
         /**
          * Freezes the range and its start and end point so it becomes
@@ -750,8 +745,8 @@ start point plus the given row and column deltas.
         /**
          * Build and return a new range by translating this range's start and
          * end points by the given delta(s).
-        @param startDelta? - A {Point} by which to translate the start of this range.
-        @param endDelta? - A {Point} to by which to translate the end of this range. If omitted, the `startDelta` will be used instead.
+         * @param startDelta? - A {Point} by which to translate the start of this range.
+         * @param endDelta? - A {Point} to by which to translate the end of this range. If omitted, the `startDelta` will be used instead.
         Returns a {Range}.
          */
         translate(startDelta? : Point, endDelta? : Point) : Range;
@@ -761,7 +756,7 @@ start point plus the given row and column deltas.
          * end points by the given delta.
          * 
          * See {Point::traverse} for details of how traversal differs from translation.
-        @param delta? - A {Point} containing the rows and columns to traverse to derive the new range.
+         * @param delta? - A {Point} containing the rows and columns to traverse to derive the new range.
         Returns a {Range}.
          */
         traverse(delta? : Point) : Range;
@@ -776,21 +771,21 @@ start point plus the given row and column deltas.
     
         isEqual(other? : any) : boolean;
     
-        coversSameRows(other? : any) : boolean;
+        coversSameRows(other? : any) : number[];
     
         /**
          * Determines whether this range intersects with the argument.
-        @param otherRange? - A {Range} or range-compatible {Array}
-        @param exclusive? - {Boolean} indicating whether to exclude endpoints   when testing for intersection. Defaults to `false`.
+         * @param otherRange? - A {Range} or range-compatible {Array}
+         * @param exclusive? - {Boolean} indicating whether to exclude endpoints   when testing for intersection. Defaults to `false`.
         Returns a {Boolean}.
          */
         intersectsWith(otherRange? : Range, exclusive? : boolean) : boolean;
     
         containsRange(otherRange? : Range, exclusive? : any) : Range;
     
-        containsPoint(point? : Point, exclusive? : any) : boolean;
+        containsPoint(point? : Point, exclusive? : any) : Point;
     
-        intersectsRow(row? : number) : boolean;
+        intersectsRow(row? : number) : number;
     
         intersectsRowRange(startRow? : number, endRow? : number) : Range;
     
@@ -812,12 +807,12 @@ start point plus the given row and column deltas.
         /**
          * This field or method was not documented by atomdoc, assume it is private. Use with caution.
          */
-        static Point: any /* default */;
+        static Point: Point;
     
         /**
          * This field or method was not documented by atomdoc, assume it is private. Use with caution.
          */
-        static Range: Range;
+        static Range: TextBuffer.Range;
     
         /**
          * This field or method was not documented by atomdoc, assume it is private. Use with caution.
@@ -832,7 +827,7 @@ start point plus the given row and column deltas.
         /**
          * This field or method was not documented by atomdoc, assume it is private. Use with caution.
          */
-        encoding: any /* default */;
+        encoding: string;
     
         /**
          * This field or method was not documented by atomdoc, assume it is private. Use with caution.
@@ -857,7 +852,7 @@ start point plus the given row and column deltas.
         /**
          * This field or method was not documented by atomdoc, assume it is private. Use with caution.
          */
-        file: any /* default */;
+        file: Pathwatcher.File;
     
         /**
          * This field or method was not documented by atomdoc, assume it is private. Use with caution.
@@ -871,7 +866,7 @@ start point plus the given row and column deltas.
     
         /**
          * Create a new buffer with the given params.
-        @param params? - {Object} or {String} of text
+         * @param params? - {Object} or {String} of text
          */
         constructor(params? : Object);
     
@@ -893,8 +888,7 @@ start point plus the given row and column deltas.
          * 
          * Because observers are invoked synchronously, it's important not to perform
          * any expensive operations via this method.
-        @param callback? - {Function} to be called when the buffer changes.
-        Returns a {Disposable} on which `.dispose()` can be called to unsubscribe.
+         * @param callback? - {Function} to be called when the buffer changes.
          */
         onWillChange(callback? : Function) : EventKit.Disposable;
     
@@ -905,8 +899,7 @@ start point plus the given row and column deltas.
          * Because observers are invoked synchronously, it's important not to perform
          * any expensive operations via this method. Consider {::onDidStopChanging} to
          * delay expensive operations until after changes stop occurring.
-        @param callback? - {Function} to be called when the buffer changes.
-        Returns a {Disposable} on which `.dispose()` can be called to unsubscribe.
+         * @param callback? - {Function} to be called when the buffer changes.
          */
         onDidChange(callback? : Function) : EventKit.Disposable;
     
@@ -923,23 +916,20 @@ start point plus the given row and column deltas.
          * This method can be used to perform potentially expensive operations that
          * don't need to be performed synchronously. If you need to run your callback
          * synchronously, use {::onDidChange} instead.
-        @param callback? - {Function} to be called when the buffer stops changing.
-        Returns a {Disposable} on which `.dispose()` can be called to unsubscribe.
+         * @param callback? - {Function} to be called when the buffer stops changing.
          */
         onDidStopChanging(callback? : Function) : EventKit.Disposable;
     
         /**
          * Invoke the given callback when the in-memory contents of the
          * buffer become in conflict with the contents of the file on disk.
-        @param callback? - {Function} to be called when the buffer enters conflict.
-        Returns a {Disposable} on which `.dispose()` can be called to unsubscribe.
+         * @param callback? - {Function} to be called when the buffer enters conflict.
          */
         onDidConflict(callback? : Function) : EventKit.Disposable;
     
         /**
          * Invoke the given callback the value of {::isModified} changes.
-        @param callback? - {Function} to be called when {::isModified} changes.
-        Returns a {Disposable} on which `.dispose()` can be called to unsubscribe.
+         * @param callback? - {Function} to be called when {::isModified} changes.
          */
         onDidChangeModified(callback? : Function) : EventKit.Disposable;
     
@@ -958,82 +948,71 @@ start point plus the given row and column deltas.
          * 
          * Basically, this method gives you a way to take action after both a buffer
          * change and all associated marker changes.
-        @param callback? - {Function} to be called after markers are updated.
-        Returns a {Disposable} on which `.dispose()` can be called to unsubscribe.
+         * @param callback? - {Function} to be called after markers are updated.
          */
         onDidUpdateMarkers(callback? : Function) : EventKit.Disposable;
     
         /**
          * Invoke the given callback when a marker is created.
-        @param callback? - {Function} to be called when a marker is created.
-        Returns a {Disposable} on which `.dispose()` can be called to unsubscribe.
+         * @param callback? - {Function} to be called when a marker is created.
          */
         onDidCreateMarker(callback? : Function) : EventKit.Disposable;
     
         /**
          * Invoke the given callback when the value of {::getPath} changes.
-        @param callback? - {Function} to be called when the path changes.
-        Returns a {Disposable} on which `.dispose()` can be called to unsubscribe.
+         * @param callback? - {Function} to be called when the path changes.
          */
         onDidChangePath(callback? : Function) : EventKit.Disposable;
     
         /**
          * Invoke the given callback when the value of {::getEncoding} changes.
-        @param callback? - {Function} to be called when the encoding changes.
-        Returns a {Disposable} on which `.dispose()` can be called to unsubscribe.
+         * @param callback? - {Function} to be called when the encoding changes.
          */
         onDidChangeEncoding(callback? : Function) : EventKit.Disposable;
     
         /**
          * Invoke the given callback before the buffer is saved to disk.
-        @param callback? - {Function} to be called before the buffer is saved.
-        Returns a {Disposable} on which `.dispose()` can be called to unsubscribe.
+         * @param callback? - {Function} to be called before the buffer is saved.
          */
         onWillSave(callback? : Function) : EventKit.Disposable;
     
         /**
          * Invoke the given callback after the buffer is saved to disk.
-        @param callback? - {Function} to be called after the buffer is saved.
-        Returns a {Disposable} on which `.dispose()` can be called to unsubscribe.
+         * @param callback? - {Function} to be called after the buffer is saved.
          */
         onDidSave(callback? : Function) : EventKit.Disposable;
     
         /**
          * Invoke the given callback after the file backing the buffer is
          * deleted.
-        @param callback? - {Function} to be called after the buffer is deleted.
-        Returns a {Disposable} on which `.dispose()` can be called to unsubscribe.
+         * @param callback? - {Function} to be called after the buffer is deleted.
          */
         onDidDelete(callback? : Function) : EventKit.Disposable;
     
         /**
          * Invoke the given callback before the buffer is reloaded from the
          * contents of its file on disk.
-        @param callback? - {Function} to be called before the buffer is reloaded.
-        Returns a {Disposable} on which `.dispose()` can be called to unsubscribe.
+         * @param callback? - {Function} to be called before the buffer is reloaded.
          */
         onWillReload(callback? : Function) : EventKit.Disposable;
     
         /**
          * Invoke the given callback after the buffer is reloaded from the
          * contents of its file on disk.
-        @param callback? - {Function} to be called after the buffer is reloaded.
-        Returns a {Disposable} on which `.dispose()` can be called to unsubscribe.
+         * @param callback? - {Function} to be called after the buffer is reloaded.
          */
         onDidReload(callback? : Function) : EventKit.Disposable;
     
         /**
          * Invoke the given callback when the buffer is destroyed.
-        @param callback? - {Function} to be called when the buffer is destroyed.
-        Returns a {Disposable} on which `.dispose()` can be called to unsubscribe.
+         * @param callback? - {Function} to be called when the buffer is destroyed.
          */
         onDidDestroy(callback? : Function) : EventKit.Disposable;
     
         /**
          * Invoke the given callback when there is an error in watching the
          * file.
-        @param callback? - {Function} callback
-        Returns a {Disposable} on which `.dispose()` can be called to unsubscribe.
+         * @param callback? - {Function} callback
          */
         onWillThrowWatchError(callback? : Function) : EventKit.Disposable;
     
@@ -1049,14 +1028,12 @@ start point plus the given row and column deltas.
          * contents on disk.
          * 
          * If the buffer is unsaved, always returns `true` unless the buffer is empty.
-        Returns a {Boolean}.
          */
         isModified() : boolean;
     
         /**
          * Determine if the in-memory contents of the buffer conflict with the
          * on-disk contents of its associated file.
-        Returns a {Boolean}.
          */
         isInConflict() : boolean;
     
@@ -1068,21 +1045,20 @@ start point plus the given row and column deltas.
     
         /**
          * Set the path for the buffer's associated file.
-        @param filePath? - A {String} representing the new file path 
+         * @param filePath? - A {String} representing the new file path 
          */
-        setPath(filePath? : string) : any;
+        setPath(filePath? : string) : void;
     
         /**
          * Sets the character set encoding for this buffer.
-        @param encoding? - The {String} encoding to use (default: 'utf8'). 
+         * @param encoding? - The {String} encoding to use (default: 'utf8'). 
          */
-        setEncoding(encoding? : string) : any;
+        setEncoding(encoding? : string) : void;
     
         getEncoding() : string;
     
         /**
          * Get the path of the associated file.
-        Returns a {String}.
          */
         getUri() : string;
     
@@ -1097,7 +1073,6 @@ start point plus the given row and column deltas.
     
         /**
          * Determine whether the buffer is empty.
-        Returns a {Boolean}.
          */
         isEmpty() : boolean;
     
@@ -1108,7 +1083,7 @@ start point plus the given row and column deltas.
     
         /**
          * Get the text in a range.
-        @param range? - A {Range}
+         * @param range? - A {Range}
          */
         getTextInRange(range? : Range) : Range;
     
@@ -1127,83 +1102,74 @@ start point plus the given row and column deltas.
     
         /**
          * Get the text of the line at the given row, without its line ending.
-        @param row? - A {Number} representing a 0-indexed row.
-        Returns a {String}.
+         * @param row? - A {Number} representing a 0-indexed row.
          */
-        lineForRow(row? : number) : string;
+        lineForRow(row? : number) : number;
     
         /**
          * Get the line ending for the given 0-indexed row.
-        @param row? - A {Number} indicating the row.
-        Returns a {String}. The returned newline is represented as a literal string:
-`'\n'`, `'\r'`, `'\r\n'`, or `''` for the last line of the buffer, which
-doesn't end in a newline.
+         * @param row? - A {Number} indicating the row.
          */
-        lineEndingForRow(row? : number) : string;
+        lineEndingForRow(row? : number) : number;
     
         /**
          * Get the length of the line for the given 0-indexed row, without its
          * line ending.
-        @param row? - A {Number} indicating the row.
-        Returns a {Number}.
+         * @param row? - A {Number} indicating the row.
          */
         lineLengthForRow(row? : number) : number;
     
         /**
          * Determine if the given row contains only whitespace.
-        @param row? - A {Number} representing a 0-indexed row.
-        Returns a {Boolean}.
+         * @param row? - A {Number} representing a 0-indexed row.
          */
         isRowBlank(row? : number) : boolean;
     
         /**
          * Given a row, find the first preceding row that's not blank.
-        @param startRow? - A {Number} identifying the row to start checking at.
-        Returns a {Number} or `null` if there's no preceding non-blank row.
+         * @param startRow? - A {Number} identifying the row to start checking at.
          */
         previousNonBlankRow(startRow? : number) : number;
     
         /**
          * Given a row, find the next row that's not blank.
-        @param startRow? - A {Number} identifying the row to start checking at.
-        Returns a {Number} or `null` if there's no next non-blank row.
+         * @param startRow? - A {Number} identifying the row to start checking at.
          */
         nextNonBlankRow(startRow? : number) : number;
     
         /**
          * Replace the entire contents of the buffer with the given text.
-        @param text? - A {String}
+         * @param text? - A {String}
          */
-        setText(text? : string) : string;
+        setText(text? : string) : void;
     
         /**
          * Replace the current buffer contents by applying a diff based on the
          * given text.
-        @param text? - A {String} containing the new buffer contents. 
+         * @param text? - A {String} containing the new buffer contents. 
          */
-        setTextViaDiff(text? : string) : any;
+        setTextViaDiff(text? : string) : void;
     
         /**
          * Set the text in the given range.
-        @param range? - A {Range}
-        @param text? - A {String}
-        @param options? - {Object}
+         * @param range? - A {Range}
+         * @param text? - A {String}
+         * @param options? - {Object}
          */
         setTextInRange(range? : Range, text? : string, options? : Object) : Range;
     
         /**
          * Insert text at the given position.
-        @param position? - A {Point} representing the insertion location. The position is clipped before insertion.
-        @param text? - A {String} representing the text to insert.
-        @param options? - {Object}
-        Returns the {Range} of the inserted text.
+         * @param position? - A {Point} representing the insertion location. The position is clipped before insertion.
+         * @param text? - A {String} representing the text to insert.
+         * @param options? - {Object}
          */
-        insert(position? : Point, text? : string, options? : Object) : Range;
+        insert(position? : Point, text? : string, options? : Object) : Range | boolean;
     
         /**
          * Append text to the end of the buffer.
-        @param text? - A {String} representing the text text to append.
-        @param options? - {Object}
+         * @param text? - A {String} representing the text text to append.
+         * @param options? - {Object}
         Returns the {Range} of the inserted text
          */
         append(text? : string, options? : Object) : Range;
@@ -1224,69 +1190,62 @@ doesn't end in a newline.
     
         /**
          * Delete the text in the given range.
-        @param range? - A {Range} in which to delete. The range is clipped before deleting.
-        Returns an empty {Range} starting at the start of deleted range.
+         * @param range? - A {Range} in which to delete. The range is clipped before deleting.
          */
-        delete(range? : Range) : Range;
+        delete(range? : Range) : void;
     
         /**
          * Delete the line associated with a specified row.
-        @param row? - A {Number} representing the 0-indexed row to delete.
-        Returns the {Range} of the deleted text.
+         * @param row? - A {Number} representing the 0-indexed row to delete.
          */
-        deleteRow(row? : number) : Range;
+        deleteRow(row? : number) : void;
     
         /**
          * Delete the lines associated with the specified row range.
          * 
          * If the row range is out of bounds, it will be clipped. If the startRow is
          * greater than the end row, they will be reordered.
-        @param startRow? - A {Number} representing the first row to delete.
-        @param endRow? - A {Number} representing the last row to delete, inclusive.
-        Returns the {Range} of the deleted text.
+         * @param startRow? - A {Number} representing the first row to delete.
+         * @param endRow? - A {Number} representing the last row to delete, inclusive.
          */
-        deleteRows(startRow? : number, endRow? : number) : Range;
+        deleteRows(startRow? : number, endRow? : number) : void;
     
         /**
          * Create a marker with the given range. This marker will maintain
          * its logical location as the buffer is changed, so if you mark a particular
          * word, the marker will remain over that word even if the word's location in
          * the buffer changes.
-        @param range? - A {Range} or range-compatible {Array}
-        @param properties? - A hash of key-value pairs to associate with the marker. There are also reserved property names that have marker-specific meaning.
+         * @param range? - A {Range} or range-compatible {Array}
+         * @param properties? - A hash of key-value pairs to associate with the marker. There are also reserved property names that have marker-specific meaning.
          */
         markRange(range? : Range, properties? : any) : Range;
     
         /**
          * Create a marker at the given position with no tail.
-        @param position? - {Point} or point-compatible {Array}
-        @param properties? - This is the same as the `properties` parameter in {::markRange}
-        Returns a {Marker}.
+         * @param position? - {Point} or point-compatible {Array}
+         * @param properties? - This is the same as the `properties` parameter in {::markRange}
          */
-        markPosition(position? : Point, properties? : any) : Marker;
+        markPosition(position? : Point, properties? : any) : Point;
     
         /**
          * Get all existing markers on the buffer.
-        Returns an {Array} of {Marker}s.
          */
-        getMarkers() : Marker[];
+        getMarkers() : Atom.Marker[];
     
         /**
          * Get an existing marker by its id.
-        @param id? - {Number} id of the marker to retrieve
-        Returns a {Marker}.
+         * @param id? - {Number} id of the marker to retrieve
          */
-        getMarker(id? : number) : Marker;
+        getMarker(id? : number) : Atom.Marker;
     
         /**
          * Find markers conforming to the given parameters.
          * 
          * Markers are sorted based on their position in the buffer. If two markers
          * start at the same position, the larger marker comes first.
-        @param params? - A hash of key-value pairs constraining the set of returned markers. You can query against custom marker properties by listing the desired key-value pairs here. In addition, the following keys are reserved and have special semantics:
-        Returns an {Array} of {Marker}s.
+         * @param params? - A hash of key-value pairs constraining the set of returned markers. You can query against custom marker properties by listing the desired key-value pairs here. In addition, the following keys are reserved and have special semantics:
          */
-        findMarkers(params? : any) : Marker[];
+        findMarkers(params? : any) : Atom.Marker[];
     
         /**
          * Get the number of markers in the buffer.
@@ -1297,17 +1256,17 @@ doesn't end in a newline.
         /**
          * This field or method was not documented by atomdoc, assume it is private. Use with caution.
          */
-        destroyMarker(id? : any) : any;
+        destroyMarker(id? : any) : void;
     
         /**
          * Undo the last operation. If a transaction is in progress, aborts it. 
          */
-        undo() : any;
+        undo() : void;
     
         /**
          * Redo the last operation 
          */
-        redo() : any;
+        redo() : void;
     
         /**
          * Batch multiple operations as a single undo/redo step.
@@ -1316,8 +1275,8 @@ doesn't end in a newline.
          * undoing and redoing should be performed in a transaction. If you want to
          * abort the transaction, call {::abortTransaction} to terminate the function's
          * execution and revert any changes performed up to the abortion.
-        @param groupingInterval? - The {Number} of milliseconds for which this transaction should be considered 'open for grouping' after it begins. If a transaction with a positive `groupingInterval` is committed while the previous transaction is still open for grouping, the two transactions are merged with respect to undo and redo.
-        @param fn? - A {Function} to call inside the transaction. 
+         * @param groupingInterval? - The {Number} of milliseconds for which this transaction should be considered 'open for grouping' after it begins. If a transaction with a positive `groupingInterval` is committed while the previous transaction is still open for grouping, the two transactions are merged with respect to undo and redo.
+         * @param fn? - A {Function} to call inside the transaction. 
          */
         transact(groupingInterval? : number, fn? : Function) : any;
     
@@ -1329,9 +1288,8 @@ doesn't end in a newline.
         /**
          * Create a pointer to the current state of the buffer for use
          * with {::revertToCheckpoint} and {::groupChangesSinceCheckpoint}.
-        Returns a checkpoint value.
          */
-        createCheckpoint() : any;
+        createCheckpoint() : Checkpoint;
     
         /**
          * Revert the buffer to the state it was in when the given
@@ -1341,9 +1299,8 @@ doesn't end in a newline.
          * checkpoint will be lost. If the given checkpoint is no longer present in the
          * undo history, no changes will be made to the buffer and this method will
          * return `false`.
-        Returns a {Boolean} indicating whether the operation succeeded.
          */
-        revertToCheckpoint(checkpoint? : any) : boolean;
+        revertToCheckpoint(checkpoint? : Checkpoint) : Checkpoint;
     
         /**
          * Group all changes since the given checkpoint into a single
@@ -1351,9 +1308,8 @@ doesn't end in a newline.
          * 
          * If the given checkpoint is no longer present in the undo history, no
          * grouping will be performed and this method will return `false`.
-        Returns a {Boolean} indicating whether the operation succeeded.
          */
-        groupChangesSinceCheckpoint(checkpoint? : any) : boolean;
+        groupChangesSinceCheckpoint(checkpoint? : Checkpoint) : Checkpoint;
     
         /**
          * Scan regular expression matches in the entire buffer, calling the
@@ -1361,41 +1317,41 @@ doesn't end in a newline.
          * 
          * If you're programmatically modifying the results, you may want to try
          * {::backwardsScan} to avoid tripping over your own changes.
-        @param regex? - A {RegExp} to search for.
-        @param iterator? - A {Function} that's called on each match with an {Object} containing the following keys:
+         * @param regex? - A {RegExp} to search for.
+         * @param iterator? - A {Function} that's called on each match with an {Object} containing the following keys:
          */
         scan(regex? : RegExp, iterator? : Function) : any;
     
         /**
          * Scan regular expression matches in the entire buffer in reverse
          * order, calling the given iterator function on each match.
-        @param regex? - A {RegExp} to search for.
-        @param iterator? - A {Function} that's called on each match with an {Object} containing the following keys:
+         * @param regex? - A {RegExp} to search for.
+         * @param iterator? - A {Function} that's called on each match with an {Object} containing the following keys:
          */
         backwardsScan(regex? : RegExp, iterator? : Function) : any;
     
         /**
          * Scan regular expression matches in a given range , calling the given
          * iterator function on each match.
-        @param regex? - A {RegExp} to search for.
-        @param range? - A {Range} in which to search.
-        @param iterator? - A {Function} that's called on each match with an {Object} containing the following keys:
+         * @param regex? - A {RegExp} to search for.
+         * @param range? - A {Range} in which to search.
+         * @param iterator? - A {Function} that's called on each match with an {Object} containing the following keys:
          */
         scanInRange(regex? : RegExp, range? : Range, iterator? : Function, reverse? : any) : Range;
     
         /**
          * Scan regular expression matches in a given range in reverse order,
          * calling the given iterator function on each match.
-        @param regex? - A {RegExp} to search for.
-        @param range? - A {Range} in which to search.
-        @param iterator? - A {Function} that's called on each match with an {Object} containing the following keys:
+         * @param regex? - A {RegExp} to search for.
+         * @param range? - A {Range} in which to search.
+         * @param iterator? - A {Function} that's called on each match with an {Object} containing the following keys:
          */
         backwardsScanInRange(regex? : RegExp, range? : Range, iterator? : Function) : Range;
     
         /**
          * Replace all regular expression matches in the entire buffer.
-        @param regex? - A {RegExp} representing the matches to be replaced.
-        @param replacementText? - A {String} representing the text to replace each match.
+         * @param regex? - A {RegExp} representing the matches to be replaced.
+         * @param replacementText? - A {String} representing the text to replace each match.
         Returns a {Number} representing the number of replacements made.
          */
         replace(regex? : RegExp, replacementText? : string) : number;
@@ -1403,9 +1359,9 @@ doesn't end in a newline.
         /**
          * Identifies if a character sequence is within a certain range.
          * This field or method was marked private by atomdoc. Use with caution.
-        @param regex? - The {RegExp} to match.
-        @param startIndex? - A {Number} representing the starting character offset.
-        @param endIndex? - A {Number} representing the ending character offset.
+         * @param regex? - The {RegExp} to match.
+         * @param startIndex? - A {Number} representing the starting character offset.
+         * @param endIndex? - A {Number} representing the ending character offset.
          */
         matchesInCharacterRange(regex? : RegExp, startIndex? : number, endIndex? : number) : Range;
     
@@ -1422,20 +1378,17 @@ doesn't end in a newline.
     
         /**
          * Get the last 0-indexed row in the buffer.
-        Returns a {Number}.
          */
         getLastRow() : number;
     
         /**
          * Get the first position in the buffer, which is always `[0, 0]`.
-        Returns a {Point}.
          */
         getFirstPosition() : Point;
     
         /**
          * Get the maximal position in the buffer, where new text would be
          * appended.
-        Returns a {Point}.
          */
         getEndPosition() : Point;
     
@@ -1447,8 +1400,8 @@ doesn't end in a newline.
     
         /**
          * Get the range for the given row
-        @param row? - A {Number} representing a 0-indexed row.
-        @param includeNewline? - A {Boolean} indicating whether or not to include the newline, which results in a range that extends to the start of the next line.
+         * @param row? - A {Number} representing a 0-indexed row.
+         * @param includeNewline? - A {Boolean} indicating whether or not to include the newline, which results in a range that extends to the start of the next line.
          */
         rangeForRow(row? : number, includeNewline? : boolean) : Range;
     
@@ -1457,18 +1410,16 @@ doesn't end in a newline.
          * absolute character offset, inclusive of line ending characters.
          * 
          * The position is clipped prior to translating.
-        @param position? - A {Point}.
-        Returns a {Number}.
+         * @param position? - A {Point}.
          */
-        characterIndexForPosition(position? : Point) : number;
+        characterIndexForPosition(position? : Point) : Point;
     
         /**
          * Convert an absolute character offset, inclusive of newlines, to a
          * position in the buffer in row/column coordinates.
          * 
          * The offset is clipped prior to translating.
-        @param offset? - A {Number}.
-        Returns a {Point}.
+         * @param offset? - A {Number}.
          */
         positionForCharacterIndex(offset? : number) : Point;
     
@@ -1477,7 +1428,7 @@ doesn't end in a newline.
          * 
          * For example, the position `[1, 100]` is out of bounds if the line at row 1 is
          * only 10 characters long, and it would be clipped to `(1, 10)`.
-        @param range? - A {Range} or range-compatible {Array} to clip.
+         * @param range? - A {Range} or range-compatible {Array} to clip.
          */
         clipRange(range? : Range) : Range;
     
@@ -1486,22 +1437,20 @@ doesn't end in a newline.
          * 
          * For example, the position (1, 100) is out of bounds if the line at row 1 is
          * only 10 characters long, and it would be clipped to (1, 10)
-        @param position? - A {Point} or point-compatible {Array}.
-        Returns a new {Point} if the given position is invalid, otherwise returns
-the given position.
+         * @param position? - A {Point} or point-compatible {Array}.
          */
         clipPosition(position? : Point) : Point;
     
         /**
          * Save the buffer. 
          */
-        save() : any;
+        save() : void;
     
         /**
          * Save the buffer at a specific path.
-        @param filePath? - The path to save at. 
+         * @param filePath? - The path to save at. 
          */
-        saveAs(filePath? : any) : any;
+        saveAs(filePath? : any) : void;
     
         /**
          * Reload the buffer's contents from disk.
@@ -1514,27 +1463,27 @@ the given position.
          * Rereads the contents of the file, and stores them in the cache. 
          * This field or method was marked private by atomdoc. Use with caution.
          */
-        updateCachedDiskContentsSync() : any;
+        updateCachedDiskContentsSync() : void;
     
         /**
          * Rereads the contents of the file, and stores them in the cache.
          * This field or method was marked private by atomdoc. Use with caution.
-        @param flushCache? - {Boolean} flush option to pass through to
+         * @param flushCache? - {Boolean} flush option to pass through to
         ```
                  {File::read} (default: false).
         ```
-        @param callback? - {Function} to call after the cached contents have
+         * @param callback? - {Function} to call after the cached contents have
         ```
                  been updated.
         ```
          */
-        updateCachedDiskContents(flushCache? : boolean, callback? : Function) : any;
+        updateCachedDiskContents(flushCache? : boolean, callback? : Function) : void;
     
         /**
          * Private Utility Methods
          * This field or method was marked private by atomdoc. Use with caution.
          */
-        markerCreated(marker? : any) : any;
+        markerCreated(marker? : Atom.Marker) : any;
     
         /**
          * This field or method was not documented by atomdoc, assume it is private. Use with caution.
@@ -1554,22 +1503,22 @@ the given position.
         /**
          * This field or method was not documented by atomdoc, assume it is private. Use with caution.
          */
-        destroy() : any;
+        destroy() : void;
     
         /**
          * This field or method was not documented by atomdoc, assume it is private. Use with caution.
          */
-        isAlive() : any;
+        isAlive() : boolean;
     
         /**
          * This field or method was not documented by atomdoc, assume it is private. Use with caution.
          */
-        isDestroyed() : any;
+        isDestroyed() : boolean;
     
         /**
          * This field or method was not documented by atomdoc, assume it is private. Use with caution.
          */
-        isRetained() : any;
+        isRetained() : boolean;
     
         /**
          * This field or method was not documented by atomdoc, assume it is private. Use with caution.
@@ -1584,7 +1533,7 @@ the given position.
         /**
          * This field or method was not documented by atomdoc, assume it is private. Use with caution.
          */
-        subscribeToFile() : any;
+        subscribeToFile() : Pathwatcher.File;
     
         /**
          * Identifies if the buffer belongs to multiple editors.
@@ -1679,11 +1628,11 @@ the given position.
         /**
          * This field or method was not documented by atomdoc, assume it is private. Use with caution.
          */
-        isOpenForGrouping() : any;
+        isOpenForGrouping() : boolean;
     
     }
 
 }
 declare module "text-buffer" {
-    export = TextBuffer;
+    export = TextBuffer.TextBuffer;
 }

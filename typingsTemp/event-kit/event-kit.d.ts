@@ -27,13 +27,13 @@ declare module EventKit {
          * Add a disposable to be disposed when the composite is disposed.
          * 
          * If this object has already been disposed, this method has no effect.
-        @param disposable? - {Disposable} instance or any object with a `.dispose()` method. 
+         * @param disposable? - {Disposable} instance or any object with a `.dispose()` method. 
          */
         add(disposable? : Disposable) : void;
     
         /**
          * Remove a previously added disposable.
-        @param disposable? - {Disposable} instance or any object with a `.dispose()` method. 
+         * @param disposable? - {Disposable} instance or any object with a `.dispose()` method. 
          */
         remove(disposable? : Disposable) : void;
     
@@ -52,7 +52,7 @@ declare module EventKit {
     export class Disposable {
         /**
          * Construct a Disposable
-        @param disposalAction? - An action to perform when {::dispose} is called for the first time. 
+         * @param disposalAction? - An action to perform when {::dispose} is called for the first time. 
          */
         constructor(disposalAction? : any);
     
@@ -91,8 +91,8 @@ declare module EventKit {
         /**
          * Register the given handler function to be invoked whenever events by
          * the given name are emitted via {::emit}.
-        @param eventName - {String} naming the event that you want to invoke the handler when emitted.
-        @param handler? - {Function} to invoke when {::emit} is called with the given event name.
+         * @param eventName - {String} naming the event that you want to invoke the handler when emitted.
+         * @param handler? - {Function} to invoke when {::emit} is called with the given event name.
         Returns a {Disposable} on which `.dispose()` can be called to unsubscribe.
          */
         on(eventName : string, handler? : (...value: any[]) => void, unshift? : any) : Disposable;
@@ -108,8 +108,8 @@ declare module EventKit {
          * public API are invoked. Your handler could itself be preempted via
          * subsequent calls to this method, but this can be controlled by keeping
          * methods based on `::preempt` private.
-        @param eventName - {String} naming the event that you want to invoke the handler when emitted.
-        @param handler? - {Function} to invoke when {::emit} is called with the given event name.
+         * @param eventName - {String} naming the event that you want to invoke the handler when emitted.
+         * @param handler? - {Function} to invoke when {::emit} is called with the given event name.
         Returns a {Disposable} on which `.dispose()` can be called to unsubscribe.
          */
         preempt(eventName : string, handler? : (...value: any[]) => void) : Disposable;
@@ -122,8 +122,8 @@ declare module EventKit {
     
         /**
          * Invoke handlers registered via {::on} for the given event name.
-        @param eventName - The name of the event to emit. Handlers registered with {::on} for the same name will be invoked.
-        @param ...value - Callbacks will be invoked with this value as an argument. 
+         * @param eventName - The name of the event to emit. Handlers registered with {::on} for the same name will be invoked.
+         * @param ...value - Callbacks will be invoked with this value as an argument. 
          */
         emit(eventName : string, ...value : any[]) : void;
     

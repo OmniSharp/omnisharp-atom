@@ -28,7 +28,7 @@ declare module AtomKeymap {
         /**
          * This field or method was not documented by atomdoc, assume it is private. Use with caution.
          */
-        abortKeyBinding() : any;
+        abortKeyBinding() : KeyBinding;
     
         /**
          * This field or method was not documented by atomdoc, assume it is private. Use with caution.
@@ -75,7 +75,7 @@ declare module AtomKeymap {
         /**
          * This field or method was not documented by atomdoc, assume it is private. Use with caution.
          */
-        constructor(source? : any, command? : any, keystrokes? : any, selector? : any);
+        constructor(source? : any, command? : any, keystrokes? : any, selector? : ScopedPropertyStore.Selector);
     
         /**
          * This field or method was not documented by atomdoc, assume it is private. Use with caution.
@@ -85,7 +85,7 @@ declare module AtomKeymap {
         /**
          * This field or method was not documented by atomdoc, assume it is private. Use with caution.
          */
-        compare(keyBinding? : any) : any;
+        compare(keyBinding? : KeyBinding) : any;
     
     }
 
@@ -97,8 +97,8 @@ declare module AtomKeymap {
     export class KeymapManager {
         /**
          * Create a keydown DOM event for testing purposes.
-        @param key? - The key or keyIdentifier of the event. For example, `'a'`, `'1'`, `'escape'`, `'backspace'`, etc.
-        @param options? - An {Object} containing any of the following:
+         * @param key? - The key or keyIdentifier of the event. For example, `'a'`, `'1'`, `'escape'`, `'backspace'`, etc.
+         * @param options? - An {Object} containing any of the following:
          */
         static buildKeydownEvent(key? : any, options? : Object) : any;
     
@@ -130,14 +130,14 @@ declare module AtomKeymap {
     
         /**
          * Create a new KeymapManager.
-        @param options? - An {Object} containing properties to assign to the keymap.  You can pass custom properties to be used by extension methods. The following properties are also supported:
+         * @param options? - An {Object} containing properties to assign to the keymap.  You can pass custom properties to be used by extension methods. The following properties are also supported:
          */
         constructor(options? : Object);
     
         /**
          * Unwatch all watched paths. 
          */
-        destroy() : any;
+        destroy() : void;
     
         /**
          * This field or method was not documented by atomdoc, assume it is private. Use with caution.
@@ -147,55 +147,49 @@ declare module AtomKeymap {
         /**
          * Invoke the given callback when one or more keystrokes completely
          * match a key binding.
-        @param callback? - {Function} to be called when keystrokes match a binding.
-        Returns a {Disposable} on which `.dispose()` can be called to unsubscribe.
+         * @param callback? - {Function} to be called when keystrokes match a binding.
          */
         onDidMatchBinding(callback? : Function) : EventKit.Disposable;
     
         /**
          * Invoke the given callback when one or more keystrokes partially
          * match a binding.
-        @param callback? - {Function} to be called when keystrokes partially match a binding.
-        Returns a {Disposable} on which `.dispose()` can be called to unsubscribe.
+         * @param callback? - {Function} to be called when keystrokes partially match a binding.
          */
         onDidPartiallyMatchBindings(callback? : Function) : EventKit.Disposable;
     
         /**
          * Invoke the given callback when one or more keystrokes fail to match
          * any bindings.
-        @param callback? - {Function} to be called when keystrokes fail to match any bindings.
-        Returns a {Disposable} on which `.dispose()` can be called to unsubscribe.
+         * @param callback? - {Function} to be called when keystrokes fail to match any bindings.
          */
         onDidFailToMatchBinding(callback? : Function) : EventKit.Disposable;
     
         /**
          * Invoke the given callback when a keymap file is reloaded.
          * This field or method was marked private by atomdoc. Use with caution.
-        @param callback? - {Function} to be called when a keymap file is reloaded.
-        Returns a {Disposable} on which `.dispose()` can be called to unsubscribe.
+         * @param callback? - {Function} to be called when a keymap file is reloaded.
          */
         onDidReloadKeymap(callback? : Function) : EventKit.Disposable;
     
         /**
          * Invoke the given callback when a keymap file is unloaded.
          * This field or method was marked private by atomdoc. Use with caution.
-        @param callback? - {Function} to be called when a keymap file is unloaded.
-        Returns a {Disposable} on which `.dispose()` can be called to unsubscribe.
+         * @param callback? - {Function} to be called when a keymap file is unloaded.
          */
         onDidUnloadKeymap(callback? : Function) : EventKit.Disposable;
     
         /**
          * Invoke the given callback when a keymap file not able to be loaded.
-        @param callback? - {Function} to be called when a keymap file is unloaded.
-        Returns a {Disposable} on which `.dispose()` can be called to unsubscribe.
+         * @param callback? - {Function} to be called when a keymap file is unloaded.
          */
         onDidFailToReadFile(callback? : Function) : EventKit.Disposable;
     
         /**
          * Add sets of key bindings grouped by CSS selector.
-        @param source? - A {String} (usually a path) uniquely identifying the given bindings so they can be removed later.
+         * @param source? - A {String} (usually a path) uniquely identifying the given bindings so they can be removed later.
          */
-        add(source? : string, keyBindingsBySelector? : any) : any;
+        add(source? : string, keyBindingsBySelector? : ScopedPropertyStore.Selector) : any;
     
         /**
          * This field or method was not documented by atomdoc, assume it is private. Use with caution.
@@ -204,20 +198,18 @@ declare module AtomKeymap {
     
         /**
          * Get all current key bindings.
-        Returns an {Array} of {KeyBinding}s.
          */
         getKeyBindings() : KeyBinding[];
     
         /**
          * Get the key bindings for a given command and optional target.
-        @param params? - An {Object} whose keys constrain the binding search:
-        Returns an {Array} of key bindings.
+         * @param params? - An {Object} whose keys constrain the binding search:
          */
-        findKeyBindings(params? : Object) : any[];
+        findKeyBindings(params? : Object) : KeyBinding[];
     
         /**
          * Load the key bindings from the given path.
-        @param options? - An {Object} containing the following optional keys:
+         * @param options? - An {Object} containing the following optional keys:
          */
         loadKeymap(bindingsPath? : any, options? : Object) : any;
     
@@ -272,13 +264,13 @@ declare module AtomKeymap {
          * 
          * If the event's target is `document.body`, it will be treated as if its
          * target is `.defaultTarget` if that property is assigned on the keymap.
-        @param event? - A `KeyboardEvent` of type 'keydown' 
+         * @param event? - A `KeyboardEvent` of type 'keydown' 
          */
         handleKeyboardEvent(event? : any, replaying? : any) : any;
     
         /**
          * Translate a keydown event to a keystroke string.
-        @param event? - A `KeyboardEvent` of type 'keydown'
+         * @param event? - A `KeyboardEvent` of type 'keydown'
         Returns a {String} describing the keystroke.
          */
         keystrokeForKeyboardEvent(event? : any) : string;
@@ -352,14 +344,14 @@ both partial and exact matches.
          * based on the binding's command. 
          * This field or method was marked private by atomdoc. Use with caution.
          */
-        dispatchCommandEvent(command? : any, target? : any, keyboardEvent? : any) : any;
+        dispatchCommandEvent(command? : any, target? : any, keyboardEvent? : any) : CommandEvent;
     
         /**
          * Chromium does not bubble events dispatched on detached targets, which makes
          * testing a pain in the ass. This method simulates bubbling manually. 
          * This field or method was marked private by atomdoc. Use with caution.
          */
-        simulateBubblingOnDetachedTarget(target? : any, commandEvent? : any) : any;
+        simulateBubblingOnDetachedTarget(target? : any, commandEvent? : CommandEvent) : any;
     
     }
 

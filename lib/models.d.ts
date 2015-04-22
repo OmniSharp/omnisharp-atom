@@ -62,6 +62,9 @@ declare module OmniSharp {
         LogLevel?: string;
     }
 
+    interface EventTypes {
+    }
+
     interface FileMemberElement {
         ChildNodes?: FileMemberElement[];
         Location?: QuickFix;
@@ -120,6 +123,16 @@ declare module OmniSharp {
         Changes?: LinePositionSpanTextChange[];
     }
 
+    interface MSBuildDiagnosticsMessage {
+        LogLevel?: string;
+        FileName?: string;
+        Text?: string;
+        StartLine?: number;
+        StartColumn?: number;
+        EndLine?: number;
+        EndColumn?: number;
+    }
+
     interface MSBuildProject {
         ProjectGuid?: string;
         Path?: string;
@@ -127,6 +140,12 @@ declare module OmniSharp {
         TargetPath?: string;
         TargetFramework?: string;
         SourceFiles?: string[];
+    }
+
+    interface MSBuildProjectDiagnostics {
+        FileName?: string;
+        Warnings?: MSBuildDiagnosticsMessage[];
+        Errors?: MSBuildDiagnosticsMessage[];
     }
 
     interface MsBuildWorkspaceInformation {
@@ -172,11 +191,31 @@ declare module OmniSharp {
         Line?: number;
         Column?: number;
         Buffer?: string;
+        FileName?: string;
     }
 
     interface RunCodeActionResponse {
         Text?: string;
         Changes?: LinePositionSpanTextChange[];
+    }
+
+    interface SignatureHelp {
+        Signatures?: SignatureHelpItem[];
+        ActiveSignature?: number;
+        ActiveParameter?: number;
+    }
+
+    interface SignatureHelpItem {
+        Name?: string;
+        Label?: string;
+        Documentation?: string;
+        Parameters?: SignatureHelpParameter[];
+    }
+
+    interface SignatureHelpParameter {
+        Name?: string;
+        Label?: string;
+        Documentation?: string;
     }
 
     interface SymbolLocation extends QuickFix {
