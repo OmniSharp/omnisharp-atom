@@ -48,7 +48,7 @@
     "autocomplete.provider": {
       "description": "A C# Roslyn powered autocomplete-plus provider.",
       "versions": {
-        "1.0.0": "provideAutocomplete"
+        "2.0.0": "provideAutocomplete"
       }
     }
   },

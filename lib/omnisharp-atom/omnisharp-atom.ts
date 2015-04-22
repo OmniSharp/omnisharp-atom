@@ -10,6 +10,8 @@ import CompletionProvider = require("./features/lib/completion-provider")
 import dependencyChecker = require('./dependency-checker')
 import StatusBarView = require('./views/status-bar-view')
 import DockView = require('./views/dock-view')
+//import autoCompleteProvider = require('./features/lib/completion-provider');
+
 
 class Feature implements OmniSharp.IFeature {
     public name: string;
@@ -136,10 +138,10 @@ class OmniSharpAtom {
     }
 
     public provideAutocomplete() {
-        this.autoCompleteProvider = new CompletionProvider;
-        return {
-            provider: this.autoCompleteProvider
-        };
+
+        this.autoCompleteProvider = CompletionProvider.CompletionProvider;
+
+        return this.autoCompleteProvider;
     }
 
 }
