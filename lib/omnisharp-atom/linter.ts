@@ -5,7 +5,6 @@ import Omni = require('../omni-sharp-server/omni');
 import _ = require('lodash');
 var Range = require('atom').Range;
 
-
 interface LinterError {
     message: string;
     line: number; // startline.

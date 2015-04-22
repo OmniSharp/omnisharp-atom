@@ -1,16 +1,25 @@
 # See https://atom.io/docs/latest/creating-a-package#menus for more details
 'context-menu':
-  '.overlayer':
-      'atom-sharp':
-        'Enable atom-sharp': 'omnisharp-atom:toggle'
-        'Find Usages': 'omnisharp-atom:find-usages'
-        'Rename': 'omnisharp-atom:rename'
+  'atom-text-editor': [
+    {
+      label: 'OmniSharp'
+      submenu: [
+        { 'label': 'Toggle', 'command': 'omnisharp-atom:toggle' }
+        { 'label': 'Find Usages', 'command': 'omnisharp-atom:find-usages' }
+        { 'label': 'Go to definition', 'command': 'omnisharp-atom:go-to-definition' }
+        { 'label': 'Rename', 'command': 'omnisharp-atom:rename'}
+        { 'label': 'Fix Usings', 'command': 'omnisharp-atom:fix-usings' }
+        { 'label': 'Code Format', 'command': 'omnisharp-atom:code-format' }
+        { 'label': 'Build', 'command': 'omnisharp-atom:build' }
+      ]
+    }
+  ]
 
 'menu': [
   {
     'label': 'Packages'
     'submenu': [
-      'label': 'omnisharp-atom'
+      'label': 'OmniSharp'
       'submenu': [
         { 'label': 'Toggle', 'command': 'omnisharp-atom:toggle' }
         { 'label': 'Find Usages', 'command': 'omnisharp-atom:find-usages' }

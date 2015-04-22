@@ -35,19 +35,42 @@ class Omni {
     }
 
     public static req<TRequest, TResponse>(path: string, event: string, data?: TRequest, editor?: Atom.TextEditor): Promise<TResponse> {
-        var result = Omni._req<TRequest, TResponse>(path, event, data, editor);
+        var context = Omni.getEditorContext(editor);
+        if (!context) {
+            return Promise.reject<any>("no editor context found");
+        }
+        var fullData = <TRequest>_.extend({}, context, data);
+        var result = Omni._req<TRequest, TResponse>(path, event, fullData, editor);
 
-        result.catch(data => {
+        result.catch(function(data) {
             var ref;
             if (typeof data !== 'string') {
                 console.error(data.statusCode != null, (ref = data.options) != null ? ref.uri : void 0);
             }
-        })
+        });
 
         return result;
     }
 
-    private static _req<TRequest, TResponse>(path: string, event: string, data : TRequest, editor: Atom.TextEditor): Promise<TResponse> {
+    public static reql<TRequest, TResponse>(path: string, event: string, data?: TRequest, editor?: Atom.TextEditor): Promise<TResponse> {
+        var context = Omni.getEditorContext(editor);
+        if (!context) {
+            return Promise.reject<any>("no editor context found");
+        }
+        var fullData = <TRequest>_.extend([], [context], data);
+        var result = Omni._req<TRequest, TResponse>(path, event, fullData, editor);
+
+        result.catch(function(data) {
+            var ref;
+            if (typeof data !== 'string') {
+                console.error(data.statusCode != null, (ref = data.options) != null ? ref.uri : void 0);
+            }
+        });
+
+        return result;
+    }
+
+    private static _req<TRequest, TResponse>(path: string, event: string, data: TRequest, editor: Atom.TextEditor): Promise<TResponse> {
         if (OmniSharpServer.vm.isNotReady) {
             return Promise.reject<any>("omnisharp not ready");
         }
@@ -61,7 +84,7 @@ class Omni {
             uri: Omni._uri(path),
             method: "POST",
             json: true,
-            body: _.extend({}, context, data)
+            body: data
         }).then(function(data) {
             var parsedData;
             try {
@@ -104,8 +127,12 @@ class Omni {
         return Omni.req("buildcommand", "build-command");
     }
 
+    public static packageRestore() {
+        Omni.reql("filesChanged", "package-restore");
+    }
+
     public static autocomplete(wordToComplete: string) {
-        var data : OmniSharp.AutoCompleteRequest = {
+        var data: OmniSharp.AutoCompleteRequest = {
             wordToComplete: wordToComplete,
             wantDocumentationForEveryCompletionResult: false,
             wantKind: true
