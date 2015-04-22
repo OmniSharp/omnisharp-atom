@@ -3,7 +3,7 @@ import Url = require("url")
 import _ = require("lodash")
 import Promise = require("bluebird")
 // TODO: Make .d.ts and submit to DefinitelyTyped?
-var request : (options:any) => Promise<any> = require("request-promise")
+var request: (options: any) => Promise<any> = require("request-promise")
 
 class Omni {
     public static getEditorContext(editor: Atom.TextEditor) {
@@ -23,7 +23,7 @@ class Omni {
         }
     }
 
-    private static _uri(path: string, query? : string) {
+    private static _uri(path: string, query?: string) {
         var port = OmniSharpServer.get().port;
         return Url.format({
             hostname: "localhost",
@@ -35,16 +35,34 @@ class Omni {
     }
 
     public static req(path: string, event: string, d?: any, editor?: Atom.TextEditor) : Promise<any> {
-        return Omni._req(path, event, d, editor)
-            .catch(data => {
+        var context = Omni.getEditorContext(editor);
+        if (!context) {
+            return Promise.reject("no editor context found");
+        }
+        var fullData = _.extend({}, context, d);
+        return Omni._req(path, event, fullData, editor).catch(function(data) {
             var ref;
             if (typeof data !== 'string') {
                 return console.error(data.statusCode != null, (ref = data.options) != null ? ref.uri : void 0);
             }
-        })
+        });
     }
 
-    private static _req(path: string, event: string, d, editor: Atom.TextEditor) : Promise<any> {
+    public static reql(path: string, event: string, d?: any, editor?: Atom.TextEditor) : Promise<any> {
+        var context = Omni.getEditorContext(editor);
+        if (!context) {
+            return Promise.reject("no editor context found");
+        }
+        var fullData = _.extend([], [context], d);
+        return Omni._req(path, event, fullData, editor).catch(function(data) {
+            var ref;
+            if (typeof data !== 'string') {
+                return console.error(data.statusCode != null, (ref = data.options) != null ? ref.uri : void 0);
+            }
+        });
+    }
+
+    private static _req(path: string, event: string, fullData, editor: Atom.TextEditor): Promise<any> {
         if (OmniSharpServer.vm.isNotReady) {
             return Promise.reject("omnisharp not ready");
         }
@@ -58,7 +76,7 @@ class Omni {
             uri: Omni._uri(path),
             method: "POST",
             json: true,
-            body: _.extend({}, context, d)
+            body: fullData
         }).then(function(data) {
             var parsedData;
             try {
@@ -99,6 +117,10 @@ class Omni {
 
     public static build() {
         return Omni.req("buildcommand", "build-command");
+    }
+
+    public static packageRestore() {
+        Omni.reql("filesChanged", "package-restore");
     }
 
     public static autocomplete(wordToComplete) {

@@ -61,6 +61,16 @@ class OmniSharpAtom {
         return this.emitter.on('omnisharp-atom-editor-destroyed', (filePath) => callback(filePath))
     }
 
+    public onConfigEditor(callback: (path: string) => any) {
+        return this.emitter.on('omnisharp-atom-config-editor', callback);
+    }
+
+    public onConfigEditorDestroyed(callback: (path: string) => any) {
+        return this.emitter.on('omnisharp-atom-config-editor-destroyed', (filePath) => {
+            callback(filePath);
+        });
+    }
+
     public getPackageDir() {
         return _.find(atom.packages.getPackageDirPaths(), function(packagePath) {
             return fs.existsSync(packagePath + "/omnisharp-atom");
@@ -81,10 +91,14 @@ class OmniSharpAtom {
     public subscribeToEvents() {
         return this.observeEditors = atom.workspace.observeTextEditors((editor: Atom.TextEditor) => {
             var editorFilePath;
-            if (editor.getGrammar().name === 'C#') {
+            var grammarName = editor.getGrammar().name;
+            if (grammarName === 'C#') {
                 this.emitter.emit('omnisharp-atom-editor', editor);
                 editorFilePath = editor.buffer.file.path;
                 return editor.onDidDestroy(() => this.emitter.emit('omnisharp-atom-editor-destroyed', editorFilePath));
+            } else if (grammarName=== "JSON") {
+                this.emitter.emit('omnisharp-atom-config-editor', editor);
+                return editor.onDidDestroy(() => this.emitter.emit('omnisharp-atom-config-editor-destroyed', editor.buffer.file.path));
             }
         })
     }
