@@ -1,3 +1,5 @@
+buildModel = require './tasks/build-models.js'
+
 module.exports = (grunt) ->
 
     grunt.initConfig
@@ -23,5 +25,8 @@ module.exports = (grunt) ->
     grunt.loadNpmTasks 'grunt-coffeelint'
 
     grunt.registerTask 'default', ['watch']
+
+    grunt.registerTask 'build-models', [], buildModel
+
 
     return

@@ -2,3 +2,6 @@
 npm-debug.log
 node_modules
 server
+typings
+lib/**/*.js
+spec/**/*.js
