@@ -28,6 +28,7 @@
         { 'label': 'Fix Usings', 'command': 'omnisharp-atom:fix-usings' }
         { 'label': 'Code Format', 'command': 'omnisharp-atom:code-format' }
         { 'label': 'Build', 'command': 'omnisharp-atom:build' }
+        { 'label': 'New Application', 'command': 'omnisharp-atom:new-application' }
       ]
     ]
   }

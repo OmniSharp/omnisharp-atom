@@ -52,6 +52,9 @@
         "./lib/omnisharp-atom/views/rename-view.ts",
         "./lib/omnisharp-atom/views/status-bar-view.ts",
         "./lib/typings.d.ts",
+        "./lib/yeoman-atom/atom-adapter.ts",
+        "./lib/yeoman-atom/run-generator.ts",
+        "./lib/yeoman-atom/views/generator-view.ts",
         "./spec/omnisharp-atom-spec.ts",
         "./spec/tsd.d.ts",
         "./tsd.d.ts"
