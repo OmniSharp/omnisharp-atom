@@ -1,4 +1,6 @@
 import Omni = require('../../../omni-sharp-server/omni')
+import OmniServer = require("../../../omni-sharp-server/omni-sharp-server");
+
 import _ = require('lodash')
 
 export interface RequestOptions {
@@ -37,6 +39,11 @@ export var CompletionProvider = {
 
     getSuggestions(options : RequestOptions) : Promise<Suggestion[]> {
         return new Promise<Suggestion[]>(resolve => {
+
+            if (OmniServer.vm.isOff) {
+                return;
+            }
+
             var wordRegex = /[A-Z_0-9]+/i;
             var buffer = options.editor.getBuffer();
 
@@ -57,12 +64,13 @@ export var CompletionProvider = {
                 }
 
                 var result = _.map(completions, (item) : Suggestion => ({
-                    text: item.CompletionText,
+                    //text: item.CompletionText,
                     snippet: item.Snippet,
-                    type: item.ReturnType,
-                    //displayText: item.DisplayText,
-                    leftLabel: item.ReturnType,
-                    rightLabel: item.Kind,
+                    type: item.ReturnType.replace(' ', ''), //This is a workaround for https://github.com/atom-community/autocomplete-plus/issues/413
+                    displayText: _.escape(item.DisplayText),
+                    //leftLabel: item.ReturnType,
+                    leftLabelHTML: '<span class="text-smaller">' + _.escape(item.ReturnType)  +'</span>',
+                    rightLabelHTML: '<span class="text-smaller">' + _.escape(item.Kind)  +'</span>',
                     //description: "desc",
                     iconHTML: this.renderIcon(item)
                 }));
@@ -81,4 +89,5 @@ export var CompletionProvider = {
         // todo: move additional styling to css
         return '<img height="16px" width="16px" src="atom://omnisharp-atom/styles/icons/autocomplete_' + item.Kind.toLowerCase() + '@3x.png" /> '
     }
+
 }

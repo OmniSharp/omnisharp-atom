@@ -153,3 +153,15 @@ atom-text-editor::shadow
     background-position: bottom;
   }
 }
+
+//autocomplete overrides
+
+autocomplete-suggestion-list.select-list.popover-list {
+    max-width:1200px; //HACK: Override for longer C# method names
+}
+autocomplete-suggestion-list span.left-label {
+    max-width:200px;
+    text-overflow:ellipsis;
+    white-space:nowrap;
+    overflow:hidden;
+}
