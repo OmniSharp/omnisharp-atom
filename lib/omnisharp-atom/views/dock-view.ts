@@ -132,6 +132,9 @@ class DockView extends spacePenViews.View {
     public selectPane = (pane) => {
         this.vm.selected = pane;
         this.show();
+        if (!this.panel.visible) {
+          this.panel.show();
+        }
         this.find("button.selected").focus();
     }
 
