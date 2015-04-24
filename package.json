@@ -1,7 +1,7 @@
 {
   "name": "omnisharp-atom",
   "main": "./lib/omnisharp-atom/omnisharp-atom",
-  "version": "0.3.0",
+  "version": "0.4.0",
   "description": "Brings the wonderful OmniSharp server to powercharge Atom's C# development experience",
   "keywords": [
     "c#",
@@ -20,8 +20,6 @@
   "scripts": {
     "postinstall": "tsd reinstall"
   },
-  "linter-package": true,
-  "linter-implementation": "omnisharp-atom/linter",
   "dependencies": {
     "ansi-to-html": "~0.1.0",
     "atom-package-dependencies": "https://github.com/basarat/atom-package-dependencies/archive/cb1.tar.gz",
