@@ -54,7 +54,6 @@ export var CompletionProvider = {
 
             while (wordRegex.test(data.charAt(end))) {
                 end--;
-                asd
             }
 
             var word = data.substring(end + 1);
