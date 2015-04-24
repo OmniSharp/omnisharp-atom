@@ -7,7 +7,7 @@ type Request = OmniSharp.Models.Request;
 var request: (options: any) => Promise<string> = require("request-promise")
 
 class Omni {
-    public static getEditorContext(editor: Atom.TextEditor) : Request {
+    public static getEditorContext(editor: Atom.TextEditor): Request {
         editor = editor || atom.workspace.getActiveTextEditor();
         if (!editor) {
             return;
@@ -41,6 +41,7 @@ class Omni {
         var fullData = <TRequest>_.extend({}, context, data);
         var result = Omni._req<TRequest, TResponse>(path, event, fullData, editor);
 
+        result.catch(function(data) {
             var ref;
             if (typeof data !== 'string') {
                 console.error(data.statusCode != null, (ref = data.options) != null ? ref.uri : void 0);
@@ -79,8 +80,8 @@ class Omni {
         }
 
         return OmniSharpServer.get()
-        .request<TRequest, TResponse>(path, <TRequest>_.extend({}, context, data))
-        .then(function(data) {
+            .request<TRequest, TResponse>(path, <TRequest>_.extend({}, context, data))
+            .then(function(data) {
             atom.emitter.emit("omni:" + event, data);
             console.log("omni:" + event, data);
             return data;
@@ -104,7 +105,7 @@ class Omni {
     }
 
     public static goToImplementation() {
-        return Omni.req<OmniSharp.Request, OmniSharp.QuickFixResponse>("findimplementations", "navigate-to-implementation");
+        return Omni.req<Request, OmniSharp.Models.QuickFixResponse>("findimplementations", "navigate-to-implementation");
     }
 
     public static fixUsings() {
@@ -130,13 +131,12 @@ class Omni {
             WantKind: true,
             WantSnippet: true,
             WantReturnType: true
-
         };
         return Omni.req<OmniSharp.Models.AutoCompleteRequest, OmniSharp.Models.AutoCompleteResponse[]>("autocomplete", "autocomplete", data);
     }
 
     public static rename(wordToRename: string) {
-        var data : OmniSharp.Models.RenameRequest = {
+        var data: OmniSharp.Models.RenameRequest = {
             RenameTo: wordToRename
         };
         return Omni.req("rename", "rename", data);
