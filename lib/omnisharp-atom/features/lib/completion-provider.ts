@@ -64,14 +64,11 @@ export var CompletionProvider = {
                 }
 
                 var result = _.map(completions, (item) : Suggestion => ({
-                    //text: item.CompletionText,
                     snippet: item.Snippet,
                     type: item.Kind,
                     displayText: _.escape(item.DisplayText),
-                    //leftLabel: item.ReturnType,
                     leftLabelHTML: '<span class="text-smaller">' + _.escape(item.ReturnType)  +'</span>',
                     rightLabelHTML: '<span class="text-smaller">' + _.escape(item.Kind)  +'</span>',
-                    //description: "desc",
                     iconHTML: this.renderIcon(item)
                 }));
 

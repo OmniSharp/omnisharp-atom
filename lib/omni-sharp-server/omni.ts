@@ -91,7 +91,6 @@ class Omni {
                 parsedData = data;
             } finally {
                 atom.emitter.emit("omni:" + event, parsedData);
-                //console.log("omni:" + event, parsedData); //spits out data
             }
             return <TResponse>parsedData;
         })
