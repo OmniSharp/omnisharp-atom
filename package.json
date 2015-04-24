@@ -9,12 +9,24 @@
     "asp.net",
     "omnisharp"
   ],
-  "activationCommands": [],
   "repository": "https://github.com/OmniSharp/omnisharp-atom",
+  "author": { 
+    "name": "Omnisharp Atom Team",
+    "url":  "https://github.com/OmniSharp/omnisharp-atom/graphs/contributors"   
+  },
+  "contributors" : [
+    { "name": "Martijn Laarman", "url": "http://localghost.io" },
+    { "name": "Stephen James", "url": "http://stephenjamescode.blogspot.co.uk/" },
+    { "name": "Chad Tolkien", "url": "http://chad.tolkien.id.au/" },
+    { "name": "David Driscoll", "url": "https://twitter.com/david_blacklite" },
+    { "name": "Sam Williamson", "url": "https://twitter.com/sgwill" },
+    { "name": "Jason Imison", "url": "https://twitter.com/jasonimison" }
+  ],
   "license": "MIT",
   "engines": {
     "atom": ">=0.192.0 <2.0.0"
   },
+  "activationCommands": [],
   "linter-package": true,
   "linter-implementation": "omnisharp-atom/linter",
   "scripts": {
