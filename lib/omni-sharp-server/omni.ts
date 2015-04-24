@@ -91,7 +91,6 @@ class Omni {
                 parsedData = data;
             } finally {
                 atom.emitter.emit("omni:" + event, parsedData);
-                console.log("omni:" + event, parsedData);
             }
             return <TResponse>parsedData;
         })
@@ -137,7 +136,10 @@ class Omni {
         var data: OmniSharp.AutoCompleteRequest = {
             WordToComplete: wordToComplete,
             WantDocumentationForEveryCompletionResult: false,
-            WantKind: true
+            WantKind: true,
+            WantSnippet: true,
+            WantReturnType: true
+
         };
         return Omni.req<OmniSharp.AutoCompleteRequest, OmniSharp.AutoCompleteResponse[]>("autocomplete", "autocomplete", data);
     }
