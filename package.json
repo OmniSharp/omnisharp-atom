@@ -26,7 +26,6 @@
     "atom-space-pen-views": "^2.0.5",
     "bluebird": "~2.3.2",
     "event-kit": "0.7.2",
-    "freeport": "^1.0.4",
     "fs-plus": "^2.3.1",
     "jquery": "^2.1.1",
     "lodash": "^3.6.0",
