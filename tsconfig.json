@@ -40,6 +40,7 @@
         "./lib/omnisharp-atom/features/find-usages.ts",
         "./lib/omnisharp-atom/features/fix-usings.ts",
         "./lib/omnisharp-atom/features/go-to-definition.ts",
+        "./lib/omnisharp-atom/features/go-to-implementation.ts",
         "./lib/omnisharp-atom/features/lib/completion-provider.ts",
         "./lib/omnisharp-atom/features/package-restore.ts",
         "./lib/omnisharp-atom/features/rename.ts",

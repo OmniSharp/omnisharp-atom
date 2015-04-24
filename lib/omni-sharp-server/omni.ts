@@ -112,6 +112,10 @@ class Omni {
         return Omni.req<OmniSharp.Request, OmniSharp.GotoDefinitionResponse>("gotoDefinition", "navigate-to");
     }
 
+    public static goToImplementation() {
+        return Omni.req<OmniSharp.Request, OmniSharp.QuickFixResponse>("findimplementations", "navigate-to-implementation");
+    }
+
     public static fixUsings() {
         return Omni.req("fixUsings", "code-format");
     }
