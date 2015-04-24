@@ -54,6 +54,7 @@ export var CompletionProvider = {
 
             while (wordRegex.test(data.charAt(end))) {
                 end--;
+                asd
             }
 
             var word = data.substring(end + 1);
@@ -66,7 +67,7 @@ export var CompletionProvider = {
                 var result = _.map(completions, (item) : Suggestion => ({
                     //text: item.CompletionText,
                     snippet: item.Snippet,
-                    type: item.ReturnType.replace(' ', ''), //This is a workaround for https://github.com/atom-community/autocomplete-plus/issues/413
+                    type: item.Kind, //This is a workaround for https://github.com/atom-community/autocomplete-plus/issues/413
                     displayText: _.escape(item.DisplayText),
                     //leftLabel: item.ReturnType,
                     leftLabelHTML: '<span class="text-smaller">' + _.escape(item.ReturnType)  +'</span>',
