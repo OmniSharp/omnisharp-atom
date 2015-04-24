@@ -4,8 +4,8 @@ import OmniServer = require("../../../omni-sharp-server/omni-sharp-server");
 import _ = require('lodash')
 
 export interface RequestOptions {
-            editor: AtomCore.IEditor;
-            bufferPosition: TextBuffer.IPoint; // the position of the cursor
+            editor: Atom.TextEditor;
+            bufferPosition: TextBuffer.Point; // the position of the cursor
             prefix: string;
             scopeDescriptor: { scopes: string[] };
 }

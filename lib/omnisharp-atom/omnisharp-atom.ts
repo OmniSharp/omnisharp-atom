@@ -63,7 +63,7 @@ class OmniSharpAtom {
         return this.emitter.on('omnisharp-atom-editor-destroyed', (filePath) => callback(filePath))
     }
 
-    public onConfigEditor(callback: (path: string) => any) {
+    public onConfigEditor(callback: (...args: any[]) => void) {
         return this.emitter.on('omnisharp-atom-config-editor', callback);
     }
 
@@ -107,7 +107,7 @@ class OmniSharpAtom {
 
     public buildStatusBarAndDock() {
         this.statusBar = new StatusBarView;
-        return this.outputView = new DockView;
+        this.outputView = new DockView(this);
     }
 
     public toggle() {
@@ -134,7 +134,7 @@ class OmniSharpAtom {
 
     public consumeStatusBar(statusBar) {
         this.statusBarView = new StatusBarView(statusBar);
-        return this.outputView = new DockView;
+        this.outputView = new DockView(this);
     }
 
     public provideAutocomplete() {
