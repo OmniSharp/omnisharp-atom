@@ -41,6 +41,7 @@ class OmniSharpAtom {
     private autoCompleteProvider;
     private statusBar;
     private generator: { run(generator: string, path?: string): void; start(prefix: string, path?:string): void;  };
+    private menu: EventKit.Disposable;
 
     public activate(state) {
         atom.commands.add('atom-workspace', 'omnisharp-atom:toggle', () => this.toggle());
@@ -114,8 +115,18 @@ class OmniSharpAtom {
     }
 
     public toggle() {
+        var menuJsonFile = this.getPackageDir() + "/omnisharp-atom/menus/omnisharp-menu.json";
+        var menuJson = JSON.parse(fs.readFileSync(menuJsonFile, 'utf8'));
+
+
         var dependencyErrors = dependencyChecker.errors();
         if (dependencyErrors.length === 0) {
+            if (OmniSharpServer.vm.isOff) {
+                this.menu = atom.menu.add(menuJson.menu);
+            } else if (this.menu) {
+                this.menu.dispose();
+                this.menu = null;
+            }
             return OmniSharpServer.get().toggle();
         } else {
             return _.map(dependencyErrors, missingDependency => alert(missingDependency));

@@ -12,7 +12,7 @@
   "repository": "https://github.com/OmniSharp/omnisharp-atom",
   "author": {
     "name": "Omnisharp Atom Team",
-    "url": "https://github.com/OmniSharp/omnisharp-atom/graphs/contributors"
+    "url":  "https://github.com/OmniSharp/omnisharp-atom/graphs/contributors"
   },
   "contributors": [
     {
@@ -49,6 +49,7 @@
     "atom": ">=0.192.0 <2.0.0"
   },
   "activationCommands": [],
+  "menus": ["atom-sharper.cson"],
   "linter-package": true,
   "linter-implementation": "omnisharp-atom/linter",
   "scripts": {
