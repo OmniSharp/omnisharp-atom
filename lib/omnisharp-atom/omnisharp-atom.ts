@@ -40,9 +40,12 @@ class OmniSharpAtom {
     public outputView;
     private autoCompleteProvider;
     private statusBar;
+    private generator: { run(generator: string, path?: string): void; start(prefix: string, path?:string): void;  };
 
     public activate(state) {
         atom.commands.add('atom-workspace', 'omnisharp-atom:toggle', () => this.toggle());
+        atom.commands.add('atom-workspace', 'omnisharp-atom:new-application', () => this.generator.run("aspnet:app"));
+        atom.commands.add('atom-workspace', 'omnisharp-atom:new-class', () => this.generator.run("aspnet:Class"));
 
         if (dependencyChecker.findAllDeps(this.getPackageDir())) {
             this.emitter = new Emitter;
@@ -135,6 +138,12 @@ class OmniSharpAtom {
     public consumeStatusBar(statusBar) {
         this.statusBarView = new StatusBarView(statusBar);
         this.outputView = new DockView(this);
+    }
+
+    public consumeYeomanEnvironment(generatorService : { run(generator: string, path: string): void; start(prefix: string, path:string): void;  }) {
+
+        console.log('generatorService')
+        this.generator = generatorService;
     }
 
     public provideAutocomplete() {

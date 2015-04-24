@@ -25,7 +25,7 @@ class RenameView extends spacePenViews.View {
 
     public initialize() {
         this.on('core:confirm', () => this.rename());
-        return this.on('core:cancel', () => this.destroy());
+        this.on('core:cancel', () => this.destroy());
     }
 
     public configure(wordToRename) {
