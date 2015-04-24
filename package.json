@@ -40,18 +40,26 @@
     "bluebird": "~2.3.2",
     "event-kit": "0.7.2",
     "fs-plus": "^2.3.1",
+    "generator-aspnet": "0.0.32",
     "jquery": "^2.1.1",
     "lodash": "^3.6.0",
     "omnisharp-server-roslyn-binaries": "latest",
     "request-promise": "~0.1.2",
     "semver": "^4.2.0",
     "tsd": "~0.6.0-beta.5",
-    "vue": "~0.10.6"
+    "vue": "~0.10.6",
+    "yeoman-environment": "^1.2.5",
+    "yo": "^1.4.6"
   },
   "consumedServices": {
     "status-bar": {
       "versions": {
         "^1.0.0": "consumeStatusBar"
+      }
+    },
+    "yeoman-environment": {
+      "versions": {
+        "^1.0.0": "consumeYeomanEnvironment"
       }
     }
   },
