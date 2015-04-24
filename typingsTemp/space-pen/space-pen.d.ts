@@ -785,7 +785,6 @@ declare module SpacePen {
         * @param duration A string or number determining how long the animation will run.
         * @param complete A function to call once the animation is complete.
         */
-        hide(duration?: number|string, complete?: Function): JQuery;
         /**
         * Hide the matched elements.
         *
@@ -793,13 +792,11 @@ declare module SpacePen {
         * @param easing A string indicating which easing function to use for the transition.
         * @param complete A function to call once the animation is complete.
         */
-        hide(duration?: number|string, easing?: string, complete?: Function): JQuery;
         /**
         * Hide the matched elements.
         *
         * @param options A map of additional options to pass to the method.
         */
-        hide(options: JQueryAnimationOptions): JQuery;
         
         /**
         * Display the matched elements.
@@ -807,7 +804,6 @@ declare module SpacePen {
         * @param duration A string or number determining how long the animation will run.
         * @param complete A function to call once the animation is complete.
         */
-        show(duration?: number|string, complete?: Function): JQuery;
         /**
         * Display the matched elements.
         *
@@ -815,13 +811,11 @@ declare module SpacePen {
         * @param easing A string indicating which easing function to use for the transition.
         * @param complete A function to call once the animation is complete.
         */
-        show(duration?: number|string, easing?: string, complete?: Function): JQuery;
         /**
         * Display the matched elements.
         *
         * @param options A map of additional options to pass to the method.
         */
-        show(options: JQueryAnimationOptions): JQuery;
         
         /**
         * Display the matched elements with a sliding motion.
@@ -911,7 +905,6 @@ declare module SpacePen {
         * @param duration A string or number determining how long the animation will run.
         * @param complete A function to call once the animation is complete.
         */
-        toggle(duration?: number|string, complete?: Function): JQuery;
         /**
         * Display or hide the matched elements.
         *
@@ -919,19 +912,16 @@ declare module SpacePen {
         * @param easing A string indicating which easing function to use for the transition.
         * @param complete A function to call once the animation is complete.
         */
-        toggle(duration?: number|string, easing?: string, complete?: Function): JQuery;
         /**
         * Display or hide the matched elements.
         *
         * @param options A map of additional options to pass to the method.
         */
-        toggle(options: JQueryAnimationOptions): JQuery;
         /**
         * Display or hide the matched elements.
         *
         * @param showOrHide A Boolean indicating whether to show or hide the elements.
         */
-        toggle(showOrHide: boolean): JQuery;
         
         /**
         * Attach a handler to an event for the elements.
@@ -2227,6 +2217,9 @@ declare module SpacePen {
         * @param callback The new function to add to the queue, with a function to call that will dequeue the next item.
         */
         queue(queueName: string, callback: Function): JQuery;
+        hide(): void;
+        show(): void;
+        toggle(): void;
     }
 
     /**
