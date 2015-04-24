@@ -1,4 +1,5 @@
 <<<<<<< HEAD
+<<<<<<< HEAD
 {
     "version": "1.4.1",
     "compilerOptions": {
@@ -60,6 +61,8 @@
     ]
 }
 =======
+=======
+>>>>>>> 6b84304043b73b774d83c32f89e78ec9d44eeb9c
 {
     "version": "1.4.1",
     "compilerOptions": {
@@ -102,6 +105,10 @@
         "./lib/omnisharp-atom/features/find-usages.ts",
         "./lib/omnisharp-atom/features/fix-usings.ts",
         "./lib/omnisharp-atom/features/go-to-definition.ts",
+<<<<<<< HEAD
+=======
+        "./lib/omnisharp-atom/features/go-to-implementation.ts",
+>>>>>>> 6b84304043b73b774d83c32f89e78ec9d44eeb9c
         "./lib/omnisharp-atom/features/lib/completion-provider.ts",
         "./lib/omnisharp-atom/features/package-restore.ts",
         "./lib/omnisharp-atom/features/rename.ts",
@@ -119,4 +126,7 @@
         "./tsd.d.ts"
     ]
 }
+<<<<<<< HEAD
 >>>>>>> master
+=======
+>>>>>>> 6b84304043b73b774d83c32f89e78ec9d44eeb9c
