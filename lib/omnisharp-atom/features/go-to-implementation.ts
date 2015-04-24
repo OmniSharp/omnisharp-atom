@@ -31,12 +31,7 @@ class GoToImplementation {
 
     atom.emitter.on("omni:navigate-to-implementation", (quickFixes) => {
       if (quickFixes.QuickFixes.length == 1) {
-        var position;
-        position.FileName = quickFixes.QuickFixes[0].FileName;
-        position.Line = quickFixes.QuickFixes[0].Line;
-        position.Column = quickFixes.QuickFixes[0].Column;
-
-        return atom.emitter.emit("omni:navigate-to", position);
+        return atom.emitter.emit("omni:navigate-to", quickFixes.QuickFixes[0]);
       } else {
         atom.emitter.emit("omni:find-usages", quickFixes);
         return this.atomSharper.outputView.selectPane("find");
