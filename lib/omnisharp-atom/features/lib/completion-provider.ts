@@ -67,7 +67,7 @@ export var CompletionProvider = {
                 var result = _.map(completions, (item) : Suggestion => ({
                     //text: item.CompletionText,
                     snippet: item.Snippet,
-                    type: item.Kind, //This is a workaround for https://github.com/atom-community/autocomplete-plus/issues/413
+                    type: item.Kind,
                     displayText: _.escape(item.DisplayText),
                     //leftLabel: item.ReturnType,
                     leftLabelHTML: '<span class="text-smaller">' + _.escape(item.ReturnType)  +'</span>',
@@ -83,7 +83,7 @@ export var CompletionProvider = {
     },
 
     renderIcon(item) {
-        // we don't have icons for this type of comment
+        //todo: fix icon images
         if (item.Kind === 'NamedType' || item.Kind === 'Parameter' || item.Kind === 'Local')
             return;
 
