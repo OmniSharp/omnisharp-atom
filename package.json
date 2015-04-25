@@ -1,7 +1,7 @@
 {
   "name": "omnisharp-atom",
   "main": "./lib/omnisharp-atom/omnisharp-atom",
-  "version": "0.4.0",
+  "version": "0.4.1",
   "description": "Brings the wonderful OmniSharp server to powercharge Atom's C# development experience",
   "keywords": [
     "c#",
@@ -10,18 +10,39 @@
     "omnisharp"
   ],
   "repository": "https://github.com/OmniSharp/omnisharp-atom",
-  "author": { 
+  "author": {
     "name": "Omnisharp Atom Team",
-    "url":  "https://github.com/OmniSharp/omnisharp-atom/graphs/contributors"   
+    "url": "https://github.com/OmniSharp/omnisharp-atom/graphs/contributors"
   },
-  "contributors" : [
-    { "name": "Martijn Laarman", "url": "http://localghost.io" },
-    { "name": "Stephen James", "url": "http://stephenjamescode.blogspot.co.uk/" },
-    { "name": "Chad Tolkien", "url": "http://chad.tolkien.id.au/" },
-    { "name": "David Driscoll", "url": "https://twitter.com/david_blacklite" },
-    { "name": "Sam Williamson", "url": "https://twitter.com/sgwill" },
-    { "name": "William Luu", "url": "https://twitter.com/willl" },
-    { "name": "Jason Imison", "url": "https://twitter.com/jasonimison" }
+  "contributors": [
+    {
+      "name": "Martijn Laarman",
+      "url": "http://localghost.io"
+    },
+    {
+      "name": "Stephen James",
+      "url": "http://stephenjamescode.blogspot.co.uk/"
+    },
+    {
+      "name": "Chad Tolkien",
+      "url": "http://chad.tolkien.id.au/"
+    },
+    {
+      "name": "David Driscoll",
+      "url": "https://twitter.com/david_blacklite"
+    },
+    {
+      "name": "Sam Williamson",
+      "url": "https://twitter.com/sgwill"
+    },
+    {
+      "name": "William Luu",
+      "url": "https://twitter.com/willl"
+    },
+    {
+      "name": "Jason Imison",
+      "url": "https://twitter.com/jasonimison"
+    }
   ],
   "license": "MIT",
   "engines": {
