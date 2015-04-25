@@ -179,7 +179,15 @@ class OmniSharpServerInstance {
             this.child.kill("SIGKILL");
         }
 
+        atom.emitter.emit("omni-sharp-server:stop");
+
         return this.child = null;
+    }
+
+    public isStarted() {
+      if (this.child) return true;
+      
+      return false;
     }
 
     public toggle() {

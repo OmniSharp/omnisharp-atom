@@ -113,10 +113,16 @@ class OmniSharpAtom {
     public toggle() {
         var dependencyErrors = dependencyChecker.errors();
         if (dependencyErrors.length === 0) {
-            return OmniSharpServer.get().toggle();
+            OmniSharpServer.get().toggle();
+            if (!OmniSharpServer.get().isStarted()) this.turnOffIcon();
+            return;
         } else {
             return _.map(dependencyErrors, missingDependency => alert(missingDependency));
         }
+    }
+
+    private turnOffIcon() {
+      this.statusBarView.turnOffIcon();
     }
 
     public deactivate() {
