@@ -5,7 +5,7 @@ notifications:
     on_success: never
     on_failure: change
 
-script: 'curl -s https://raw.githubusercontent.com/OmniSharp/omnisharp-atom/master/build-package.sh | sh'
+script: ./build-package.sh 
 
 git:
   depth: 10
