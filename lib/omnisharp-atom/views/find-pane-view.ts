@@ -13,16 +13,6 @@ class FindPaneView extends spacePenViews.View {
 
     private vm: { usages:any[] };
 
-    private static startupKeyboardCommand()
-    {
-        //todo: we need to change this keybinding, and perhaps move it to settings.
-        if (process.platform === "darwin") {
-            return "⌃⌥O"; //funky OSX keyboard combo
-        }
-        return "CTRL+ALT+O";
-    }
-
-
     public static content() {
 
         return this.div({
@@ -37,7 +27,7 @@ class FindPaneView extends spacePenViews.View {
                             this.span('Omnisharp server is turned off');
                             return this.kbd({
                                 "class": 'key-binding text-highlight'
-                            }, this.startupKeyboardCommand());
+                            }, atom.keymaps.findKeyBindings({command :'omnisharp-atom:toggle'})[0].keystrokes);
                         });
                     });
                 this.ul({

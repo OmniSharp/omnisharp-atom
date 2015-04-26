@@ -144,15 +144,6 @@ class OmniSharpAtom {
         return this.autoCompleteProvider;
     }
 
-    public startupKeyboardCommand() //todo: this is currently unused, couldn't figure out how to import it
-    {
-        //todo: we need to change this keybinding, and perhaps move it to settings.
-        if (process.platform === "darwin") {
-            return "⌃⌥O"; //funky OSX keyboard combo
-        }
-        return "CTRL+ALT+O";
-    }
-
 }
 
 var instance = new OmniSharpAtom
