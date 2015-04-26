@@ -10,6 +10,7 @@ import CompletionProvider = require("./features/lib/completion-provider")
 import dependencyChecker = require('./dependency-checker')
 import StatusBarView = require('./views/status-bar-view')
 import DockView = require('./views/dock-view')
+import path = require('path');
 //import autoCompleteProvider = require('./features/lib/completion-provider');
 
 
@@ -34,7 +35,7 @@ class Feature implements OmniSharp.IFeature {
 
 class OmniSharpAtom {
     private features: OmniSharp.IFeature[];
-    private observeEditors: {dispose: Function};
+    private observeEditors: { dispose: Function };
     private emitter: EventKit.Emitter;
     public statusBarView;
     public outputView;
@@ -91,18 +92,45 @@ class OmniSharpAtom {
         return features;
     }
     public subscribeToEvents() {
-        return this.observeEditors = atom.workspace.observeTextEditors((editor: Atom.TextEditor) => {
+        this.observeEditors = atom.workspace.observeTextEditors((editor: Atom.TextEditor) => {
             var editorFilePath;
             var grammarName = editor.getGrammar().name;
             if (grammarName === 'C#') {
                 this.emitter.emit('omnisharp-atom-editor', editor);
                 editorFilePath = editor.buffer.file.path;
-                return editor.onDidDestroy(() => this.emitter.emit('omnisharp-atom-editor-destroyed', editorFilePath));
-            } else if (grammarName=== "JSON") {
+                editor.onDidDestroy(() => this.emitter.emit('omnisharp-atom-editor-destroyed', editorFilePath));
+            } else if (grammarName === "JSON") {
                 this.emitter.emit('omnisharp-atom-config-editor', editor);
-                return editor.onDidDestroy(() => this.emitter.emit('omnisharp-atom-config-editor-destroyed', editor.buffer.file.path));
+                editor.onDidDestroy(() => this.emitter.emit('omnisharp-atom-config-editor-destroyed', editor.buffer.file.path));
             }
-        })
+
+            this.detectAutoToggleGrammar(editor);
+        });
+    }
+
+    private detectAutoToggleGrammar(editor: Atom.TextEditor) {
+        var grammar = editor.getGrammar();
+
+        this.detectGrammar(editor, grammar);
+        editor.onDidChangeGrammar((grammar: FirstMate.Grammar) => this.detectGrammar(editor, grammar));
+    }
+
+    private detectGrammar(editor: Atom.TextEditor, grammar: FirstMate.Grammar) {
+        if (grammar.name === 'C#') {
+            if (OmniSharpServer.vm.isOff) {
+                OmniSharpServer.get().toggle();
+            }
+        } else if (grammar.name === "JSON") {
+            if (path.basename(editor.getPath()) === "project.json") {
+                if (OmniSharpServer.vm.isOff) {
+                    OmniSharpServer.get().toggle();
+                }
+            }
+        } else if (grammar.name === "C# Script File") {
+            if (OmniSharpServer.vm.isOff) {
+                OmniSharpServer.get().toggle();
+            }
+        }
     }
 
     public buildStatusBarAndDock() {
