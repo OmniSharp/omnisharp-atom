@@ -4,11 +4,22 @@ var Convert = require('ansi-to-html')
 import Vue = require('vue')
 import _ = require('lodash')
 import OmniSharpServer = require('../../omni-sharp-server/omni-sharp-server')
+import OmniSharpAtom = require('../omnisharp-atom');
+
 
 // Internal: A tool-panel view for the test result output.
 class OmniOutputPaneView extends spacePenViews.View {
     private vm : {uninitialized: boolean; initialized: boolean; output: OmniSharp.VueArray<any> };
     private convert: typeof Convert;
+
+    private static startupKeyboardCommand()
+    {
+        //todo: we need to change this keybinding, and perhaps move it to settings.
+        if (process.platform === "darwin") {
+            return "⌃⌥O"; //funky OSX keyboard combo
+        }
+        return "CTRL+ALT+O";
+    }
 
     public static content() {
         return this.div({
@@ -22,7 +33,7 @@ class OmniOutputPaneView extends spacePenViews.View {
                             this.span('Omnisharp server is turned off');
                             return this.kbd({
                                 "class": 'key-binding text-highlight'
-                            }, '⌃⌥O');
+                            }, this.startupKeyboardCommand());
                         });
                     });
                 return this.div({
