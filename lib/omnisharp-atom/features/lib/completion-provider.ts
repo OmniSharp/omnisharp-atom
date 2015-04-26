@@ -4,29 +4,29 @@ import OmniServer = require("../../../omni-sharp-server/omni-sharp-server");
 import _ = require('lodash')
 
 export interface RequestOptions {
-            editor: Atom.TextEditor;
-            bufferPosition: TextBuffer.Point; // the position of the cursor
-            prefix: string;
-            scopeDescriptor: { scopes: string[] };
+    editor: Atom.TextEditor;
+    bufferPosition: TextBuffer.Point; // the position of the cursor
+    prefix: string;
+    scopeDescriptor: { scopes: string[] };
 }
 
 export interface Suggestion {
 
-       //Either text or snippet is required
-       text?: string;
-       snippet?: string;
-       displayText?: string;
-       replacementPrefix?: string;
-       type: string;
-       leftLabel?: string;
-       leftLabelHTML?: string;
-       rightLabel?: string;
-       rightLabelHTML?: string;
-       iconHTML?: string;
-       description?: string;
-       descriptionMoreURL?: string;
-       className?: string;
-   }
+    //Either text or snippet is required
+    text?: string;
+    snippet?: string;
+    displayText?: string;
+    replacementPrefix?: string;
+    type: string;
+    leftLabel?: string;
+    leftLabelHTML?: string;
+    rightLabel?: string;
+    rightLabelHTML?: string;
+    iconHTML?: string;
+    description?: string;
+    descriptionMoreURL?: string;
+    className?: string;
+}
 
 
 export var CompletionProvider = {
@@ -37,10 +37,10 @@ export var CompletionProvider = {
     inclusionPriority: 1,
     excludeLowerPriority: true,
 
-    getSuggestions(options : RequestOptions) : Promise<Suggestion[]> {
+    getSuggestions(options: RequestOptions): Promise<Suggestion[]> {
         return new Promise<Suggestion[]>(resolve => {
 
-            if (OmniServer.vm.isOff) {
+            if (!OmniServer.vm.isReady) {
                 return;
             }
 
@@ -62,14 +62,19 @@ export var CompletionProvider = {
             } while (wordRegex.test(data.charAt(start)));
 
             var word = data.substring(start + 1, end);
-
-            Omni.autocomplete(word)
-                .then(completions => {
+            var p = Omni.client.autocompletePromise(Omni.makeDataRequest<OmniSharp.Models.AutoCompleteRequest>({
+                WordToComplete: word,
+                WantDocumentationForEveryCompletionResult: false,
+                WantKind: true,
+                WantSnippet: true,
+                WantReturnType: true
+            }))
+            .then(completions => {
                 if (completions == null) {
                     completions = [];
                 }
 
-                var result = _.map(completions, (item) : Suggestion => ({
+                var result = _.map(completions, (item): Suggestion => ({
                     snippet: item.Snippet,
                     type: item.Kind,
                     iconHTML: this.renderIcon(item),

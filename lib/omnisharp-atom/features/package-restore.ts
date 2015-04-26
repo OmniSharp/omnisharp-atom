@@ -4,7 +4,7 @@ import Omni = require('../../omni-sharp-server/omni');
 import OmniSharpAtom = require('../omnisharp-atom');
 
 class PackageRestore {
-    private editorDestroyedSubscription : EventKit.Disposable;
+    private editorDestroyedSubscription: EventKit.Disposable;
     constructor(private atomSharper: typeof OmniSharpAtom) {
         this.registerEventHandlerOnEditor = this.registerEventHandlerOnEditor;
         this.activate = this.activate;
@@ -20,9 +20,9 @@ class PackageRestore {
         var filename = path.basename(editor.getPath());
         if (filename === 'project.json') {
             return editor.getBuffer().onDidSave(() => {
-                if (!OmniSharpServer.vm.isOff) {
-                    Omni.packageRestore();
-                }
+                Omni.client.filesChangedPromise([{
+                    FileName: editor.getPath()
+                }]);
             });
         }
     }

@@ -1,12 +1,16 @@
 import OmniSharpServer = require('./omni-sharp-server')
-import Url = require("url")
-import _ = require("lodash")
-import Promise = require("bluebird")
+import Url = require("url");
+import _ = require("lodash");
+import Promise = require("bluebird");
+import Rx = require('rx');
+Rx.config.Promise = Promise;
 type Request = OmniSharp.Models.Request;
 // TODO: Make .d.ts and submit to DefinitelyTyped?
 var request: (options: any) => Promise<string> = require("request-promise")
 
 class Omni {
+    public static get client() { return OmniSharpServer.client; }
+
     public static getEditorContext(editor: Atom.TextEditor): Request {
         editor = editor || atom.workspace.getActiveTextEditor();
         if (!editor) {
@@ -22,120 +26,30 @@ class Omni {
         };
     }
 
-    private static _uri(path: string, query?: string) {
-        var port = OmniSharpServer.get().port;
-        return Url.format({
-            hostname: "localhost",
-            protocol: "http",
-            port: port,
-            pathname: path,
-            query: query
-        })
-    }
+    public static makeRequest(editor?: Atom.TextEditor, buffer?: TextBuffer.TextBuffer) {
+        editor = editor || atom.workspace.getActiveTextEditor();
+        buffer = buffer || editor.getBuffer();
 
-    public static req<TRequest extends Request, TResponse>(path: string, event: string, data?: TRequest, editor?: Atom.TextEditor): Promise<TResponse> {
-        var context = Omni.getEditorContext(editor);
-        if (!context) {
-            return Promise.reject<any>("no editor context found");
-        }
-        var fullData = <TRequest>_.extend({}, context, data);
-        var result = Omni._req<TRequest, TResponse>(path, event, fullData, editor);
+        var bufferText = buffer.getLines().join('\n');
 
-        result.catch(function(data) {
-            var ref;
-            if (typeof data !== 'string') {
-                console.error(data.statusCode != null, (ref = data.options) != null ? ref.uri : void 0);
-            }
-        });
-
-        return result;
-    }
-
-    public static reql<TRequest, TResponse>(path: string, event: string, data?: TRequest, editor?: Atom.TextEditor): Promise<TResponse> {
-        var context = Omni.getEditorContext(editor);
-        if (!context) {
-            return Promise.reject<any>("no editor context found");
-        }
-        var fullData = <TRequest>_.extend([], [context], data);
-        var result = Omni._req<TRequest, TResponse>(path, event, fullData, editor);
-
-        result.catch(function(data) {
-            var ref;
-            if (typeof data !== 'string') {
-                console.error(data.statusCode != null, (ref = data.options) != null ? ref.uri : void 0);
-            }
-        });
-
-        return result;
-    }
-
-    private static _req<TRequest, TResponse>(path: string, event: string, data: TRequest, editor: Atom.TextEditor): Promise<TResponse> {
-        if (OmniSharpServer.vm.isNotReady) {
-            return Promise.reject<any>("omnisharp not ready");
-        }
-
-        return OmniSharpServer.get()
-            .request<TRequest, TResponse>(path, data)
-            .then(function(data) {
-            atom.emitter.emit("omni:" + event, data);
-            console.log("omni:" + event, data);
-            return data;
-        })
-    }
-
-    public static syntaxErrors() {
-        return Omni.req("syntaxErrors", "syntax-errors");
-    }
-
-    public static codecheck(buffer, editor) {
-        return Omni.req<Request, OmniSharp.Models.QuickFixResponse>("codecheck", "quick-fixes", null, editor);
-    }
-
-    public static findUsages() {
-        return Omni.req<Request, OmniSharp.Models.QuickFixResponse>("findUsages", "find-usages");
-    }
-
-    public static goToDefinition() {
-        return Omni.req<Request, OmniSharp.Models.GotoDefinitionResponse>("gotoDefinition", "navigate-to");
-    }
-
-    public static goToImplementation() {
-        return Omni.req<Request, OmniSharp.Models.QuickFixResponse>("findimplementations", "navigate-to-implementation");
-    }
-
-    public static fixUsings() {
-        return Omni.req("fixUsings", "code-format");
-    }
-
-    public static codeFormat() {
-        return Omni.req<Request, OmniSharp.Models.CodeFormatResponse>("codeFormat", "code-format");
-    }
-
-    public static build() {
-        return Omni.req("buildcommand", "build-command");
-    }
-
-    public static packageRestore() {
-        Omni.reql("filesChanged", "package-restore");
-    }
-
-    public static autocomplete(wordToComplete: string) {
-        var data: OmniSharp.Models.AutoCompleteRequest = {
-            WordToComplete: wordToComplete,
-            WantDocumentationForEveryCompletionResult: false,
-            WantKind: true,
-            WantSnippet: true,
-            WantReturnType: true
-
+        var marker = editor.getCursorBufferPosition();
+        return <OmniSharp.Models.Request>{
+            Column: marker.column + 1,
+            FileName: editor.getURI(),
+            Line: marker.row + 1,
+            Buffer: bufferText
         };
-        return Omni.req<OmniSharp.Models.AutoCompleteRequest, OmniSharp.Models.AutoCompleteResponse[]>("autocomplete", "autocomplete", data);
     }
 
-    public static rename(wordToRename: string) {
-        var data: OmniSharp.Models.RenameRequest = {
-            RenameTo: wordToRename
-        };
-        return Omni.req("rename", "rename", data);
+    public static makeDataRequest<T>(data: T, editor?: Atom.TextEditor, buffer?: TextBuffer.TextBuffer) {
+        return <T>_.extend(data, Omni.makeRequest(editor, buffer));
+    }
+
+    public static navigateTo(response: { FileName: string; Line: number; Column: number; }) {
+        atom.workspace.open(response.FileName, undefined)
+            .then((editor) => {
+                editor.setCursorBufferPosition([response.Line && response.Line - 1, response.Column && response.Column - 1])
+            });
     }
 }
 

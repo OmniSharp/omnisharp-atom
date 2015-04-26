@@ -1,4 +1,3 @@
-/// <reference path="./models.d.ts" />
 /// <reference path="../typingsTemp/atom/atom.d.ts" />
 
 declare module OmniSharp {
@@ -17,13 +16,8 @@ declare module OmniSharp {
         isNotReady: boolean;
         isReady: boolean;
         isNotError: boolean;
-        isOffOrError: boolean;
-        isOffAndNotError: boolean;
         isError: boolean;
         isLoadingOrReady: boolean;
-        isLoadingOrReadyOrError: boolean;
-        state: string;
-        previousState: string;
         iconText: string;
         isOpen: boolean;
     }

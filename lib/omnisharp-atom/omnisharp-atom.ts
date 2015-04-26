@@ -160,9 +160,9 @@ class OmniSharpAtom {
                 this.menu.dispose();
                 this.menu = null;
             }
-            return OmniSharpServer.get().toggle();
+            OmniSharpServer.toggle();
         } else {
-            return _.map(dependencyErrors, missingDependency => alert(missingDependency));
+            _.map(dependencyErrors, missingDependency => alert(missingDependency));
         }
     }
 
@@ -176,7 +176,7 @@ class OmniSharpAtom {
         this.statusBarView && this.statusBarView.destroy();
         this.outputView && this.outputView.destroy();
         this.autoCompleteProvider && this.autoCompleteProvider.destroy();
-        return OmniSharpServer.get().stop();
+        OmniSharpServer.client.disconnect();
     }
 
     public consumeStatusBar(statusBar) {

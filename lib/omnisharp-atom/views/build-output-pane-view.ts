@@ -3,6 +3,7 @@ var $ = spacePenViews.jQuery;
 var Convert = require('ansi-to-html')
 import Vue = require('vue')
 import _ = require('lodash')
+import Omni = require("../../omni-sharp-server/omni");
 
 // Internal: A tool- panel view for the build result output.
 class BuildOutputPaneView extends spacePenViews.View {
@@ -50,7 +51,7 @@ class BuildOutputPaneView extends spacePenViews.View {
                 navigate: function(e) {
                     var nav = JSON.parse(e.srcElement.attributes['data-nav'].value);
                     if (nav) {
-                        return atom.emitter.emit("omni:navigate-to", nav);
+                        Omni.navigateTo(nav);
                     }
                 }
             }

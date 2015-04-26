@@ -3,44 +3,39 @@ import Omni = require('../../omni-sharp-server/omni')
 import OmniSharpAtom = require('../omnisharp-atom')
 
 class GoToImplementation {
-  private disposable: { dispose: () => void; }
-  private navigateToWord: string;
-  private atomSharper: typeof OmniSharpAtom;
+    private disposable: { dispose: () => void; }
+    private atomSharper: typeof OmniSharpAtom;
 
-  constructor(atomSharper: typeof OmniSharpAtom) {
-      this.atomSharper = atomSharper;
-  }
-
-  public goToImplementation() {
-    var ref;
-    if (OmniSharpServer.vm.isReady) {
-        this.navigateToWord = (ref = atom.workspace.getActiveTextEditor()) != null ? ref.getWordUnderCursor() : void 0;
-        return Omni.goToImplementation();
+    constructor(atomSharper: typeof OmniSharpAtom) {
+        this.atomSharper = atomSharper;
     }
-  }
 
-  public activate() {
-    var goToImpl;
-    goToImpl = this.goToImplementation;
+    public goToImplementation() {
+        var editor = atom.workspace.getActiveTextEditor();
+        if (editor) {
+            var req: any = Omni.makeRequest();
+            req.word = <any>editor.getWordUnderCursor();
 
-    this.disposable = atom.workspace.observeTextEditors((editor) => { });
+            Omni.client.findimplementationsPromise(Omni.makeRequest());
+        }
+    }
 
-    atom.commands.add("atom-text-editor", "omnisharp-atom:go-to-implementation", () => {
-        return goToImpl();
-    });
+    public activate() {
+        this.disposable = atom.workspace.observeTextEditors((editor) => { });
 
-    atom.emitter.on("omni:navigate-to-implementation", (quickFixes) => {
-      if (quickFixes.QuickFixes.length == 1) {
-        return atom.emitter.emit("omni:navigate-to", quickFixes.QuickFixes[0]);
-      } else {
-        atom.emitter.emit("omni:find-usages", quickFixes);
-        return this.atomSharper.outputView.selectPane("find");
-      }
-    });
-  }
+        atom.commands.add("atom-text-editor", "omnisharp-atom:go-to-implementation", () => {
+            return this.goToImplementation();
+        });
 
-  public deactivate() {
-    this.disposable.dispose()
-  }
+        Omni.client.observeFindimplementations.subscribe((data) => {
+            if (data.response.QuickFixes.length == 1) {
+                Omni.navigateTo(data.response.QuickFixes[0]);
+            }
+        });
+    }
+
+    public deactivate() {
+        this.disposable.dispose()
+    }
 }
 export = GoToImplementation

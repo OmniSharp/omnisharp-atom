@@ -47,20 +47,20 @@ class LinterCSharp extends Linter.Linter {
         return wordLocation;
     }
 
-    public lintFile(filePath: string, callback) : any {
+    public lintFile(filePath: string, callback): any {
 
         //if Omnisharp isn't booted, short out.
         //todo: check for nulls here?
-        if (OmniSharpServer.vm.isOff) {
+        if (OmniSharpServer.vm.isReady) {
             return;
         }
 
+        Omni.client.codecheckPromise(Omni.makeRequest())
+            .then(data => {
 
-        Omni.codecheck(null, this.editor).then(data => {
-
-            var errors = _.map(data.QuickFixes, (error : OmniSharp.Models.DiagnosticLocation) : LinterError => {
-                var line = error.Line-1;
-                var column = error.Column-1;
+            var errors = _.map(data.QuickFixes, (error: OmniSharp.Models.DiagnosticLocation): LinterError => {
+                var line = error.Line - 1;
+                var column = error.Column - 1;
                 var text = this.editor.lineTextForBufferRow(line);
                 var wordLocation = this.getWordAt(text, column);
                 var level = error.LogLevel.toLowerCase();

@@ -3,36 +3,34 @@ import Omni = require('../../omni-sharp-server/omni')
 
 class GoToDefinition {
     private disposable: { dispose: () => void; };
-    private navigateToWord: string;
 
     public goToDefinition() {
-        var ref;
-        if (OmniSharpServer.vm.isReady) {
-            this.navigateToWord = (ref = atom.workspace.getActiveTextEditor()) != null ? ref.getWordUnderCursor() : void 0;
-            return Omni.goToDefinition();
+        var editor = atom.workspace.getActiveTextEditor();
+        if (editor) {
+            var req : any = Omni.makeRequest();
+            req.word = <any>editor.getWordUnderCursor();
+
+            Omni.client.gotodefinitionPromise(Omni.makeRequest());
         }
     }
 
     public activate() {
-        var goToDef;
-        goToDef = this.goToDefinition;
         this.disposable = atom.workspace.observeTextEditors((editor) => {
-            // editor .on was depricated...   Is this needed?
             return atom.emitter.on("symbols-view:go-to-declaration", () => {
-                return goToDef();
+                return this.goToDefinition();
             });
         });
         atom.commands.add("atom-text-editor", "omnisharp-atom:go-to-definition", () => {
-            return goToDef();
+            return this.goToDefinition();
         });
-        atom.emitter.on("omni:navigate-to", (position) => {
-            if (position.FileName != null) {
-                atom.workspace.open(position.FileName, undefined)
-                    .then((editor) => {
-                        editor.setCursorBufferPosition([position.Line && position.Line - 1, position.Column && position.Column - 1])
-                    });
+
+        Omni.client.observeGotodefinition.subscribe((data) => {
+            if (data.response.FileName != null) {
+                Omni.navigateTo(data.response);
             } else {
-                atom.emitter.emit("omnisharp-atom:error", "Can't navigate to '" + this.navigateToWord + "'");
+                var word = (<any>data.request).word;
+                atom.emitter.emit("omnisharp-atom:error",
+                    "Can't navigate to '" + word + "'");
             }
         });
     }

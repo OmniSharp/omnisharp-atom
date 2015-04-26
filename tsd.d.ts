@@ -18,3 +18,5 @@
 /// <reference path="typingsTemp/space-pen/space-pen.d.ts" />
 /// <reference path="typingsTemp/status-bar/status-bar.d.ts" />
 /// <reference path="typingsTemp/text-buffer/text-buffer.d.ts" />
+/// <reference path="node_modules/rx/ts/rx.all.d.ts" />
+/// <reference path="node_modules/omnisharp-node-client/omnisharp-client.d.ts" />

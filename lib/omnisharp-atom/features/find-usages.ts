@@ -10,8 +10,8 @@ class FindUsages {
 
     public activate() {
         atom.commands.add('atom-workspace', "omnisharp-atom:find-usages", () => {
-            Omni.findUsages();
-            return this.atomSharper.outputView.selectPane("find");
+            Omni.client.findusagesPromise(Omni.makeRequest())
+            this.atomSharper.outputView.selectPane("find");
         });
     }
 }

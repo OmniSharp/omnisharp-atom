@@ -8,17 +8,19 @@ class Rename {
     public activate() {
         this.renameView = new RenameView();
         atom.commands.add('atom-text-editor', 'omnisharp-atom:rename', () => this.rename());
-        atom.emitter.on('omnisharp-atom:rename:exec', (newName) => Omni.rename(newName));
-        atom.emitter.on('omni:rename', (changes) => this.applyChanges(changes.Changes));
+        Omni.client.observeRename.subscribe((data) => {
+            this.applyChanges(data.response.Changes)
+        })
     }
 
     public rename() {
         var editor = atom.workspace.getActiveTextEditor();
-        if (editor)
+        if (editor) {
             var wordToRename = editor.getWordUnderCursor();
-        atom.workspace.addTopPanel({
-            item: this.renameView
-        });
+            atom.workspace.addTopPanel({
+                item: this.renameView
+            });
+        }
         return this.renameView.configure(wordToRename);
     }
 

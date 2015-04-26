@@ -5,7 +5,11 @@ var OmnisharpLocation = require('omnisharp-server-roslyn-binaries')
 import _ = require('lodash')
 import Promise = require("bluebird");
 import readline = require("readline");
+<<<<<<< HEAD
 import finder = require('./project-finder');
+=======
+import omnisharp = require("omnisharp-node-client");
+>>>>>>> Converted to using omnisharp-node-client to control the server connection.  Refactored to not wrap the client up too much and reduce events that are getting emitted.
 
 class OmniSharpServer {
     public vm: OmniSharp.vm = {
@@ -17,17 +21,13 @@ class OmniSharpServer {
         isNotReady: true,
         isReady: false,
         isNotError: true,
-        isOffOrError: false,
-        isOffAndNotError: false,
         isError: false,
         isLoadingOrReady: false,
-        isLoadingOrReadyOrError: false,
-        state: "off",
-        previousState: "off",
         iconText: "",
         isOpen: false
     }
 
+<<<<<<< HEAD
     private _instance: OmniSharpServerInstance;
     public get() {
         if (this._instance == null)
@@ -96,12 +96,25 @@ class OmniSharpServerInstance {
             atom.emitter.emit("omni-sharp-server:error");
             atom.emitter.emit("omni-sharp-server:state-change", "error");
             this.stop();
+=======
+    public toggle() {
+        if (this.client.currentState === omnisharp.DriverState.Disconnected) {
+            var path = atom && atom.project && atom.project.getPaths()[0];
+            this.client.connect({
+                projectPath: path
+            });
+            atom.emitter.emit("omni-sharp-server:start", this.client.id);
+            atom.emitter.emit("omni-sharp-server:state-change", "loading");
+        } else {
+            this.client.disconnect();
+>>>>>>> Converted to using omnisharp-node-client to control the server connection.  Refactored to not wrap the client up too much and reduce events that are getting emitted.
         }
     }
 
-    private _outstandingRequests: { [seq: number]: { resolve: (thenable: any | Promise.Thenable<any>) => void; reject: (error: any) => void; } } = {}
-    private _partialResult: string;
+    private _client: omnisharp.OmnisharpClient;
+    public get client() { return this._client; }
 
+<<<<<<< HEAD
     private handleResponse = (data: string) => {
         try {
             var packet: OmniSharp.Protocol.Packet = JSON.parse(data.toString().trim());
@@ -113,36 +126,34 @@ class OmniSharpServerInstance {
             // TODO: Log error?
             return;
         }
+=======
+    constructor() {
+        var client = this._client = new omnisharp.OmnisharpClient();
+        this.configure(client);
+    }
+>>>>>>> Converted to using omnisharp-node-client to control the server connection.  Refactored to not wrap the client up too much and reduce events that are getting emitted.
 
-        // enum?
-        if (packet.Type === "response") {
-            var response: OmniSharp.Protocol.ResponsePacket<any> = packet;
-            var outstandingRequest = this._outstandingRequests[response.Request_seq];
-            if (response.Success) {
-                if (outstandingRequest) {
-                    outstandingRequest.resolve(response.Body);
-                } else {
-                    // TODO: using .Command go find stuff
-                }
-            } else {
-                if (outstandingRequest) {
-                    outstandingRequest.reject(response.Message);
-                } else {
-                    // TODO: make notification?
-                }
+    private configure(client: omnisharp.OmnisharpClient) {
+        console.log('configure called')
+        atom.notifications.addInfo("configured called");
+        client.events.subscribe(event => {
+            atom.emitter.emit("omni-sharp-server:out", event.Body && event.Body.Message || event.Event || '');
+
+            if (event.Type === "error") {
+                atom.emitter.emit("omni-sharp-server:err", event.Body && event.Body.Message || event.Event || '');
             }
+        });
 
-            if (outstandingRequest) {
-                delete this._outstandingRequests[response.Request_seq];
+        client.state.subscribe(state => {
+            atom.emitter.emit("omni-sharp-server:state-change", state);
+            if (state == omnisharp.DriverState.Connected) {
+                atom.emitter.emit("omni-sharp-server:ready", client.id);
+            } else if (state == omnisharp.DriverState.Disconnected) {
+                atom.emitter.emit("omni-sharp-server:close", "closing server");
             }
-        } else if (packet.Type === "event") {
-            var event: OmniSharp.Protocol.EventPacket<any> = packet;
+        });
 
-            if (event.Event === "started") {
-                atom.emitter.emit("omni-sharp-server:ready", this.child.pid);
-                atom.emitter.emit("omni-sharp-server:state-change", "ready");
-            }
-
+<<<<<<< HEAD
             var outMessage = {
               message: event.Body && event.Body.Message || event.Event || '',
               logLevel: event.Body && event.Body.LogLevel || 'INFORMATION'
@@ -183,23 +194,31 @@ class OmniSharpServerInstance {
         if (this.child != null) {
             this.child.kill("SIGKILL");
         }
+=======
+        client.errors.subscribe(exception => {
+            console.error(exception);
+        });
+>>>>>>> Converted to using omnisharp-node-client to control the server connection.  Refactored to not wrap the client up too much and reduce events that are getting emitted.
 
-        return this.child = null;
-    }
-
-    public toggle() {
-        if (this.child) {
-            return this.stop();
-        } else {
-            return this.start();
-        }
-    }
-
-    public parseError(data) {
-        var message = data.toString();
-        if (data.code === 'ENOENT' && data.path === 'mono') {
-            message = 'mono could not be found, please ensure it is installed and in your path';
-        }
-        return message;
+        client.responses.subscribe(data => {
+            console.log("omni:" + event, data);
+        });
     }
 }
+
+var server = new OmniSharpServer();
+export = server;
+
+atom.emitter.on("omni-sharp-server:state-change", (state: omnisharp.DriverState) => {
+    server.vm.isLoading = state === omnisharp.DriverState.Connecting;
+    server.vm.isNotLoading = !this.isLoading;
+    server.vm.isOff = state === omnisharp.DriverState.Disconnected;
+    server.vm.isNotOff = !this.isOff;
+    server.vm.isOn = state === omnisharp.DriverState.Connecting || state === omnisharp.DriverState.Connected;
+    server.vm.isReady = state === omnisharp.DriverState.Connected;
+    server.vm.isNotReady = !this.isReady
+    server.vm.isNotError = !this.isError;
+    server.vm.isLoadingOrReady = this.isLoading || this.isReady;
+    server.vm.iconText = server.vm.isError ? "omni error occured" : "";
+    atom.emitter.emit("omni-sharp-server:state-change-complete", omnisharp.DriverState[state]);
+});
