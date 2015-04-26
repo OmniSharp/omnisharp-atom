@@ -22,7 +22,7 @@
     'submenu': [
       'label': 'OmniSharp'
       'submenu': [
-        { "label": "Toggle", "command": "omnisharp-atom:toggle" },
+        { "label": "Toggle", "command": "omnisharp-atom:toggle" }
         { 'label': 'New Application', 'command': 'omnisharp-atom:new-application' }
       ]
     ]
