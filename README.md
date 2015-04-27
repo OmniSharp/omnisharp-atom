@@ -1,4 +1,5 @@
-# omnisharp-atom package ![build status](https://travis-ci.org/OmniSharp/omnisharp-atom.svg)
+# omnisharp-atom package [![build status](https://travis-ci.org/OmniSharp/omnisharp-atom.svg)](https://travis-ci.org/OmniSharp/omnisharp-atom/)
+
 ###(The hackable IDE)
 
 ![omnisharp-atom](https://github.com/Omnisharp/omnisharp-atom/raw/master/omnisharp-atom.gif)
@@ -30,3 +31,7 @@ When the flame icon in the bottom left corner turns green, the server has starte
 - Editor adornments (squigglies) appear for errors and code hints as you type.
 - Automatic Package restore in vNext when you save `project.json` files
 - Enjoy!
+
+# Wiki
+
+https://github.com/OmniSharp/omnisharp-atom/wiki
