@@ -40,9 +40,13 @@ class OmniSharpAtom {
     public outputView;
     private autoCompleteProvider;
     private statusBar;
+    private generator: { run(generator: string, path?: string): void; start(prefix: string, path?:string): void;  };
+    private menu: EventKit.Disposable;
 
     public activate(state) {
         atom.commands.add('atom-workspace', 'omnisharp-atom:toggle', () => this.toggle());
+        atom.commands.add('atom-workspace', 'omnisharp-atom:new-application', () => this.generator.run("aspnet:app"));
+        atom.commands.add('atom-workspace', 'omnisharp-atom:new-class', () => this.generator.run("aspnet:Class"));
 
         if (dependencyChecker.findAllDeps(this.getPackageDir())) {
             this.emitter = new Emitter;
@@ -111,8 +115,18 @@ class OmniSharpAtom {
     }
 
     public toggle() {
+        var menuJsonFile = this.getPackageDir() + "/omnisharp-atom/menus/omnisharp-menu.json";
+        var menuJson = JSON.parse(fs.readFileSync(menuJsonFile, 'utf8'));
+
+
         var dependencyErrors = dependencyChecker.errors();
         if (dependencyErrors.length === 0) {
+            if (OmniSharpServer.vm.isOff) {
+                this.menu = atom.menu.add(menuJson.menu);
+            } else if (this.menu) {
+                this.menu.dispose();
+                this.menu = null;
+            }
             return OmniSharpServer.get().toggle();
         } else {
             return _.map(dependencyErrors, missingDependency => alert(missingDependency));
@@ -135,6 +149,12 @@ class OmniSharpAtom {
     public consumeStatusBar(statusBar) {
         this.statusBarView = new StatusBarView(statusBar);
         this.outputView = new DockView(this);
+    }
+
+    public consumeYeomanEnvironment(generatorService : { run(generator: string, path: string): void; start(prefix: string, path:string): void;  }) {
+
+        console.log('generatorService')
+        this.generator = generatorService;
     }
 
     public provideAutocomplete() {

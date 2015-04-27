@@ -74,13 +74,8 @@ class Omni {
             return Promise.reject<any>("omnisharp not ready");
         }
 
-        var context = Omni.getEditorContext(editor);
-        if (!context) {
-            return Promise.reject<any>("no editor context found");
-        }
-
         return OmniSharpServer.get()
-            .request<TRequest, TResponse>(path, <TRequest>_.extend({}, context, data))
+            .request<TRequest, TResponse>(path, data)
             .then(function(data) {
             atom.emitter.emit("omni:" + event, data);
             console.log("omni:" + event, data);
