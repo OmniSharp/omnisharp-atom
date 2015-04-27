@@ -1,7 +1,7 @@
 {
   "name": "omnisharp-atom",
   "main": "./lib/omnisharp-atom/omnisharp-atom",
-  "version": "0.4.3",
+  "version": "0.4.4",
   "description": "Brings the wonderful OmniSharp server to powercharge Atom's C# development experience",
   "keywords": [
     "c#",
@@ -12,7 +12,7 @@
   "repository": "https://github.com/OmniSharp/omnisharp-atom",
   "author": {
     "name": "Omnisharp Atom Team",
-    "url":  "https://github.com/OmniSharp/omnisharp-atom/graphs/contributors"
+    "url": "https://github.com/OmniSharp/omnisharp-atom/graphs/contributors"
   },
   "contributors": [
     {
@@ -49,7 +49,9 @@
     "atom": ">=0.192.0 <2.0.0"
   },
   "activationCommands": [],
-  "menus": ["atom-sharper.cson"],
+  "menus": [
+    "atom-sharper.cson"
+  ],
   "linter-package": true,
   "linter-implementation": "omnisharp-atom/linter",
   "scripts": {
