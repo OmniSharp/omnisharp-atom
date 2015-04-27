@@ -7,22 +7,17 @@
 
 From the packages settings inside Atom:
 
-* install "Autocomplete plus" package first!
-* install "Linter" package
-* install "OmniSharp Atom" package
+* install omnisharp-atom
 
 From the command-line:
 
 ```
-apm install autocomplete-plus
-apm install linter
 apm install omnisharp-atom
 ```
 
 ## To use
 
-- Open the root of your solution within Atom
-- Press Ctrl-Alt-o - this starts the OmniSharp server
+- Open a c# file
 
 When the flame icon in the bottom left corner turns green, the server has started!
 
