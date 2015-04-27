@@ -60,7 +60,7 @@ atom.emitter.on("omni-sharp-server:state-change", (state) => {
 
 class OmniSharpServerInstance {
     public packageDir = atom.packages.getPackageDirPaths()[0];
-    public location = OmnisharpLocation;
+    public location = 'C:\\Users\\Sam\\projects\\omnisharp-roslyn\\artifacts\\build\\omnisharp\\omnisharp.cmd'; //OmnisharpLocation;
     public child: child_process.ChildProcess;
     public port;
     private _seq = 0;
@@ -175,18 +175,18 @@ class OmniSharpServerInstance {
     }
 
     public stop() {
+        atom.emitter.emit("omni-sharp-server:stop");
+
         if (this.child != null) {
             this.child.kill("SIGKILL");
         }
-
-        atom.emitter.emit("omni-sharp-server:stop");
 
         return this.child = null;
     }
 
     public isStarted() {
       if (this.child) return true;
-      
+
       return false;
     }
 

@@ -122,7 +122,8 @@ class OmniSharpAtom {
     }
 
     private turnOffIcon() {
-      this.statusBarView.turnOffIcon();
+        Omni.stopServer();
+        this.statusBarView.turnOffIcon();
     }
 
     public deactivate() {

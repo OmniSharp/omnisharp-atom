@@ -115,6 +115,10 @@ class Omni {
         return Omni.req("buildcommand", "build-command");
     }
 
+    public static stopServer() {
+        return Omni.req("stopserver", "stop-server");
+    }
+
     public static packageRestore() {
         Omni.reql("filesChanged", "package-restore");
     }
