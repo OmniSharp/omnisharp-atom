@@ -12,7 +12,8 @@ class BuildOutputPaneView extends spacePenViews.View {
 
     public static content() {
         return this.div({
-            "class": 'build-output-pane-view'
+            "class": 'build-output-pane-view native-key-bindings',
+            "tabindex": '-1'
         }, () => {
                 this.ul({
                     "class": 'background-message centered',
