@@ -4,6 +4,7 @@ var Convert = require('ansi-to-html')
 import Vue = require('vue')
 import _ = require('lodash')
 
+
 // Internal: A tool- panel view for the build result output.
 class BuildOutputPaneView extends spacePenViews.View {
     public vm: { output: OmniSharp.VueArray<any> };
@@ -13,7 +14,19 @@ class BuildOutputPaneView extends spacePenViews.View {
         return this.div({
             "class": 'build-output-pane-view native-key-bindings',
             "tabindex": '-1'
-        }, () => this.div({
+        }, () => {
+                this.ul({
+                    "class": 'background-message centered',
+                    'v-class': 'hide: initialized'
+                }, () => {
+                        return this.li(() => {
+                            this.span('Omnisharp server is turned off');
+                            return this.kbd({
+                                "class": 'key-binding text-highlight'
+                            }, atom.keymaps.findKeyBindings({command :'omnisharp-atom:toggle'})[0].keystrokes);
+                        });
+                    });
+        return this.div({
                 "class": 'messages-container'
             }, () => this.pre({
                     'v-class': 'text-error: l.isError, navigate-link: l.isLink',
@@ -22,7 +35,7 @@ class BuildOutputPaneView extends spacePenViews.View {
                     'v-attr': 'data-nav: l.nav'
                 }, '{{ l.message | build-output-ansi-to-html }}')
                 )
-            );
+            });
     }
 
     public initialize() {

@@ -4,12 +4,17 @@ var Convert = require('ansi-to-html')
 import Vue = require('vue')
 import _ = require('lodash')
 import OmniSharpServer = require('../../omni-sharp-server/omni-sharp-server')
+import OmniSharpAtom = require('../omnisharp-atom');
+
 
 // Internal: A tool-panel view for find usages/implementations
 class FindPaneView extends spacePenViews.View {
+
+
     private vm: { usages:any[] };
 
     public static content() {
+
         return this.div({
             "class": 'error-output-pane',
             outlet: 'atomSharpFindPane'
@@ -22,7 +27,7 @@ class FindPaneView extends spacePenViews.View {
                             this.span('Omnisharp server is turned off');
                             return this.kbd({
                                 "class": 'key-binding text-highlight'
-                            }, '⌃⌥O');
+                            }, atom.keymaps.findKeyBindings({command :'omnisharp-atom:toggle'})[0].keystrokes);
                         });
                     });
                 this.ul({
