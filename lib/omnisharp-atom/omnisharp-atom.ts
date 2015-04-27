@@ -122,17 +122,17 @@ class OmniSharpAtom {
     private detectGrammar(editor: Atom.TextEditor, grammar: FirstMate.Grammar) {
         if (grammar.name === 'C#') {
             if (OmniSharpServer.vm.isOff) {
-                OmniSharpServer.get().toggle();
+                this.toggle();
             }
         } else if (grammar.name === "JSON") {
             if (path.basename(editor.getPath()) === "project.json") {
                 if (OmniSharpServer.vm.isOff) {
-                    OmniSharpServer.get().toggle();
+                    this.toggle();
                 }
             }
         } else if (grammar.name === "C# Script File") {
             if (OmniSharpServer.vm.isOff) {
-                OmniSharpServer.get().toggle();
+                this.toggle()
             }
         }
     }
