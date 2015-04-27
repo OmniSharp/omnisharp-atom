@@ -64,6 +64,7 @@
     "bluebird": "~2.3.2",
     "event-kit": "0.7.2",
     "fs-plus": "^2.3.1",
+    "glob": "^5.0.5",
     "generator-aspnet": "0.0.32",
     "jquery": "^2.1.1",
     "lodash": "^3.6.0",

@@ -5,6 +5,7 @@ var OmnisharpLocation = require('omnisharp-server-roslyn-binaries')
 import _ = require('lodash')
 import Promise = require("bluebird");
 import readline = require("readline");
+import finder = require('./project-finder');
 
 class OmniSharpServer {
     public vm: OmniSharp.vm = {
@@ -70,7 +71,8 @@ class OmniSharpServerInstance {
         useMono = process.platform !== "win32";
         executablePath = this.location;
 
-        var path = atom && atom.project && atom.project.getPaths()[0] || void 0;
+
+        var path = finder.findProject(atom && atom.project && atom.project.getPaths()[0]);
         var serverArguments = ["--stdio", "-s", path, "--hostPID", process.pid];
         this.child = spawn(executablePath, serverArguments);
         atom.emitter.emit("omni-sharp-server:start", this.child.pid);
