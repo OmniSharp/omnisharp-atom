@@ -1,4 +1,3 @@
-import OmniSharpServer = require('../../omni-sharp-server/omni-sharp-server')
 import Omni = require('../../omni-sharp-server/omni')
 
 class GoToDefinition {
@@ -7,7 +6,7 @@ class GoToDefinition {
     public goToDefinition() {
         var editor = atom.workspace.getActiveTextEditor();
         if (editor) {
-            var req : any = Omni.makeRequest();
+            var req: any = Omni.makeRequest();
             req.word = <any>editor.getWordUnderCursor();
 
             Omni.client.gotodefinitionPromise(Omni.makeRequest());
@@ -24,14 +23,16 @@ class GoToDefinition {
             return this.goToDefinition();
         });
 
-        Omni.client.observeGotodefinition.subscribe((data) => {
-            if (data.response.FileName != null) {
-                Omni.navigateTo(data.response);
-            } else {
-                var word = (<any>data.request).word;
-                atom.emitter.emit("omnisharp-atom:error",
-                    "Can't navigate to '" + word + "'");
-            }
+        Omni.registerConfiguration(client => {
+            client.observeGotodefinition.subscribe((data) => {
+                if (data.response.FileName != null) {
+                    Omni.navigateTo(data.response);
+                } else {
+                    var word = (<any>data.request).word;
+                    atom.emitter.emit("omnisharp-atom:error",
+                        "Can't navigate to '" + word + "'");
+                }
+            })
         });
     }
 

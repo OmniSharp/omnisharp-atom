@@ -1,5 +1,4 @@
 import Omni = require('../../../omni-sharp-server/omni')
-import OmniServer = require("../../../omni-sharp-server/omni-sharp-server");
 
 import _ = require('lodash')
 
@@ -40,7 +39,7 @@ export var CompletionProvider = {
     getSuggestions(options: RequestOptions): Promise<Suggestion[]> {
         return new Promise<Suggestion[]>(resolve => {
 
-            if (!OmniServer.vm.isReady) {
+            if (!Omni.vm.isReady) {
                 return;
             }
 

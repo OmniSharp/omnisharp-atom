@@ -1,4 +1,3 @@
-import OmniSharpServer = require('../../omni-sharp-server/omni-sharp-server')
 import Omni = require('../../omni-sharp-server/omni')
 import OmniSharpAtom = require('../omnisharp-atom')
 
@@ -27,10 +26,12 @@ class GoToImplementation {
             return this.goToImplementation();
         });
 
-        Omni.client.observeFindimplementations.subscribe((data) => {
-            if (data.response.QuickFixes.length == 1) {
-                Omni.navigateTo(data.response.QuickFixes[0]);
-            }
+        Omni.registerConfiguration(client => {
+            client.observeFindimplementations.subscribe((data) => {
+                if (data.response.QuickFixes.length == 1) {
+                    Omni.navigateTo(data.response.QuickFixes[0]);
+                }
+            });
         });
     }
 

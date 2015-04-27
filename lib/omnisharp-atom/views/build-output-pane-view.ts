@@ -60,14 +60,14 @@ class BuildOutputPaneView extends spacePenViews.View {
 
         atom.emitter.on("omnisharp-atom:build-message", data => {
             var buildMessages = data.split('\n');
-            return _.map(buildMessages, message => this.processMessage(message));
+            _.map(buildMessages, message => this.processMessage(message));
         });
 
         atom.emitter.on("omnisharp-atom:build-err", data => {
             if (this.vm.output.length >= 1000) {
                 this.vm.output.$remove(0);
             }
-            return this.vm.output.push({
+            this.vm.output.push({
                 message: data,
                 isError: true
             });
@@ -78,18 +78,18 @@ class BuildOutputPaneView extends spacePenViews.View {
             this.vm.output.push({
                 message: 'OmniSharp Atom building...'
             });
-            return this.vm.output.push({
+            this.vm.output.push({
                 message: "\t" + command
             });
         });
 
-        return atom.emitter.on("omnisharp-atom:build-exitcode", exitCode => {
+        atom.emitter.on("omnisharp-atom:build-exitcode", exitCode => {
             if (exitCode === 0) {
-                return this.vm.output.push({
+                this.vm.output.push({
                     message: 'Build succeeded!'
                 });
             } else {
-                return this.vm.output.push({
+                this.vm.output.push({
                     message: 'Build failed!',
                     isError: true
                 });
@@ -119,7 +119,7 @@ class BuildOutputPaneView extends spacePenViews.View {
         if (this.vm.output.length >= 1000) {
             this.vm.output.$remove(0);
         }
-        return this.vm.output.push(logMessage);
+        this.vm.output.push(logMessage);
     }
 
     public destroy() {

@@ -1,7 +1,6 @@
 import spacePenViews = require('atom-space-pen-views')
 var $ = spacePenViews.jQuery;
 import Vue = require('vue')
-import OmniSharpServer = require('../../omni-sharp-server/omni-sharp-server')
 
 class StatusBarView extends spacePenViews.View {
     private vm: OmniSharp.vm;
@@ -34,7 +33,7 @@ class StatusBarView extends spacePenViews.View {
     public initialize(statusBar) {
         var viewModel = new Vue({
             el: this[0],
-            data: OmniSharpServer.vm,
+            data: { isOpen: false },
             methods: {
                 toggle: () => this.toggleView()
             }

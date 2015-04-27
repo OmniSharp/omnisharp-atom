@@ -1,6 +1,5 @@
 var linterPath = atom.packages.resolvePackagePath("linter");
 var Linter = { Linter: <typeof Linter.Linter>require(`${linterPath}/lib/linter`) };
-import OmniSharpServer = require('../omni-sharp-server/omni-sharp-server');
 import Omni = require('../omni-sharp-server/omni');
 import _ = require('lodash');
 var Range = require('atom').Range;
@@ -51,7 +50,7 @@ class LinterCSharp extends Linter.Linter {
 
         //if Omnisharp isn't booted, short out.
         //todo: check for nulls here?
-        if (OmniSharpServer.vm.isReady) {
+        if (Omni.vm.isReady) {
             return;
         }
 

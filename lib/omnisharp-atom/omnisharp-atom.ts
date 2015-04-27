@@ -3,8 +3,8 @@ import fs = require('fs')
 import a = require("atom")
 var Emitter = (<any>a).Emitter
 
-import OmniSharpServer = require('../omni-sharp-server/omni-sharp-server')
 import Omni = require('../omni-sharp-server/omni')
+import ClientManager = require('../omni-sharp-server/client-manager')
 
 import CompletionProvider = require("./features/lib/completion-provider")
 import dependencyChecker = require('./dependency-checker')
@@ -45,6 +45,7 @@ class OmniSharpAtom {
     private menu: EventKit.Disposable;
 
     public activate(state) {
+        ClientManager.activate();
         atom.commands.add('atom-workspace', 'omnisharp-atom:toggle', () => this.toggle());
         atom.commands.add('atom-workspace', 'omnisharp-atom:new-application', () => this.generator.run("aspnet:app"));
         atom.commands.add('atom-workspace', 'omnisharp-atom:new-class', () => this.generator.run("aspnet:Class"));
@@ -160,7 +161,7 @@ class OmniSharpAtom {
                 this.menu.dispose();
                 this.menu = null;
             }
-            OmniSharpServer.toggle();
+            Omni.toggle();
         } else {
             _.map(dependencyErrors, missingDependency => alert(missingDependency));
         }
@@ -176,7 +177,7 @@ class OmniSharpAtom {
         this.statusBarView && this.statusBarView.destroy();
         this.outputView && this.outputView.destroy();
         this.autoCompleteProvider && this.autoCompleteProvider.destroy();
-        OmniSharpServer.client.disconnect();
+        Omni.client.disconnect();
     }
 
     public consumeStatusBar(statusBar) {

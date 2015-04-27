@@ -1,5 +1,4 @@
 import path = require('path');
-import OmniSharpServer = require('../../omni-sharp-server/omni-sharp-server');
 import Omni = require('../../omni-sharp-server/omni');
 import OmniSharpAtom = require('../omnisharp-atom');
 
