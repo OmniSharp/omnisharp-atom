@@ -127,7 +127,7 @@ declare module FirstMate {
         /**
          * This field or method was not documented by atomdoc, assume it is private. Use with caution.
          */
-        createToken(value? : any, scopes? : Atom.Scope[]) : Atom.Token;
+        createToken(value? : any, scopes? : Atom.Token[]) : Atom.Token;
     
         /**
          * This field or method was not documented by atomdoc, assume it is private. Use with caution.
@@ -241,7 +241,7 @@ declare module FirstMate {
         /**
          * This field or method was not documented by atomdoc, assume it is private. Use with caution.
          */
-        createToken(value? : any, scopes? : Atom.Scope[]) : Atom.Token;
+        createToken(value? : any, scopes? : Atom.Token[]) : Atom.Token;
     
         /**
          * This field or method was not documented by atomdoc, assume it is private. Use with caution.
@@ -359,7 +359,7 @@ declare module FirstMate {
         /**
          * This field or method was not documented by atomdoc, assume it is private. Use with caution.
          */
-        getIncludedPatterns(baseGrammar? : Grammar, included? : any) : Pattern[];
+        getIncludedPatterns(baseGrammar? : Pattern[], included? : any) : Pattern[];
     
         /**
          * This field or method was not documented by atomdoc, assume it is private. Use with caution.
@@ -374,7 +374,7 @@ declare module FirstMate {
         /**
          * This field or method was not documented by atomdoc, assume it is private. Use with caution.
          */
-        getTokensForCaptureRule(rule? : Rule, line? : any, captureStart? : any, captureEnd? : any, scopes? : Atom.Scope[], stack? : any) : Rule;
+        getTokensForCaptureRule(rule? : Rule, line? : any, captureStart? : any, captureEnd? : any, scopes? : Rule[], stack? : any) : Rule;
     
         /**
          * Get the tokens for the capture indices.
@@ -438,7 +438,7 @@ declare module FirstMate {
         /**
          * This field or method was not documented by atomdoc, assume it is private. Use with caution.
          */
-        getIncludedPatterns(baseGrammar? : Grammar, included? : any) : Pattern[];
+        getIncludedPatterns(baseGrammar? : Pattern[], included? : any) : Pattern[];
     
         /**
          * This field or method was not documented by atomdoc, assume it is private. Use with caution.

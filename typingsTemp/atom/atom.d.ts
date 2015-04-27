@@ -83,7 +83,7 @@ located if it exists.
         /**
          * This field or method was not documented by atomdoc, assume it is private. Use with caution.
          */
-        static getCurrentWindow() : any;
+        static getCurrentWindow() : AtomWindow;
     
         /**
          * This field or method was not documented by atomdoc, assume it is private. Use with caution.
@@ -312,7 +312,7 @@ if the window hasn't finished loading yet.
         /**
          * This field or method was not documented by atomdoc, assume it is private. Use with caution.
          */
-        getCurrentWindow() : any;
+        getCurrentWindow() : AtomWindow;
     
         /**
          * Move current window to the center of the screen. 
@@ -3940,7 +3940,7 @@ file in the type specified by the configuration schema.
         /**
          * This field or method was not documented by atomdoc, assume it is private. Use with caution.
          */
-        createToken(value? : any, scopes? : Scope[]) : Token;
+        createToken(value? : any, scopes? : Token[]) : Token;
     
         /**
          * Select a grammar for the given file path and file contents.
@@ -6970,7 +6970,7 @@ added menu items.
         /**
          * Get an {Array} of {Directory}s associated with this project. 
          */
-        getDirectories() : any;
+        getDirectories() : Pathwatcher.Directory[];
     
         /**
          * This field or method was not documented by atomdoc, assume it is private. Use with caution.
@@ -12443,7 +12443,7 @@ required stylesheet.
         /**
          * This field or method was not documented by atomdoc, assume it is private. Use with caution.
          */
-        buildSoftWrapIndentationTokens(token? : Token, hangingIndent? : any) : Token[];
+        buildSoftWrapIndentationTokens(token? : Token[], hangingIndent? : any) : Token[];
     
         /**
          * This field or method was not documented by atomdoc, assume it is private. Use with caution.
@@ -12622,7 +12622,7 @@ tooltip.
         Returns a {Disposable} on which `.dispose()` can be called to remove the
 added provider.
          */
-        addViewProvider(modelConstructor? : any, createView? : SpacePen.View) : EventKit.Disposable;
+        addViewProvider(modelConstructor? : any, createView? : (model: any) => HTMLElement) : EventKit.Disposable;
     
         /**
          * Get the view associated with an object in the workspace.
@@ -12637,7 +12637,7 @@ added provider.
         /**
          * This field or method was not documented by atomdoc, assume it is private. Use with caution.
          */
-        createView(object? : any) : SpacePen.View;
+        createView(object? : any) : (model: any) => HTMLElement;
     
         /**
          * This field or method was not documented by atomdoc, assume it is private. Use with caution.
@@ -13274,7 +13274,7 @@ opener.
          * Adds a panel item to the bottom of the editor window.
          * @param options? - {Object}
          */
-        addBottomPanel(options? : Object) : Panel;
+        addBottomPanel(options? : { item: Node | JQuery | Object; visible?: boolean; priority?: number; }) : Panel;
     
         /**
          * Get an {Array} of all the panel items to the left of the editor window. 
@@ -13285,7 +13285,7 @@ opener.
          * Adds a panel item to the left of the editor window.
          * @param options? - {Object}
          */
-        addLeftPanel(options? : Object) : Panel;
+        addLeftPanel(options? : { item: Node | JQuery | Object; visible?: boolean; priority?: number; }) : Panel;
     
         /**
          * Get an {Array} of all the panel items to the right of the editor window. 
@@ -13296,7 +13296,7 @@ opener.
          * Adds a panel item to the right of the editor window.
          * @param options? - {Object}
          */
-        addRightPanel(options? : Object) : Panel;
+        addRightPanel(options? : { item: Node | JQuery | Object; visible?: boolean; priority?: number; }) : Panel;
     
         /**
          * Get an {Array} of all the panel items at the top of the editor window. 
@@ -13307,7 +13307,7 @@ opener.
          * Adds a panel item to the top of the editor window above the tabs.
          * @param options? - {Object}
          */
-        addTopPanel(options? : Object) : Panel;
+        addTopPanel(options? : { item: Node | JQuery | Object; visible?: boolean; priority?: number; }) : Panel;
     
         /**
          * Get an {Array} of all the modal panel items 
@@ -13318,7 +13318,7 @@ opener.
          * Adds a panel item as a modal dialog.
          * @param options? - {Object}
          */
-        addModalPanel(options? : Object) : Panel;
+        addModalPanel(options? : { item: Node | JQuery | Object; visible?: boolean; priority?: number; }) : Panel;
     
         panelForItem(item? : any) : Panel | any;
     

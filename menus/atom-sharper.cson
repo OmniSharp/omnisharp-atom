@@ -22,14 +22,8 @@
     'submenu': [
       'label': 'OmniSharp'
       'submenu': [
-        { 'label': 'Toggle', 'command': 'omnisharp-atom:toggle' }
-        { 'label': 'Find Usages', 'command': 'omnisharp-atom:find-usages' }
-        { 'label': 'Go to definition', 'command': 'omnisharp-atom:go-to-definition' }
-        { 'label': 'Go to implementation', 'command': 'omnisharp-atom:go-to-implementation' }
-        { 'label': 'Rename', 'command': 'omnisharp-atom:rename'}
-        { 'label': 'Fix Usings', 'command': 'omnisharp-atom:fix-usings' }
-        { 'label': 'Code Format', 'command': 'omnisharp-atom:code-format' }
-        { 'label': 'Build', 'command': 'omnisharp-atom:build' }
+        { "label": "Toggle", "command": "omnisharp-atom:toggle" }
+        { 'label': 'New Application', 'command': 'omnisharp-atom:new-application' }
       ]
     ]
   }
