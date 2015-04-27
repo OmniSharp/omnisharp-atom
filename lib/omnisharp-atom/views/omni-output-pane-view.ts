@@ -12,7 +12,8 @@ class OmniOutputPaneView extends spacePenViews.View {
 
     public static content() {
         return this.div({
-            "class": 'omni-output-pane-view'
+            "class": 'omni-output-pane-view native-key-bindings',
+            "tabindex": '-1'
         }, () => {
                 this.ul({
                     "class": 'background-message centered',
@@ -30,7 +31,7 @@ class OmniOutputPaneView extends spacePenViews.View {
                     'v-class': 'hide: uninitialized'
                 }, () => {
                         return this.pre({
-                            'v-class': 'text-error: l.isError',
+                            'v-class': 'l.logLevel',
                             'v-repeat': 'l :output'
                         }, '{{ l.message | ansi-to-html }}');
                     });
@@ -66,7 +67,8 @@ class OmniOutputPaneView extends spacePenViews.View {
                 this.vm.output.$remove(0);
             }
             return this.vm.output.push({
-                message: data
+                message: data.message,
+                logLevel: data.logLevel
             });
         });
         atom.emitter.on("omni-sharp-server:err", (data) => {
@@ -74,8 +76,8 @@ class OmniOutputPaneView extends spacePenViews.View {
                 this.vm.output.$remove(0);
             }
             return this.vm.output.push({
-                message: data,
-                isError: true
+                message: data.message,
+                logLevel: data.logLevel
             });
         });
         return atom.emitter.on("omni-sharp-server:start", (pid, port) => {

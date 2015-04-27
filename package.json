@@ -1,7 +1,7 @@
 {
   "name": "omnisharp-atom",
   "main": "./lib/omnisharp-atom/omnisharp-atom",
-  "version": "0.4.0",
+  "version": "0.4.4",
   "description": "Brings the wonderful OmniSharp server to powercharge Atom's C# development experience",
   "keywords": [
     "c#",
@@ -49,6 +49,9 @@
     "atom": ">=0.192.0 <2.0.0"
   },
   "activationCommands": [],
+  "menus": [
+    "atom-sharper.cson"
+  ],
   "linter-package": true,
   "linter-implementation": "omnisharp-atom/linter",
   "scripts": {
@@ -62,18 +65,26 @@
     "event-kit": "0.7.2",
     "fs-plus": "^2.3.1",
     "glob": "^5.0.5",
+    "generator-aspnet": "0.0.32",
     "jquery": "^2.1.1",
     "lodash": "^3.6.0",
     "omnisharp-server-roslyn-binaries": "latest",
     "request-promise": "~0.1.2",
     "semver": "^4.2.0",
     "tsd": "~0.6.0-beta.5",
-    "vue": "~0.10.6"
+    "vue": "~0.10.6",
+    "yeoman-environment": "^1.2.5",
+    "yo": "^1.4.6"
   },
   "consumedServices": {
     "status-bar": {
       "versions": {
         "^1.0.0": "consumeStatusBar"
+      }
+    },
+    "yeoman-environment": {
+      "versions": {
+        "^1.0.0": "consumeYeomanEnvironment"
       }
     }
   },
@@ -94,6 +105,7 @@
   "package-dependencies": {
     "autocomplete-plus": "^2.0.2",
     "language-csharp": ">=0.3.0",
-    "linter": ">=0.12.0"
+    "linter": ">=0.12.0",
+    "atom-yeoman": ">=0.1.5"
   }
 }

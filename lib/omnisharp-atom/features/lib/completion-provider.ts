@@ -4,8 +4,8 @@ import OmniServer = require("../../../omni-sharp-server/omni-sharp-server");
 import _ = require('lodash')
 
 export interface RequestOptions {
-            editor: AtomCore.IEditor;
-            bufferPosition: TextBuffer.IPoint; // the position of the cursor
+            editor: Atom.TextEditor;
+            bufferPosition: TextBuffer.Point; // the position of the cursor
             prefix: string;
             scopeDescriptor: { scopes: string[] };
 }
@@ -50,13 +50,19 @@ export var CompletionProvider = {
             var end = options.bufferPosition.column;
 
             var data = buffer.getLines()[options.bufferPosition.row].substring(0, end + 1);
-            end--;
-
-            while (wordRegex.test(data.charAt(end))) {
-                end--;
+            var lastCharacterTyped = data[end - 1];
+            if (!/[A-Z_0-9.]+/i.test(lastCharacterTyped)) {
+                return;
             }
 
-            var word = data.substring(end + 1);
+            var start = end;
+
+            do {
+                start--;
+            } while (wordRegex.test(data.charAt(start)));
+
+            var word = data.substring(start + 1, end);
+
             Omni.autocomplete(word)
                 .then(completions => {
                 if (completions == null) {

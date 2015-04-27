@@ -106,7 +106,7 @@ class OmniSharpServerInstance {
         try {
             var packet: OmniSharp.Protocol.Packet = JSON.parse(data.toString().trim());
         } catch (_error) {
-            atom.emitter.emit("omni-sharp-server:out", 'failed with: ' + data.toString());
+            atom.emitter.emit("omni-sharp-server:out", { message: 'failed with: ' + data.toString(), logLevel: "ERROR" });
         }
 
         if (!packet) {
@@ -143,16 +143,19 @@ class OmniSharpServerInstance {
                 atom.emitter.emit("omni-sharp-server:state-change", "ready");
             }
 
-            // TODO: make friend with colors and stuff
-            atom.emitter.emit("omni-sharp-server:out", event.Body && event.Body.Message || event.Event || '');
+            var outMessage = {
+              message: event.Body && event.Body.Message || event.Event || '',
+              logLevel: event.Body && event.Body.LogLevel || 'INFORMATION'
+            };
+
+            atom.emitter.emit("omni-sharp-server:out", outMessage);
         }
     }
 
     private serverErr = (data) => {
-        var friendlyMessage = this.parseError(data);
+        var outMessage = { message: this.parseError(data), logLevel: "ERROR" };
 
-        // TODO: make friend with colors and stuff
-        return atom.emitter.emit("omni-sharp-server:err", friendlyMessage);
+        return atom.emitter.emit("omni-sharp-server:err", outMessage);
     }
 
     public request<TRequest extends OmniSharp.Models.Request, TResponse>(command: string, request: TRequest): Promise<TResponse> {

@@ -3,7 +3,7 @@ var $ = spacePenViews.jQuery;
 var Convert = require('ansi-to-html')
 import Vue = require('vue')
 
-import omnisharpAtom = require("../omnisharp-atom");
+import OmniSharpAtom = require("../omnisharp-atom");
 import FindPaneView = require('./find-pane-view')
 import BuildOutputPaneView = require('./build-output-pane-view')
 import OmniOutputPaneView = require('./omni-output-pane-view')
@@ -129,6 +129,10 @@ class DockView extends spacePenViews.View {
         });
     }
 
+    constructor(private omnisharpAtom : OmniSharpAtom) {
+        super();
+    }
+
     public selectPane = (pane) => {
         this.vm.selected = pane;
         this.show();
@@ -142,7 +146,7 @@ class DockView extends spacePenViews.View {
         this.fixedTop = this.resizeHandle.offset().top;
         this.fixedHeight = $(".omnisharp-atom-pane").height();
         this.fixedButtonBarHeight = this.find(".btn-group").height();
-        this.statusBarHeight = omnisharpAtom.statusBarView.height();
+        this.statusBarHeight = this.omnisharpAtom.statusBarView.height();
         $(document).on('mousemove', this.resizePane);
         $(document).on('mouseup', this.resizeStopped);
     }
