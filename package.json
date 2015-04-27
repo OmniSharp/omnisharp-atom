@@ -10,18 +10,39 @@
     "omnisharp"
   ],
   "repository": "https://github.com/OmniSharp/omnisharp-atom",
-  "author": { 
+  "author": {
     "name": "Omnisharp Atom Team",
-    "url":  "https://github.com/OmniSharp/omnisharp-atom/graphs/contributors"   
+    "url": "https://github.com/OmniSharp/omnisharp-atom/graphs/contributors"
   },
-  "contributors" : [
-    { "name": "Martijn Laarman", "url": "http://localghost.io" },
-    { "name": "Stephen James", "url": "http://stephenjamescode.blogspot.co.uk/" },
-    { "name": "Chad Tolkien", "url": "http://chad.tolkien.id.au/" },
-    { "name": "David Driscoll", "url": "https://twitter.com/david_blacklite" },
-    { "name": "Sam Williamson", "url": "https://twitter.com/sgwill" },
-    { "name": "William Luu", "url": "https://twitter.com/willl" },
-    { "name": "Jason Imison", "url": "https://twitter.com/jasonimison" }
+  "contributors": [
+    {
+      "name": "Martijn Laarman",
+      "url": "http://localghost.io"
+    },
+    {
+      "name": "Stephen James",
+      "url": "http://stephenjamescode.blogspot.co.uk/"
+    },
+    {
+      "name": "Chad Tolkien",
+      "url": "http://chad.tolkien.id.au/"
+    },
+    {
+      "name": "David Driscoll",
+      "url": "https://twitter.com/david_blacklite"
+    },
+    {
+      "name": "Sam Williamson",
+      "url": "https://twitter.com/sgwill"
+    },
+    {
+      "name": "William Luu",
+      "url": "https://twitter.com/willl"
+    },
+    {
+      "name": "Jason Imison",
+      "url": "https://twitter.com/jasonimison"
+    }
   ],
   "license": "MIT",
   "engines": {
@@ -40,6 +61,7 @@
     "bluebird": "~2.3.2",
     "event-kit": "0.7.2",
     "fs-plus": "^2.3.1",
+    "glob": "^5.0.5",
     "jquery": "^2.1.1",
     "lodash": "^3.6.0",
     "omnisharp-server-roslyn-binaries": "latest",
