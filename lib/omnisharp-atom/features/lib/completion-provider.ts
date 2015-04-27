@@ -85,9 +85,6 @@ export var CompletionProvider = {
     },
 
     renderIcon(item) {
-        //todo: fix icon images
-        if (item.Kind === 'NamedType' || item.Kind === 'Parameter' || item.Kind === 'Local')
-            return;
 
         // todo: move additional styling to css
         return '<img height="16px" width="16px" src="atom://omnisharp-atom/styles/icons/autocomplete_' + item.Kind.toLowerCase() + '@3x.png" /> '
