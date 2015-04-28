@@ -72,9 +72,7 @@ export var CompletionProvider = {
                 var result = _.map(completions, (item) : Suggestion => ({
                     snippet: item.Snippet,
                     type: item.Kind,
-                    //displayText: _.escape(item.DisplayText),
                     iconHTML: this.renderIcon(item),
-                    //rightLabel: item.ReturnType,
                     displayText: item.MethodHeader,
                     className: 'autocomplete-omnisharp-atom',
                     description: this.renderReturnType(item.ReturnType)
