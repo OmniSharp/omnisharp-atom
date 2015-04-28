@@ -192,6 +192,15 @@ class OmniSharpAtom {
         return this.autoCompleteProvider;
     }
 
+    public config = {
+        autoStartOnCompatibleFile: {
+            title: "Autostart Omnisharp Roslyn",
+            description: "Automatically starts Omnisharp Roslyn when a compatible file is opened.",
+            type: 'boolean',
+            default: true
+        }
+    }
+
 }
 
 var instance = new OmniSharpAtom
