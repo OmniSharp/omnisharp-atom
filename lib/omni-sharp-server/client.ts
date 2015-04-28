@@ -56,16 +56,23 @@ class Client extends omnisharp.OmnisharpClient {
     public navigateTo(response: { FileName: string; Line: number; Column: number; }) {
         atom.workspace.open(response.FileName, undefined)
             .then((editor) => {
-                editor.setCursorBufferPosition([response.Line && response.Line - 1, response.Column && response.Column - 1])
-            });
+            editor.setCursorBufferPosition([response.Line && response.Line - 1, response.Column && response.Column - 1])
+        });
     }
 
     private configureClient() {
         this.events.subscribe(event => {
-            atom.emitter.emit("omni-sharp-server:out", event.Body && event.Body.Message || event.Event || '');
 
             if (event.Type === "error") {
-                atom.emitter.emit("omni-sharp-server:err", event.Body && event.Body.Message || event.Event || '');
+                atom.emitter.emit("omni-sharp-server:err", {
+                    message: event.Body && event.Body.Message || event.Event || '',
+                    logLevel: event.Body && event.Body.LogLevel || 'ERROR'
+                });
+            } else {
+                atom.emitter.emit("omni-sharp-server:out", {
+                    message: event.Body && event.Body.Message || event.Event || '',
+                    logLevel: event.Body && event.Body.LogLevel || 'INFORMATION'
+                });
             }
         });
 

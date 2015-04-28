@@ -32,9 +32,7 @@
     "files": [
         "./lib/omni-sharp-server/client-manager.ts",
         "./lib/omni-sharp-server/client.ts",
-        "./lib/omni-sharp-server/omni-sharp-server.ts",
         "./lib/omni-sharp-server/omni.ts",
-        "./lib/omni-sharp-server/project-finder.ts",
         "./lib/omnisharp-atom/dependency-checker.ts",
         "./lib/omnisharp-atom/features/code-format.ts",
         "./lib/omnisharp-atom/features/error-handler.ts",

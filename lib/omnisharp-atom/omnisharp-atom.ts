@@ -126,17 +126,17 @@ class OmniSharpAtom {
             return; //short out, if setting to not auto start is enabled
         }
         if (grammar.name === 'C#') {
-            if (OmniSharpServer.vm.isOff) {
+            if (Omni.vm.isOff) {
                 this.toggle();
             }
         } else if (grammar.name === "JSON") {
             if (path.basename(editor.getPath()) === "project.json") {
-                if (OmniSharpServer.vm.isOff) {
+                if (Omni.vm.isOff) {
                     this.toggle();
                 }
             }
         } else if (grammar.name === "C# Script File") {
-            if (OmniSharpServer.vm.isOff) {
+            if (Omni.vm.isOff) {
                 this.toggle()
             }
         }
@@ -155,7 +155,7 @@ class OmniSharpAtom {
 
         var dependencyErrors = dependencyChecker.errors();
         if (dependencyErrors.length === 0) {
-            if (OmniSharpServer.vm.isOff) {
+            if (Omni.vm.isOff) {
                 this.menu = atom.menu.add(menuJson.menu);
             } else if (this.menu) {
                 this.menu.dispose();
