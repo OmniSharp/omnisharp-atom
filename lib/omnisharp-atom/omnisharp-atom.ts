@@ -120,6 +120,10 @@ class OmniSharpAtom {
     }
 
     private detectGrammar(editor: Atom.TextEditor, grammar: FirstMate.Grammar) {
+
+        if (!atom.config.get('omnisharp-atom.autoStartOnCompatibleFile')) {
+            return; //short out, if setting to not auto start is enabled
+        }
         if (grammar.name === 'C#') {
             if (OmniSharpServer.vm.isOff) {
                 this.toggle();
@@ -135,6 +139,7 @@ class OmniSharpAtom {
                 this.toggle()
             }
         }
+
     }
 
     public buildStatusBarAndDock() {
@@ -190,6 +195,15 @@ class OmniSharpAtom {
         this.autoCompleteProvider = CompletionProvider.CompletionProvider;
 
         return this.autoCompleteProvider;
+    }
+
+    public config = {
+        autoStartOnCompatibleFile: {
+            title: "Autostart Omnisharp Roslyn",
+            description: "Automatically starts Omnisharp Roslyn when a compatible file is opened.",
+            type: 'boolean',
+            default: true
+        }
     }
 
 }
