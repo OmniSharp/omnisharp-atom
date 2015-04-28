@@ -25,7 +25,7 @@ export interface Suggestion {
        iconHTML?: string;
        description?: string;
        descriptionMoreURL?: string;
-
+       className?: string;
    }
 
 
@@ -72,16 +72,25 @@ export var CompletionProvider = {
                 var result = _.map(completions, (item) : Suggestion => ({
                     snippet: item.Snippet,
                     type: item.Kind,
-                    displayText: _.escape(item.DisplayText),
-                    leftLabelHTML: '<span class="text-smaller">' + _.escape(item.ReturnType)  +'</span>',
-                    rightLabelHTML: '<span class="text-smaller">' + _.escape(item.Kind)  +'</span>',
-                    iconHTML: this.renderIcon(item)
+                    //displayText: _.escape(item.DisplayText),
+                    iconHTML: this.renderIcon(item),
+                    //rightLabel: item.ReturnType,
+                    displayText: item.MethodHeader,
+                    className: 'autocomplete-omnisharp-atom',
+                    description: this.renderReturnType(item.ReturnType)
                 }));
 
                 // TODO: reoslve issue in bluebird.d.ts
                 return resolve(<any>result);
             });
         })
+    },
+
+    renderReturnType(returnType :string) {
+        if (returnType === null) {
+            return;
+        }
+        return `Returns: ${returnType}`;
     },
 
     renderIcon(item) {

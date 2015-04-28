@@ -126,6 +126,7 @@ class Omni {
             WantKind: true,
             WantSnippet: true,
             WantReturnType: true
+
         };
         return Omni.req<OmniSharp.Models.AutoCompleteRequest, OmniSharp.Models.AutoCompleteResponse[]>("autocomplete", "autocomplete", data);
     }
