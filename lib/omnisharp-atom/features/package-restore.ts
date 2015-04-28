@@ -18,7 +18,7 @@ class PackageRestore {
 
     public registerEventHandlerOnEditor = (editor: Atom.TextEditor) => {
         var filename = path.basename(editor.getPath());
-        if (filename === 'project.json') {
+        if (filename === 'project.json' || filename === 'project.lock.json') {
             return editor.getBuffer().onDidSave(() => {
                 if (!OmniSharpServer.vm.isOff) {
                     Omni.packageRestore();
