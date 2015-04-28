@@ -3,6 +3,7 @@ var $ = spacePenViews.jQuery;
 var Convert = require('ansi-to-html')
 import Vue = require('vue')
 import _ = require('lodash')
+import Omni = require('../../omni-sharp-server/omni')
 
 // Internal: A tool-panel view for the test result output.
 class OmniOutputPaneView extends spacePenViews.View {
@@ -54,11 +55,11 @@ class OmniOutputPaneView extends spacePenViews.View {
         });
         var viewModel = new Vue({
             el: this[0],
-            data: {
+            data: _.extend(Omni.vm, {
                 uninitialized: true,
                 initialized: false,
                 output: []
-            }
+            })
         });
         this.vm = <any>viewModel;
         atom.emitter.on("omni-sharp-server:out", (data) => {

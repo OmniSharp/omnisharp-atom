@@ -65,9 +65,9 @@ class FindPaneView extends spacePenViews.View {
 
         var viewModel = new Vue({
             el: this[0],
-            data: {
+            data: _.extend(Omni.vm, {
                 usages: []
-            },
+            }),
             methods: {
                 gotoUsage: (arg) => {
                     var targetVM;
@@ -82,9 +82,7 @@ class FindPaneView extends spacePenViews.View {
             client.observeFindusages.subscribe((data) => {
                 this.vm.usages = data.response.QuickFixes;
             });
-        });
 
-        Omni.registerConfiguration(client => {
             client.observeFindimplementations.subscribe((data) => {
                 if (data.response.QuickFixes.length > 1) {
                     this.vm.usages = data.response.QuickFixes;

@@ -47,13 +47,6 @@ class LinterCSharp extends Linter.Linter {
     }
 
     public lintFile(filePath: string, callback): any {
-
-        //if Omnisharp isn't booted, short out.
-        //todo: check for nulls here?
-        if (Omni.vm.isReady) {
-            return;
-        }
-
         Omni.client.codecheckPromise(Omni.makeRequest())
             .then(data => {
 
