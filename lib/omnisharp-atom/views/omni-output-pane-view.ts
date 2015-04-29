@@ -80,12 +80,21 @@ class OmniOutputPaneView extends spacePenViews.View {
                 logLevel: data.logLevel
             });
         });
-        return atom.emitter.on("omni-sharp-server:start", (pid, port) => {
+        return atom.emitter.on("omni-sharp-server:start", (data) => {
             this.vm.uninitialized = false;
             this.vm.initialized = true;
             this.vm.output = <OmniSharp.VueArray<any>> [];
-            return this.vm.output.push({
-                message: "Starting Omnisharp server (pid:" + pid + ", port:" + port + ")"
+            this.vm.output.push({
+                message: "Starting OmniSharp server (pid:" + data.pid + ")"
+            });
+            this.vm.output.push({
+                message: "OmniSharp Location: " + data.exePath
+            });
+            this.vm.output.push({
+                message: "Change the location that OmniSharp is loaded from by setting the OMNISHARP environment variable"
+            });
+            this.vm.output.push({
+                message: "OmniSharp Path: " + data.path
             });
         });
     }
