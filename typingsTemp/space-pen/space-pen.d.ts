@@ -21,7 +21,7 @@ declare module SpacePen {
          * @param name? - {String} name of the subview
          * @param view? - DOM element or jQuery node subview 
          */
-        static subview(name? : string, view? : View) : View;
+        static subview(name? : string, view? : any) : View;
     
         /**
          * Add a text node with the given text content
@@ -217,60 +217,93 @@ declare module SpacePen {
         static var(...args : any[]) : Builder;
         static video(...args : any[]) : Builder;
         static wbr(...args : any[]) : Builder;
-        /**
-        * Register a handler to be called when Ajax requests complete. This is an AjaxEvent.
-        *
-        * @param handler The function to be invoked.
-        */
-        ajaxComplete(handler: (event: JQueryEventObject, XMLHttpRequest: XMLHttpRequest, ajaxOptions: any) => any): JQuery;
-        /**
-        * Register a handler to be called when Ajax requests complete with an error. This is an Ajax Event.
-        *
-        * @param handler The function to be invoked.
-        */
-        ajaxError(handler: (event: JQueryEventObject, jqXHR: JQueryXHR, ajaxSettings: JQueryAjaxSettings, thrownError: any) => any): JQuery;
-        /**
-        * Attach a function to be executed before an Ajax request is sent. This is an Ajax Event.
-        *
-        * @param handler The function to be invoked.
-        */
-        ajaxSend(handler: (event: JQueryEventObject, jqXHR: JQueryXHR, ajaxOptions: JQueryAjaxSettings) => any): JQuery;
-        /**
-        * Register a handler to be called when the first Ajax request begins. This is an Ajax Event.
-        *
-        * @param handler The function to be invoked.
-        */
-        ajaxStart(handler: () => any): JQuery;
-        /**
-        * Register a handler to be called when all Ajax requests have completed. This is an Ajax Event.
-        *
-        * @param handler The function to be invoked.
-        */
-        ajaxStop(handler: () => any): JQuery;
-        /**
-        * Attach a function to be executed whenever an Ajax request completes successfully. This is an Ajax Event.
-        *
-        * @param handler The function to be invoked.
-        */
-        ajaxSuccess(handler: (event: JQueryEventObject, XMLHttpRequest: XMLHttpRequest, ajaxOptions: JQueryAjaxSettings) => any): JQuery;
+        
         
         /**
-        * Load data from the server and place the returned HTML into the matched element.
-        *
-        * @param url A string containing the URL to which the request is sent.
-        * @param data A plain object or string that is sent to the server with the request.
-        * @param complete A callback function that is executed when the request completes.
+        * Add the given subview wired to an outlet with the given name
+        * @param name? - {String} name of the subview
+        * @param view? - DOM element or jQuery node subview
         */
-        load(url: string, data?: string|Object, complete?: (responseText: string, textStatus: string, XMLHttpRequest: XMLHttpRequest) => any): JQuery;
+        static subview(name? : string, view? : any) : View;
         
         /**
-        * Encode a set of form elements as a string for submission.
+        * Add a text node with the given text content
+        * @param string? - {String} text contents of the node
         */
-        serialize(): string;
+        static text(string? : string) : string;
+        
         /**
-        * Encode a set of form elements as an array of names and values.
+        * Add a new tag with the given name
+        * @param tagName? - {String} name of the tag like 'li', etc
+        * @param args? - other arguments
         */
-        serializeArray(): JQuerySerializeArrayElement[];
+        static tag(tagName? : string, args? : any) : any;
+        
+        /**
+        * Add new child DOM nodes from the given raw HTML string.
+        * @param string? - {String} HTML content
+        */
+        static raw(string? : string) : any;
+        
+        /**
+        * This field or method was not documented by atomdoc, assume it is private. Use with caution.
+        */
+        static pushBuilder() : Builder;
+        
+        /**
+        * This field or method was not documented by atomdoc, assume it is private. Use with caution.
+        */
+        static popBuilder() : Builder;
+        
+        /**
+        * This field or method was not documented by atomdoc, assume it is private. Use with caution.
+        */
+        static buildHtml(fn? : any) : string;
+        
+        /**
+        * This field or method was not documented by atomdoc, assume it is private. Use with caution.
+        */
+        static render(fn? : any) : any;
+        
+        /**
+        * This field or method was not documented by atomdoc, assume it is private. Use with caution.
+        */
+        constructor(args? : any);
+        
+        /**
+        * This field or method was not documented by atomdoc, assume it is private. Use with caution.
+        */
+        buildHtml(params? : any) : string;
+        
+        /**
+        * This field or method was not documented by atomdoc, assume it is private. Use with caution.
+        */
+        wireOutlets(view? : any) : any;
+        
+        /**
+        * This field or method was not documented by atomdoc, assume it is private. Use with caution.
+        */
+        bindEventHandlers(view? : any) : any;
+        
+        /**
+        * `pushStack` and `end` are jQuery methods that construct new wrappers.
+        * we override them here to construct plain wrappers with `jQuery` rather
+        * than wrappers that are instances of our view class.
+        * This field or method was marked private by atomdoc. Use with caution.
+        */
+        pushStack(elems? : any) : any;
+        
+        /**
+        * This field or method was not documented by atomdoc, assume it is private. Use with caution.
+        */
+        end() : any;
+        
+        /**
+        * Preempt events registered with jQuery's `::on`.
+        * @param eventName? - A event name {String}.
+        * @param handler? - A {Function} to execute when the eventName is triggered.
+        */
+        preempt(eventName? : string, handler? : Function) : any;
         
         /**
         * Adds the specified class(es) to each of the set of matched elements.
@@ -628,13 +661,6 @@ declare module SpacePen {
         data(): any;
         
         /**
-        * Execute the next function on the queue for the matched elements.
-        *
-        * @param queueName A string containing the name of the queue. Defaults to fx, the standard effects queue.
-        */
-        dequeue(queueName?: string): JQuery;
-        
-        /**
         * Remove a previously-stored piece of data.
         *
         * @param name A string naming the piece of data to delete or space-separated string naming the pieces of data to delete.
@@ -646,649 +672,34 @@ declare module SpacePen {
         * @param list An array of strings naming the pieces of data to delete.
         */
         removeData(list: string[]): JQuery;
-        
-        /**
-        * Return a Promise object to observe when all actions of a certain type bound to the collection, queued or not, have finished.
-        *
-        * @param type The type of queue that needs to be observed. (default: fx)
-        * @param target Object onto which the promise methods have to be attached
-        */
-        promise(type?: string, target?: Object): JQueryPromise<any>;
-        
-        /**
-        * Perform a custom animation of a set of CSS properties.
-        *
-        * @param properties An object of CSS properties and values that the animation will move toward.
-        * @param duration A string or number determining how long the animation will run.
-        * @param complete A function to call once the animation is complete.
-        */
-        animate(properties: Object, duration?: string|number, complete?: Function): JQuery;
-        /**
-        * Perform a custom animation of a set of CSS properties.
-        *
-        * @param properties An object of CSS properties and values that the animation will move toward.
-        * @param duration A string or number determining how long the animation will run.
-        * @param easing A string indicating which easing function to use for the transition. (default: swing)
-        * @param complete A function to call once the animation is complete.
-        */
-        animate(properties: Object, duration?: string|number, easing?: string, complete?: Function): JQuery;
-        /**
-        * Perform a custom animation of a set of CSS properties.
-        *
-        * @param properties An object of CSS properties and values that the animation will move toward.
-        * @param options A map of additional options to pass to the method.
-        */
-        animate(properties: Object, options: JQueryAnimationOptions): JQuery;
-        
-        /**
-        * Set a timer to delay execution of subsequent items in the queue.
-        *
-        * @param duration An integer indicating the number of milliseconds to delay execution of the next item in the queue.
-        * @param queueName A string containing the name of the queue. Defaults to fx, the standard effects queue.
-        */
-        delay(duration: number, queueName?: string): JQuery;
-        
-        /**
-        * Display the matched elements by fading them to opaque.
-        *
-        * @param duration A string or number determining how long the animation will run.
-        * @param complete A function to call once the animation is complete.
-        */
-        fadeIn(duration?: number|string, complete?: Function): JQuery;
-        /**
-        * Display the matched elements by fading them to opaque.
-        *
-        * @param duration A string or number determining how long the animation will run.
-        * @param easing A string indicating which easing function to use for the transition.
-        * @param complete A function to call once the animation is complete.
-        */
-        fadeIn(duration?: number|string, easing?: string, complete?: Function): JQuery;
-        /**
-        * Display the matched elements by fading them to opaque.
-        *
-        * @param options A map of additional options to pass to the method.
-        */
-        fadeIn(options: JQueryAnimationOptions): JQuery;
-        
-        /**
-        * Hide the matched elements by fading them to transparent.
-        *
-        * @param duration A string or number determining how long the animation will run.
-        * @param complete A function to call once the animation is complete.
-        */
-        fadeOut(duration?: number|string, complete?: Function): JQuery;
-        /**
-        * Hide the matched elements by fading them to transparent.
-        *
-        * @param duration A string or number determining how long the animation will run.
-        * @param easing A string indicating which easing function to use for the transition.
-        * @param complete A function to call once the animation is complete.
-        */
-        fadeOut(duration?: number|string, easing?: string, complete?: Function): JQuery;
-        /**
-        * Hide the matched elements by fading them to transparent.
-        *
-        * @param options A map of additional options to pass to the method.
-        */
-        fadeOut(options: JQueryAnimationOptions): JQuery;
-        
-        /**
-        * Adjust the opacity of the matched elements.
-        *
-        * @param duration A string or number determining how long the animation will run.
-        * @param opacity A number between 0 and 1 denoting the target opacity.
-        * @param complete A function to call once the animation is complete.
-        */
-        fadeTo(duration: string|number, opacity: number, complete?: Function): JQuery;
-        /**
-        * Adjust the opacity of the matched elements.
-        *
-        * @param duration A string or number determining how long the animation will run.
-        * @param opacity A number between 0 and 1 denoting the target opacity.
-        * @param easing A string indicating which easing function to use for the transition.
-        * @param complete A function to call once the animation is complete.
-        */
-        fadeTo(duration: string|number, opacity: number, easing?: string, complete?: Function): JQuery;
-        
-        /**
-        * Display or hide the matched elements by animating their opacity.
-        *
-        * @param duration A string or number determining how long the animation will run.
-        * @param complete A function to call once the animation is complete.
-        */
-        fadeToggle(duration?: number|string, complete?: Function): JQuery;
-        /**
-        * Display or hide the matched elements by animating their opacity.
-        *
-        * @param duration A string or number determining how long the animation will run.
-        * @param easing A string indicating which easing function to use for the transition.
-        * @param complete A function to call once the animation is complete.
-        */
-        fadeToggle(duration?: number|string, easing?: string, complete?: Function): JQuery;
-        /**
-        * Display or hide the matched elements by animating their opacity.
-        *
-        * @param options A map of additional options to pass to the method.
-        */
-        fadeToggle(options: JQueryAnimationOptions): JQuery;
-        
-        /**
-        * Stop the currently-running animation, remove all queued animations, and complete all animations for the matched elements.
-        *
-        * @param queue The name of the queue in which to stop animations.
-        */
-        finish(queue?: string): JQuery;
-        
-        /**
-        * Hide the matched elements.
-        *
-        * @param duration A string or number determining how long the animation will run.
-        * @param complete A function to call once the animation is complete.
-        */
-        /**
-        * Hide the matched elements.
-        *
-        * @param duration A string or number determining how long the animation will run.
-        * @param easing A string indicating which easing function to use for the transition.
-        * @param complete A function to call once the animation is complete.
-        */
-        /**
-        * Hide the matched elements.
-        *
-        * @param options A map of additional options to pass to the method.
-        */
-        
-        /**
-        * Display the matched elements.
-        *
-        * @param duration A string or number determining how long the animation will run.
-        * @param complete A function to call once the animation is complete.
-        */
-        /**
-        * Display the matched elements.
-        *
-        * @param duration A string or number determining how long the animation will run.
-        * @param easing A string indicating which easing function to use for the transition.
-        * @param complete A function to call once the animation is complete.
-        */
-        /**
-        * Display the matched elements.
-        *
-        * @param options A map of additional options to pass to the method.
-        */
-        
-        /**
-        * Display the matched elements with a sliding motion.
-        *
-        * @param duration A string or number determining how long the animation will run.
-        * @param complete A function to call once the animation is complete.
-        */
-        slideDown(duration?: number|string, complete?: Function): JQuery;
-        /**
-        * Display the matched elements with a sliding motion.
-        *
-        * @param duration A string or number determining how long the animation will run.
-        * @param easing A string indicating which easing function to use for the transition.
-        * @param complete A function to call once the animation is complete.
-        */
-        slideDown(duration?: number|string, easing?: string, complete?: Function): JQuery;
-        /**
-        * Display the matched elements with a sliding motion.
-        *
-        * @param options A map of additional options to pass to the method.
-        */
-        slideDown(options: JQueryAnimationOptions): JQuery;
-        
-        /**
-        * Display or hide the matched elements with a sliding motion.
-        *
-        * @param duration A string or number determining how long the animation will run.
-        * @param complete A function to call once the animation is complete.
-        */
-        slideToggle(duration?: number|string, complete?: Function): JQuery;
-        /**
-        * Display or hide the matched elements with a sliding motion.
-        *
-        * @param duration A string or number determining how long the animation will run.
-        * @param easing A string indicating which easing function to use for the transition.
-        * @param complete A function to call once the animation is complete.
-        */
-        slideToggle(duration?: number|string, easing?: string, complete?: Function): JQuery;
-        /**
-        * Display or hide the matched elements with a sliding motion.
-        *
-        * @param options A map of additional options to pass to the method.
-        */
-        slideToggle(options: JQueryAnimationOptions): JQuery;
-        
-        /**
-        * Hide the matched elements with a sliding motion.
-        *
-        * @param duration A string or number determining how long the animation will run.
-        * @param complete A function to call once the animation is complete.
-        */
-        slideUp(duration?: number|string, complete?: Function): JQuery;
-        /**
-        * Hide the matched elements with a sliding motion.
-        *
-        * @param duration A string or number determining how long the animation will run.
-        * @param easing A string indicating which easing function to use for the transition.
-        * @param complete A function to call once the animation is complete.
-        */
-        slideUp(duration?: number|string, easing?: string, complete?: Function): JQuery;
-        /**
-        * Hide the matched elements with a sliding motion.
-        *
-        * @param options A map of additional options to pass to the method.
-        */
-        slideUp(options: JQueryAnimationOptions): JQuery;
-        
-        /**
-        * Stop the currently-running animation on the matched elements.
-        *
-        * @param clearQueue A Boolean indicating whether to remove queued animation as well. Defaults to false.
-        * @param jumpToEnd A Boolean indicating whether to complete the current animation immediately. Defaults to false.
-        */
-        stop(clearQueue?: boolean, jumpToEnd?: boolean): JQuery;
-        /**
-        * Stop the currently-running animation on the matched elements.
-        *
-        * @param queue The name of the queue in which to stop animations.
-        * @param clearQueue A Boolean indicating whether to remove queued animation as well. Defaults to false.
-        * @param jumpToEnd A Boolean indicating whether to complete the current animation immediately. Defaults to false.
-        */
-        stop(queue?: string, clearQueue?: boolean, jumpToEnd?: boolean): JQuery;
-        
-        /**
-        * Display or hide the matched elements.
-        *
-        * @param duration A string or number determining how long the animation will run.
-        * @param complete A function to call once the animation is complete.
-        */
-        /**
-        * Display or hide the matched elements.
-        *
-        * @param duration A string or number determining how long the animation will run.
-        * @param easing A string indicating which easing function to use for the transition.
-        * @param complete A function to call once the animation is complete.
-        */
-        /**
-        * Display or hide the matched elements.
-        *
-        * @param options A map of additional options to pass to the method.
-        */
-        /**
-        * Display or hide the matched elements.
-        *
-        * @param showOrHide A Boolean indicating whether to show or hide the elements.
-        */
-        
-        /**
-        * Attach a handler to an event for the elements.
-        *
-        * @param eventType A string containing one or more DOM event types, such as "click" or "submit," or custom event names.
-        * @param eventData An object containing data that will be passed to the event handler.
-        * @param handler A function to execute each time the event is triggered.
-        */
-        bind(eventType: string, eventData: any, handler: (eventObject: JQueryEventObject) => any): JQuery;
-        /**
-        * Attach a handler to an event for the elements.
-        *
-        * @param eventType A string containing one or more DOM event types, such as "click" or "submit," or custom event names.
-        * @param handler A function to execute each time the event is triggered.
-        */
-        bind(eventType: string, handler: (eventObject: JQueryEventObject) => any): JQuery;
-        /**
-        * Attach a handler to an event for the elements.
-        *
-        * @param eventType A string containing one or more DOM event types, such as "click" or "submit," or custom event names.
-        * @param eventData An object containing data that will be passed to the event handler.
-        * @param preventBubble Setting the third argument to false will attach a function that prevents the default action from occurring and stops the event from bubbling. The default is true.
-        */
-        bind(eventType: string, eventData: any, preventBubble: boolean): JQuery;
-        /**
-        * Attach a handler to an event for the elements.
-        *
-        * @param eventType A string containing one or more DOM event types, such as "click" or "submit," or custom event names.
-        * @param preventBubble Setting the third argument to false will attach a function that prevents the default action from occurring and stops the event from bubbling. The default is true.
-        */
-        bind(eventType: string, preventBubble: boolean): JQuery;
-        /**
-        * Attach a handler to an event for the elements.
-        *
-        * @param events An object containing one or more DOM event types and functions to execute for them.
-        */
-        bind(events: any): JQuery;
-        
-        /**
-        * Trigger the "blur" event on an element
-        */
-        blur(): JQuery;
-        /**
-        * Bind an event handler to the "blur" JavaScript event
-        *
-        * @param handler A function to execute each time the event is triggered.
-        */
-        blur(handler: (eventObject: JQueryEventObject) => any): JQuery;
-        /**
-        * Bind an event handler to the "blur" JavaScript event
-        *
-        * @param eventData An object containing data that will be passed to the event handler.
-        * @param handler A function to execute each time the event is triggered.
-        */
-        blur(eventData?: any, handler?: (eventObject: JQueryEventObject) => any): JQuery;
-        
         /**
         * Trigger the "change" event on an element.
         */
-        change(): JQuery;
+        change(): void;
         /**
-        * Bind an event handler to the "change" JavaScript event
-        *
-        * @param handler A function to execute each time the event is triggered.
+        * Trigger the "show" event on an element.
         */
-        change(handler: (eventObject: JQueryEventObject) => any): JQuery;
+        show(): void;
         /**
-        * Bind an event handler to the "change" JavaScript event
-        *
-        * @param eventData An object containing data that will be passed to the event handler.
-        * @param handler A function to execute each time the event is triggered.
+        * Trigger the "hide" event on an element.
         */
-        change(eventData?: any, handler?: (eventObject: JQueryEventObject) => any): JQuery;
-        
+        hide(): void;
+        /**
+        * Trigger the "toggle" event on an element.
+        */
+        toggle(): void;
         /**
         * Trigger the "click" event on an element.
         */
-        click(): JQuery;
-        /**
-        * Bind an event handler to the "click" JavaScript event
-        *
-        * @param eventData An object containing data that will be passed to the event handler.
-        */
-        click(handler: (eventObject: JQueryEventObject) => any): JQuery;
-        /**
-        * Bind an event handler to the "click" JavaScript event
-        *
-        * @param eventData An object containing data that will be passed to the event handler.
-        * @param handler A function to execute each time the event is triggered.
-        */
-        click(eventData?: any, handler?: (eventObject: JQueryEventObject) => any): JQuery;
-        
+        click(): void;
         /**
         * Trigger the "dblclick" event on an element.
         */
-        dblclick(): JQuery;
-        /**
-        * Bind an event handler to the "dblclick" JavaScript event
-        *
-        * @param handler A function to execute each time the event is triggered.
-        */
-        dblclick(handler: (eventObject: JQueryEventObject) => any): JQuery;
-        /**
-        * Bind an event handler to the "dblclick" JavaScript event
-        *
-        * @param eventData An object containing data that will be passed to the event handler.
-        * @param handler A function to execute each time the event is triggered.
-        */
-        dblclick(eventData?: any, handler?: (eventObject: JQueryEventObject) => any): JQuery;
-        
-        delegate(selector: any, eventType: string, handler: (eventObject: JQueryEventObject) => any): JQuery;
-        delegate(selector: any, eventType: string, eventData: any, handler: (eventObject: JQueryEventObject) => any): JQuery;
-        
+        dblclick(): void;
         /**
         * Trigger the "focus" event on an element.
         */
-        focus(): JQuery;
-        /**
-        * Bind an event handler to the "focus" JavaScript event
-        *
-        * @param handler A function to execute each time the event is triggered.
-        */
-        focus(handler: (eventObject: JQueryEventObject) => any): JQuery;
-        /**
-        * Bind an event handler to the "focus" JavaScript event
-        *
-        * @param eventData An object containing data that will be passed to the event handler.
-        * @param handler A function to execute each time the event is triggered.
-        */
-        focus(eventData?: any, handler?: (eventObject: JQueryEventObject) => any): JQuery;
-        
-        /**
-        * Bind an event handler to the "focusin" JavaScript event
-        *
-        * @param handler A function to execute each time the event is triggered.
-        */
-        focusin(handler: (eventObject: JQueryEventObject) => any): JQuery;
-        /**
-        * Bind an event handler to the "focusin" JavaScript event
-        *
-        * @param eventData An object containing data that will be passed to the event handler.
-        * @param handler A function to execute each time the event is triggered.
-        */
-        focusin(eventData: Object, handler: (eventObject: JQueryEventObject) => any): JQuery;
-        
-        /**
-        * Bind an event handler to the "focusout" JavaScript event
-        *
-        * @param handler A function to execute each time the event is triggered.
-        */
-        focusout(handler: (eventObject: JQueryEventObject) => any): JQuery;
-        /**
-        * Bind an event handler to the "focusout" JavaScript event
-        *
-        * @param eventData An object containing data that will be passed to the event handler.
-        * @param handler A function to execute each time the event is triggered.
-        */
-        focusout(eventData: Object, handler: (eventObject: JQueryEventObject) => any): JQuery;
-        
-        /**
-        * Bind two handlers to the matched elements, to be executed when the mouse pointer enters and leaves the elements.
-        *
-        * @param handlerIn A function to execute when the mouse pointer enters the element.
-        * @param handlerOut A function to execute when the mouse pointer leaves the element.
-        */
-        hover(handlerIn: (eventObject: JQueryEventObject) => any, handlerOut: (eventObject: JQueryEventObject) => any): JQuery;
-        /**
-        * Bind a single handler to the matched elements, to be executed when the mouse pointer enters or leaves the elements.
-        *
-        * @param handlerInOut A function to execute when the mouse pointer enters or leaves the element.
-        */
-        hover(handlerInOut: (eventObject: JQueryEventObject) => any): JQuery;
-        
-        /**
-        * Trigger the "keydown" event on an element.
-        */
-        keydown(): JQuery;
-        /**
-        * Bind an event handler to the "keydown" JavaScript event
-        *
-        * @param handler A function to execute each time the event is triggered.
-        */
-        keydown(handler: (eventObject: JQueryKeyEventObject) => any): JQuery;
-        /**
-        * Bind an event handler to the "keydown" JavaScript event
-        *
-        * @param eventData An object containing data that will be passed to the event handler.
-        * @param handler A function to execute each time the event is triggered.
-        */
-        keydown(eventData?: any, handler?: (eventObject: JQueryKeyEventObject) => any): JQuery;
-        
-        /**
-        * Trigger the "keypress" event on an element.
-        */
-        keypress(): JQuery;
-        /**
-        * Bind an event handler to the "keypress" JavaScript event
-        *
-        * @param handler A function to execute each time the event is triggered.
-        */
-        keypress(handler: (eventObject: JQueryKeyEventObject) => any): JQuery;
-        /**
-        * Bind an event handler to the "keypress" JavaScript event
-        *
-        * @param eventData An object containing data that will be passed to the event handler.
-        * @param handler A function to execute each time the event is triggered.
-        */
-        keypress(eventData?: any, handler?: (eventObject: JQueryKeyEventObject) => any): JQuery;
-        
-        /**
-        * Trigger the "keyup" event on an element.
-        */
-        keyup(): JQuery;
-        /**
-        * Bind an event handler to the "keyup" JavaScript event
-        *
-        * @param handler A function to execute each time the event is triggered.
-        */
-        keyup(handler: (eventObject: JQueryKeyEventObject) => any): JQuery;
-        /**
-        * Bind an event handler to the "keyup" JavaScript event
-        *
-        * @param eventData An object containing data that will be passed to the event handler.
-        * @param handler A function to execute each time the event is triggered.
-        */
-        keyup(eventData?: any, handler?: (eventObject: JQueryKeyEventObject) => any): JQuery;
-        
-        /**
-        * Bind an event handler to the "load" JavaScript event.
-        *
-        * @param handler A function to execute when the event is triggered.
-        */
-        load(handler: (eventObject: JQueryEventObject) => any): JQuery;
-        /**
-        * Bind an event handler to the "load" JavaScript event.
-        *
-        * @param eventData An object containing data that will be passed to the event handler.
-        * @param handler A function to execute when the event is triggered.
-        */
-        load(eventData?: any, handler?: (eventObject: JQueryEventObject) => any): JQuery;
-        
-        /**
-        * Trigger the "mousedown" event on an element.
-        */
-        mousedown(): JQuery;
-        /**
-        * Bind an event handler to the "mousedown" JavaScript event.
-        *
-        * @param handler A function to execute when the event is triggered.
-        */
-        mousedown(handler: (eventObject: JQueryMouseEventObject) => any): JQuery;
-        /**
-        * Bind an event handler to the "mousedown" JavaScript event.
-        *
-        * @param eventData An object containing data that will be passed to the event handler.
-        * @param handler A function to execute when the event is triggered.
-        */
-        mousedown(eventData: Object, handler: (eventObject: JQueryMouseEventObject) => any): JQuery;
-        
-        /**
-        * Trigger the "mouseenter" event on an element.
-        */
-        mouseenter(): JQuery;
-        /**
-        * Bind an event handler to be fired when the mouse enters an element.
-        *
-        * @param handler A function to execute when the event is triggered.
-        */
-        mouseenter(handler: (eventObject: JQueryMouseEventObject) => any): JQuery;
-        /**
-        * Bind an event handler to be fired when the mouse enters an element.
-        *
-        * @param eventData An object containing data that will be passed to the event handler.
-        * @param handler A function to execute when the event is triggered.
-        */
-        mouseenter(eventData: Object, handler: (eventObject: JQueryMouseEventObject) => any): JQuery;
-        
-        /**
-        * Trigger the "mouseleave" event on an element.
-        */
-        mouseleave(): JQuery;
-        /**
-        * Bind an event handler to be fired when the mouse leaves an element.
-        *
-        * @param handler A function to execute when the event is triggered.
-        */
-        mouseleave(handler: (eventObject: JQueryMouseEventObject) => any): JQuery;
-        /**
-        * Bind an event handler to be fired when the mouse leaves an element.
-        *
-        * @param eventData An object containing data that will be passed to the event handler.
-        * @param handler A function to execute when the event is triggered.
-        */
-        mouseleave(eventData: Object, handler: (eventObject: JQueryMouseEventObject) => any): JQuery;
-        
-        /**
-        * Trigger the "mousemove" event on an element.
-        */
-        mousemove(): JQuery;
-        /**
-        * Bind an event handler to the "mousemove" JavaScript event.
-        *
-        * @param handler A function to execute when the event is triggered.
-        */
-        mousemove(handler: (eventObject: JQueryMouseEventObject) => any): JQuery;
-        /**
-        * Bind an event handler to the "mousemove" JavaScript event.
-        *
-        * @param eventData An object containing data that will be passed to the event handler.
-        * @param handler A function to execute when the event is triggered.
-        */
-        mousemove(eventData: Object, handler: (eventObject: JQueryMouseEventObject) => any): JQuery;
-        
-        /**
-        * Trigger the "mouseout" event on an element.
-        */
-        mouseout(): JQuery;
-        /**
-        * Bind an event handler to the "mouseout" JavaScript event.
-        *
-        * @param handler A function to execute when the event is triggered.
-        */
-        mouseout(handler: (eventObject: JQueryMouseEventObject) => any): JQuery;
-        /**
-        * Bind an event handler to the "mouseout" JavaScript event.
-        *
-        * @param eventData An object containing data that will be passed to the event handler.
-        * @param handler A function to execute when the event is triggered.
-        */
-        mouseout(eventData: Object, handler: (eventObject: JQueryMouseEventObject) => any): JQuery;
-        
-        /**
-        * Trigger the "mouseover" event on an element.
-        */
-        mouseover(): JQuery;
-        /**
-        * Bind an event handler to the "mouseover" JavaScript event.
-        *
-        * @param handler A function to execute when the event is triggered.
-        */
-        mouseover(handler: (eventObject: JQueryMouseEventObject) => any): JQuery;
-        /**
-        * Bind an event handler to the "mouseover" JavaScript event.
-        *
-        * @param eventData An object containing data that will be passed to the event handler.
-        * @param handler A function to execute when the event is triggered.
-        */
-        mouseover(eventData: Object, handler: (eventObject: JQueryMouseEventObject) => any): JQuery;
-        
-        /**
-        * Trigger the "mouseup" event on an element.
-        */
-        mouseup(): JQuery;
-        /**
-        * Bind an event handler to the "mouseup" JavaScript event.
-        *
-        * @param handler A function to execute when the event is triggered.
-        */
-        mouseup(handler: (eventObject: JQueryMouseEventObject) => any): JQuery;
-        /**
-        * Bind an event handler to the "mouseup" JavaScript event.
-        *
-        * @param eventData An object containing data that will be passed to the event handler.
-        * @param handler A function to execute when the event is triggered.
-        */
-        mouseup(eventData: Object, handler: (eventObject: JQueryMouseEventObject) => any): JQuery;
-        
+        focus(): void;
         /**
         * Remove an event handler.
         */
@@ -1415,86 +826,18 @@ declare module SpacePen {
         */
         one(events: { [key: string]: any; }, data?: any): JQuery;
         
-        
-        /**
-        * Specify a function to execute when the DOM is fully loaded.
-        *
-        * @param handler A function to execute after the DOM is ready.
-        */
-        ready(handler: Function): JQuery;
-        
         /**
         * Trigger the "resize" event on an element.
         */
         resize(): JQuery;
         /**
-        * Bind an event handler to the "resize" JavaScript event.
-        *
-        * @param handler A function to execute each time the event is triggered.
-        */
-        resize(handler: (eventObject: JQueryEventObject) => any): JQuery;
-        /**
-        * Bind an event handler to the "resize" JavaScript event.
-        *
-        * @param eventData An object containing data that will be passed to the event handler.
-        * @param handler A function to execute each time the event is triggered.
-        */
-        resize(eventData: Object, handler: (eventObject: JQueryEventObject) => any): JQuery;
-        
-        /**
         * Trigger the "scroll" event on an element.
         */
         scroll(): JQuery;
         /**
-        * Bind an event handler to the "scroll" JavaScript event.
-        *
-        * @param handler A function to execute each time the event is triggered.
-        */
-        scroll(handler: (eventObject: JQueryEventObject) => any): JQuery;
-        /**
-        * Bind an event handler to the "scroll" JavaScript event.
-        *
-        * @param eventData An object containing data that will be passed to the event handler.
-        * @param handler A function to execute each time the event is triggered.
-        */
-        scroll(eventData: Object, handler: (eventObject: JQueryEventObject) => any): JQuery;
-        
-        /**
         * Trigger the "select" event on an element.
         */
         select(): JQuery;
-        /**
-        * Bind an event handler to the "select" JavaScript event.
-        *
-        * @param handler A function to execute each time the event is triggered.
-        */
-        select(handler: (eventObject: JQueryEventObject) => any): JQuery;
-        /**
-        * Bind an event handler to the "select" JavaScript event.
-        *
-        * @param eventData An object containing data that will be passed to the event handler.
-        * @param handler A function to execute each time the event is triggered.
-        */
-        select(eventData: Object, handler: (eventObject: JQueryEventObject) => any): JQuery;
-        
-        /**
-        * Trigger the "submit" event on an element.
-        */
-        submit(): JQuery;
-        /**
-        * Bind an event handler to the "submit" JavaScript event
-        *
-        * @param handler A function to execute each time the event is triggered.
-        */
-        submit(handler: (eventObject: JQueryEventObject) => any): JQuery;
-        /**
-        * Bind an event handler to the "submit" JavaScript event
-        *
-        * @param eventData An object containing data that will be passed to the event handler.
-        * @param handler A function to execute each time the event is triggered.
-        */
-        submit(eventData?: any, handler?: (eventObject: JQueryEventObject) => any): JQuery;
-        
         /**
         * Execute all handlers and behaviors attached to the matched elements for the given event type.
         *
@@ -1517,68 +860,6 @@ declare module SpacePen {
         * @param extraParameters An array of additional parameters to pass along to the event handler.
         */
         triggerHandler(eventType: string, ...extraParameters: any[]): Object;
-        
-        /**
-        * Remove a previously-attached event handler from the elements.
-        *
-        * @param eventType A string containing a JavaScript event type, such as click or submit.
-        * @param handler The function that is to be no longer executed.
-        */
-        unbind(eventType?: string, handler?: (eventObject: JQueryEventObject) => any): JQuery;
-        /**
-        * Remove a previously-attached event handler from the elements.
-        *
-        * @param eventType A string containing a JavaScript event type, such as click or submit.
-        * @param fls Unbinds the corresponding 'return false' function that was bound using .bind( eventType, false ).
-        */
-        unbind(eventType: string, fls: boolean): JQuery;
-        /**
-        * Remove a previously-attached event handler from the elements.
-        *
-        * @param evt A JavaScript event object as passed to an event handler.
-        */
-        unbind(evt: any): JQuery;
-        
-        /**
-        * Remove a handler from the event for all elements which match the current selector, based upon a specific set of root elements.
-        */
-        undelegate(): JQuery;
-        /**
-        * Remove a handler from the event for all elements which match the current selector, based upon a specific set of root elements.
-        *
-        * @param selector A selector which will be used to filter the event results.
-        * @param eventType A string containing a JavaScript event type, such as "click" or "keydown"
-        * @param handler A function to execute at the time the event is triggered.
-        */
-        undelegate(selector: string, eventType: string, handler?: (eventObject: JQueryEventObject) => any): JQuery;
-        /**
-        * Remove a handler from the event for all elements which match the current selector, based upon a specific set of root elements.
-        *
-        * @param selector A selector which will be used to filter the event results.
-        * @param events An object of one or more event types and previously bound functions to unbind from them.
-        */
-        undelegate(selector: string, events: Object): JQuery;
-        /**
-        * Remove a handler from the event for all elements which match the current selector, based upon a specific set of root elements.
-        *
-        * @param namespace A string containing a namespace to unbind all events from.
-        */
-        undelegate(namespace: string): JQuery;
-        
-        /**
-        * Bind an event handler to the "unload" JavaScript event. (DEPRECATED from v1.8)
-        *
-        * @param handler A function to execute when the event is triggered.
-        */
-        unload(handler: (eventObject: JQueryEventObject) => any): JQuery;
-        /**
-        * Bind an event handler to the "unload" JavaScript event. (DEPRECATED from v1.8)
-        *
-        * @param eventData A plain object of data that will be passed to the event handler.
-        * @param handler A function to execute when the event is triggered.
-        */
-        unload(eventData?: any, handler?: (eventObject: JQueryEventObject) => any): JQuery;
-        
         /**
         * The DOM node context originally passed to jQuery(); if none was passed then context will likely be the document. (DEPRECATED from v1.10)
         */
@@ -1724,7 +1005,7 @@ declare module SpacePen {
         *
         * @param selector A selector expression that filters the set of matched elements to be removed.
         */
-        remove(selector?: string): JQuery;
+        remove(): void;
         
         /**
         * Replace each target element with the set of matched elements.
@@ -2217,9 +1498,6 @@ declare module SpacePen {
         * @param callback The new function to add to the queue, with a function to call that will dequeue the next item.
         */
         queue(queueName: string, callback: Function): JQuery;
-        hide(): void;
-        show(): void;
-        toggle(): void;
     }
 
     /**
@@ -2245,12 +1523,12 @@ declare module SpacePen {
         /**
          * This field or method was not documented by atomdoc, assume it is private. Use with caution.
          */
-        openTag(name? : string, attributes? : any) : any;
+        openTag(name? : string, attributes? : any) : void;
     
         /**
          * This field or method was not documented by atomdoc, assume it is private. Use with caution.
          */
-        closeTag(name? : string) : any;
+        closeTag(name? : string) : void;
     
         /**
          * This field or method was not documented by atomdoc, assume it is private. Use with caution.

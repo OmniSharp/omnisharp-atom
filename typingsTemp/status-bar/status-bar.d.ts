@@ -1,4 +1,4 @@
-// Type definitions for status-bar (v0.69.0)
+// Type definitions for status-bar (v0.67.0)
 // Project: https://github.com/atom/status-bar
 // Definitions by: david-driscoll <https://github.com/david-driscoll/>
 // Definitions: https://github.com/borisyankov/DefinitelyTyped
@@ -15,7 +15,7 @@ declare module StatusBar {
         /**
          * This field or method was not documented by atomdoc, assume it is private. Use with caution.
          */
-        initialize() : any;
+        initialize() : boolean;
     
         /**
          * This field or method was not documented by atomdoc, assume it is private. Use with caution.
@@ -47,7 +47,7 @@ declare module StatusBar {
         /**
          * This field or method was not documented by atomdoc, assume it is private. Use with caution.
          */
-        initialize() : any;
+        initialize() : boolean;
     
         /**
          * This field or method was not documented by atomdoc, assume it is private. Use with caution.
@@ -72,12 +72,12 @@ declare module StatusBar {
         /**
          * This field or method was not documented by atomdoc, assume it is private. Use with caution.
          */
-        updateBufferHasModifiedText(isModified? : boolean) : void;
+        updateBufferHasModifiedText(isModified? : any) : string;
     
         /**
          * This field or method was not documented by atomdoc, assume it is private. Use with caution.
          */
-        updatePathText() : void;
+        updatePathText() : string;
     
     }
 
@@ -89,7 +89,7 @@ declare module StatusBar {
         /**
          * This field or method was not documented by atomdoc, assume it is private. Use with caution.
          */
-        initialize() : any;
+        initialize() : boolean;
     
         /**
          * This field or method was not documented by atomdoc, assume it is private. Use with caution.
@@ -124,7 +124,7 @@ declare module StatusBar {
         /**
          * This field or method was not documented by atomdoc, assume it is private. Use with caution.
          */
-        getActiveItemPath() : any;
+        getActiveItemPath() : string;
     
         /**
          * This field or method was not documented by atomdoc, assume it is private. Use with caution.
@@ -144,7 +144,7 @@ declare module StatusBar {
         /**
          * This field or method was not documented by atomdoc, assume it is private. Use with caution.
          */
-        updateBranchText(repo? : any) : void;
+        updateBranchText(repo? : any) : string;
     
         /**
          * This field or method was not documented by atomdoc, assume it is private. Use with caution.
@@ -154,12 +154,12 @@ declare module StatusBar {
         /**
          * This field or method was not documented by atomdoc, assume it is private. Use with caution.
          */
-        updateAheadBehindCount(repo? : any) : void;
+        updateAheadBehindCount(repo? : any) : number;
     
         /**
          * This field or method was not documented by atomdoc, assume it is private. Use with caution.
          */
-        updateStatusText(repo? : any) : void;
+        updateStatusText(repo? : any) : string;
     
     }
 
@@ -171,7 +171,7 @@ declare module StatusBar {
         /**
          * This field or method was not documented by atomdoc, assume it is private. Use with caution.
          */
-        initialize(safeMode? : any, devMode? : any) : any;
+        initialize({ safeMode, devMode } : { safeMode? : boolean; devMode? : boolean }) : boolean;
     
         /**
          * This field or method was not documented by atomdoc, assume it is private. Use with caution.
@@ -188,7 +188,7 @@ declare module StatusBar {
         /**
          * This field or method was not documented by atomdoc, assume it is private. Use with caution.
          */
-        initialize() : any;
+        initialize() : boolean;
     
         /**
          * This field or method was not documented by atomdoc, assume it is private. Use with caution.
@@ -208,7 +208,7 @@ declare module StatusBar {
         /**
          * This field or method was not documented by atomdoc, assume it is private. Use with caution.
          */
-        updateCount() : void;
+        updateCount() : number;
     
     }
 
@@ -225,7 +225,7 @@ declare module StatusBar {
         /**
          * This field or method was not documented by atomdoc, assume it is private. Use with caution.
          */
-        initialize() : any;
+        initialize(state? : boolean) : boolean;
     
         /**
          * This field or method was not documented by atomdoc, assume it is private. Use with caution.
@@ -285,7 +285,7 @@ declare module StatusBar {
         /**
          * This field or method was not documented by atomdoc, assume it is private. Use with caution.
          */
-        storeActiveBuffer() : any;
+        storeActiveBuffer() : void;
     
         /**
          * This field or method was not documented by atomdoc, assume it is private. Use with caution.

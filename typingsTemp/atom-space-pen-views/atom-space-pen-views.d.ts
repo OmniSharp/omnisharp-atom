@@ -14,7 +14,7 @@ declare module AtomSpacePenViews {
         /**
          * This field or method was not documented by atomdoc, assume it is private. Use with caution.
          */
-        initialize() : any;
+        initialize() : boolean;
     
     }
 
@@ -41,7 +41,7 @@ declare module AtomSpacePenViews {
         /**
          * This field or method was not documented by atomdoc, assume it is private. Use with caution.
          */
-        inputThrottle: any /* default */;
+        inputThrottle: boolean;
     
         /**
          * This field or method was not documented by atomdoc, assume it is private. Use with caution.
@@ -54,7 +54,7 @@ declare module AtomSpacePenViews {
          * This method can be overridden by subclasses but `super` should always
          * be called. 
          */
-        initialize() : any;
+        initialize() : boolean;
     
         /**
          * Create a view for the given model item.
@@ -63,7 +63,7 @@ declare module AtomSpacePenViews {
          * 
          * This is called when the item is about to appended to the list view.
          * @param item? - The model item being rendered. This will always be one of the items previously passed to {::setItems}.
-        Returns a String of HTML, DOM element, jQuery object, or View.
+         * Returns a String of HTML, DOM element, jQuery object, or View.
          */
         viewForItem(item? : any) : any;
     
@@ -72,7 +72,7 @@ declare module AtomSpacePenViews {
          * 
          * This method must be overridden by subclasses.
          * @param item? - The selected model item. This will always be one of the items previously passed to {::setItems}.
-        Returns a DOM element, jQuery object, or {View}.
+         * Returns a DOM element, jQuery object, or {View}.
          */
         confirmed(item? : any) : SpacePen.View;
     
@@ -83,11 +83,11 @@ declare module AtomSpacePenViews {
          * called to render the item when it is being appended to the list view.
          * @param items? - The {Array} of model items to display in the list (default: []). 
          */
-        setItems(items? : any[]) : void;
+        setItems(items? : any) : void;
     
         /**
          * Get the model item that is currently selected in the list view.
-        Returns a model item.
+         * Returns a model item.
          */
         getSelectedItem() : any;
     
@@ -101,7 +101,7 @@ declare module AtomSpacePenViews {
          * `{"id": 3, "name": "Atom"}` then you would return `"name"` from this method
          * to fuzzy filter by that property when text is entered into this view's
          * editor.
-        Returns the property name to fuzzy filter by.
+         * Returns the property name to fuzzy filter by.
          */
         getFilterKey() : any;
     
@@ -111,7 +111,7 @@ declare module AtomSpacePenViews {
          * 
          * By default this method returns the text in the mini editor but it can be
          * overridden by subclasses if needed.
-        Returns a {String} to use when fuzzy filtering the elements to display.
+         * Returns a {String} to use when fuzzy filtering the elements to display.
          */
         getFilterQuery() : string;
     
@@ -147,7 +147,6 @@ declare module AtomSpacePenViews {
          * Subclasses may override this method to customize the message.
          * @param itemCount? - The {Number} of items in the array specified to {::setItems}
          * @param filteredItemCount? - The {Number} of items that pass the fuzzy filter test.
-        Returns a {String} message (default: 'No matches found').
          */
         getEmptyMessage(itemCount? : number, filteredItemCount? : number) : string;
     
@@ -162,13 +161,13 @@ declare module AtomSpacePenViews {
         /**
          * Focus the fuzzy filter editor view. 
          */
-        focusFilterEditor() : any;
+        focusFilterEditor() : void;
     
         /**
          * Store the currently focused element. This element will be given
          * back focus when {::cancel} is called. 
          */
-        storeFocusedElement() : any;
+        storeFocusedElement() : void;
     
         /**
          * Private
@@ -184,17 +183,17 @@ declare module AtomSpacePenViews {
         /**
          * This field or method was not documented by atomdoc, assume it is private. Use with caution.
          */
-        selectItemView(view? : SpacePen.View) : SpacePen.View;
+        selectItemView(view? : any) : SpacePen.View;
     
         /**
          * This field or method was not documented by atomdoc, assume it is private. Use with caution.
          */
-        scrollToItemView(view? : SpacePen.View) : SpacePen.View;
+        scrollToItemView(view? : any) : SpacePen.View;
     
         /**
          * This field or method was not documented by atomdoc, assume it is private. Use with caution.
          */
-        restoreFocus() : any;
+        restoreFocus() : void;
     
         /**
          * This field or method was not documented by atomdoc, assume it is private. Use with caution.
@@ -227,7 +226,7 @@ declare module AtomSpacePenViews {
         /**
          * This field or method was not documented by atomdoc, assume it is private. Use with caution.
          */
-        setModel(model? : Atom.Model) : void;
+        setModel(model? : any) : Atom.Model;
     
         /**
          * Get the underlying editor model for this view.
@@ -242,11 +241,11 @@ declare module AtomSpacePenViews {
         /**
          * Set the text of the editor as a `String`. 
          */
-        setText(text? : string) : void;
+        setText(text? : string) : string;
     
         /**
          * Determine whether the editor is or contains the active element.
-        Returns a `Boolean`.
+         * Returns a `Boolean`.
          */
         hasFocus() : any;
     

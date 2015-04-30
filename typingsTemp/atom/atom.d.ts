@@ -1,4 +1,4 @@
-// Type definitions for Atom (v0.193.0)
+// Type definitions for Atom (v0.191.0)
 // Project: https://atom.io/
 // Definitions by: vvakame <https://github.com/vvakame/>
 // Definitions: https://github.com/borisyankov/DefinitelyTyped
@@ -23,23 +23,11 @@ declare module Atom {
      */
     class Atom extends Model {
         /**
-         * This field or method was not documented by atomdoc, assume it is private. Use with caution.
-         */
-        static version: any /* default */;
-    
-        /**
          * Load or create the Atom environment in the given mode.
          * This field or method was marked private by atomdoc. Use with caution.
          * @param mode? - A {String} mode that is either 'editor' or 'spec' depending on the kind of environment you want to build.
-        Returns an Atom instance, fully initialized
          */
-        static loadOrCreate(mode? : string) : any;
-    
-        /**
-         * Deserializes the Atom environment from a state object 
-         * This field or method was marked private by atomdoc. Use with caution.
-         */
-        static deserialize(state? : any) : any;
+        static loadOrCreate(mode? : string) : Atom;
     
         /**
          * Loads and returns the serialized state corresponding to this window
@@ -51,34 +39,27 @@ declare module Atom {
         /**
          * 
          * This field or method was marked private by atomdoc. Use with caution.
-        Returns the path where the state for the current window will be
-located if it exists.
          */
-        static getStateKey(paths? : any, mode? : any) : any;
+        static getStatePath(paths? : string, mode? : any) : string;
     
         /**
          * Get the directory path to Atom's configuration area.
          * This field or method was marked private by atomdoc. Use with caution.
-        Returns the absolute path to ~/.atom
          */
-        static getConfigDirPath() : any;
+        static getConfigDirPath() : string;
     
         /**
-         * This field or method was not documented by atomdoc, assume it is private. Use with caution.
+         * Get the path to Atom's storage directory.
+         * This field or method was marked private by atomdoc. Use with caution.
          */
-        static getStorageFolder() : StorageFolder;
+        static getStorageDirPath() : string;
     
         /**
          * 
          * This field or method was marked private by atomdoc. Use with caution.
-        Returns the load settings hash associated with the current window.
+         * Returns the load settings hash associated with the current window.
          */
         static getLoadSettings() : any;
-    
-        /**
-         * This field or method was not documented by atomdoc, assume it is private. Use with caution.
-         */
-        static updateLoadSetting(key? : any, value? : any) : void;
     
         /**
          * This field or method was not documented by atomdoc, assume it is private. Use with caution.
@@ -89,16 +70,6 @@ located if it exists.
          * This field or method was not documented by atomdoc, assume it is private. Use with caution.
          */
         state: any /* default */;
-    
-        /**
-         * This field or method was not documented by atomdoc, assume it is private. Use with caution.
-         */
-        workspaceViewParentSelector: ScopedPropertyStore.Selector;
-    
-        /**
-         * This field or method was not documented by atomdoc, assume it is private. Use with caution.
-         */
-        lastUncaughtError: any /* default */;
     
         /**
          * A {CommandRegistry} instance 
@@ -166,11 +137,6 @@ located if it exists.
         styles: StyleManager;
     
         /**
-         * A {DeserializerManager} instance 
-         */
-        deserializers: DeserializerManager;
-    
-        /**
          * A {ViewRegistry} instance 
          */
         views: ViewRegistry;
@@ -193,74 +159,72 @@ located if it exists.
          * Call after this instance has been assigned to the `atom` global. 
          * This field or method was marked private by atomdoc. Use with caution.
          */
-        initialize() : any;
+        initialize() : boolean;
     
         /**
          * Invoke the given callback whenever {::beep} is called.
-         * @param callback? - {Function} to be called whenever {::beep} is called.
+         * @param callback - {Function} to be called whenever {::beep} is called.
          */
-        onDidBeep(callback? : Function) : EventKit.Disposable;
+        onDidBeep(callback : () => void) : EventKit.Disposable;
     
         /**
          * Invoke the given callback when there is an unhandled error, but
          * before the devtools pop open
-         * @param callback? - {Function} to be called whenever there is an unhandled error
+         * @param callback - {Function} to be called whenever there is an unhandled error
          */
-        onWillThrowError(callback? : Function) : EventKit.Disposable;
+        onWillThrowError(callback : (event: { message: any; url: any; line: any; column: any; originalError: any; }) => void) : EventKit.Disposable;
     
         /**
          * Invoke the given callback whenever there is an unhandled error.
-         * @param callback? - {Function} to be called whenever there is an unhandled error
+         * @param callback - {Function} to be called whenever there is an unhandled error
          */
-        onDidThrowError(callback? : Function) : EventKit.Disposable;
+        onDidThrowError(callback : (event: { message: any; url: any; line: any; column: any; originalError: any; }) => void) : EventKit.Disposable;
     
         /**
          * Is the current window in development mode? 
          */
-        inDevMode() : any;
+        inDevMode() : boolean;
     
         /**
          * Is the current window in safe mode? 
          */
-        inSafeMode() : any;
+        inSafeMode() : boolean;
     
         /**
          * Is the current window running specs? 
          */
-        inSpecMode() : any;
+        inSpecMode() : boolean;
     
         /**
          * Get the version of the Atom application.
-        Returns the version text {String}.
          */
-        getVersion() : string;
+        getVersion() : number;
     
         /**
          * Determine whether the current version is an official release. 
          */
-        isReleasedVersion() : boolean;
+        isReleasedVersion() : number;
     
         /**
          * Get the directory path to Atom's configuration area.
          * This field or method was marked private by atomdoc. Use with caution.
-        Returns the absolute path to ~/.atom
          */
-        getConfigDirPath() : any;
+        getConfigDirPath() : string;
     
         /**
          * Get the time taken to completely load the current window.
          * 
          * This time include things like loading and activating packages, creating
          * DOM elements for the editor, and reading the config.
-        Returns the {Number} of milliseconds taken to load the window or null
-if the window hasn't finished loading yet.
+         * Returns the {Number} of milliseconds taken to load the window or null
+         * if the window hasn't finished loading yet.
          */
         getWindowLoadTime() : number;
     
         /**
          * 
          * This field or method was marked private by atomdoc. Use with caution.
-        Returns the load settings hash associated with the current window.
+         * Returns the load settings hash associated with the current window.
          */
         getLoadSettings() : any;
     
@@ -271,24 +235,23 @@ if the window hasn't finished loading yet.
          * a file/folder to open in the new window.
          * @param options? - An {Object} with the following keys:
          */
-        open(options? : Object) : any;
+        open(options? : any) : void;
     
         /**
          * Prompt the user to select one or more folders.
          * @param callback? - A {Function} to call once the user has confirmed the selection.
          */
-        pickFolder(callback? : Function) : any;
+        pickFolder(callback? : (path: string) => void) : any;
     
         /**
          * Close the current window. 
          */
-        close() : any;
+        close() : void;
     
         /**
          * Get the size of current window.
-        Returns an {Object} in the format `{width: 1000, height: 700}`
          */
-        getSize() : Object;
+        getSize() : { width: number; height: number; };
     
         /**
          * Set the size of current window.
@@ -317,34 +280,34 @@ if the window hasn't finished loading yet.
         /**
          * Move current window to the center of the screen. 
          */
-        center() : any;
+        center() : void;
     
         /**
          * Focus the current window. 
          */
-        focus() : any;
+        focus() : void;
     
         /**
          * Show the current window. 
          */
-        show() : any;
+        show() : void;
     
         /**
          * Hide the current window. 
          */
-        hide() : any;
+        hide() : void;
     
         /**
          * Reload the current window. 
          */
-        reload() : any;
+        reload() : void;
     
         isMaximixed() : boolean;
     
         /**
          * This field or method was not documented by atomdoc, assume it is private. Use with caution.
          */
-        maximize() : any;
+        maximize() : void;
     
         /**
          * Is the current window in full screen mode? 
@@ -359,7 +322,7 @@ if the window hasn't finished loading yet.
         /**
          * Toggle the full screen state of the current window. 
          */
-        toggleFullScreen() : any;
+        toggleFullScreen() : void;
     
         /**
          * Schedule the window to be shown and focused on the next tick.
@@ -368,19 +331,13 @@ if the window hasn't finished loading yet.
          * if called synchronously. 
          * This field or method was marked private by atomdoc. Use with caution.
          */
-        displayWindow(maximize? : any) : any;
+        displayWindow({ maximize } : { maximize? : any }) : void;
     
         /**
          * Get the dimensions of this window.
          * This field or method was marked private by atomdoc. Use with caution.
-        Returns an {Object} with the following keys:
-
-* `x`      The window's x-position {Number}.
-* `y`      The window's y-position {Number}.
-* `width`  The window's width {Number}.
-* `height` The window's height {Number}.
          */
-        getWindowDimensions() : Object;
+        getWindowDimensions() : { x: number; y: number; width: number; height: number; };
     
         /**
          * Set the dimensions of the window.
@@ -390,18 +347,18 @@ if the window hasn't finished loading yet.
          * centered. If height or width are omitted only the position will be changed.
          * This field or method was marked private by atomdoc. Use with caution.
          */
-        setWindowDimensions(x? : any, y? : any, width? : any, height? : any) : void;
+        setWindowDimensions({ x, y, width, height } : { x? : number; y? : number; width? : number; height? : number }) : void;
     
         /**
          * 
          * This field or method was marked private by atomdoc. Use with caution.
          */
-        isValidDimensions(x? : any, y? : any, width? : any, height? : any) : boolean;
+        isValidDimensions({ x, y, width, height } : { x? : number; y? : number; width? : number; height? : number }) : boolean;
     
         /**
          * This field or method was not documented by atomdoc, assume it is private. Use with caution.
          */
-        storeDefaultWindowDimensions() : any;
+        storeDefaultWindowDimensions() : void;
     
         /**
          * This field or method was not documented by atomdoc, assume it is private. Use with caution.
@@ -411,33 +368,33 @@ if the window hasn't finished loading yet.
         /**
          * This field or method was not documented by atomdoc, assume it is private. Use with caution.
          */
-        restoreWindowDimensions() : any;
+        restoreWindowDimensions() : void;
     
         /**
          * This field or method was not documented by atomdoc, assume it is private. Use with caution.
          */
-        storeWindowDimensions() : any;
+        storeWindowDimensions() : void;
     
         /**
          * Call this method when establishing a real application window. 
          * This field or method was marked private by atomdoc. Use with caution.
          */
-        startEditorWindow() : any;
+        startEditorWindow() : void;
     
         /**
          * This field or method was not documented by atomdoc, assume it is private. Use with caution.
          */
-        unloadEditorWindow() : any;
+        unloadEditorWindow() : void;
     
         /**
          * This field or method was not documented by atomdoc, assume it is private. Use with caution.
          */
-        removeEditorWindow() : any;
+        removeEditorWindow() : void;
     
         /**
          * This field or method was not documented by atomdoc, assume it is private. Use with caution.
          */
-        openInitialEmptyEditorIfNecessary() : any;
+        openInitialEmptyEditorIfNecessary() : void;
     
         /**
          * Visually and audibly trigger a beep. 
@@ -446,45 +403,24 @@ if the window hasn't finished loading yet.
     
         /**
          * A flexible way to open a dialog akin to an alert dialog.
-        Returns the chosen button index {Number} if the buttons option was an array.
+         * Returns the chosen button index {Number} if the buttons option was an array.
          */
-        confirm(message? : any, detailedMessage? : any, buttons? : any) : number;
+        confirm({ message, detailedMessage, buttons } : { message? : string; detailedMessage? : string; buttons? : any }) : number;
     
         /**
          * Open the dev tools for the current window. 
          */
-        openDevTools() : any;
+        openDevTools() : void;
     
         /**
          * Toggle the visibility of the dev tools for the current window. 
          */
-        toggleDevTools() : any;
+        toggleDevTools() : void;
     
         /**
          * Execute code in dev tools. 
          */
         executeJavaScriptInDevTools(code? : any) : any;
-    
-        /**
-         * Private
-         * This field or method was marked private by atomdoc. Use with caution.
-         */
-        deserializeProject() : Project;
-    
-        /**
-         * This field or method was not documented by atomdoc, assume it is private. Use with caution.
-         */
-        deserializeWorkspaceView() : WorkspaceView;
-    
-        /**
-         * This field or method was not documented by atomdoc, assume it is private. Use with caution.
-         */
-        deserializePackageStates() : any;
-    
-        /**
-         * This field or method was not documented by atomdoc, assume it is private. Use with caution.
-         */
-        deserializeEditorWindow() : any;
     
         /**
          * This field or method was not documented by atomdoc, assume it is private. Use with caution.
@@ -505,7 +441,7 @@ if the window hasn't finished loading yet.
          * Notify the browser project of the window's current project path 
          * This field or method was marked private by atomdoc. Use with caution.
          */
-        watchProjectPath() : any;
+        watchProjectPath() : string;
     
         /**
          * This field or method was not documented by atomdoc, assume it is private. Use with caution.
@@ -520,12 +456,12 @@ if the window hasn't finished loading yet.
         /**
          * This field or method was not documented by atomdoc, assume it is private. Use with caution.
          */
-        setRepresentedFilename(filename? : string) : void;
+        setRepresentedFilename(filename? : string) : string;
     
         /**
          * This field or method was not documented by atomdoc, assume it is private. Use with caution.
          */
-        addProjectFolder() : any;
+        addProjectFolder() : void;
     
         /**
          * This field or method was not documented by atomdoc, assume it is private. Use with caution.
@@ -535,7 +471,7 @@ if the window hasn't finished loading yet.
         /**
          * This field or method was not documented by atomdoc, assume it is private. Use with caution.
          */
-        showSaveDialogSync(defaultPath? : any) : any;
+        showSaveDialogSync(defaultPath? : string) : any;
     
         /**
          * This field or method was not documented by atomdoc, assume it is private. Use with caution.
@@ -555,7 +491,7 @@ if the window hasn't finished loading yet.
         /**
          * This field or method was not documented by atomdoc, assume it is private. Use with caution.
          */
-        getUserInitScriptPath() : any;
+        getUserInitScriptPath() : string;
     
         /**
          * This field or method was not documented by atomdoc, assume it is private. Use with caution.
@@ -604,12 +540,12 @@ if the window hasn't finished loading yet.
         /**
          * This field or method was not documented by atomdoc, assume it is private. Use with caution.
          */
-        version: any /* default */;
+        version: number;
     
         /**
          * This field or method was not documented by atomdoc, assume it is private. Use with caution.
          */
-        constructor(version? : any);
+        constructor(version? : number);
     
         /**
          * Updates the entire menu with the given keybindings.
@@ -619,25 +555,25 @@ if the window hasn't finished loading yet.
          * keystrokesByCommand - An Object where the keys are commands and the values
          *                       are Arrays containing the keystroke. 
          */
-        update(window? : any, template? : any, keystrokesByCommand? : any) : void;
+        update(window? : any, template? : MenuItem[], keystrokesByCommand? : string) : void;
     
         /**
          * This field or method was not documented by atomdoc, assume it is private. Use with caution.
          */
-        setActiveTemplate(template? : any) : void;
+        setActiveTemplate(template? : MenuItem[]) : void;
     
         /**
          * Register a BrowserWindow with this application menu. 
          * This field or method was marked private by atomdoc. Use with caution.
          */
-        addWindow(window? : any) : any;
+        addWindow(window? : any) : void;
     
         /**
          * Flattens the given menu and submenu items into an single Array.
          * 
          * menu - A complete menu configuration object for atom-shell's menu API.
          * This field or method was marked private by atomdoc. Use with caution.
-        Returns an Array of native menu items.
+         * Returns an Array of native menu items.
          */
         flattenMenuItems(menu? : any) : any;
     
@@ -646,9 +582,9 @@ if the window hasn't finished loading yet.
          * 
          * template - An object describing the menu item.
          * This field or method was marked private by atomdoc. Use with caution.
-        Returns an Array of native menu items.
+         * Returns an Array of native menu items.
          */
-        flattenMenuTemplate(template? : any) : any;
+        flattenMenuTemplate(template? : MenuItem[]) : any;
     
         /**
          * Used to make all window related menu items are active.
@@ -662,7 +598,7 @@ if the window hasn't finished loading yet.
          * Replaces VERSION with the current version. 
          * This field or method was marked private by atomdoc. Use with caution.
          */
-        substituteVersion(template? : any) : any;
+        substituteVersion(template? : MenuItem[]) : number;
     
         /**
          * Sets the proper visible state the update menu items 
@@ -673,14 +609,14 @@ if the window hasn't finished loading yet.
         /**
          * Default list of menu items.
          * This field or method was marked private by atomdoc. Use with caution.
-        Returns an Array of menu item Objects.
+         * Returns an Array of menu item Objects.
          */
         getDefaultTemplate() : any;
     
         /**
          * This field or method was not documented by atomdoc, assume it is private. Use with caution.
          */
-        focusedWindow() : any;
+        focusedWindow() : void;
     
         /**
          * Combines a menu template with the appropriate keystroke.
@@ -690,9 +626,9 @@ if the window hasn't finished loading yet.
          * keystrokesByCommand - An Object where the keys are commands and the values
          *                       are Arrays containing the keystroke.
          * This field or method was marked private by atomdoc. Use with caution.
-        Returns a complete menu configuration object for atom-shell's menu API.
+         * Returns a complete menu configuration object for atom-shell's menu API.
          */
-        translateTemplate(template? : any, keystrokesByCommand? : any) : any;
+        translateTemplate(template? : MenuItem[], keystrokesByCommand? : string) : any;
     
         /**
          * Determine the accelerator for a given command.
@@ -701,10 +637,8 @@ if the window hasn't finished loading yet.
          * keystrokesByCommand - An Object where the keys are commands and the values
          *                       are Arrays containing the keystroke.
          * This field or method was marked private by atomdoc. Use with caution.
-        Returns a String containing the keystroke in a format that can be interpreted
-  by atom shell to provide nice icons where available.
          */
-        acceleratorForCommand(command? : any, keystrokesByCommand? : any) : any;
+        acceleratorForCommand(command? : string, keystrokesByCommand? : string) : string;
     
     }
 
@@ -715,7 +649,7 @@ if the window hasn't finished loading yet.
         /**
          * The entry point into the Atom application. 
          */
-        static open(options? : any) : any;
+        static open(options? : any) : void;
     
         /**
          * This field or method was not documented by atomdoc, assume it is private. Use with caution.
@@ -735,12 +669,12 @@ if the window hasn't finished loading yet.
         /**
          * This field or method was not documented by atomdoc, assume it is private. Use with caution.
          */
-        resourcePath: any /* default */;
+        resourcePath: string;
     
         /**
          * This field or method was not documented by atomdoc, assume it is private. Use with caution.
          */
-        version: any /* default */;
+        version: number;
     
         /**
          * This field or method was not documented by atomdoc, assume it is private. Use with caution.
@@ -753,19 +687,20 @@ if the window hasn't finished loading yet.
         constructor(options? : any);
     
         /**
-         * This field or method was not documented by atomdoc, assume it is private. Use with caution.
+         * Opens a new window based on the options provided. 
+         * This field or method was marked private by atomdoc. Use with caution.
          */
-        openWithOptions(pathsToOpen? : any, urlsToOpen? : any, test? : any, pidToKillWhenClosed? : any, devMode? : any, safeMode? : any, apiPreviewMode? : any, newWindow? : any, specDirectory? : Pathwatcher.Directory, logFile? : Pathwatcher.File) : any;
+        openWithOptions({ pathsToOpen, urlsToOpen, test, pidToKillWhenClosed, devMode, safeMode, apiPreviewMode, newWindow, specDirectory, logFile } : { pathsToOpen? : string; urlsToOpen? : string; test? : any; pidToKillWhenClosed? : number; devMode? : boolean; safeMode? : boolean; apiPreviewMode? : boolean; newWindow? : boolean; specDirectory? : Pathwatcher.Directory; logFile? : boolean }) : void;
     
         /**
          * Removes the {AtomWindow} from the global window list. 
          */
-        removeWindow(window? : any) : any;
+        removeWindow(window? : AtomWindow) : void;
     
         /**
          * Adds the {AtomWindow} to the global window list. 
          */
-        addWindow(window? : any) : any;
+        addWindow(window? : AtomWindow) : void;
     
         /**
          * Creates server to listen for additional atom application launches.
@@ -780,7 +715,7 @@ if the window hasn't finished loading yet.
         /**
          * This field or method was not documented by atomdoc, assume it is private. Use with caution.
          */
-        deleteSocketFile() : void;
+        deleteSocketFile() : Pathwatcher.File;
     
         /**
          * Configures required javascript environment flags. 
@@ -792,7 +727,7 @@ if the window hasn't finished loading yet.
          * Registers basic application commands, non-idempotent. 
          * This field or method was marked private by atomdoc. Use with caution.
          */
-        handleEvents() : any;
+        handleEvents() : void;
     
         /**
          * Executes the given command.
@@ -802,7 +737,7 @@ if the window hasn't finished loading yet.
          * command - The string representing the command.
          * args - The optional arguments to pass along. 
          */
-        sendCommand(command? : any, args? : any) : any;
+        sendCommand(command? : string, args? : any) : string;
     
         /**
          * Executes the given command on the given window.
@@ -811,14 +746,14 @@ if the window hasn't finished loading yet.
          * atomWindow - The {AtomWindow} to send the command to.
          * args - The optional arguments to pass along. 
          */
-        sendCommandToWindow(command? : any, atomWindow? : AtomWindow, args? : any) : any;
+        sendCommandToWindow(command? : string, atomWindow? : AtomWindow, args? : any) : string;
     
         /**
          * Translates the command into OS X action and sends it to application's first
          * responder. 
          * This field or method was marked private by atomdoc. Use with caution.
          */
-        sendCommandToFirstResponder(command? : any) : any;
+        sendCommandToFirstResponder(command? : string) : string;
     
         /**
          * Open the given path in the focused window when the event is
@@ -829,26 +764,25 @@ if the window hasn't finished loading yet.
          * eventName - The event to listen for.
          * pathToOpen - The path to open when the event is triggered. 
          */
-        openPathOnEvent(eventName? : string, pathToOpen? : any) : any;
+        openPathOnEvent(eventName? : string, pathToOpen? : string) : string;
     
         /**
          * 
          * This field or method was marked private by atomdoc. Use with caution.
-        Returns the {AtomWindow} for the given paths.
          */
-        windowForPaths(pathsToOpen? : any, devMode? : any) : AtomWindow;
+        windowForPaths(pathsToOpen? : string, devMode? : boolean) : string;
     
         /**
          * 
          * This field or method was marked private by atomdoc. Use with caution.
-        Returns the {AtomWindow} for the given ipc event.
+         * Returns the {AtomWindow} for the given ipc event.
          */
-        windowForEvent(sender? : any) : AtomWindow;
+        windowForEvent({ sender } : { sender? : any }) : AtomWindow;
     
-        focusedWindow() : AtomWindow;
+        focusedWindow() : void;
     
         /**
-         * Opens a single path, in an existing window if possible.
+         * Opens multiple paths, in existing windows if possible.
          * 
          * options -
          *   :pathToOpen - The file path to open
@@ -859,10 +793,10 @@ if the window hasn't finished loading yet.
          *   :apiPreviewMode - Boolean to control the opened window's 1.0 API preview mode.
          *   :window - {AtomWindow} to open file paths in. 
          */
-        openPath(pathToOpen? : any, pidToKillWhenClosed? : any, newWindow? : any, devMode? : any, safeMode? : any, apiPreviewMode? : any, window? : any) : any;
+        openPath({ pathToOpen, pidToKillWhenClosed, newWindow, devMode, safeMode, apiPreviewMode, window } : { pathToOpen? : string; pidToKillWhenClosed? : number; newWindow? : boolean; devMode? : boolean; safeMode? : boolean; apiPreviewMode? : boolean; window? : AtomWindow }) : string;
     
         /**
-         * Opens multiple paths, in existing windows if possible.
+         * Opens a single path, in an existing window if possible.
          * 
          * options -
          *   :pathsToOpen - The array of file paths to open
@@ -874,35 +808,25 @@ if the window hasn't finished loading yet.
          *   :windowDimensions - Object with height and width keys.
          *   :window - {AtomWindow} to open file paths in. 
          */
-        openPaths(pathsToOpen? : any, pidToKillWhenClosed? : any, newWindow? : any, devMode? : any, safeMode? : any, apiPreviewMode? : any, windowDimensions? : any, window? : any) : any;
+        openPaths({ pathsToOpen, pidToKillWhenClosed, newWindow, devMode, safeMode, apiPreviewMode, windowDimensions, window } : { pathsToOpen? : string; pidToKillWhenClosed? : number; newWindow? : boolean; devMode? : boolean; safeMode? : boolean; apiPreviewMode? : boolean; windowDimensions? : AtomWindow; window? : AtomWindow }) : string;
     
         /**
          * Kill all processes associated with opened windows. 
          * This field or method was marked private by atomdoc. Use with caution.
          */
-        killAllProcesses() : any;
+        killAllProcesses() : void;
     
         /**
          * Kill process associated with the given opened window. 
          * This field or method was marked private by atomdoc. Use with caution.
          */
-        killProcessForWindow(openedWindow? : any) : any;
+        killProcessForWindow(openedWindow? : any) : void;
     
         /**
          * Kill the process with the given pid. 
          * This field or method was marked private by atomdoc. Use with caution.
          */
-        killProcess(pid? : any) : any;
-    
-        /**
-         * This field or method was not documented by atomdoc, assume it is private. Use with caution.
-         */
-        saveState() : void;
-    
-        /**
-         * This field or method was not documented by atomdoc, assume it is private. Use with caution.
-         */
-        loadState() : any;
+        killProcess(pid? : number) : void;
     
         /**
          * Open an atom:// url.
@@ -917,7 +841,7 @@ if the window hasn't finished loading yet.
          *   :safeMode - Boolean to control the opened window's safe mode. 
          * This field or method was marked private by atomdoc. Use with caution.
          */
-        openUrl(urlToOpen? : any, devMode? : any, safeMode? : any) : any;
+        openUrl({ urlToOpen, devMode, safeMode } : { urlToOpen? : string; devMode? : boolean; safeMode? : boolean }) : string;
     
         /**
          * Opens up a new {AtomWindow} to run specs within.
@@ -931,17 +855,17 @@ if the window hasn't finished loading yet.
          *               and ~/.atom/dev/packages, defaults to false. 
          * This field or method was marked private by atomdoc. Use with caution.
          */
-        runSpecs(exitWhenDone? : any, resourcePath? : any, specDirectory? : Pathwatcher.Directory, logFile? : Pathwatcher.File, safeMode? : any) : any;
+        runSpecs({ exitWhenDone, resourcePath, specDirectory, logFile, safeMode } : { exitWhenDone? : boolean; resourcePath? : string; specDirectory? : Pathwatcher.Directory; logFile? : boolean; safeMode? : boolean }) : void;
     
         /**
          * This field or method was not documented by atomdoc, assume it is private. Use with caution.
          */
-        runBenchmarks(exitWhenDone? : any, specDirectory? : Pathwatcher.Directory) : any;
+        runBenchmarks({ exitWhenDone, specDirectory } : { exitWhenDone? : boolean; specDirectory? : Pathwatcher.Directory }) : void;
     
         /**
          * This field or method was not documented by atomdoc, assume it is private. Use with caution.
          */
-        locationForPathToOpen(pathToOpen? : any) : any;
+        locationForPathToOpen(pathToOpen? : string) : string;
     
         /**
          * Opens a native dialog to prompt the user for a path.
@@ -958,12 +882,12 @@ if the window hasn't finished loading yet.
          *   :window - An {AtomWindow} to use for opening a selected file path. 
          * This field or method was marked private by atomdoc. Use with caution.
          */
-        promptForPathToOpen(type? : any, options? : (devMode? : any,safeMode? : any,apiPreviewMode? : any,window? : any) => any) : any;
+        promptForPathToOpen(type? : any, options? : (devMode? : boolean,safeMode? : boolean,apiPreviewMode? : boolean,window? : AtomWindow) => any) : string;
     
         /**
          * This field or method was not documented by atomdoc, assume it is private. Use with caution.
          */
-        promptForPath(type? : any, callback? : any) : any;
+        promptForPath(type? : any, callback? : any) : string;
     
     }
 
@@ -974,7 +898,7 @@ if the window hasn't finished loading yet.
         /**
          * This field or method was not documented by atomdoc, assume it is private. Use with caution.
          */
-        constructor(resourcePath? : any, safeMode? : any);
+        constructor(resourcePath? : string, safeMode? : boolean);
     
         /**
          * Creates the 'atom' custom protocol handler. 
@@ -992,12 +916,12 @@ if the window hasn't finished loading yet.
         /**
          * This field or method was not documented by atomdoc, assume it is private. Use with caution.
          */
-        static includeShellLoadTime: any /* default */;
+        static includeShellLoadTime: boolean;
     
         /**
          * This field or method was not documented by atomdoc, assume it is private. Use with caution.
          */
-        static iconPath() : any;
+        static iconPath() : string;
     
         /**
          * This field or method was not documented by atomdoc, assume it is private. Use with caution.
@@ -1017,7 +941,7 @@ if the window hasn't finished loading yet.
         /**
          * This field or method was not documented by atomdoc, assume it is private. Use with caution.
          */
-        constructor(settings? : void);
+        constructor(settings? : any);
     
         /**
          * This field or method was not documented by atomdoc, assume it is private. Use with caution.
@@ -1032,52 +956,52 @@ if the window hasn't finished loading yet.
         /**
          * This field or method was not documented by atomdoc, assume it is private. Use with caution.
          */
-        hasProjectPath() : any;
+        hasProjectPath() : string;
     
         /**
          * This field or method was not documented by atomdoc, assume it is private. Use with caution.
          */
-        setupContextMenu() : void;
+        setupContextMenu() : ContextMenu;
     
         /**
          * This field or method was not documented by atomdoc, assume it is private. Use with caution.
          */
-        containsPaths(paths? : any) : any;
+        containsPaths(paths? : string) : string;
     
         /**
          * This field or method was not documented by atomdoc, assume it is private. Use with caution.
          */
-        containsPath(pathToCheck? : any) : any;
+        containsPath(pathToCheck? : string) : string;
     
         /**
          * This field or method was not documented by atomdoc, assume it is private. Use with caution.
          */
-        handleEvents() : any;
+        handleEvents() : void;
     
         /**
          * This field or method was not documented by atomdoc, assume it is private. Use with caution.
          */
-        openPath(pathToOpen? : any, initialLine? : any, initialColumn? : number) : any;
+        openPath(pathToOpen? : string, initialLine? : number, initialColumn? : number) : string;
     
         /**
          * This field or method was not documented by atomdoc, assume it is private. Use with caution.
          */
-        openLocations(locationsToOpen? : any) : any;
+        openLocations(locationsToOpen? : any) : void;
     
         /**
          * This field or method was not documented by atomdoc, assume it is private. Use with caution.
          */
-        sendMessage(message? : any, detail? : any) : any;
+        sendMessage(message? : string, detail? : any) : string;
     
         /**
          * This field or method was not documented by atomdoc, assume it is private. Use with caution.
          */
-        sendCommand(command? : any, args? : any) : any;
+        sendCommand(command? : string, args? : any) : string;
     
         /**
          * This field or method was not documented by atomdoc, assume it is private. Use with caution.
          */
-        sendCommandToBrowserWindow(command? : any, args? : any) : any;
+        sendCommandToBrowserWindow(command? : string, args? : any) : string;
     
         /**
          * This field or method was not documented by atomdoc, assume it is private. Use with caution.
@@ -1087,12 +1011,12 @@ if the window hasn't finished loading yet.
         /**
          * This field or method was not documented by atomdoc, assume it is private. Use with caution.
          */
-        close() : any;
+        close() : void;
     
         /**
          * This field or method was not documented by atomdoc, assume it is private. Use with caution.
          */
-        focus() : any;
+        focus() : void;
     
         /**
          * This field or method was not documented by atomdoc, assume it is private. Use with caution.
@@ -1107,12 +1031,12 @@ if the window hasn't finished loading yet.
         /**
          * This field or method was not documented by atomdoc, assume it is private. Use with caution.
          */
-        restore() : any;
+        restore() : void;
     
         /**
          * This field or method was not documented by atomdoc, assume it is private. Use with caution.
          */
-        handlesAtomCommands() : any;
+        handlesAtomCommands() : string;
     
         /**
          * This field or method was not documented by atomdoc, assume it is private. Use with caution.
@@ -1137,7 +1061,7 @@ if the window hasn't finished loading yet.
         /**
          * This field or method was not documented by atomdoc, assume it is private. Use with caution.
          */
-        reload() : any;
+        reload() : void;
     
         /**
          * This field or method was not documented by atomdoc, assume it is private. Use with caution.
@@ -1154,22 +1078,22 @@ if the window hasn't finished loading yet.
         /**
          * This field or method was not documented by atomdoc, assume it is private. Use with caution.
          */
-        version: any /* default */;
+        version: number;
     
         /**
          * This field or method was not documented by atomdoc, assume it is private. Use with caution.
          */
-        constructor(version? : any);
+        constructor(version? : number);
     
         /**
          * This field or method was not documented by atomdoc, assume it is private. Use with caution.
          */
-        setupAutoUpdater() : void;
+        setupAutoUpdater() : AutoUpdater;
     
         /**
          * This field or method was not documented by atomdoc, assume it is private. Use with caution.
          */
-        emitUpdateAvailableEvent(windows? : any) : any;
+        emitUpdateAvailableEvent(windows? : any) : void;
     
         /**
          * This field or method was not documented by atomdoc, assume it is private. Use with caution.
@@ -1184,12 +1108,12 @@ if the window hasn't finished loading yet.
         /**
          * This field or method was not documented by atomdoc, assume it is private. Use with caution.
          */
-        check(hidePopups? : any) : any;
+        check({ hidePopups } : { hidePopups? : any }) : any;
     
         /**
          * This field or method was not documented by atomdoc, assume it is private. Use with caution.
          */
-        install() : any;
+        install() : boolean;
     
         /**
          * This field or method was not documented by atomdoc, assume it is private. Use with caution.
@@ -1199,7 +1123,7 @@ if the window hasn't finished loading yet.
         /**
          * This field or method was not documented by atomdoc, assume it is private. Use with caution.
          */
-        onUpdateError(event? : any, message? : any) : any;
+        onUpdateError(event? : any, message? : string) : any;
     
         /**
          * This field or method was not documented by atomdoc, assume it is private. Use with caution.
@@ -1216,7 +1140,7 @@ if the window hasn't finished loading yet.
         /**
          * This field or method was not documented by atomdoc, assume it is private. Use with caution.
          */
-        setFeedUrl(updateUrl? : void) : void;
+        setFeedUrl(updateUrl? : string) : string;
     
         /**
          * This field or method was not documented by atomdoc, assume it is private. Use with caution.
@@ -1231,7 +1155,7 @@ if the window hasn't finished loading yet.
         /**
          * This field or method was not documented by atomdoc, assume it is private. Use with caution.
          */
-        installUpdate(callback? : any) : any;
+        installUpdate(callback? : boolean) : boolean;
     
         /**
          * This field or method was not documented by atomdoc, assume it is private. Use with caution.
@@ -1258,7 +1182,7 @@ if the window hasn't finished loading yet.
         /**
          * This field or method was not documented by atomdoc, assume it is private. Use with caution.
          */
-        constructor(template? : any, atomWindow? : AtomWindow);
+        constructor(template? : MenuItem[], atomWindow? : AtomWindow);
     
         /**
          * It's necessary to build the event handlers in this process, otherwise
@@ -1266,7 +1190,7 @@ if the window hasn't finished loading yet.
          * appropriately. 
          * This field or method was marked private by atomdoc. Use with caution.
          */
-        createClickHandlers(template? : any) : any;
+        createClickHandlers(template? : MenuItem[]) : any;
     
     }
 
@@ -1279,7 +1203,7 @@ if the window hasn't finished loading yet.
          * Runs the given Node script by spawning a new child process.
          * @param options? - An {Object} with the following keys:
          */
-        constructor(command? : any, args? : any, options? : Object, stdout? : any, stderr? : any, exit? : any);
+        constructor({ command, args, options, stdout, stderr, exit } : { command? : string; args? : any; options? : Object; stdout? : NodeJS.WritableStream; stderr? : NodeJS.WritableStream; exit? : any });
     
     }
 
@@ -1292,16 +1216,16 @@ if the window hasn't finished loading yet.
          * Runs the given command by spawning a new child process.
          * @param options? - An {Object} with the following keys:
          */
-        constructor(command? : any, args? : any, options? : Object, stdout? : any, stderr? : any, exit? : any);
+        constructor({ command, args, options, stdout, stderr, exit } : { command? : string; args? : any; options? : Object; stdout? : NodeJS.WritableStream; stderr? : NodeJS.WritableStream; exit? : any });
     
         /**
          * Will call your callback when an error will be raised by the process.
          * Usually this is due to the command not being available or not on the PATH.
          * You can call `handle()` on the object passed to your callback to indicate
          * that you have handled this error.
-         * @param callback? - {Function} callback
+         * @param callback - {Function} callback
          */
-        onWillThrowError(callback? : Function) : EventKit.Disposable;
+        onWillThrowError(callback : (event: { message: any; url: any; line: any; column: any; originalError: any; }) => void) : EventKit.Disposable;
     
         /**
          * Helper method to pass data line by line.
@@ -1310,7 +1234,7 @@ if the window hasn't finished loading yet.
          * @param onLines? - The callback to call with each line of data.
          * @param onDone? - The callback to call when the stream has closed. 
          */
-        bufferStream(stream? : any, onLines? : any, onDone? : any) : any;
+        bufferStream(stream? : any, onLines? : string[], onDone? : any) : any;
     
         /**
          * Kill all child processes of the spawned cmd.exe process on Windows.
@@ -1319,27 +1243,27 @@ if the window hasn't finished loading yet.
          * processes. 
          * This field or method was marked private by atomdoc. Use with caution.
          */
-        killOnWindows() : any;
+        killOnWindows() : void;
     
         /**
          * This field or method was not documented by atomdoc, assume it is private. Use with caution.
          */
-        killProcess() : any;
+        killProcess() : void;
     
         /**
          * This field or method was not documented by atomdoc, assume it is private. Use with caution.
          */
-        isExplorerCommand(command? : any) : boolean;
+        isExplorerCommand(command? : string) : string;
     
         /**
          * This field or method was not documented by atomdoc, assume it is private. Use with caution.
          */
-        getCmdPath() : any;
+        getCmdPath() : string;
     
         /**
          * Terminate the process. 
          */
-        kill() : any;
+        kill() : void;
     
     }
 
@@ -1361,7 +1285,7 @@ if the window hasn't finished loading yet.
          * Creates an `md5` hash of some text.
          * This field or method was marked private by atomdoc. Use with caution.
          * @param text? - A {String} to hash.
-        Returns a hashed {String}.
+         * Returns a hashed {String}.
          */
         md5(text? : string) : string;
     
@@ -1377,17 +1301,17 @@ if the window hasn't finished loading yet.
     
         /**
          * Read the text from the clipboard.
-        Returns a {String}.
+         * Returns a {String}.
          */
         read() : string;
     
         /**
          * Read the text from the clipboard and return both the text and the
          * associated metadata.
-        Returns an {Object} with the following keys:
-
-* `text` The {String} clipboard text.
-* `metadata` The metadata stored by an earlier call to {::write}.
+         * Returns an {Object} with the following keys:
+         * 
+         * * `text` The {String} clipboard text.
+         * * `metadata` The metadata stored by an earlier call to {::write}.
          */
         readWithMetadata() : Object;
     
@@ -1401,14 +1325,14 @@ if the window hasn't finished loading yet.
         /**
          * Parse a {String} or {Object} into a {Color}.
          * @param value? - A {String} such as `'white'`, `#ff00ff`, or `'rgba(255, 15, 60, .75)'` or an {Object} with `red`, `green`, `blue`, and `alpha` properties.
-        Returns a {Color} or `null` if it cannot be parsed.
+         * Returns a {Color} or `null` if it cannot be parsed.
          */
         static parse(value? : string) : Color;
     
         /**
          * This field or method was not documented by atomdoc, assume it is private. Use with caution.
          */
-        constructor(red? : any, green? : any, blue? : any, alpha? : any);
+        constructor(red? : number, green? : number, blue? : number, alpha? : number);
     
         toHexString() : string;
     
@@ -1441,7 +1365,7 @@ if the window hasn't finished loading yet.
         /**
          * This field or method was not documented by atomdoc, assume it is private. Use with caution.
          */
-        constructor(rootNode? : any);
+        constructor(rootNode : any);
     
         /**
          * This field or method was not documented by atomdoc, assume it is private. Use with caution.
@@ -1450,32 +1374,13 @@ if the window hasn't finished loading yet.
     
         /**
          * Add one or more command listeners associated with a selector.
-        Returns a {Disposable} on which `.dispose()` can be called to remove the
-added command handler(s).
          */
-        add(target? : any, commandName? : string, callback? : any) : EventKit.Disposable;
-    
-        /**
-         * This field or method was not documented by atomdoc, assume it is private. Use with caution.
-         */
-        addSelectorBasedListener(selector? : SelectorBasedListener, commandName? : string, callback? : any) : SelectorBasedListener;
-    
-        /**
-         * This field or method was not documented by atomdoc, assume it is private. Use with caution.
-         */
-        addInlineListener(element? : any, commandName? : string, callback? : any) : InlineListener;
+        add(target : string | JQuery | Node | SpacePen.View, commandName : string, callback : (event: Event) => any) : EventKit.Disposable;
     
         /**
          * Find all registered commands matching a query.
-        Returns an {Array} of {Object}s containing the following keys:
-
-* `name` The name of the command. For example, `user:insert-date`.
-* `displayName` The display name of the command. For example,
-  `User: Insert Date`.
-* `jQuery` Present if the command was registered with the legacy
-  `$::command` method.
          */
-        findCommands(target? : any) : Object[];
+        findCommands({ target } : { target : string | JQuery | Node | SpacePen.View }) : string;
     
         /**
          * Simulate the dispatch of a command on a DOM node.
@@ -1484,36 +1389,28 @@ added command handler(s).
          * command on a detached DOM node. Otherwise, the DOM node in question needs to
          * be attached to the document so the event bubbles up to the root node to be
          * processed.
-         * @param target? - The DOM node at which to start bubbling the command event.
-         * @param commandName? - {String} indicating the name of the command to dispatch. 
+         * @param target - The DOM node at which to start bubbling the command event.
+         * @param commandName - {String} indicating the name of the command to dispatch. 
          */
-        dispatch(target? : any, commandName? : string, detail? : any) : any;
+        dispatch(target : string | JQuery | Node | SpacePen.View, commandName : string, detail? : any) : any;
     
         /**
          * This field or method was not documented by atomdoc, assume it is private. Use with caution.
          */
-        onWillDispatch(callback? : any) : EventKit.Disposable;
+        onWillDispatch(callback : (event: Event) => any) : EventKit.Disposable;
     
         /**
          * This field or method was not documented by atomdoc, assume it is private. Use with caution.
          */
-        getSnapshot() : any;
+        getSnapshot() : (InlineListener | SelectorBasedListener)[];
     
         /**
          * This field or method was not documented by atomdoc, assume it is private. Use with caution.
          */
-        restoreSnapshot(snapshot? : any) : any;
+        restoreSnapshot(snapshot : (InlineListener | SelectorBasedListener)[]) : void;
     
-        /**
-         * This field or method was not documented by atomdoc, assume it is private. Use with caution.
-         */
-        handleCommandEvent(originalEvent? : any) : AtomKeymap.CommandEvent;
     
-        /**
-         * This field or method was not documented by atomdoc, assume it is private. Use with caution.
-         */
-        commandRegistered(commandName? : string) : any;
-    
+        add(target : string | JQuery | Node, commands: { [commandName: string]: (event: Event) => void }): EventKit.Disposable
     }
 
     /**
@@ -1524,7 +1421,7 @@ added command handler(s).
         /**
          * This field or method was not documented by atomdoc, assume it is private. Use with caution.
          */
-        selector: ScopedPropertyStore.Selector;
+        selector: string;
     
         /**
          * This field or method was not documented by atomdoc, assume it is private. Use with caution.
@@ -1534,7 +1431,7 @@ added command handler(s).
         /**
          * This field or method was not documented by atomdoc, assume it is private. Use with caution.
          */
-        constructor(selector? : ScopedPropertyStore.Selector, callback? : any);
+        constructor(selector? : string, callback? : any);
     
         /**
          * This field or method was not documented by atomdoc, assume it is private. Use with caution.
@@ -1565,359 +1462,55 @@ added command handler(s).
      */
     class Config {
         /**
-         * This field or method was not documented by atomdoc, assume it is private. Use with caution.
-         */
-        static undefined: any /* default */;
-    
-        /**
-         * This field or method was not documented by atomdoc, assume it is private. Use with caution.
-         */
-        static addSchemaEnforcer(typeName? : string, enforcerFunction? : any) : any;
-    
-        /**
-         * This field or method was not documented by atomdoc, assume it is private. Use with caution.
-         */
-        static addSchemaEnforcers(filters? : any) : any;
-    
-        /**
-         * This field or method was not documented by atomdoc, assume it is private. Use with caution.
-         */
-        static executeSchemaEnforcers(keyPath? : any, value? : any, schema? : any) : any;
-    
-        /**
-         * This field or method was not documented by atomdoc, assume it is private. Use with caution.
-         */
-        configDirPath: any /* default */;
-    
-        /**
-         * This field or method was not documented by atomdoc, assume it is private. Use with caution.
-         */
-        resourcePath: any /* default */;
-    
-        /**
-         * Created during initialization, available as `atom.config` 
-         * This field or method was marked private by atomdoc. Use with caution.
-         */
-        constructor(configDirPath? : any, resourcePath? : any);
-    
-        /**
-         * Add a listener for changes to a given key path. This is different
-         * than {::onDidChange} in that it will immediately call your callback with the
-         * current value of the config entry.
-         * 
-         * ### Examples
-         * 
-         * You might want to be notified when the themes change. We'll watch
-         * `core.themes` for changes
-         * 
-         * ```coffee
-         * atom.config.observe 'core.themes', (value) ->
-         *   # do stuff with value
-         * ```
-         */
-        observe() : EventKit.Disposable;
-    
-        /**
-         * Add a listener for changes to a given key path. If `keyPath` is
-         * not specified, your callback will be called on changes to any key.
-         */
-        onDidChange() : EventKit.Disposable;
-    
-        /**
-         * Retrieves the setting for the given key.
-         * 
-         * ### Examples
-         * 
-         * You might want to know what themes are enabled, so check `core.themes`
-         * 
-         * ```coffee
-         * atom.config.get('core.themes')
-         * ```
-         * 
-         * With scope descriptors you can get settings within a specific editor
-         * scope. For example, you might want to know `editor.tabLength` for ruby
-         * files.
-         * 
-         * ```coffee
-         * atom.config.get('editor.tabLength', scope: ['source.ruby']) # => 2
-         * ```
-         * 
-         * This setting in ruby files might be different than the global tabLength setting
-         * 
-         * ```coffee
-         * atom.config.get('editor.tabLength') # => 4
-         * atom.config.get('editor.tabLength', scope: ['source.ruby']) # => 2
-         * ```
-         * 
-         * You can get the language scope descriptor via
-         * {TextEditor::getRootScopeDescriptor}. This will get the setting specifically
-         * for the editor's language.
-         * 
-         * ```coffee
-         * atom.config.get('editor.tabLength', scope: @editor.getRootScopeDescriptor()) # => 2
-         * ```
-         * 
-         * Additionally, you can get the setting at the specific cursor position.
-         * 
-         * ```coffee
-         * scopeDescriptor = @editor.getLastCursor().getScopeDescriptor()
-         * atom.config.get('editor.tabLength', scope: scopeDescriptor) # => 2
-         * ```
-        Returns the value from Atom's default settings, the user's configuration
-file in the type specified by the configuration schema.
-         */
-        get() : any;
-    
-        /**
          * Get all of the values for the given key-path, along with their
          * associated scope selector.
-         * @param keyPath? - The {String} name of the key to retrieve
+         * @param keyPath - The {String} name of the key to retrieve
          * @param options? - {Object} see the `options` argument to {::get}
-        Returns an {Array} of {Object}s with the following keys:
-
-* `scopeDescriptor` The {ScopeDescriptor} with which the value is associated
-* `value` The value for the key-path
          */
-        getAll(keyPath? : string, options? : Object) : Object[];
-    
-        /**
-         * Sets the value for a configuration setting.
-         * 
-         * This value is stored in Atom's internal configuration file.
-         * 
-         * ### Examples
-         * 
-         * You might want to change the themes programmatically:
-         * 
-         * ```coffee
-         * atom.config.set('core.themes', ['atom-light-ui', 'atom-light-syntax'])
-         * ```
-         * 
-         * You can also set scoped settings. For example, you might want change the
-         * `editor.tabLength` only for ruby files.
-         * 
-         * ```coffee
-         * atom.config.get('editor.tabLength') # => 4
-         * atom.config.get('editor.tabLength', scope: ['source.ruby']) # => 4
-         * atom.config.get('editor.tabLength', scope: ['source.js']) # => 4
-         * 
-         * # Set ruby to 2
-         * atom.config.set('editor.tabLength', 2, scopeSelector: 'source.ruby') # => true
-         * 
-         * # Notice it's only set to 2 in the case of ruby
-         * atom.config.get('editor.tabLength') # => 4
-         * atom.config.get('editor.tabLength', scope: ['source.ruby']) # => 2
-         * atom.config.get('editor.tabLength', scope: ['source.js']) # => 4
-         * ```
-         */
-        set() : void;
+        getAll(keyPath : string, options? : { sources: string[]; excludeSources: string[]; scope: ScopeDescriptor }) : { scopeDescriptor: ScopeDescriptor; value: any };
     
         /**
          * Restore the setting at `keyPath` to its default value.
-         * @param keyPath? - The {String} name of the key.
+         * @param keyPath - The {String} name of the key.
          * @param options? - {Object}
          */
-        unset(keyPath? : string, options? : Object) : any;
+        unset(keyPath : string, options? : { scopeSelector: string; source: string }) : any;
     
         /**
          * Get an {Array} of all of the `source` {String}s with which
          * settings have been added via {::set}. 
          */
-        getSources() : any;
+        getSources() : string[];
     
         /**
          * Retrieve the schema for a specific key path. The schema will tell
          * you what type the keyPath expects, and other metadata about the config
          * option.
-         * @param keyPath? - The {String} name of the key.
-        Returns an {Object} eg. `{type: 'integer', default: 23, minimum: 1}`.
-        Returns `null` when the keyPath has no schema specified.
+         * @param keyPath - The {String} name of the key.
          */
-        getSchema(keyPath? : string) : Object | any;
+        getSchema(keyPath : string) : { type: string; default: number; minimum: number; };
     
         /**
          * Get the {String} path to the config file being used. 
          */
-        getUserConfigPath() : any;
+        getUserConfigPath() : string;
     
         /**
          * Suppress calls to handler functions registered with {::onDidChange}
          * and {::observe} for the duration of `callback`. After `callback` executes,
          * handlers will be called once if the value for their key-path has changed.
-         * @param callback? - {Function} to execute while suppressing calls to handlers. 
+         * @param callback - {Function} to execute while suppressing calls to handlers. 
          */
-        transact(callback? : Function) : any;
+        transact(callback : () => any) : any;
     
-        /**
-         * Internal methods used by core
-         * This field or method was marked private by atomdoc. Use with caution.
-         */
-        pushAtKeyPath(keyPath? : any, value? : any) : any;
     
-        /**
-         * This field or method was not documented by atomdoc, assume it is private. Use with caution.
-         */
-        unshiftAtKeyPath(keyPath? : any, value? : any) : any;
-    
-        /**
-         * This field or method was not documented by atomdoc, assume it is private. Use with caution.
-         */
-        removeAtKeyPath(keyPath? : any, value? : any) : any;
-    
-        /**
-         * This field or method was not documented by atomdoc, assume it is private. Use with caution.
-         */
-        setSchema(keyPath? : any, schema? : any) : void;
-    
-        /**
-         * This field or method was not documented by atomdoc, assume it is private. Use with caution.
-         */
-        load() : any;
-    
-        /**
-         * Private methods managing the user's config file
-         * This field or method was marked private by atomdoc. Use with caution.
-         */
-        initializeConfigDirectory(done? : any) : Pathwatcher.Directory;
-    
-        /**
-         * This field or method was not documented by atomdoc, assume it is private. Use with caution.
-         */
-        loadUserConfig() : Config;
-    
-        /**
-         * This field or method was not documented by atomdoc, assume it is private. Use with caution.
-         */
-        observeUserConfig() : EventKit.Disposable;
-    
-        /**
-         * This field or method was not documented by atomdoc, assume it is private. Use with caution.
-         */
-        unobserveUserConfig() : Config;
-    
-        /**
-         * This field or method was not documented by atomdoc, assume it is private. Use with caution.
-         */
-        notifyFailure(errorMessage? : any, detail? : any) : any;
-    
-        /**
-         * This field or method was not documented by atomdoc, assume it is private. Use with caution.
-         */
-        save() : void;
-    
-        /**
-         * Private methods managing global settings
-         * This field or method was marked private by atomdoc. Use with caution.
-         */
-        resetUserSettings(newSettings? : any) : void;
-    
-        /**
-         * This field or method was not documented by atomdoc, assume it is private. Use with caution.
-         */
-        getRawValue(keyPath? : any, options? : any) : any;
-    
-        /**
-         * This field or method was not documented by atomdoc, assume it is private. Use with caution.
-         */
-        setRawValue(keyPath? : any, value? : any) : void;
-    
-        /**
-         * This field or method was not documented by atomdoc, assume it is private. Use with caution.
-         */
-        observeKeyPath(keyPath? : any, options? : any, callback? : any) : EventKit.Disposable;
-    
-        /**
-         * This field or method was not documented by atomdoc, assume it is private. Use with caution.
-         */
-        onDidChangeKeyPath(keyPath? : any, callback? : any) : EventKit.Disposable;
-    
-        /**
-         * This field or method was not documented by atomdoc, assume it is private. Use with caution.
-         */
-        isSubKeyPath(keyPath? : any, subKeyPath? : any) : boolean;
-    
-        /**
-         * This field or method was not documented by atomdoc, assume it is private. Use with caution.
-         */
-        setRawDefault(keyPath? : any, value? : any) : void;
-    
-        /**
-         * This field or method was not documented by atomdoc, assume it is private. Use with caution.
-         */
-        setDefaults(keyPath? : any, defaults? : any) : void;
-    
-        /**
-         * This field or method was not documented by atomdoc, assume it is private. Use with caution.
-         */
-        deepClone(object? : any) : any;
-    
-        /**
-         * `schema` will look something like this
-         * 
-         * ```coffee
-         * type: 'string'
-         * default: 'ok'
-         * scopes:
-         *   '.source.js':
-         *     default: 'omg'
-         * ```
-         * This field or method was marked private by atomdoc. Use with caution.
-         */
-        setScopedDefaultsFromSchema(keyPath? : any, schema? : any) : void;
-    
-        /**
-         * This field or method was not documented by atomdoc, assume it is private. Use with caution.
-         */
-        extractDefaultsFromSchema(schema? : any) : any;
-    
-        /**
-         * This field or method was not documented by atomdoc, assume it is private. Use with caution.
-         */
-        makeValueConformToSchema(keyPath? : any, value? : any, options? : any) : any;
-    
-        /**
-         * When the schema is changed / added, there may be values set in the config
-         * that do not conform to the schema. This will reset make them conform. 
-         * This field or method was marked private by atomdoc. Use with caution.
-         */
-        resetSettingsForSchemaChange(source? : any) : void;
-    
-        /**
-         * Private Scoped Settings
-         * This field or method was marked private by atomdoc. Use with caution.
-         */
-        priorityForSource(source? : any) : any;
-    
-        /**
-         * This field or method was not documented by atomdoc, assume it is private. Use with caution.
-         */
-        emitChangeEvent() : any;
-    
-        /**
-         * This field or method was not documented by atomdoc, assume it is private. Use with caution.
-         */
-        resetUserScopedSettings(newScopedSettings? : any) : void;
-    
-        /**
-         * This field or method was not documented by atomdoc, assume it is private. Use with caution.
-         */
-        setRawScopedValue(keyPath? : any, value? : any, source? : any, selector? : ScopedPropertyStore.Selector, options? : any) : void;
-    
-        /**
-         * This field or method was not documented by atomdoc, assume it is private. Use with caution.
-         */
-        getRawScopedValue(scopeDescriptor? : ScopeDescriptor, keyPath? : any, options? : any) : any;
-    
-        /**
-         * This field or method was not documented by atomdoc, assume it is private. Use with caution.
-         */
-        observeScopedKeyPath(scope? : Scope, keyPath? : any, callback? : any) : EventKit.Disposable;
-    
-        /**
-         * This field or method was not documented by atomdoc, assume it is private. Use with caution.
-         */
-        onDidChangeScopedKeyPath(scope? : Scope, keyPath? : any, callback? : any) : EventKit.Disposable;
-    
+        observe(keyPath: string, callback: (value: any) => void): EventKit.Disposable
+        observe(keyPath: string, options: { scopeDescriptor: ScopeDescriptor }, callback: (value: any) => void): EventKit.Disposable
+        onDidChange(callback: (item: { keyPath: string; oldValue: any; newValue: any; }) => void): EventKit.Disposable
+        onDidChange(keyPath: string, callback: (item: { keyPath: string; oldValue: any; newValue: any;}) => void): EventKit.Disposable
+        onDidChange(keyPath: string, options: { scopeDescriptor: ScopeDescriptor }, callback: (item: { keyPath: string; oldValue: any; newValue: any; }) => void): EventKit.Disposable
+        get<T>(keyPath: string, options?: { sources: string[]; excludeSources: string[]; scope: ScopeDescriptor }): T
+        set(keyPath: string, value: any, options?: { scopeSelector: string; source: string })
     }
 
     /**
@@ -1926,82 +1519,10 @@ file in the type specified by the configuration schema.
      */
     class ContextMenuManager {
         /**
-         * This field or method was not documented by atomdoc, assume it is private. Use with caution.
-         */
-        resourcePath: any /* default */;
-    
-        /**
-         * This field or method was not documented by atomdoc, assume it is private. Use with caution.
-         */
-        devMode: any /* default */;
-    
-        /**
-         * This field or method was not documented by atomdoc, assume it is private. Use with caution.
-         */
-        constructor(resourcePath? : any, devMode? : any);
-    
-        /**
-         * This field or method was not documented by atomdoc, assume it is private. Use with caution.
-         */
-        loadPlatformItems() : any;
-    
-        /**
          * Add context menu items scoped by CSS selectors.
-         * @param itemsBySelector? - An {Object} whose keys are CSS selectors and whose values are {Array}s of item {Object}s containing the following keys:
+         * @param itemsBySelector - An {Object} whose keys are CSS selectors and whose values are {Array}s of item {Object}s containing the following keys:
          */
-        add(itemsBySelector? : Object) : any;
-    
-        /**
-         * This field or method was not documented by atomdoc, assume it is private. Use with caution.
-         */
-        templateForElement(target? : any) : any;
-    
-        /**
-         * This field or method was not documented by atomdoc, assume it is private. Use with caution.
-         */
-        templateForEvent(event? : any) : any;
-    
-        /**
-         * This field or method was not documented by atomdoc, assume it is private. Use with caution.
-         */
-        convertLegacyItemsBySelector(legacyItemsBySelector? : ScopedPropertyStore.Selector, devMode? : any) : ScopedPropertyStore.Selector;
-    
-        /**
-         * This field or method was not documented by atomdoc, assume it is private. Use with caution.
-         */
-        convertLegacyItems(legacyItems? : any, devMode? : any) : any;
-    
-        /**
-         * This field or method was not documented by atomdoc, assume it is private. Use with caution.
-         */
-        showForEvent(event? : any) : any;
-    
-        /**
-         * This field or method was not documented by atomdoc, assume it is private. Use with caution.
-         */
-        clear() : any;
-    
-    }
-
-    /**
-     * ContextMenuItemSet
-     * This class was not documented by atomdoc, assume it is private. Use with caution.
-     */
-    class ContextMenuItemSet {
-        /**
-         * This field or method was not documented by atomdoc, assume it is private. Use with caution.
-         */
-        selector: ScopedPropertyStore.Selector;
-    
-        /**
-         * This field or method was not documented by atomdoc, assume it is private. Use with caution.
-         */
-        items: any /* default */;
-    
-        /**
-         * This field or method was not documented by atomdoc, assume it is private. Use with caution.
-         */
-        constructor(selector? : ScopedPropertyStore.Selector, items? : any);
+        add(itemsBySelector : ContextMenuItem) : EventKit.Disposable;
     
     }
 
@@ -2044,7 +1565,7 @@ file in the type specified by the configuration schema.
          * Instantiated by a {TextEditor} 
          * This field or method was marked private by atomdoc. Use with caution.
          */
-        constructor(editor? : TextEditor, marker? : Marker, id? : any);
+        constructor({ editor, marker, id } : { editor? : any; marker? : Marker; id? : any });
     
         /**
          * This field or method was not documented by atomdoc, assume it is private. Use with caution.
@@ -2053,33 +1574,28 @@ file in the type specified by the configuration schema.
     
         /**
          * Calls your `callback` when the cursor has been moved.
-         * @param callback? - {Function}
+         * @param callback - {Function}
          */
-        onDidChangePosition(callback? : Function) : TextBuffer.Point;
+        onDidChangePosition(callback : (event: { oldBufferPosition: TextBuffer.Point; oldScreenPosition: TextBuffer.Point; newBufferPosition: TextBuffer.Point; newScreenPosition: TextBuffer.Point; textChanged: boolean; cursor: Cursor; }) => any) : EventKit.Disposable;
     
         /**
          * Calls your `callback` when the cursor is destroyed
-         * @param callback? - {Function}
+         * @param callback - {Function}
          */
-        onDidDestroy(callback? : Function) : EventKit.Disposable;
+        onDidDestroy(callback : () => void) : EventKit.Disposable;
     
         /**
          * Calls your `callback` when the cursor's visibility has changed
-         * @param callback? - {Function}
+         * @param callback - {Function}
          */
-        onDidChangeVisibility(callback? : Function) : EventKit.Disposable;
-    
-        /**
-         * This field or method was not documented by atomdoc, assume it is private. Use with caution.
-         */
-        on(eventName? : string) : any;
+        onDidChangeVisibility(callback : (event: { oldBufferPosition: TextBuffer.Point; oldScreenPosition: TextBuffer.Point; newBufferPosition: TextBuffer.Point; newScreenPosition: TextBuffer.Point; textChanged: boolean; cursor: Cursor; }) => any) : EventKit.Disposable;
     
         /**
          * Moves a cursor to a given screen position.
          * @param screenPosition? - {Array} of two numbers: the screen row, and the screen column.
          * @param options? - {Object} with the following keys:
          */
-        setScreenPosition(screenPosition? : any[], options? : Object) : TextBuffer.Point;
+        setScreenPosition(screenPosition? : TextBuffer.Point | { row: number; column: number } | [number, number], options? : { autoscroll: boolean; }) : TextBuffer.Point;
     
         getScreenPosition() : TextBuffer.Point;
     
@@ -2088,7 +1604,7 @@ file in the type specified by the configuration schema.
          * @param bufferPosition? - {Array} of two numbers: the buffer row, and the buffer column.
          * @param options? - {Object} with the following keys:
          */
-        setBufferPosition(bufferPosition? : any[], options? : Object) : TextBuffer.Point;
+        setBufferPosition(bufferPosition? : TextBuffer.Point | { row: number; column: number } | [number, number], options? : { autoscroll: boolean; }) : TextBuffer.Point;
     
         getBufferPosition() : TextBuffer.Point;
     
@@ -2103,11 +1619,11 @@ file in the type specified by the configuration schema.
     
         getBufferColumn() : number;
     
-        getCurrentBufferLine() : any;
+        getCurrentBufferLine() : number;
     
-        isAtBeginningOfLine() : boolean;
+        isAtBeginningOfLine() : number;
     
-        isAtEndOfLine() : boolean;
+        isAtEndOfLine() : number;
     
         getMarker() : Marker;
     
@@ -2127,7 +1643,7 @@ file in the type specified by the configuration schema.
          */
         isBetweenWordAndNonWord() : boolean;
     
-        isInsideWord(options? : Object) : boolean;
+        isInsideWord(options? : { wordRegex: RegExp; }) : boolean;
     
         getIndentLevel() : any;
     
@@ -2136,14 +1652,14 @@ file in the type specified by the configuration schema.
          */
         getScopeDescriptor() : ScopeDescriptor;
     
-        hasPrecedingCharactersOnLine() : any;
+        hasPrecedingCharactersOnLine() : number;
     
         /**
          * Identifies if this cursor is the last in the {TextEditor}.
          * 
          * "Last" is defined as the most recently added cursor.
          */
-        isLastCursor() : boolean;
+        isLastCursor() : Cursor;
     
         /**
          * Moves the cursor up one screen row.
@@ -2151,7 +1667,7 @@ file in the type specified by the configuration schema.
          * @param options? - {Object} with the following keys:
          * @param moveToEndOfSelection? - if true, move to the left of the selection if a selection exists. 
          */
-        moveUp(rowCount? : number, options? : { moveToEndOfSelection? : void }) : void;
+        moveUp(rowCount? : number, options? : { moveToEndOfSelection: boolean; }) : void;
     
         /**
          * Moves the cursor down one screen row.
@@ -2159,7 +1675,7 @@ file in the type specified by the configuration schema.
          * @param options? - {Object} with the following keys:
          * @param moveToEndOfSelection? - if true, move to the left of the selection if a selection exists. 
          */
-        moveDown(rowCount? : number, options? : { moveToEndOfSelection? : void }) : void;
+        moveDown(rowCount? : number, options? : { moveToEndOfSelection: boolean; }) : void;
     
         /**
          * Moves the cursor left one screen column.
@@ -2167,7 +1683,7 @@ file in the type specified by the configuration schema.
          * @param options? - {Object} with the following keys:
          * @param moveToEndOfSelection? - if true, move to the left of the selection if a selection exists. 
          */
-        moveLeft(columnCount? : number, options? : { moveToEndOfSelection? : void }) : void;
+        moveLeft(columnCount? : number, options? : { moveToEndOfSelection: boolean; }) : void;
     
         /**
          * Moves the cursor right one screen column.
@@ -2175,7 +1691,7 @@ file in the type specified by the configuration schema.
          * @param options? - {Object} with the following keys:
          * @param moveToEndOfSelection? - if true, move to the right of the selection if a selection exists. 
          */
-        moveRight(columnCount? : number, options? : { moveToEndOfSelection? : void }) : void;
+        moveRight(columnCount? : number, options? : { moveToEndOfSelection: boolean; }) : void;
     
         /**
          * Moves the cursor to the top of the buffer. 
@@ -2190,28 +1706,28 @@ file in the type specified by the configuration schema.
         /**
          * Moves the cursor to the beginning of the line. 
          */
-        moveToBeginningOfScreenLine() : void;
+        moveToBeginningOfScreenLine() : number;
     
         /**
          * Moves the cursor to the beginning of the buffer line. 
          */
-        moveToBeginningOfLine() : void;
+        moveToBeginningOfLine() : number;
     
         /**
          * Moves the cursor to the beginning of the first character in the
          * line. 
          */
-        moveToFirstCharacterOfLine() : void;
+        moveToFirstCharacterOfLine() : number;
     
         /**
          * Moves the cursor to the end of the line. 
          */
-        moveToEndOfScreenLine() : void;
+        moveToEndOfScreenLine() : number;
     
         /**
          * Moves the cursor to the end of the buffer line. 
          */
-        moveToEndOfLine() : void;
+        moveToEndOfLine() : number;
     
         /**
          * Moves the cursor to the beginning of the word. 
@@ -2254,42 +1770,42 @@ file in the type specified by the configuration schema.
          */
         moveToBeginningOfPreviousParagraph() : void;
     
-        getPreviousWordBoundaryBufferPosition(options? : any) : TextBuffer.Point;
+        getPreviousWordBoundaryBufferPosition(options? : { wordRegex: RegExp; }) : TextBuffer.Point;
     
-        getNextWordBoundaryBufferPosition(options? : any) : TextBuffer.Point;
+        getNextWordBoundaryBufferPosition(options? : { wordRegex: RegExp; }) : TextBuffer.Point;
     
         /**
          * Retrieves the buffer position of where the current word starts.
          */
-        getBeginningOfCurrentWordBufferPosition(options? : any) : TextBuffer.Point;
+        getBeginningOfCurrentWordBufferPosition(options? : { wordRegex?: RegExp; includeNonWordCharacters?: boolean; allowPrevious?: boolean; }) : TextBuffer.Point;
     
         /**
          * Retrieves the buffer position of where the current word ends.
          */
-        getEndOfCurrentWordBufferPosition(options? : any) : TextBuffer.Point;
+        getEndOfCurrentWordBufferPosition(options? : { wordRegex?: RegExp; includeNonWordCharacters?: boolean; allowPrevious?: boolean; }) : TextBuffer.Point;
     
         /**
          * Retrieves the buffer position of where the next word starts.
          */
-        getBeginningOfNextWordBufferPosition(options? : any) : TextBuffer.Point;
+        getBeginningOfNextWordBufferPosition(options? : { wordRegex: RegExp; }) : TextBuffer.Point;
     
-        getCurrentWordBufferRange(options? : Object) : TextBuffer.Range;
+        getCurrentWordBufferRange(options? : { wordRegex: RegExp; }) : Range;
     
-        getCurrentLineBufferRange(options? : Object) : TextBuffer.Range;
+        getCurrentLineBufferRange(options? : { includeNewline: boolean; }) : Range;
     
         /**
          * Retrieves the range for the current paragraph.
          * 
          * A paragraph is defined as a block of text surrounded by empty lines.
          */
-        getCurrentParagraphBufferRange() : TextBuffer.Range;
+        getCurrentParagraphBufferRange() : Range;
     
-        getCurrentWordPrefix() : any;
+        getCurrentWordPrefix() : string;
     
         /**
          * Sets whether the cursor is visible. 
          */
-        setVisible(visible? : boolean) : void;
+        setVisible(visible? : boolean) : boolean;
     
         isVisible() : boolean;
     
@@ -2304,81 +1820,23 @@ file in the type specified by the configuration schema.
          * See {Point::compare} for more details.
          * @param otherCursor? - {Cursor} to compare against 
          */
-        compare(otherCursor? : Cursor) : any;
+        compare(otherCursor? : number) : number;
     
         /**
          * Prevents this cursor from causing scrolling. 
          */
-        clearAutoscroll() : any;
+        clearAutoscroll() : void;
     
         /**
          * Deselects the current selection. 
          */
-        clearSelection(options? : any) : Selection;
+        clearSelection(options? : { autoscroll: boolean; }) : Selection;
     
         /**
          * Get the RegExp used by the cursor to determine what a "word" is.
-        Returns a {RegExp}.
+         * Returns a {RegExp}.
          */
-        wordRegExp(includeNonWordCharacters? : any) : RegExp;
-    
-        /**
-         * Private
-         * This field or method was marked private by atomdoc. Use with caution.
-         */
-        changePosition(options? : any, fn? : any) : TextBuffer.Point;
-    
-        /**
-         * This field or method was not documented by atomdoc, assume it is private. Use with caution.
-         */
-        getPixelRect() : any;
-    
-        /**
-         * This field or method was not documented by atomdoc, assume it is private. Use with caution.
-         */
-        getScreenRange() : TextBuffer.Range;
-    
-        /**
-         * This field or method was not documented by atomdoc, assume it is private. Use with caution.
-         */
-        autoscroll(options? : any) : any;
-    
-        /**
-         * This field or method was not documented by atomdoc, assume it is private. Use with caution.
-         */
-        getBeginningOfNextParagraphBufferPosition() : TextBuffer.Point;
-    
-        /**
-         * This field or method was not documented by atomdoc, assume it is private. Use with caution.
-         */
-        getBeginningOfPreviousParagraphBufferPosition() : TextBuffer.Point;
-    
-    }
-
-    /**
-     * CursorsComponent
-     * This class was not documented by atomdoc, assume it is private. Use with caution.
-     */
-    class CursorsComponent {
-        /**
-         * This field or method was not documented by atomdoc, assume it is private. Use with caution.
-         */
-        oldState: any /* default */;
-    
-        /**
-         * This field or method was not documented by atomdoc, assume it is private. Use with caution.
-         */
-        constructor();
-    
-        /**
-         * This field or method was not documented by atomdoc, assume it is private. Use with caution.
-         */
-        updateSync(state? : any) : void;
-    
-        /**
-         * This field or method was not documented by atomdoc, assume it is private. Use with caution.
-         */
-        updateCursorNode(id? : any, newCursorState? : any) : void;
+        wordRegExp({ includeNonWordCharacters } : { includeNonWordCharacters? : any }) : RegExp;
     
     }
 
@@ -2389,103 +1847,6 @@ file in the type specified by the configuration schema.
      * around marked ranges of text.
      */
     class Decoration {
-        /**
-         * Check if the `decorationProperties.type` matches `type`
-         * This field or method was marked private by atomdoc. Use with caution.
-         * @param decorationProperties? - {Object} eg. `{type: 'line-number', class: 'my-new-class'}`
-         * @param type? - {String} type like `'line-number'`, `'line'`, etc. `type` can also be an {Array} of {String}s, where it will return true if the decoration's type matches any in the array.
-         */
-        static isType(decorationProperties? : Object, type? : string) : boolean;
-    
-        /**
-         * This field or method was not documented by atomdoc, assume it is private. Use with caution.
-         */
-        marker: Marker;
-    
-        /**
-         * This field or method was not documented by atomdoc, assume it is private. Use with caution.
-         */
-        displayBuffer: DisplayBuffer;
-    
-        /**
-         * This field or method was not documented by atomdoc, assume it is private. Use with caution.
-         */
-        properties: any /* default */;
-    
-        /**
-         * Construction and Destruction
-         * This field or method was marked private by atomdoc. Use with caution.
-         */
-        constructor(marker? : Marker, displayBuffer? : DisplayBuffer, properties? : any);
-    
-        /**
-         * Destroy this marker.
-         * 
-         * If you own the marker, you should use {Marker::destroy} which will destroy
-         * this decoration. 
-         */
-        destroy() : void;
-    
-        /**
-         * This field or method was not documented by atomdoc, assume it is private. Use with caution.
-         */
-        isDestroyed() : boolean;
-    
-        /**
-         * When the {Decoration} is updated via {Decoration::update}.
-         * @param callback? - {Function}
-         */
-        onDidChangeProperties(callback? : Function) : EventKit.Disposable;
-    
-        /**
-         * Invoke the given callback when the {Decoration} is destroyed
-         * @param callback? - {Function}
-         */
-        onDidDestroy(callback? : Function) : EventKit.Disposable;
-    
-        /**
-         * An id unique across all {Decoration} objects 
-         */
-        getId() : any;
-    
-        getMarker() : Marker;
-    
-        /**
-         * Check if the `decorationProperties.type` matches `type`
-         * This field or method was marked private by atomdoc. Use with caution.
-         * @param type? - {String} type like `'line-number'`, `'line'`, etc. `type` can also be an {Array} of {String}s, where it will return true if the decoration's type matches any in the array.
-         */
-        isType(type? : string) : boolean;
-    
-        getProperties() : Decoration;
-    
-        /**
-         * Update the marker with new Properties. Allows you to change the decoration's class.
-         * @param newProperties? - {Object} eg. `{type: 'line-number', class: 'my-new-class'}` 
-         */
-        setProperties(newProperties? : Object) : void;
-    
-        /**
-         * Private methods
-         * This field or method was marked private by atomdoc. Use with caution.
-         */
-        matchesPattern(decorationPattern? : FirstMate.Pattern) : FirstMate.Pattern;
-    
-        /**
-         * This field or method was not documented by atomdoc, assume it is private. Use with caution.
-         */
-        onDidFlash(callback? : any) : EventKit.Disposable;
-    
-        /**
-         * This field or method was not documented by atomdoc, assume it is private. Use with caution.
-         */
-        flash(klass? : any, duration? : any) : any;
-    
-        /**
-         * This field or method was not documented by atomdoc, assume it is private. Use with caution.
-         */
-        consumeNextFlash() : any;
-    
     }
 
     /**
@@ -2496,22 +1857,14 @@ file in the type specified by the configuration schema.
         /**
          * Create a Directory that corresponds to the specified URI.
          * @param uri? - {String} The path to the directory to add. This is guaranteed not to be contained by a {Directory} in `atom.project`.
-        Returns:
-
-* {Directory} if the given URI is compatible with this provider.
-* `null` if the given URI is not compatibile with this provider.
          */
-        directoryForURISync(uri? : string) : Pathwatcher.Directory;
+        directoryForURISync(uri? : string) : any;
     
         /**
          * Create a Directory that corresponds to the specified URI.
          * @param uri? - {String} The path to the directory to add. This is guaranteed not to be contained by a {Directory} in `atom.project`.
-        Returns a Promise that resolves to:
-
-* {Directory} if the given URI is compatible with this provider.
-* `null` if the given URI is not compatibile with this provider.
          */
-        directoryForURI(uri? : string) : Pathwatcher.Directory;
+        directoryForURI(uri? : string) : any;
     
     }
 
@@ -2527,7 +1880,7 @@ file in the type specified by the configuration schema.
         /**
          * Register the given class(es) as deserializers.
          */
-        add(deserializers? : any) : any;
+        add(deserializers? : any) : EventKit.Disposable;
     
         /**
          * Deserialize the state and params.
@@ -2546,28 +1899,6 @@ file in the type specified by the configuration schema.
     }
 
     /**
-     * BufferToScreenConversionError
-     * This class was not documented by atomdoc, assume it is private. Use with caution.
-     */
-    class BufferToScreenConversionError /*extends Error*/ {
-        /**
-         * This field or method was not documented by atomdoc, assume it is private. Use with caution.
-         */
-        message: any /* default */;
-    
-        /**
-         * This field or method was not documented by atomdoc, assume it is private. Use with caution.
-         */
-        metadata: any /* default */;
-    
-        /**
-         * This field or method was not documented by atomdoc, assume it is private. Use with caution.
-         */
-        constructor(message? : any, metadata? : any);
-    
-    }
-
-    /**
      * DisplayBuffer
      * This class was not documented by atomdoc, assume it is private. Use with caution.
      */
@@ -2575,7 +1906,7 @@ file in the type specified by the configuration schema.
         /**
          * This field or method was not documented by atomdoc, assume it is private. Use with caution.
          */
-        editorWidthInChars: any /* default */;
+        editorWidthInChars: number;
     
         /**
          * This field or method was not documented by atomdoc, assume it is private. Use with caution.
@@ -2590,22 +1921,22 @@ file in the type specified by the configuration schema.
         /**
          * This field or method was not documented by atomdoc, assume it is private. Use with caution.
          */
-        verticalScrollMargin: any /* default */;
+        verticalScrollMargin: number;
     
         /**
          * This field or method was not documented by atomdoc, assume it is private. Use with caution.
          */
-        horizontalScrollMargin: any /* default */;
+        horizontalScrollMargin: number;
     
         /**
          * This field or method was not documented by atomdoc, assume it is private. Use with caution.
          */
-        scopedCharacterWidthsChangeCount: any /* default */;
+        scopedCharacterWidthsChangeCount: number;
     
         /**
          * This field or method was not documented by atomdoc, assume it is private. Use with caution.
          */
-        constructor(tabLength? : any, editorWidthInChars? : any, tokenizedBuffer? : TokenizedBuffer, buffer? : any, invisibles? : boolean);
+        constructor({ tabLength, editorWidthInChars, tokenizedBuffer, buffer, invisibles } : { tabLength? : number; editorWidthInChars? : number; tokenizedBuffer? : TokenizedBuffer; buffer? : any; invisibles? : boolean });
     
         /**
          * This field or method was not documented by atomdoc, assume it is private. Use with caution.
@@ -2630,77 +1961,77 @@ file in the type specified by the configuration schema.
         /**
          * This field or method was not documented by atomdoc, assume it is private. Use with caution.
          */
-        updateAllScreenLines() : void;
+        updateAllScreenLines() : string[];
     
         /**
          * This field or method was not documented by atomdoc, assume it is private. Use with caution.
          */
-        onDidChangeSoftWrapped(callback? : any) : EventKit.Disposable;
+        onDidChangeSoftWrapped(callback : Function /* needs to be defined */) : EventKit.Disposable;
     
         /**
          * This field or method was not documented by atomdoc, assume it is private. Use with caution.
          */
-        onDidChangeGrammar(callback? : any) : EventKit.Disposable;
+        onDidChangeGrammar(callback : Function /* needs to be defined */) : EventKit.Disposable;
     
         /**
          * This field or method was not documented by atomdoc, assume it is private. Use with caution.
          */
-        onDidTokenize(callback? : any) : EventKit.Disposable;
+        onDidTokenize(callback : Function /* needs to be defined */) : EventKit.Disposable;
     
         /**
          * This field or method was not documented by atomdoc, assume it is private. Use with caution.
          */
-        onDidChange(callback? : any) : EventKit.Disposable;
+        onDidChange(callback : Function /* needs to be defined */) : EventKit.Disposable;
     
         /**
          * This field or method was not documented by atomdoc, assume it is private. Use with caution.
          */
-        onDidChangeCharacterWidths(callback? : any) : EventKit.Disposable;
+        onDidChangeCharacterWidths(callback : Function /* needs to be defined */) : EventKit.Disposable;
     
         /**
          * This field or method was not documented by atomdoc, assume it is private. Use with caution.
          */
-        onDidChangeScrollTop(callback? : any) : EventKit.Disposable;
+        onDidChangeScrollTop(callback : Function /* needs to be defined */) : EventKit.Disposable;
     
         /**
          * This field or method was not documented by atomdoc, assume it is private. Use with caution.
          */
-        onDidChangeScrollLeft(callback? : any) : EventKit.Disposable;
+        onDidChangeScrollLeft(callback : Function /* needs to be defined */) : EventKit.Disposable;
     
         /**
          * This field or method was not documented by atomdoc, assume it is private. Use with caution.
          */
-        observeScrollTop(callback? : any) : EventKit.Disposable;
+        observeScrollTop(callback : (any: any) => void) : EventKit.Disposable;
     
         /**
          * This field or method was not documented by atomdoc, assume it is private. Use with caution.
          */
-        observeScrollLeft(callback? : any) : EventKit.Disposable;
+        observeScrollLeft(callback : (any: any) => void) : EventKit.Disposable;
     
         /**
          * This field or method was not documented by atomdoc, assume it is private. Use with caution.
          */
-        observeDecorations(callback? : any) : EventKit.Disposable;
+        observeDecorations(callback : (any: any) => void) : EventKit.Disposable;
     
         /**
          * This field or method was not documented by atomdoc, assume it is private. Use with caution.
          */
-        onDidAddDecoration(callback? : any) : EventKit.Disposable;
+        onDidAddDecoration(callback : Function /* needs to be defined */) : EventKit.Disposable;
     
         /**
          * This field or method was not documented by atomdoc, assume it is private. Use with caution.
          */
-        onDidRemoveDecoration(callback? : any) : EventKit.Disposable;
+        onDidRemoveDecoration(callback : Function /* needs to be defined */) : EventKit.Disposable;
     
         /**
          * This field or method was not documented by atomdoc, assume it is private. Use with caution.
          */
-        onDidCreateMarker(callback? : any) : EventKit.Disposable;
+        onDidCreateMarker(callback : Function /* needs to be defined */) : EventKit.Disposable;
     
         /**
          * This field or method was not documented by atomdoc, assume it is private. Use with caution.
          */
-        onDidUpdateMarkers(callback? : any) : EventKit.Disposable;
+        onDidUpdateMarkers(callback : Function /* needs to be defined */) : EventKit.Disposable;
     
         /**
          * This field or method was not documented by atomdoc, assume it is private. Use with caution.
@@ -2710,7 +2041,7 @@ file in the type specified by the configuration schema.
         /**
          * This field or method was not documented by atomdoc, assume it is private. Use with caution.
          */
-        updateWrappedScreenLines() : void;
+        updateWrappedScreenLines() : string[];
     
         /**
          * Sets the visibility of the tokenized buffer.
@@ -2718,97 +2049,97 @@ file in the type specified by the configuration schema.
          * visible - A {Boolean} indicating of the tokenized buffer is shown 
          * This field or method was marked private by atomdoc. Use with caution.
          */
-        setVisible(visible? : boolean) : void;
+        setVisible(visible? : boolean) : boolean;
     
         /**
          * This field or method was not documented by atomdoc, assume it is private. Use with caution.
          */
-        getVerticalScrollMargin() : any;
+        getVerticalScrollMargin() : number;
     
         /**
          * This field or method was not documented by atomdoc, assume it is private. Use with caution.
          */
-        setVerticalScrollMargin(verticalScrollMargin? : any) : void;
+        setVerticalScrollMargin(verticalScrollMargin? : number) : number;
     
         /**
          * This field or method was not documented by atomdoc, assume it is private. Use with caution.
          */
-        getVerticalScrollMarginInPixels() : any;
+        getVerticalScrollMarginInPixels() : number;
     
         /**
          * This field or method was not documented by atomdoc, assume it is private. Use with caution.
          */
-        getHorizontalScrollMargin() : any;
+        getHorizontalScrollMargin() : number;
     
         /**
          * This field or method was not documented by atomdoc, assume it is private. Use with caution.
          */
-        setHorizontalScrollMargin(horizontalScrollMargin? : any) : void;
+        setHorizontalScrollMargin(horizontalScrollMargin? : number) : number;
     
         /**
          * This field or method was not documented by atomdoc, assume it is private. Use with caution.
          */
-        getHorizontalScrollMarginInPixels() : any;
+        getHorizontalScrollMarginInPixels() : number;
     
         /**
          * This field or method was not documented by atomdoc, assume it is private. Use with caution.
          */
-        getHorizontalScrollbarHeight() : any;
+        getHorizontalScrollbarHeight() : number;
     
         /**
          * This field or method was not documented by atomdoc, assume it is private. Use with caution.
          */
-        setHorizontalScrollbarHeight(horizontalScrollbarHeight? : any) : void;
+        setHorizontalScrollbarHeight(horizontalScrollbarHeight? : number) : number;
     
         /**
          * This field or method was not documented by atomdoc, assume it is private. Use with caution.
          */
-        getVerticalScrollbarWidth() : any;
+        getVerticalScrollbarWidth() : number;
     
         /**
          * This field or method was not documented by atomdoc, assume it is private. Use with caution.
          */
-        setVerticalScrollbarWidth(verticalScrollbarWidth? : any) : void;
+        setVerticalScrollbarWidth(verticalScrollbarWidth? : number) : number;
     
         /**
          * This field or method was not documented by atomdoc, assume it is private. Use with caution.
          */
-        getHeight() : any;
+        getHeight() : number;
     
         /**
          * This field or method was not documented by atomdoc, assume it is private. Use with caution.
          */
-        setHeight(height? : any) : void;
+        setHeight(height? : number) : number;
     
         /**
          * This field or method was not documented by atomdoc, assume it is private. Use with caution.
          */
-        getClientHeight(reentrant? : any) : any;
+        getClientHeight(reentrant? : any) : number;
     
         /**
          * This field or method was not documented by atomdoc, assume it is private. Use with caution.
          */
-        getClientWidth(reentrant? : any) : any;
+        getClientWidth(reentrant? : any) : number;
     
         /**
          * This field or method was not documented by atomdoc, assume it is private. Use with caution.
          */
-        horizontallyScrollable(reentrant? : any) : any;
+        horizontallyScrollable(reentrant? : any) : number;
     
         /**
          * This field or method was not documented by atomdoc, assume it is private. Use with caution.
          */
-        verticallyScrollable(reentrant? : any) : any;
+        verticallyScrollable(reentrant? : any) : number;
     
         /**
          * This field or method was not documented by atomdoc, assume it is private. Use with caution.
          */
-        getWidth() : any;
+        getWidth() : number;
     
         /**
          * This field or method was not documented by atomdoc, assume it is private. Use with caution.
          */
-        setWidth(newWidth? : any) : void;
+        setWidth(newWidth? : number) : number;
     
         /**
          * This field or method was not documented by atomdoc, assume it is private. Use with caution.
@@ -2863,37 +2194,37 @@ file in the type specified by the configuration schema.
         /**
          * This field or method was not documented by atomdoc, assume it is private. Use with caution.
          */
-        getLineHeightInPixels() : any;
+        getLineHeightInPixels() : number;
     
         /**
          * This field or method was not documented by atomdoc, assume it is private. Use with caution.
          */
-        setLineHeightInPixels(lineHeightInPixels? : any) : void;
+        setLineHeightInPixels(lineHeightInPixels? : number) : number;
     
         /**
          * This field or method was not documented by atomdoc, assume it is private. Use with caution.
          */
-        getDefaultCharWidth() : any;
+        getDefaultCharWidth() : number;
     
         /**
          * This field or method was not documented by atomdoc, assume it is private. Use with caution.
          */
-        setDefaultCharWidth(defaultCharWidth? : any) : void;
+        setDefaultCharWidth(defaultCharWidth? : number) : number;
     
         /**
          * This field or method was not documented by atomdoc, assume it is private. Use with caution.
          */
-        getCursorWidth() : any;
+        getCursorWidth() : number;
     
         /**
          * This field or method was not documented by atomdoc, assume it is private. Use with caution.
          */
-        getScopedCharWidth(scopeNames? : string, char? : any) : any;
+        getScopedCharWidth(scopeNames? : string, char? : any) : number;
     
         /**
          * This field or method was not documented by atomdoc, assume it is private. Use with caution.
          */
-        getScopedCharWidths(scopeNames? : string) : any;
+        getScopedCharWidths(scopeNames? : string) : number;
     
         /**
          * This field or method was not documented by atomdoc, assume it is private. Use with caution.
@@ -2903,48 +2234,48 @@ file in the type specified by the configuration schema.
         /**
          * This field or method was not documented by atomdoc, assume it is private. Use with caution.
          */
-        setScopedCharWidth(scopeNames? : string, char? : any, width? : any) : void;
+        setScopedCharWidth(scopeNames? : string, char? : any, width? : number) : number;
     
         /**
          * This field or method was not documented by atomdoc, assume it is private. Use with caution.
          */
-        characterWidthsChanged() : any;
+        characterWidthsChanged() : number;
     
         /**
          * This field or method was not documented by atomdoc, assume it is private. Use with caution.
          */
-        clearScopedCharWidths() : any;
+        clearScopedCharWidths() : number;
     
         /**
          * This field or method was not documented by atomdoc, assume it is private. Use with caution.
          */
-        getScrollHeight() : any;
+        getScrollHeight() : number;
     
         /**
          * This field or method was not documented by atomdoc, assume it is private. Use with caution.
          */
-        getScrollWidth() : any;
+        getScrollWidth() : number;
     
         /**
          * 
          * This field or method was marked private by atomdoc. Use with caution.
          */
-        getVisibleRowRange() : TextBuffer.Range;
+        getVisibleRowRange() : Range;
     
         /**
          * This field or method was not documented by atomdoc, assume it is private. Use with caution.
          */
-        intersectsVisibleRowRange(startRow? : number, endRow? : number) : TextBuffer.Range;
+        intersectsVisibleRowRange(startRow? : number, endRow? : number) : Range;
     
         /**
          * This field or method was not documented by atomdoc, assume it is private. Use with caution.
          */
-        selectionIntersectsVisibleRowRange(selection? : Range) : TextBuffer.Range;
+        selectionIntersectsVisibleRowRange(selection? : Selection) : Range;
     
         /**
          * This field or method was not documented by atomdoc, assume it is private. Use with caution.
          */
-        scrollToScreenRange(screenRange? : TextBuffer.Range, options? : any) : TextBuffer.Range;
+        scrollToScreenRange(screenRange? : Range, options? : any) : Range;
     
         /**
          * This field or method was not documented by atomdoc, assume it is private. Use with caution.
@@ -2959,12 +2290,11 @@ file in the type specified by the configuration schema.
         /**
          * This field or method was not documented by atomdoc, assume it is private. Use with caution.
          */
-        pixelRectForScreenRange(screenRange? : TextBuffer.Range) : TextBuffer.Range;
+        pixelRectForScreenRange(screenRange? : Range) : Range;
     
         /**
          * Retrieves the current tab length.
          * This field or method was marked private by atomdoc. Use with caution.
-        Returns a {Number}.
          */
         getTabLength() : number;
     
@@ -2974,12 +2304,12 @@ file in the type specified by the configuration schema.
          * tabLength - A {Number} that defines the new tab length. 
          * This field or method was marked private by atomdoc. Use with caution.
          */
-        setTabLength(tabLength? : any) : void;
+        setTabLength(tabLength? : number) : number;
     
         /**
          * This field or method was not documented by atomdoc, assume it is private. Use with caution.
          */
-        setInvisibles(invisibles? : boolean) : void;
+        setInvisibles(invisibles? : boolean) : boolean;
     
         /**
          * This field or method was not documented by atomdoc, assume it is private. Use with caution.
@@ -2997,14 +2327,13 @@ file in the type specified by the configuration schema.
          * editorWidthInChars - A {Number} of characters. 
          * This field or method was marked private by atomdoc. Use with caution.
          */
-        setEditorWidthInChars(editorWidthInChars? : any) : void;
+        setEditorWidthInChars(editorWidthInChars? : number) : number;
     
         /**
          * 
          * This field or method was marked private by atomdoc. Use with caution.
-        Returns the editor width in characters for soft wrap.
          */
-        getEditorWidthInChars() : any;
+        getEditorWidthInChars() : number;
     
         /**
          * This field or method was not documented by atomdoc, assume it is private. Use with caution.
@@ -3036,7 +2365,7 @@ file in the type specified by the configuration schema.
         /**
          * This field or method was not documented by atomdoc, assume it is private. Use with caution.
          */
-        indentLevelForLine(line? : any) : any;
+        indentLevelForLine(line? : number) : number;
     
         /**
          * Given starting and ending screen rows, this returns an array of the
@@ -3060,12 +2389,12 @@ file in the type specified by the configuration schema.
         /**
          * This field or method was not documented by atomdoc, assume it is private. Use with caution.
          */
-        isFoldedAtBufferRow(bufferRow? : number) : boolean;
+        isFoldedAtBufferRow(bufferRow? : number) : number;
     
         /**
          * This field or method was not documented by atomdoc, assume it is private. Use with caution.
          */
-        isFoldedAtScreenRow(screenRow? : number) : boolean;
+        isFoldedAtScreenRow(screenRow? : number) : number;
     
         /**
          * Destroys the fold with the given id 
@@ -3125,7 +2454,7 @@ file in the type specified by the configuration schema.
          * 
          * This field or method was marked private by atomdoc. Use with caution.
          */
-        outermostFoldsInBufferRowRange(startRow? : number, endRow? : number) : TextBuffer.Range;
+        outermostFoldsInBufferRowRange(startRow? : number, endRow? : number) : Range;
     
         /**
          * Given a buffer row, this returns folds that include it.
@@ -3161,7 +2490,7 @@ file in the type specified by the configuration schema.
          * bufferRange - The {Range} to convert
          * This field or method was marked private by atomdoc. Use with caution.
          */
-        screenRangeForBufferRange(bufferRange? : TextBuffer.Range, options? : any) : TextBuffer.Range;
+        screenRangeForBufferRange(bufferRange? : Range, options? : any) : Range;
     
         /**
          * Given a screen range, this converts it into a buffer position.
@@ -3169,12 +2498,12 @@ file in the type specified by the configuration schema.
          * screenRange - The {Range} to convert
          * This field or method was marked private by atomdoc. Use with caution.
          */
-        bufferRangeForScreenRange(screenRange? : TextBuffer.Range) : TextBuffer.Range;
+        bufferRangeForScreenRange(screenRange? : Range) : Range;
     
         /**
          * This field or method was not documented by atomdoc, assume it is private. Use with caution.
          */
-        pixelRangeForScreenRange(screenRange? : TextBuffer.Range, clip? : any) : TextBuffer.Range;
+        pixelRangeForScreenRange(screenRange? : Range, clip? : any) : Range;
     
         /**
          * This field or method was not documented by atomdoc, assume it is private. Use with caution.
@@ -3194,7 +2523,6 @@ file in the type specified by the configuration schema.
         /**
          * Gets the number of screen lines.
          * This field or method was marked private by atomdoc. Use with caution.
-        Returns a {Number}.
          */
         getLineCount() : number;
     
@@ -3207,7 +2535,6 @@ file in the type specified by the configuration schema.
         /**
          * Gets the length of the longest screen line.
          * This field or method was marked private by atomdoc. Use with caution.
-        Returns a {Number}.
          */
         getMaxLineLength() : number;
     
@@ -3254,7 +2581,7 @@ file in the type specified by the configuration schema.
         /**
          * This field or method was not documented by atomdoc, assume it is private. Use with caution.
          */
-        bufferRangeForScopeAtPosition(selector? : ScopedPropertyStore.Selector, position? : TextBuffer.Point | { row: number; column: number } | [number, number]) : TextBuffer.Range;
+        bufferRangeForScopeAtPosition(selector? : string, position? : TextBuffer.Point | { row: number; column: number } | [number, number]) : TextBuffer.Range;
     
         /**
          * Retrieves the grammar's token for a buffer position.
@@ -3276,7 +2603,7 @@ file in the type specified by the configuration schema.
          * grammar - Sets the new grammar rules 
          * This field or method was marked private by atomdoc. Use with caution.
          */
-        setGrammar(grammar? : FirstMate.Grammar) : void;
+        setGrammar(grammar? : FirstMate.Grammar) : FirstMate.Grammar;
     
         /**
          * Reloads the current grammar. 
@@ -3308,13 +2635,13 @@ file in the type specified by the configuration schema.
          * @param range? - The {Range} to clip.
          * @param options? - See {::clipScreenPosition} `options`. Returns a {Range}. 
          */
-        clipScreenRange(range? : TextBuffer.Range, options? : TextBuffer.Range) : TextBuffer.Range;
+        clipScreenRange(range? : Range, options? : TextBuffer.Range) : Range;
     
         /**
          * Calculates a {Range} representing the start of the {TextBuffer} until the end.
          * This field or method was marked private by atomdoc. Use with caution.
          */
-        rangeForAllLines() : TextBuffer.Range;
+        rangeForAllLines() : string[];
     
         /**
          * This field or method was not documented by atomdoc, assume it is private. Use with caution.
@@ -3349,7 +2676,7 @@ file in the type specified by the configuration schema.
         /**
          * This field or method was not documented by atomdoc, assume it is private. Use with caution.
          */
-        decorationsForScreenRowRange(startScreenRow? : number, endScreenRow? : number) : TextBuffer.Range;
+        decorationsForScreenRowRange(startScreenRow? : number, endScreenRow? : number) : Range;
     
         /**
          * This field or method was not documented by atomdoc, assume it is private. Use with caution.
@@ -3378,7 +2705,7 @@ file in the type specified by the configuration schema.
         /**
          * This field or method was not documented by atomdoc, assume it is private. Use with caution.
          */
-        getMarkerCount() : any;
+        getMarkerCount() : number;
     
         /**
          * Constructs a new marker at the given screen range.
@@ -3386,7 +2713,7 @@ file in the type specified by the configuration schema.
          * range - The marker {Range} (representing the distance between the head and tail)
          * options - Options to pass to the {Marker} constructor
          */
-        markScreenRange(args? : any) : TextBuffer.Range;
+        markScreenRange(args? : Marker) : Marker;
     
         /**
          * Constructs a new marker at the given buffer range.
@@ -3394,7 +2721,7 @@ file in the type specified by the configuration schema.
          * range - The marker {Range} (representing the distance between the head and tail)
          * options - Options to pass to the {Marker} constructor
          */
-        markBufferRange(range? : TextBuffer.Range, options? : any) : TextBuffer.Range;
+        markBufferRange(range? : Marker, options? : Marker) : Marker;
     
         /**
          * Constructs a new marker at the given screen position.
@@ -3402,7 +2729,7 @@ file in the type specified by the configuration schema.
          * range - The marker {Range} (representing the distance between the head and tail)
          * options - Options to pass to the {Marker} constructor
          */
-        markScreenPosition(screenPosition? : TextBuffer.Point | { row: number; column: number } | [number, number], options? : any) : TextBuffer.Point;
+        markScreenPosition(screenPosition? : Marker, options? : Marker) : Marker;
     
         /**
          * Constructs a new marker at the given buffer position.
@@ -3410,14 +2737,14 @@ file in the type specified by the configuration schema.
          * range - The marker {Range} (representing the distance between the head and tail)
          * options - Options to pass to the {Marker} constructor
          */
-        markBufferPosition(bufferPosition? : TextBuffer.Point | { row: number; column: number } | [number, number], options? : any) : TextBuffer.Point;
+        markBufferPosition(bufferPosition? : Marker, options? : Marker) : Marker;
     
         /**
          * Removes the marker with the given id.
          * 
          * id - The {Number} of the ID to remove 
          */
-        destroyMarker(id? : any) : void;
+        destroyMarker(id? : any) : Marker;
     
         /**
          * Finds the first marker satisfying the given attributes
@@ -3490,7 +2817,7 @@ file in the type specified by the configuration schema.
         /**
          * This field or method was not documented by atomdoc, assume it is private. Use with caution.
          */
-        logLines(start? : any, end? : any) : any;
+        logLines(start? : any, end? : any) : string[];
     
         /**
          * This field or method was not documented by atomdoc, assume it is private. Use with caution.
@@ -3500,37 +2827,37 @@ file in the type specified by the configuration schema.
         /**
          * This field or method was not documented by atomdoc, assume it is private. Use with caution.
          */
-        handleTokenizedBufferChange(tokenizedBufferChange? : any) : any;
+        handleTokenizedBufferChange(tokenizedBufferChange? : any) : void;
     
         /**
          * This field or method was not documented by atomdoc, assume it is private. Use with caution.
          */
-        updateScreenLines(startBufferRow? : number, endBufferRow? : number, bufferDelta? : any, options? : any) : void;
+        updateScreenLines(startBufferRow? : number, endBufferRow? : number, bufferDelta? : any, options? : any) : string[];
     
         /**
          * This field or method was not documented by atomdoc, assume it is private. Use with caution.
          */
-        buildScreenLines(startBufferRow? : number, endBufferRow? : number) : any;
+        buildScreenLines(startBufferRow? : number, endBufferRow? : number) : string[];
     
         /**
          * This field or method was not documented by atomdoc, assume it is private. Use with caution.
          */
-        findMaxLineLength(startScreenRow? : number, endScreenRow? : number, newScreenLines? : any, screenDelta? : any) : any;
+        findMaxLineLength(startScreenRow? : number, endScreenRow? : number, newScreenLines? : string[], screenDelta? : any) : number;
     
         /**
          * This field or method was not documented by atomdoc, assume it is private. Use with caution.
          */
-        computeScrollWidth() : any;
+        computeScrollWidth() : number;
     
         /**
          * This field or method was not documented by atomdoc, assume it is private. Use with caution.
          */
-        handleBufferMarkersUpdated() : any;
+        handleBufferMarkersUpdated() : void;
     
         /**
          * This field or method was not documented by atomdoc, assume it is private. Use with caution.
          */
-        handleBufferMarkerCreated(textBufferMarker? : Marker) : any;
+        handleBufferMarkerCreated(textBufferMarker? : Marker) : void;
     
         /**
          * This field or method was not documented by atomdoc, assume it is private. Use with caution.
@@ -3573,7 +2900,7 @@ file in the type specified by the configuration schema.
          * 
          * This field or method was marked private by atomdoc. Use with caution.
          */
-        isInsideLargerFold() : boolean;
+        isInsideLargerFold() : Fold;
     
         /**
          * Destroys this fold 
@@ -3587,12 +2914,12 @@ file in the type specified by the configuration schema.
          * includeNewline - A {Boolean} which, if `true`, includes the trailing newline
          * This field or method was marked private by atomdoc. Use with caution.
          */
-        getBufferRange(includeNewline? : any) : TextBuffer.Range;
+        getBufferRange({ includeNewline } : { includeNewline? : number }) : Range;
     
         /**
          * This field or method was not documented by atomdoc, assume it is private. Use with caution.
          */
-        getBufferRowRange() : TextBuffer.Range;
+        getBufferRowRange() : Range;
     
         /**
          * 
@@ -3609,14 +2936,12 @@ file in the type specified by the configuration schema.
         /**
          * 
          * This field or method was marked private by atomdoc. Use with caution.
-        Returns a {String} representation of the fold.
          */
-        inspect() : string;
+        inspect() : boolean;
     
         /**
          * Retrieves the number of buffer rows spanned by the fold.
          * This field or method was marked private by atomdoc. Use with caution.
-        Returns a {Number}.
          */
         getBufferRowCount() : number;
     
@@ -3626,12 +2951,12 @@ file in the type specified by the configuration schema.
          * fold - A {Fold} to check
          * This field or method was marked private by atomdoc. Use with caution.
          */
-        isContainedByFold(fold? : Fold) : boolean;
+        isContainedByFold(fold? : Fold) : Fold;
     
         /**
          * This field or method was not documented by atomdoc, assume it is private. Use with caution.
          */
-        updateDisplayBuffer() : void;
+        updateDisplayBuffer() : DisplayBuffer;
     
         /**
          * This field or method was not documented by atomdoc, assume it is private. Use with caution.
@@ -3661,7 +2986,7 @@ file in the type specified by the configuration schema.
          * * `null` if the given directory does not have a Git repository. 
          * This field or method was marked private by atomdoc. Use with caution.
          */
-        repositoryForDirectory(directory? : Pathwatcher.Directory) : Pathwatcher.Directory;
+        repositoryForDirectory(directory? : GitRepository) : GitRepository;
     
         /**
          * 
@@ -3669,9 +2994,8 @@ file in the type specified by the configuration schema.
          * * {GitRepository} if the given directory has a Git repository.
          * * `null` if the given directory does not have a Git repository. 
          * This field or method was marked private by atomdoc. Use with caution.
-        Returns either:
          */
-        repositoryForDirectorySync(directory? : Pathwatcher.Directory) : any;
+        repositoryForDirectorySync(directory? : GitRepository) : GitRepository;
     
     }
 
@@ -3682,20 +3006,19 @@ file in the type specified by the configuration schema.
         /**
          * This field or method was not documented by atomdoc, assume it is private. Use with caution.
          */
-        static exists(path? : any) : any;
+        static exists(path? : string) : any;
     
         /**
          * Creates a new GitRepository instance.
          * @param path? - The {String} path to the Git repository to open.
          * @param options? - An optional {Object} with the following keys:
-        Returns a {GitRepository} instance or `null` if the repository could not be opened.
          */
-        static open(path? : string, options? : Object) : GitRepository;
+        static open(path? : string, options? : any) : void;
     
         /**
          * This field or method was not documented by atomdoc, assume it is private. Use with caution.
          */
-        constructor(path? : any, options? : any);
+        constructor(path? : string, options? : any);
     
         /**
          * Destroy this {GitRepository} object.
@@ -3709,29 +3032,29 @@ file in the type specified by the configuration schema.
          * Invoke the given callback when this GitRepository's destroy() method
          * is invoked. 
          */
-        onDidDestroy(callback? : any) : EventKit.Disposable;
+        onDidDestroy(callback : Function /* needs to be defined */) : EventKit.Disposable;
     
         /**
          * Invoke the given callback when a specific file's status has
          * changed. When a file is updated, reloaded, etc, and the status changes, this
          * will be fired.
-         * @param callback? - {Function}
+         * @param callback - {Function}
          */
-        onDidChangeStatus(callback? : Function) : EventKit.Disposable;
+        onDidChangeStatus(callback : Function /* needs to be defined */) : EventKit.Disposable;
     
         /**
          * Invoke the given callback when a multiple files' statuses have
          * changed. For example, on window focus, the status of all the paths in the
          * repo is checked. If any of them have changed, this will be fired. Call
          * {::getPathStatus(path)} to get the status for your path of choice.
-         * @param callback? - {Function}
+         * @param callback - {Function}
          */
-        onDidChangeStatuses(callback? : Function) : EventKit.Disposable;
+        onDidChangeStatuses(callback : Function /* needs to be defined */) : EventKit.Disposable;
     
         /**
          * A {String} indicating the type of version control system used by
          * this repository.
-        Returns `"git"`.
+         * Returns `"git"`.
          */
         getType() : any;
     
@@ -3744,7 +3067,7 @@ file in the type specified by the configuration schema.
         /**
          * Makes a path relative to the repository's working directory. 
          */
-        relativize(path? : any) : any;
+        relativize(path? : string) : any;
     
         hasBranch(branch? : any) : any;
     
@@ -3755,7 +3078,7 @@ file in the type specified by the configuration schema.
          * `refs/remotes`.  It also shortens the SHA-1 of a detached `HEAD` to 7
          * characters.
          * @param path? - An optional {String} path in the repository to get this information for, only needed if the repository contains submodules.
-        Returns a {String}.
+         * Returns a {String}.
          */
         getShortHead(path? : string) : string;
     
@@ -3765,73 +3088,66 @@ file in the type specified by the configuration schema.
          */
         isSubmodule(path? : string) : boolean;
     
-        getAheadBehindCount(reference? : string, path? : string) : any;
+        getAheadBehindCount(reference? : string, path? : string) : number;
     
         /**
          * Get the cached ahead/behind commit counts for the current branch's
          * upstream branch.
          * @param path? - An optional {String} path in the repository to get this information for, only needed if the repository has submodules.
-        Returns an {Object} with the following keys:
-
-* `ahead`  The {Number} of commits ahead.
-* `behind` The {Number} of commits behind.
          */
-        getCachedUpstreamAheadBehindCount(path? : string) : Object;
+        getCachedUpstreamAheadBehindCount(path? : string) : number;
     
         getConfigValue(key? : any, path? : string) : any;
     
-        getOriginURL(path? : string) : any;
+        getOriginURL(path? : string) : string;
     
         getUpstreamBranch(path? : string) : any | string;
     
         /**
          * Gets all the local and remote references.
          * @param path? - An optional {String} path in the repository to get this information for, only needed if the repository has submodules.
-        Returns an {Object} with the following keys:
-
-* `heads`   An {Array} of head reference names.
-* `remotes` An {Array} of remote reference names.
-* `tags`    An {Array} of tag reference names.
+         * Returns an {Object} with the following keys:
+         * 
+         * * `heads`   An {Array} of head reference names.
+         * * `remotes` An {Array} of remote reference names.
+         * * `tags`    An {Array} of tag reference names.
          */
         getReferences(path? : string) : Object;
     
         getReferenceTarget(reference? : string, path? : string) : string;
     
-        isPathModified(path? : any) : boolean;
+        isPathModified(path? : string) : string;
     
-        isPathNew(path? : any) : boolean;
+        isPathNew(path? : string) : string;
     
         /**
          * Is the given path ignored?
          */
-        isPathIgnored(path? : any) : boolean;
+        isPathIgnored(path? : string) : string;
     
         /**
          * Get the status of a directory in the repository's working directory.
-        Returns a {Number} representing the status. This value can be passed to
-{::isStatusModified} or {::isStatusNew} to get more information.
+         * Returns a {Number} representing the status. This value can be passed to
+         * {::isStatusModified} or {::isStatusNew} to get more information.
          */
-        getDirectoryStatus(directoryPath? : any) : number;
+        getDirectoryStatus(directoryPath? : string) : number;
     
         /**
          * Get the status of a single path in the repository.
          * 
          * `path` A {String} repository-relative path.
-        Returns a {Number} representing the status. This value can be passed to
-{::isStatusModified} or {::isStatusNew} to get more information.
          */
-        getPathStatus(path? : any) : number;
+        getPathStatus(path? : string) : string;
     
         /**
          * Get the cached status for the given path.
          * @param path? - A {String} path in the repository, relative or absolute.
-        Returns a status {Number} or null if the path is not in the cache.
          */
-        getCachedPathStatus(path? : string) : number;
+        getCachedPathStatus(path? : string) : string;
     
-        isStatusModified(status? : any) : boolean;
+        isStatusModified(status? : boolean) : boolean;
     
-        isStatusNew(status? : any) : boolean;
+        isStatusNew(status? : boolean) : boolean;
     
         /**
          * Retrieves the number of lines added and removed to a path.
@@ -3839,10 +3155,10 @@ file in the type specified by the configuration schema.
          * This compares the working directory contents of the path to the `HEAD`
          * version.
          * @param path? - The {String} path to check.
-        Returns an {Object} with the following keys:
-
-* `added` The {Number} of added lines.
-* `deleted` The {Number} of deleted lines.
+         * Returns an {Object} with the following keys:
+         * 
+         * * `added` The {Number} of added lines.
+         * * `deleted` The {Number} of deleted lines.
          */
         getDiffStats(path? : string) : Object;
     
@@ -3851,12 +3167,12 @@ file in the type specified by the configuration schema.
          * path and the given text.
          * @param path? - The {String} path relative to the repository.
          * @param text? - The {String} to compare against the `HEAD` contents
-        Returns an {Array} of hunk {Object}s with the following keys:
-
-* `oldStart` The line {Number} of the old hunk.
-* `newStart` The line {Number} of the new hunk.
-* `oldLines` The {Number} of lines in the old hunk.
-* `newLines` The {Number} of lines in the new hunk
+         * Returns an {Array} of hunk {Object}s with the following keys:
+         * 
+         * * `oldStart` The line {Number} of the old hunk.
+         * * `newStart` The line {Number} of the new hunk.
+         * * `oldLines` The {Number} of lines in the old hunk.
+         * * `newLines` The {Number} of lines in the new hunk
          */
         getLineDiffs(path? : string, text? : string) : any[];
     
@@ -3871,7 +3187,7 @@ file in the type specified by the configuration schema.
          *   git checkout HEAD -- <path>
          * ```
          * @param path? - The {String} path to checkout.
-        Returns a {Boolean} that's true if the method was successful.
+         * Returns a {Boolean} that's true if the method was successful.
          */
         checkoutHead(path? : string) : boolean;
     
@@ -3879,7 +3195,7 @@ file in the type specified by the configuration schema.
          * Checks out a branch in your repository.
          * @param reference? - The {String} reference to checkout.
          * @param create? - A {Boolean} value which, if true creates the new reference if it doesn't exist.
-        Returns a Boolean that's true if the method was successful.
+         * Returns a Boolean that's true if the method was successful.
          */
         checkoutReference(reference? : string, create? : boolean) : any;
     
@@ -3893,14 +3209,14 @@ file in the type specified by the configuration schema.
          * Subscribes to editor view event. 
          * This field or method was marked private by atomdoc. Use with caution.
          */
-        checkoutHeadForEditor(editor? : TextEditor) : any;
+        checkoutHeadForEditor(editor? : any) : any;
     
         /**
          * 
          * This field or method was marked private by atomdoc. Use with caution.
-        Returns the corresponding {Repository}
+         * Returns the corresponding {Repository}
          */
-        getRepo(path? : any) : any;
+        getRepo(path? : string) : any;
     
         /**
          * Reread the index to update any values that have changed since the
@@ -3925,7 +3241,7 @@ file in the type specified by the configuration schema.
         /**
          * This field or method was not documented by atomdoc, assume it is private. Use with caution.
          */
-        static deserialize(grammarOverridesByPath? : any) : any;
+        static deserialize({ grammarOverridesByPath } : { grammarOverridesByPath? : string }) : any;
     
         /**
          * This field or method was not documented by atomdoc, assume it is private. Use with caution.
@@ -3940,7 +3256,7 @@ file in the type specified by the configuration schema.
         /**
          * This field or method was not documented by atomdoc, assume it is private. Use with caution.
          */
-        createToken(value? : any, scopes? : Token[]) : Token;
+        createToken(value? : any, scopes? : Scope[]) : Token;
     
         /**
          * Select a grammar for the given file path and file contents.
@@ -3955,7 +3271,7 @@ file in the type specified by the configuration schema.
         /**
          * This field or method was not documented by atomdoc, assume it is private. Use with caution.
          */
-        clearObservers() : any;
+        clearObservers() : void;
     
     }
 
@@ -3982,7 +3298,7 @@ file in the type specified by the configuration schema.
         /**
          * This field or method was not documented by atomdoc, assume it is private. Use with caution.
          */
-        constructor(presenter? : any, onMouseDown? : any, editor? : TextEditor);
+        constructor({ presenter, onMouseDown, editor } : { presenter? : any; onMouseDown? : any; editor? : any });
     
         /**
          * This field or method was not documented by atomdoc, assume it is private. Use with caution.
@@ -4024,7 +3340,7 @@ file in the type specified by the configuration schema.
         /**
          * This field or method was not documented by atomdoc, assume it is private. Use with caution.
          */
-        buildLineNumberClassName(bufferRow? : number, foldable? : any, decorationClasses? : any, softWrapped? : any) : string;
+        buildLineNumberClassName({ bufferRow, foldable, decorationClasses, softWrapped } : { bufferRow? : number; foldable? : any; decorationClasses? : any; softWrapped? : any }) : string;
     
         /**
          * This field or method was not documented by atomdoc, assume it is private. Use with caution.
@@ -4110,12 +3426,12 @@ file in the type specified by the configuration schema.
         /**
          * This field or method was not documented by atomdoc, assume it is private. Use with caution.
          */
-        addItem(item? : any) : any;
+        addItem(item? : any) : void;
     
         /**
          * This field or method was not documented by atomdoc, assume it is private. Use with caution.
          */
-        removeItem(item? : any) : any;
+        removeItem(item? : any) : void;
     
         /**
          * This field or method was not documented by atomdoc, assume it is private. Use with caution.
@@ -4140,7 +3456,7 @@ file in the type specified by the configuration schema.
          * editor - The {TextEditor} to associate with 
          * This field or method was marked private by atomdoc. Use with caution.
          */
-        constructor(editor? : TextEditor);
+        constructor(editor? : any);
     
         /**
          * This field or method was not documented by atomdoc, assume it is private. Use with caution.
@@ -4198,36 +3514,36 @@ file in the type specified by the configuration schema.
          * bufferRow - A {Number} indicating the buffer row
          * This field or method was marked private by atomdoc. Use with caution.
          */
-        rowRangeForFoldAtBufferRow(bufferRow? : number) : TextBuffer.Range;
+        rowRangeForFoldAtBufferRow(bufferRow? : number) : number;
     
         /**
          * This field or method was not documented by atomdoc, assume it is private. Use with caution.
          */
-        rowRangeForCommentAtBufferRow(bufferRow? : number) : TextBuffer.Range;
+        rowRangeForCommentAtBufferRow(bufferRow? : number) : number;
     
         /**
          * This field or method was not documented by atomdoc, assume it is private. Use with caution.
          */
-        rowRangeForCodeFoldAtBufferRow(bufferRow? : number) : TextBuffer.Range;
+        rowRangeForCodeFoldAtBufferRow(bufferRow? : number) : number;
     
         /**
          * This field or method was not documented by atomdoc, assume it is private. Use with caution.
          */
-        isFoldableAtBufferRow(bufferRow? : number) : boolean;
+        isFoldableAtBufferRow(bufferRow? : number) : number;
     
         /**
          * 
          * This field or method was marked private by atomdoc. Use with caution.
          */
-        isLineCommentedAtBufferRow(bufferRow? : number) : boolean;
+        isLineCommentedAtBufferRow(bufferRow? : number) : number;
     
         /**
-         * Find a row range for a 'paragraph' around specified bufferRow. A paragraph
-         * is a block of text bounded by and empty line or a block of text that is not
-         * the same type (comments next to source code). 
+         * Find a row range for a 'paragraph' around specified bufferRow.
+         * Right now, a paragraph is a block of text bounded by and empty line or a
+         * block of text that is not the same type (comments next to source code). 
          * This field or method was marked private by atomdoc. Use with caution.
          */
-        rowRangeForParagraphAtBufferRow(bufferRow? : number) : TextBuffer.Range;
+        rowRangeForParagraphAtBufferRow(bufferRow? : number) : number;
     
         /**
          * Given a buffer row, this returns a suggested indentation level.
@@ -4242,7 +3558,7 @@ file in the type specified by the configuration schema.
         /**
          * This field or method was not documented by atomdoc, assume it is private. Use with caution.
          */
-        suggestedIndentForLineAtBufferRow(bufferRow? : number, line? : any, options? : any) : number;
+        suggestedIndentForLineAtBufferRow(bufferRow? : number, line? : number, options? : any) : number;
     
         /**
          * This field or method was not documented by atomdoc, assume it is private. Use with caution.
@@ -4256,7 +3572,7 @@ file in the type specified by the configuration schema.
          * endRow - The row {Number} to end at
          * This field or method was marked private by atomdoc. Use with caution.
          */
-        minIndentLevelForRowRange(startRow? : number, endRow? : number) : TextBuffer.Range;
+        minIndentLevelForRowRange(startRow? : number, endRow? : number) : Range;
     
         /**
          * Indents all the rows between two buffer row numbers.
@@ -4292,22 +3608,17 @@ file in the type specified by the configuration schema.
         /**
          * This field or method was not documented by atomdoc, assume it is private. Use with caution.
          */
-        increaseIndentRegexForScopeDescriptor(scopeDescriptor? : ScopeDescriptor) : void;
+        increaseIndentRegexForScopeDescriptor(scopeDescriptor? : ScopeDescriptor) : ScopeDescriptor;
     
         /**
          * This field or method was not documented by atomdoc, assume it is private. Use with caution.
          */
-        decreaseIndentRegexForScopeDescriptor(scopeDescriptor? : ScopeDescriptor) : void;
+        decreaseIndentRegexForScopeDescriptor(scopeDescriptor? : ScopeDescriptor) : ScopeDescriptor;
     
         /**
          * This field or method was not documented by atomdoc, assume it is private. Use with caution.
          */
         foldEndRegexForScopeDescriptor(scopeDescriptor? : ScopeDescriptor) : ScopeDescriptor;
-    
-        /**
-         * This field or method was not documented by atomdoc, assume it is private. Use with caution.
-         */
-        commentStartAndEndStringsForScope(scope? : Scope) : Scope;
     
     }
 
@@ -4323,22 +3634,22 @@ file in the type specified by the configuration schema.
         /**
          * This field or method was not documented by atomdoc, assume it is private. Use with caution.
          */
-        constructor(resourcePath? : any, importPaths? : any);
+        constructor({ resourcePath, importPaths } : { resourcePath? : string; importPaths? : string });
     
         /**
          * This field or method was not documented by atomdoc, assume it is private. Use with caution.
          */
-        setImportPaths(importPaths? : any) : void;
+        setImportPaths(importPaths? : string) : string;
     
         /**
          * This field or method was not documented by atomdoc, assume it is private. Use with caution.
          */
-        read(stylesheetPath? : any) : any;
+        read(stylesheetPath? : string) : any;
     
         /**
          * This field or method was not documented by atomdoc, assume it is private. Use with caution.
          */
-        cssForFile(stylesheetPath? : any, lessContent? : any) : Pathwatcher.File;
+        cssForFile(stylesheetPath? : string, lessContent? : any) : Pathwatcher.File;
     
     }
 
@@ -4370,7 +3681,7 @@ file in the type specified by the configuration schema.
         /**
          * This field or method was not documented by atomdoc, assume it is private. Use with caution.
          */
-        constructor(presenter? : any, hostElement? : any, useShadowDOM? : boolean, visible? : boolean);
+        constructor({ presenter, hostElement, useShadowDOM, visible } : { presenter? : any; hostElement? : any; useShadowDOM? : any; visible? : boolean });
     
         /**
          * This field or method was not documented by atomdoc, assume it is private. Use with caution.
@@ -4380,12 +3691,12 @@ file in the type specified by the configuration schema.
         /**
          * This field or method was not documented by atomdoc, assume it is private. Use with caution.
          */
-        removeLineNodes() : any;
+        removeLineNodes() : void;
     
         /**
          * This field or method was not documented by atomdoc, assume it is private. Use with caution.
          */
-        removeLineNode(id? : any) : any;
+        removeLineNode(id? : any) : void;
     
         /**
          * This field or method was not documented by atomdoc, assume it is private. Use with caution.
@@ -4440,27 +3751,27 @@ file in the type specified by the configuration schema.
         /**
          * This field or method was not documented by atomdoc, assume it is private. Use with caution.
          */
-        measureLineHeightAndDefaultCharWidth() : any;
+        measureLineHeightAndDefaultCharWidth() : number;
     
         /**
          * This field or method was not documented by atomdoc, assume it is private. Use with caution.
          */
-        remeasureCharacterWidths() : any;
+        remeasureCharacterWidths() : number;
     
         /**
          * This field or method was not documented by atomdoc, assume it is private. Use with caution.
          */
-        measureCharactersInNewLines() : any;
+        measureCharactersInNewLines() : string[];
     
         /**
          * This field or method was not documented by atomdoc, assume it is private. Use with caution.
          */
-        measureCharactersInLine(lineId? : any, tokenizedLine? : TokenizedLine, lineNode? : any) : any;
+        measureCharactersInLine(lineId? : any, tokenizedLine? : TokenizedLine, lineNode? : any) : number;
     
         /**
          * This field or method was not documented by atomdoc, assume it is private. Use with caution.
          */
-        clearScopedCharWidths() : any;
+        clearScopedCharWidths() : number;
     
     }
 
@@ -4509,7 +3820,7 @@ file in the type specified by the configuration schema.
         /**
          * This field or method was not documented by atomdoc, assume it is private. Use with caution.
          */
-        wasValid: any /* default */;
+        wasValid: boolean;
     
         /**
          * This field or method was not documented by atomdoc, assume it is private. Use with caution.
@@ -4520,7 +3831,7 @@ file in the type specified by the configuration schema.
          * Construction and Destruction
          * This field or method was marked private by atomdoc. Use with caution.
          */
-        constructor(bufferMarker? : Marker, displayBuffer? : DisplayBuffer);
+        constructor({ bufferMarker, displayBuffer } : { bufferMarker? : Marker; displayBuffer? : DisplayBuffer });
     
         /**
          * Destroys the marker, causing it to emit the 'destroyed' event. Once
@@ -4533,19 +3844,19 @@ file in the type specified by the configuration schema.
          * marker.
          * @param properties? - {Object} 
          */
-        copy(properties? : Object) : Marker;
+        copy(properties? : Marker) : Marker;
     
         /**
          * Invoke the given callback when the state of the marker changes.
-         * @param callback? - {Function} to be called when the marker changes.
+         * @param callback - {Function} to be called when the marker changes.
          */
-        onDidChange(callback? : Function) : EventKit.Disposable;
+        onDidChange(callback : Function /* needs to be defined */) : EventKit.Disposable;
     
         /**
          * Invoke the given callback when the marker is destroyed.
-         * @param callback? - {Function} to be called when the marker is destroyed.
+         * @param callback - {Function} to be called when the marker is destroyed.
          */
-        onDidDestroy(callback? : Function) : EventKit.Disposable;
+        onDidDestroy(callback : Function /* needs to be defined */) : EventKit.Disposable;
     
         isValid() : boolean;
     
@@ -4557,7 +3868,7 @@ file in the type specified by the configuration schema.
          * Get the invalidation strategy for this marker.
          * 
          * Valid values include: `never`, `surround`, `overlap`, `inside`, and `touch`.
-        Returns a {String}.
+         * Returns a {String}.
          */
         getInvalidationStrategy() : string;
     
@@ -4568,44 +3879,44 @@ file in the type specified by the configuration schema.
          * existing properties.
          * @param properties? - {Object} 
          */
-        setProperties(properties? : Object) : void;
+        setProperties(properties? : any) : void;
     
         /**
          * This field or method was not documented by atomdoc, assume it is private. Use with caution.
          */
         matchesProperties(attributes? : any) : any;
     
-        isEqual(other? : Marker) : boolean;
+        isEqual(other? : boolean) : boolean;
     
         /**
          * Compares this marker to another based on their ranges.
          * @param other? - {Marker}
-        Returns a {Number}
+         * Returns a {Number}
          */
         compare(other? : Marker) : number;
     
         /**
          * Gets the buffer range of the display marker.
          */
-        getBufferRange() : TextBuffer.Range;
+        getBufferRange() : Range;
     
         /**
          * Modifies the buffer range of the display marker.
          * @param bufferRange? - The new {Range} to use
          * @param properties? - {Object} properties to associate with the marker.
          */
-        setBufferRange(bufferRange? : TextBuffer.Range, properties? : Object) : TextBuffer.Range;
+        setBufferRange(bufferRange? : Range, properties? : any) : Range;
     
         /**
          * Gets the screen range of the display marker.
          */
-        getScreenRange() : TextBuffer.Range;
+        getScreenRange() : Range;
     
         /**
          * Modifies the screen range of the display marker.
          * @param screenRange? - The new {Range} to use
          */
-        setScreenRange(screenRange? : TextBuffer.Range, options? : any) : TextBuffer.Range;
+        setScreenRange(screenRange? : Range, options? : any) : Range;
     
         /**
          * Retrieves the buffer position of the marker's start. This will always be
@@ -4641,7 +3952,7 @@ file in the type specified by the configuration schema.
          * @param bufferPosition? - The new {Point} to use
          * @param properties? - {Object} properties to associate with the marker. 
          */
-        setHeadBufferPosition(bufferPosition? : TextBuffer.Point | { row: number; column: number } | [number, number], properties? : Object) : TextBuffer.Point;
+        setHeadBufferPosition(bufferPosition? : TextBuffer.Point | { row: number; column: number } | [number, number], properties? : any) : TextBuffer.Point;
     
         /**
          * Retrieves the screen position of the marker's head.
@@ -4653,7 +3964,7 @@ file in the type specified by the configuration schema.
          * @param screenPosition? - The new {Point} to use
          * @param properties? - {Object} properties to associate with the marker. 
          */
-        setHeadScreenPosition(screenPosition? : TextBuffer.Point | { row: number; column: number } | [number, number], properties? : Object) : TextBuffer.Point;
+        setHeadScreenPosition(screenPosition? : TextBuffer.Point | { row: number; column: number } | [number, number], properties? : any) : TextBuffer.Point;
     
         /**
          * Retrieves the buffer position of the marker's tail.
@@ -4692,14 +4003,13 @@ file in the type specified by the configuration schema.
          * again.
          * @param properties? - {Object} properties to associate with the marker. 
          */
-        clearTail(properties? : Object) : any;
+        clearTail(properties? : any) : void;
     
         /**
          * 
          * This field or method was marked private by atomdoc. Use with caution.
-        Returns a {String} representation of the marker
          */
-        inspect() : string;
+        inspect() : boolean;
     
         /**
          * This field or method was not documented by atomdoc, assume it is private. Use with caution.
@@ -4709,7 +4019,7 @@ file in the type specified by the configuration schema.
         /**
          * This field or method was not documented by atomdoc, assume it is private. Use with caution.
          */
-        notifyObservers(textChanged? : string) : any;
+        notifyObservers({ textChanged } : { textChanged? : string }) : any;
     
         /**
          * This field or method was not documented by atomdoc, assume it is private. Use with caution.
@@ -4724,7 +4034,7 @@ file in the type specified by the configuration schema.
         /**
          * This field or method was not documented by atomdoc, assume it is private. Use with caution.
          */
-        getPixelRange() : TextBuffer.Range;
+        getPixelRange() : Range;
     
     }
 
@@ -4734,81 +4044,15 @@ file in the type specified by the configuration schema.
      */
     class MenuManager {
         /**
-         * This field or method was not documented by atomdoc, assume it is private. Use with caution.
-         */
-        resourcePath: any /* default */;
-    
-        /**
-         * This field or method was not documented by atomdoc, assume it is private. Use with caution.
-         */
-        constructor(resourcePath? : any);
-    
-        /**
          * Adds the given items to the application menu.
          * @param items? - An {Array} of menu item {Object}s containing the keys:
-        Returns a {Disposable} on which `.dispose()` can be called to remove the
-added menu items.
          */
-        add(items? : any[]) : EventKit.Disposable;
-    
-        /**
-         * This field or method was not documented by atomdoc, assume it is private. Use with caution.
-         */
-        remove(items? : any) : any;
-    
-        /**
-         * Should the binding for the given selector be included in the menu
-         * commands.
-         * This field or method was marked private by atomdoc. Use with caution.
-         * @param selector? - A {String} selector to check.
-         */
-        includeSelector(selector? : string) : ScopedPropertyStore.Selector;
+        add(items? : MenuItem) : EventKit.Disposable;
     
         /**
          * Refreshes the currently visible menu. 
          */
         update() : void;
-    
-        /**
-         * This field or method was not documented by atomdoc, assume it is private. Use with caution.
-         */
-        loadPlatformItems() : any;
-    
-        /**
-         * Merges an item in a submenu aware way such that new items are always
-         * appended to the bottom of existing menus where possible. 
-         * This field or method was marked private by atomdoc. Use with caution.
-         */
-        merge(menu? : any, item? : any) : any;
-    
-        /**
-         * This field or method was not documented by atomdoc, assume it is private. Use with caution.
-         */
-        unmerge(menu? : any, item? : any) : any;
-    
-        /**
-         * OSX can't handle displaying accelerators for multiple keystrokes.
-         * If they are sent across, it will stop processing accelerators for the rest
-         * of the menu items. 
-         * This field or method was marked private by atomdoc. Use with caution.
-         */
-        filterMultipleKeystroke(keystrokesByCommand? : any) : any;
-    
-        /**
-         * This field or method was not documented by atomdoc, assume it is private. Use with caution.
-         */
-        sendToBrowserProcess(template? : any, keystrokesByCommand? : any) : any;
-    
-        /**
-         * Get an {Array} of {String} classes for the given element. 
-         * This field or method was marked private by atomdoc. Use with caution.
-         */
-        classesForElement(element? : any) : any;
-    
-        /**
-         * This field or method was not documented by atomdoc, assume it is private. Use with caution.
-         */
-        sortPackagesMenu() : any;
     
     }
 
@@ -4866,7 +4110,7 @@ added menu items.
         /**
          * This field or method was not documented by atomdoc, assume it is private. Use with caution.
          */
-        test(version? : any) : any;
+        test(version? : number) : any;
     
     }
 
@@ -4884,38 +4128,38 @@ added menu items.
          * Events
          * This field or method was marked private by atomdoc. Use with caution.
          */
-        onDidAddNotification(callback? : any) : EventKit.Disposable;
+        onDidAddNotification(callback : Function /* needs to be defined */) : EventKit.Disposable;
     
         /**
          * Adding Notifications
          * This field or method was marked private by atomdoc. Use with caution.
          */
-        addSuccess(message? : any, options? : any) : any;
+        addSuccess(message : string, options? : { detail?: string; icon?: string; dismissable?: boolean; }) : Notification;
     
         /**
          * This field or method was not documented by atomdoc, assume it is private. Use with caution.
          */
-        addInfo(message? : any, options? : any) : any;
+        addInfo(message : string, options? : { detail?: string; icon?: string; dismissable?: boolean; }) : Notification;
     
         /**
          * This field or method was not documented by atomdoc, assume it is private. Use with caution.
          */
-        addWarning(message? : any, options? : any) : any;
+        addWarning(message : string, options? : { detail?: string; icon?: string; dismissable?: boolean; }) : Notification;
     
         /**
          * This field or method was not documented by atomdoc, assume it is private. Use with caution.
          */
-        addError(message? : any, options? : any) : any;
+        addError(message : string, options? : { detail?: string; icon?: string; dismissable?: boolean; }) : Notification;
     
         /**
          * This field or method was not documented by atomdoc, assume it is private. Use with caution.
          */
-        addFatalError(message? : any, options? : any) : any;
+        addFatalError(message : string, options? : { detail?: string; icon?: string; dismissable?: boolean; }) : Notification;
     
         /**
          * This field or method was not documented by atomdoc, assume it is private. Use with caution.
          */
-        add(type? : any, message? : any, options? : any) : any;
+        add(type : Notification, message : string, options? : { detail?: string; icon?: string; dismissable?: boolean; }) : Notification;
     
         /**
          * This field or method was not documented by atomdoc, assume it is private. Use with caution.
@@ -4932,7 +4176,7 @@ added menu items.
          * Managing Notifications
          * This field or method was marked private by atomdoc. Use with caution.
          */
-        clear() : any;
+        clear() : void;
     
     }
 
@@ -4948,62 +4192,62 @@ added menu items.
         /**
          * This field or method was not documented by atomdoc, assume it is private. Use with caution.
          */
-        message: any /* default */;
+        message: string;
     
         /**
          * This field or method was not documented by atomdoc, assume it is private. Use with caution.
          */
-        options: any /* default */;
+        options: { detail?: string; icon?: string; dismissable?: boolean; };
     
         /**
          * This field or method was not documented by atomdoc, assume it is private. Use with caution.
          */
-        constructor(type? : any, message? : any, options? : any);
+        constructor(type? : any, message? : string, options? : any);
     
         /**
          * This field or method was not documented by atomdoc, assume it is private. Use with caution.
          */
-        onDidDismiss(callback? : any) : EventKit.Disposable;
+        onDidDismiss(callback : (notification: Notification) => void) : EventKit.Disposable;
     
         /**
          * This field or method was not documented by atomdoc, assume it is private. Use with caution.
          */
-        onDidDisplay(callback? : any) : EventKit.Disposable;
+        onDidDisplay(callback : (notification: Notification) => void) : EventKit.Disposable;
     
         /**
          * This field or method was not documented by atomdoc, assume it is private. Use with caution.
          */
-        getOptions() : any;
+        getOptions() : { detail?: string; icon?: string; dismissable?: boolean; };
     
         /**
          * This field or method was not documented by atomdoc, assume it is private. Use with caution.
          */
-        getType() : any;
+        getType() : string;
     
         /**
          * This field or method was not documented by atomdoc, assume it is private. Use with caution.
          */
-        getMessage() : any;
+        getMessage() : string;
     
         /**
          * This field or method was not documented by atomdoc, assume it is private. Use with caution.
          */
-        getTimestamp() : any;
+        getTimestamp() : Date;
     
         /**
          * This field or method was not documented by atomdoc, assume it is private. Use with caution.
          */
-        getDetail() : any;
+        getDetail() : string;
     
         /**
          * This field or method was not documented by atomdoc, assume it is private. Use with caution.
          */
-        isEqual(other? : any) : boolean;
+        isEqual(other? : Notification) : Notification;
     
         /**
          * This field or method was not documented by atomdoc, assume it is private. Use with caution.
          */
-        dismiss() : any;
+        dismiss() : void;
     
         /**
          * This field or method was not documented by atomdoc, assume it is private. Use with caution.
@@ -5018,12 +4262,12 @@ added menu items.
         /**
          * This field or method was not documented by atomdoc, assume it is private. Use with caution.
          */
-        wasDisplayed() : any;
+        wasDisplayed() : boolean;
     
         /**
          * This field or method was not documented by atomdoc, assume it is private. Use with caution.
          */
-        setDisplayed(displayed? : any) : void;
+        setDisplayed(displayed? : boolean) : void;
     
         /**
          * This field or method was not documented by atomdoc, assume it is private. Use with caution.
@@ -5060,7 +4304,7 @@ added menu items.
         /**
          * This field or method was not documented by atomdoc, assume it is private. Use with caution.
          */
-        shouldUpdateOverlay(decorationId? : any, overlay? : any) : boolean;
+        shouldUpdateOverlay(decorationId? : boolean, overlay? : boolean) : boolean;
     
         /**
          * This field or method was not documented by atomdoc, assume it is private. Use with caution.
@@ -5091,59 +4335,58 @@ added menu items.
         /**
          * This field or method was not documented by atomdoc, assume it is private. Use with caution.
          */
-        resourcePath: any /* default */;
+        resourcePath: string;
     
         /**
          * This field or method was not documented by atomdoc, assume it is private. Use with caution.
          */
-        constructor(configDirPath? : any, devMode? : any, safeMode? : any, resourcePath? : any);
+        constructor({ configDirPath, devMode, safeMode, resourcePath } : { configDirPath? : string; devMode? : boolean; safeMode? : boolean; resourcePath? : string });
     
         /**
          * Invoke the given callback when all packages have been loaded.
-         * @param callback? - {Function}
+         * @param callback - {Function}
          */
-        onDidLoadInitialPackages(callback? : Function) : EventKit.Disposable;
+        onDidLoadInitialPackages(callback : Function /* needs to be defined */) : EventKit.Disposable;
     
         /**
          * Invoke the given callback when all packages have been activated.
-         * @param callback? - {Function}
+         * @param callback - {Function}
          */
-        onDidActivateInitialPackages(callback? : Function) : EventKit.Disposable;
+        onDidActivateInitialPackages(callback : Function /* needs to be defined */) : EventKit.Disposable;
     
         /**
          * Invoke the given callback when a package is activated.
-         * @param callback? - A {Function} to be invoked when a package is activated.
+         * @param callback - A {Function} to be invoked when a package is activated.
          */
-        onDidActivatePackage(callback? : Function) : EventKit.Disposable;
+        onDidActivatePackage(callback : Function /* needs to be defined */) : EventKit.Disposable;
     
         /**
          * Invoke the given callback when a package is deactivated.
-         * @param callback? - A {Function} to be invoked when a package is deactivated.
+         * @param callback - A {Function} to be invoked when a package is deactivated.
          */
-        onDidDeactivatePackage(callback? : Function) : Q.Promise<Package>;
+        onDidDeactivatePackage(callback : Function /* needs to be defined */) : Q.Promise<Package>;
     
         /**
          * Invoke the given callback when a package is loaded.
-         * @param callback? - A {Function} to be invoked when a package is loaded.
+         * @param callback - A {Function} to be invoked when a package is loaded.
          */
-        onDidLoadPackage(callback? : Function) : EventKit.Disposable;
+        onDidLoadPackage(callback : Function /* needs to be defined */) : EventKit.Disposable;
     
         /**
          * Invoke the given callback when a package is unloaded.
-         * @param callback? - A {Function} to be invoked when a package is unloaded.
+         * @param callback - A {Function} to be invoked when a package is unloaded.
          */
-        onDidUnloadPackage(callback? : Function) : EventKit.Disposable;
+        onDidUnloadPackage(callback : Function /* needs to be defined */) : EventKit.Disposable;
     
         /**
          * Get the path to the apm command.
          * 
          * Return a {String} file path to apm. 
          */
-        getApmPath() : any;
+        getApmPath() : string;
     
         /**
          * Get the paths being used to look for packages.
-        Returns an {Array} of {String} directory paths.
          */
         getPackageDirPaths() : string[];
     
@@ -5153,13 +4396,13 @@ added menu items.
          * Return a {String} folder path or undefined if it could not be resolved. 
          * @param name? - The {String} package name.
          */
-        resolvePackagePath(name? : string) : any;
+        resolvePackagePath(name? : string) : string;
     
         /**
          * Is the package with the given name bundled with Atom?
          * @param name? - The {String} package name.
          */
-        isBundledPackage(name? : string) : boolean;
+        isBundledPackage(name? : string) : Package;
     
         /**
          * Enable the package with the given name.
@@ -5221,7 +4464,7 @@ added menu items.
         /**
          * Get an {Array} of {String}s of all the available package paths. 
          */
-        getAvailablePackagePaths() : any;
+        getAvailablePackagePaths() : string[];
     
         /**
          * Get an {Array} of {String}s of all the available package names. 
@@ -5252,7 +4495,7 @@ added menu items.
         /**
          * This field or method was not documented by atomdoc, assume it is private. Use with caution.
          */
-        hasAtomEngine(packagePath? : any) : any;
+        hasAtomEngine(packagePath? : string) : any;
     
         /**
          * This field or method was not documented by atomdoc, assume it is private. Use with caution.
@@ -5323,7 +4566,7 @@ added menu items.
         /**
          * This field or method was not documented by atomdoc, assume it is private. Use with caution.
          */
-        handleMetadataError(error? : any, packagePath? : any) : any;
+        handleMetadataError(error? : any, packagePath? : string) : void;
     
     }
 
@@ -5335,17 +4578,17 @@ added menu items.
         /**
          * This field or method was not documented by atomdoc, assume it is private. Use with caution.
          */
-        static isBundledPackagePath(packagePath? : any) : boolean;
+        static isBundledPackagePath(packagePath? : string) : string;
     
         /**
          * This field or method was not documented by atomdoc, assume it is private. Use with caution.
          */
-        static loadMetadata(packagePath? : any, ignoreErrors? : any) : any;
+        static loadMetadata(packagePath? : string, ignoreErrors? : any) : any;
     
         /**
          * This field or method was not documented by atomdoc, assume it is private. Use with caution.
          */
-        path: any /* default */;
+        path: string;
     
         /**
          * This field or method was not documented by atomdoc, assume it is private. Use with caution.
@@ -5385,12 +4628,12 @@ added menu items.
         /**
          * This field or method was not documented by atomdoc, assume it is private. Use with caution.
          */
-        mainModulePath: any /* default */;
+        mainModulePath: string;
     
         /**
          * This field or method was not documented by atomdoc, assume it is private. Use with caution.
          */
-        resolvedMainModulePath: any /* default */;
+        resolvedMainModulePath: string;
     
         /**
          * This field or method was not documented by atomdoc, assume it is private. Use with caution.
@@ -5401,13 +4644,13 @@ added menu items.
          * Construction
          * This field or method was marked private by atomdoc. Use with caution.
          */
-        constructor(path? : any, metadata? : any);
+        constructor(path? : string, metadata? : any);
     
         /**
          * Invoke the given callback when all packages have been activated.
-         * @param callback? - {Function}
+         * @param callback - {Function}
          */
-        onDidDeactivate(callback? : Function) : EventKit.Disposable;
+        onDidDeactivate(callback : Function /* needs to be defined */) : EventKit.Disposable;
     
         /**
          * Instance Methods
@@ -5463,7 +4706,7 @@ added menu items.
         /**
          * This field or method was not documented by atomdoc, assume it is private. Use with caution.
          */
-        activateConfig() : void;
+        activateConfig() : Config;
     
         /**
          * This field or method was not documented by atomdoc, assume it is private. Use with caution.
@@ -5493,12 +4736,12 @@ added menu items.
         /**
          * This field or method was not documented by atomdoc, assume it is private. Use with caution.
          */
-        getKeymapPaths() : any;
+        getKeymapPaths() : string[];
     
         /**
          * This field or method was not documented by atomdoc, assume it is private. Use with caution.
          */
-        getMenuPaths() : any;
+        getMenuPaths() : string[];
     
         /**
          * This field or method was not documented by atomdoc, assume it is private. Use with caution.
@@ -5508,12 +4751,12 @@ added menu items.
         /**
          * This field or method was not documented by atomdoc, assume it is private. Use with caution.
          */
-        getStylesheetsPath() : any;
+        getStylesheetsPath() : string;
     
         /**
          * This field or method was not documented by atomdoc, assume it is private. Use with caution.
          */
-        getStylesheetPaths() : any;
+        getStylesheetPaths() : string[];
     
         /**
          * This field or method was not documented by atomdoc, assume it is private. Use with caution.
@@ -5543,7 +4786,7 @@ added menu items.
         /**
          * This field or method was not documented by atomdoc, assume it is private. Use with caution.
          */
-        deactivateConfig() : void;
+        deactivateConfig() : Config;
     
         /**
          * This field or method was not documented by atomdoc, assume it is private. Use with caution.
@@ -5553,7 +4796,7 @@ added menu items.
         /**
          * This field or method was not documented by atomdoc, assume it is private. Use with caution.
          */
-        reloadStylesheets() : any;
+        reloadStylesheets() : void;
     
         /**
          * This field or method was not documented by atomdoc, assume it is private. Use with caution.
@@ -5563,35 +4806,35 @@ added menu items.
         /**
          * This field or method was not documented by atomdoc, assume it is private. Use with caution.
          */
-        getMainModulePath() : any;
+        getMainModulePath() : string;
     
         /**
          * This field or method was not documented by atomdoc, assume it is private. Use with caution.
          */
-        hasActivationCommands() : any;
+        hasActivationCommands() : string;
     
         /**
          * This field or method was not documented by atomdoc, assume it is private. Use with caution.
          */
-        subscribeToActivationCommands() : any;
+        subscribeToActivationCommands() : string;
     
         /**
          * This field or method was not documented by atomdoc, assume it is private. Use with caution.
          */
-        getActivationCommands() : any;
+        getActivationCommands() : string;
     
         /**
          * Does the given module path contain native code? 
          * This field or method was marked private by atomdoc. Use with caution.
          */
-        isNativeModule(modulePath? : any) : boolean;
+        isNativeModule(modulePath? : string) : boolean;
     
         /**
          * Get an array of all the native modules that this package depends on.
          * This will recurse through all dependencies. 
          * This field or method was marked private by atomdoc. Use with caution.
          */
-        getNativeModuleDependencyPaths() : any;
+        getNativeModuleDependencyPaths() : string[];
     
         /**
          * Get the incompatible native modules that this package depends on.
@@ -5616,7 +4859,7 @@ added menu items.
         /**
          * This field or method was not documented by atomdoc, assume it is private. Use with caution.
          */
-        handleError(message? : any, error? : any) : any;
+        handleError(message? : string, error? : any) : void;
     
     }
 
@@ -5643,7 +4886,7 @@ added menu items.
         /**
          * This field or method was not documented by atomdoc, assume it is private. Use with caution.
          */
-        constructor(container? : any, orientation? : any, children? : any, flexScale? : any);
+        constructor({ container, orientation, children } : { container? : any; orientation? : any; children? : any });
     
         /**
          * This field or method was not documented by atomdoc, assume it is private. Use with caution.
@@ -5654,16 +4897,6 @@ added menu items.
          * This field or method was not documented by atomdoc, assume it is private. Use with caution.
          */
         serializeParams() : any;
-    
-        /**
-         * This field or method was not documented by atomdoc, assume it is private. Use with caution.
-         */
-        getFlexScale() : any;
-    
-        /**
-         * This field or method was not documented by atomdoc, assume it is private. Use with caution.
-         */
-        setFlexScale(flexScale? : any) : void;
     
         /**
          * This field or method was not documented by atomdoc, assume it is private. Use with caution.
@@ -5708,47 +4941,32 @@ added menu items.
         /**
          * This field or method was not documented by atomdoc, assume it is private. Use with caution.
          */
-        onDidAddChild(fn? : any) : EventKit.Disposable;
+        onDidAddChild(fn? : Function /* needs to be defined */) : EventKit.Disposable;
     
         /**
          * This field or method was not documented by atomdoc, assume it is private. Use with caution.
          */
-        onDidRemoveChild(fn? : any) : EventKit.Disposable;
+        onDidRemoveChild(fn? : Function /* needs to be defined */) : EventKit.Disposable;
     
         /**
          * This field or method was not documented by atomdoc, assume it is private. Use with caution.
          */
-        onDidReplaceChild(fn? : any) : EventKit.Disposable;
+        onDidReplaceChild(fn? : Function /* needs to be defined */) : EventKit.Disposable;
     
         /**
          * This field or method was not documented by atomdoc, assume it is private. Use with caution.
          */
-        onDidDestroy(fn? : any) : EventKit.Disposable;
+        onDidDestroy(fn? : Function /* needs to be defined */) : EventKit.Disposable;
     
         /**
          * This field or method was not documented by atomdoc, assume it is private. Use with caution.
          */
-        onDidChangeFlexScale(fn? : any) : EventKit.Disposable;
+        addChild(child? : any, index? : any) : void;
     
         /**
          * This field or method was not documented by atomdoc, assume it is private. Use with caution.
          */
-        observeFlexScale(fn? : any) : EventKit.Disposable;
-    
-        /**
-         * This field or method was not documented by atomdoc, assume it is private. Use with caution.
-         */
-        addChild(child? : any, index? : any) : any;
-    
-        /**
-         * This field or method was not documented by atomdoc, assume it is private. Use with caution.
-         */
-        adjustFlexScale() : any;
-    
-        /**
-         * This field or method was not documented by atomdoc, assume it is private. Use with caution.
-         */
-        removeChild(child? : any, replacing? : any) : any;
+        removeChild(child? : any, replacing? : any) : void;
     
         /**
          * This field or method was not documented by atomdoc, assume it is private. Use with caution.
@@ -5758,12 +4976,12 @@ added menu items.
         /**
          * This field or method was not documented by atomdoc, assume it is private. Use with caution.
          */
-        insertChildBefore(currentChild? : any, newChild? : any) : TextBuffer.Range | boolean;
+        insertChildBefore(currentChild? : boolean, newChild? : boolean) : TextBuffer.Range | boolean;
     
         /**
          * This field or method was not documented by atomdoc, assume it is private. Use with caution.
          */
-        insertChildAfter(currentChild? : any, newChild? : any) : TextBuffer.Range | boolean;
+        insertChildAfter(currentChild? : boolean, newChild? : boolean) : TextBuffer.Range | boolean;
     
         /**
          * This field or method was not documented by atomdoc, assume it is private. Use with caution.
@@ -5809,7 +5027,7 @@ added menu items.
         /**
          * This field or method was not documented by atomdoc, assume it is private. Use with caution.
          */
-        setModel(model? : Model) : void;
+        setModel(model? : any) : Model;
     
         /**
          * This field or method was not documented by atomdoc, assume it is private. Use with caution.
@@ -5834,7 +5052,7 @@ added menu items.
         /**
          * This field or method was not documented by atomdoc, assume it is private. Use with caution.
          */
-        indexOfPane(paneView? : Pane) : Pane;
+        indexOfPane(paneView? : boolean) : Pane;
     
         /**
          * This field or method was not documented by atomdoc, assume it is private. Use with caution.
@@ -5889,22 +5107,22 @@ added menu items.
         /**
          * This field or method was not documented by atomdoc, assume it is private. Use with caution.
          */
-        focusPaneViewAbove() : any;
+        focusPaneViewAbove() : void;
     
         /**
          * This field or method was not documented by atomdoc, assume it is private. Use with caution.
          */
-        focusPaneViewBelow() : any;
+        focusPaneViewBelow() : void;
     
         /**
          * This field or method was not documented by atomdoc, assume it is private. Use with caution.
          */
-        focusPaneViewOnLeft() : any;
+        focusPaneViewOnLeft() : void;
     
         /**
          * This field or method was not documented by atomdoc, assume it is private. Use with caution.
          */
-        focusPaneViewOnRight() : any;
+        focusPaneViewOnRight() : void;
     
         /**
          * This field or method was not documented by atomdoc, assume it is private. Use with caution.
@@ -5921,7 +5139,7 @@ added menu items.
         /**
          * This field or method was not documented by atomdoc, assume it is private. Use with caution.
          */
-        static version: any /* default */;
+        static version: number;
     
         /**
          * This field or method was not documented by atomdoc, assume it is private. Use with caution.
@@ -5931,17 +5149,17 @@ added menu items.
         /**
          * This field or method was not documented by atomdoc, assume it is private. Use with caution.
          */
-        constructor(params? : any);
+        constructor(params : any);
     
         /**
          * This field or method was not documented by atomdoc, assume it is private. Use with caution.
          */
-        deserializeParams(params? : any) : any;
+        deserializeParams(params : any) : any;
     
         /**
          * This field or method was not documented by atomdoc, assume it is private. Use with caution.
          */
-        serializeParams(params? : any) : any;
+        serializeParams(params : any) : any;
     
         /**
          * This field or method was not documented by atomdoc, assume it is private. Use with caution.
@@ -5951,82 +5169,82 @@ added menu items.
         /**
          * This field or method was not documented by atomdoc, assume it is private. Use with caution.
          */
-        onDidChangeRoot(fn? : any) : EventKit.Disposable;
+        onDidChangeRoot(fn : Function /* needs to be defined */) : EventKit.Disposable;
     
         /**
          * This field or method was not documented by atomdoc, assume it is private. Use with caution.
          */
-        observeRoot(fn? : any) : EventKit.Disposable;
+        observeRoot(fn : (any: any) => void) : EventKit.Disposable;
     
         /**
          * This field or method was not documented by atomdoc, assume it is private. Use with caution.
          */
-        onDidAddPane(fn? : any) : EventKit.Disposable;
+        onDidAddPane(fn : (pane: Pane) => void) : Pane;
     
         /**
          * This field or method was not documented by atomdoc, assume it is private. Use with caution.
          */
-        observePanes(fn? : any) : EventKit.Disposable;
+        observePanes(fn : (pane: Pane) => void) : Pane[];
     
         /**
          * This field or method was not documented by atomdoc, assume it is private. Use with caution.
          */
-        onDidDestroyPane(fn? : any) : EventKit.Disposable;
+        onDidDestroyPane(fn : (pane: Pane) => void) : Pane;
     
         /**
          * This field or method was not documented by atomdoc, assume it is private. Use with caution.
          */
-        onDidChangeActivePane(fn? : any) : EventKit.Disposable;
+        onDidChangeActivePane(fn : (pane: Pane) => void) : Pane;
     
         /**
          * This field or method was not documented by atomdoc, assume it is private. Use with caution.
          */
-        observeActivePane(fn? : any) : EventKit.Disposable;
+        observeActivePane(fn : (pane: Pane) => void) : Pane;
     
         /**
          * This field or method was not documented by atomdoc, assume it is private. Use with caution.
          */
-        onDidAddPaneItem(fn? : any) : EventKit.Disposable;
+        onDidAddPaneItem(fn : (item: any) => void) : any;
     
         /**
          * This field or method was not documented by atomdoc, assume it is private. Use with caution.
          */
-        observePaneItems(fn? : any) : EventKit.Disposable;
+        observePaneItems(fn : (item: any) => void) : any[];
     
         /**
          * This field or method was not documented by atomdoc, assume it is private. Use with caution.
          */
-        onDidChangeActivePaneItem(fn? : any) : EventKit.Disposable;
+        onDidChangeActivePaneItem(fn : (item: any) => void) : any;
     
         /**
          * This field or method was not documented by atomdoc, assume it is private. Use with caution.
          */
-        observeActivePaneItem(fn? : any) : EventKit.Disposable;
+        observeActivePaneItem(fn : (item: any) => void) : any;
     
         /**
          * This field or method was not documented by atomdoc, assume it is private. Use with caution.
          */
-        onWillDestroyPaneItem(fn? : any) : EventKit.Disposable;
+        onWillDestroyPaneItem(fn : (item: any) => void) : any;
     
         /**
          * This field or method was not documented by atomdoc, assume it is private. Use with caution.
          */
-        onDidDestroyPaneItem(fn? : any) : EventKit.Disposable;
+        onDidDestroyPaneItem(fn : (item: any) => void) : any;
     
         /**
          * This field or method was not documented by atomdoc, assume it is private. Use with caution.
          */
-        getRoot() : any;
+        getRoot() : Pane;
     
         /**
          * This field or method was not documented by atomdoc, assume it is private. Use with caution.
          */
-        setRoot(root? : any) : void;
+        setRoot(root : Pane) : void;
     
         /**
          * This field or method was not documented by atomdoc, assume it is private. Use with caution.
          */
-        replaceChild(oldChild? : any, newChild? : any) : any;
+        replaceChild(oldChild : Pane, newChild : Pane) : any;
     
         /**
          * This field or method was not documented by atomdoc, assume it is private. Use with caution.
@@ -6036,7 +5254,7 @@ added menu items.
         /**
          * This field or method was not documented by atomdoc, assume it is private. Use with caution.
          */
-        getPaneItems() : any;
+        getPaneItems() : any[];
     
         /**
          * This field or method was not documented by atomdoc, assume it is private. Use with caution.
@@ -6046,7 +5264,7 @@ added menu items.
         /**
          * This field or method was not documented by atomdoc, assume it is private. Use with caution.
          */
-        setActivePane(activePane? : Pane) : void;
+        setActivePane(activePane : (pane: Pane) => void) : Pane;
     
         /**
          * This field or method was not documented by atomdoc, assume it is private. Use with caution.
@@ -6056,12 +5274,12 @@ added menu items.
         /**
          * This field or method was not documented by atomdoc, assume it is private. Use with caution.
          */
-        paneForURI(uri? : any) : any;
+        paneForURI(uri : Pane) : Pane;
     
         /**
          * This field or method was not documented by atomdoc, assume it is private. Use with caution.
          */
-        paneForItem(item? : any) : any;
+        paneForItem(item : Pane) : Pane;
     
         /**
          * This field or method was not documented by atomdoc, assume it is private. Use with caution.
@@ -6071,42 +5289,42 @@ added menu items.
         /**
          * This field or method was not documented by atomdoc, assume it is private. Use with caution.
          */
-        confirmClose(options? : any) : any;
+        confirmClose(options : any) : any;
     
         /**
          * This field or method was not documented by atomdoc, assume it is private. Use with caution.
          */
-        activateNextPane() : void;
+        activateNextPane() : Pane;
     
         /**
          * This field or method was not documented by atomdoc, assume it is private. Use with caution.
          */
-        activatePreviousPane() : void;
+        activatePreviousPane() : Pane;
     
         /**
          * This field or method was not documented by atomdoc, assume it is private. Use with caution.
          */
-        destroyEmptyPanes() : void;
+        destroyEmptyPanes() : Pane[];
     
         /**
          * This field or method was not documented by atomdoc, assume it is private. Use with caution.
          */
-        willDestroyPaneItem(event? : any) : any;
+        willDestroyPaneItem(event : (item: any) => void) : any;
     
         /**
          * This field or method was not documented by atomdoc, assume it is private. Use with caution.
          */
-        didDestroyPaneItem(event? : any) : any;
+        didDestroyPaneItem(event : (item: any) => void) : any;
     
         /**
          * This field or method was not documented by atomdoc, assume it is private. Use with caution.
          */
-        didAddPane(event? : any) : Pane;
+        didAddPane(event : (pane: Pane) => void) : Pane;
     
         /**
          * This field or method was not documented by atomdoc, assume it is private. Use with caution.
          */
-        didDestroyPane(event? : any) : Pane;
+        didDestroyPane(event : (pane: Pane) => void) : Pane;
     
         /**
          * Called by Model superclass when destroyed 
@@ -6122,17 +5340,17 @@ added menu items.
         /**
          * This field or method was not documented by atomdoc, assume it is private. Use with caution.
          */
-        monitorPaneItems() : any;
+        monitorPaneItems() : any[];
     
         /**
          * This field or method was not documented by atomdoc, assume it is private. Use with caution.
          */
-        addedPaneItem(item? : any, pane? : Pane, index? : any) : any;
+        addedPaneItem(item : (item: any) => void, pane : (item: any) => void, index : (item: any) => void) : any;
     
         /**
          * This field or method was not documented by atomdoc, assume it is private. Use with caution.
          */
-        removedPaneItem(item? : any) : any;
+        removedPaneItem(item : (item: any) => void) : any;
     
     }
 
@@ -6163,7 +5381,7 @@ added menu items.
         /**
          * This field or method was not documented by atomdoc, assume it is private. Use with caution.
          */
-        setModel(model? : Model) : void;
+        setModel(model? : any) : Model;
     
         /**
          * This field or method was not documented by atomdoc, assume it is private. Use with caution.
@@ -6178,14 +5396,14 @@ added menu items.
         /**
          * This field or method was not documented by atomdoc, assume it is private. Use with caution.
          */
-        remove() : any;
+        remove() : void;
     
         getModel() : Model;
     
         /**
          * Use ::destroyItem 
          */
-        removeItem(item? : any) : any;
+        removeItem(item? : any) : void;
     
         /**
          * Use ::activateItem 
@@ -6232,22 +5450,22 @@ added menu items.
         /**
          * This field or method was not documented by atomdoc, assume it is private. Use with caution.
          */
-        onItemAdded(item? : any, index? : any) : any;
+        onItemAdded({ item, index } : { item? : any; index? : any }) : any;
     
         /**
          * This field or method was not documented by atomdoc, assume it is private. Use with caution.
          */
-        onItemRemoved(item? : any, index? : any, destroyed? : void) : any;
+        onItemRemoved({ item, index, destroyed } : { item? : any; index? : any; destroyed? : any }) : any;
     
         /**
          * This field or method was not documented by atomdoc, assume it is private. Use with caution.
          */
-        onItemMoved(item? : any, newIndex? : any) : any;
+        onItemMoved({ item, newIndex } : { item? : any; newIndex? : any }) : any;
     
         /**
          * This field or method was not documented by atomdoc, assume it is private. Use with caution.
          */
-        onBeforeItemDestroyed(item? : any) : any;
+        onBeforeItemDestroyed({ item } : { item? : any }) : any;
     
         /**
          * This field or method was not documented by atomdoc, assume it is private. Use with caution.
@@ -6287,7 +5505,7 @@ added menu items.
         /**
          * This field or method was not documented by atomdoc, assume it is private. Use with caution.
          */
-        focus() : any;
+        focus() : void;
     
     }
 
@@ -6336,107 +5554,83 @@ added menu items.
         setContainer(container? : any) : void;
     
         /**
-         * This field or method was not documented by atomdoc, assume it is private. Use with caution.
-         */
-        setFlexScale(flexScale? : any) : void;
-    
-        /**
-         * This field or method was not documented by atomdoc, assume it is private. Use with caution.
-         */
-        getFlexScale() : any;
-    
-        /**
-         * Invoke the given callback when the pane resize
-         * 
-         * the callback will be invoked when pane's flexScale property changes
-         * @param callback? - {Function} to be called when the pane is resized
-         */
-        onDidChangeFlexScale(callback? : Function) : EventKit.Disposable;
-    
-        /**
-         * Invoke the given callback with all current and future items.
-         * @param callback? - {Function} to be called with current and future items.
-         */
-        observeFlexScale(callback? : Function) : EventKit.Disposable;
-    
-        /**
          * Invoke the given callback when the pane is activated.
          * 
          * The given callback will be invoked whenever {::activate} is called on the
          * pane, even if it is already active at the time.
-         * @param callback? - {Function} to be called when the pane is activated.
+         * @param callback - {Function} to be called when the pane is activated.
          */
-        onDidActivate(callback? : Function) : EventKit.Disposable;
+        onDidActivate(callback : Function /* needs to be defined */) : EventKit.Disposable;
     
         /**
          * Invoke the given callback when the pane is destroyed.
-         * @param callback? - {Function} to be called when the pane is destroyed.
+         * @param callback - {Function} to be called when the pane is destroyed.
          */
-        onDidDestroy(callback? : Function) : EventKit.Disposable;
+        onDidDestroy(callback : Function /* needs to be defined */) : EventKit.Disposable;
     
         /**
          * Invoke the given callback when the value of the {::isActive}
          * property changes.
-         * @param callback? - {Function} to be called when the value of the {::isActive} property changes.
+         * @param callback - {Function} to be called when the value of the {::isActive} property changes.
          */
-        onDidChangeActive(callback? : Function) : EventKit.Disposable;
+        onDidChangeActive(callback : Function /* needs to be defined */) : EventKit.Disposable;
     
         /**
          * Invoke the given callback with the current and future values of the
          * {::isActive} property.
-         * @param callback? - {Function} to be called with the current and future values of the {::isActive} property.
+         * @param callback - {Function} to be called with the current and future values of the {::isActive} property.
          */
-        observeActive(callback? : Function) : EventKit.Disposable;
+        observeActive(callback : Function) : EventKit.Disposable;
     
         /**
          * Invoke the given callback when an item is added to the pane.
-         * @param callback? - {Function} to be called with when items are added.
+         * @param callback - {Function} to be called with when items are added.
          */
-        onDidAddItem(callback? : Function) : EventKit.Disposable;
+        onDidAddItem(callback : Function /* needs to be defined */) : EventKit.Disposable;
     
         /**
          * Invoke the given callback when an item is removed from the pane.
-         * @param callback? - {Function} to be called with when items are removed.
+         * @param callback - {Function} to be called with when items are removed.
          */
-        onDidRemoveItem(callback? : Function) : EventKit.Disposable;
+        onDidRemoveItem(callback : Function /* needs to be defined */) : EventKit.Disposable;
     
         /**
          * Invoke the given callback when an item is moved within the pane.
-         * @param callback? - {Function} to be called with when items are moved.
+         * @param callback - {Function} to be called with when items are moved.
          */
-        onDidMoveItem(callback? : Function) : EventKit.Disposable;
+        onDidMoveItem(callback : Function /* needs to be defined */) : EventKit.Disposable;
     
         /**
          * Invoke the given callback with all current and future items.
-         * @param callback? - {Function} to be called with current and future items.
+         * @param callback - {Function} to be called with current and future items.
          */
-        observeItems(callback? : Function) : EventKit.Disposable;
+        observeItems(callback : Function) : EventKit.Disposable;
     
         /**
          * Invoke the given callback when the value of {::getActiveItem}
          * changes.
-         * @param callback? - {Function} to be called with when the active item changes.
+         * @param callback - {Function} to be called with when the active item changes.
          */
-        onDidChangeActiveItem(callback? : Function) : EventKit.Disposable;
+        onDidChangeActiveItem(callback : Function /* needs to be defined */) : EventKit.Disposable;
     
         /**
          * Invoke the given callback with the current and future values of
          * {::getActiveItem}.
-         * @param callback? - {Function} to be called with the current and future active items.
+         * @param callback - {Function} to be called with the current and future active items.
          */
-        observeActiveItem(callback? : Function) : EventKit.Disposable;
+        observeActiveItem(callback : Function) : EventKit.Disposable;
     
         /**
          * Invoke the given callback before items are destroyed.
-         * @param callback? - {Function} to be called before items are destroyed.
+         * @param callback - {Function} to be called before items are destroyed.
          */
-        onWillDestroyItem(callback? : Function) : EventKit.Disposable;
+        onWillDestroyItem(callback : Function) : EventKit.Disposable;
     
         /**
          * Called by the view layer to indicate that the pane has gained focus. 
          * This field or method was marked private by atomdoc. Use with caution.
          */
-        focus() : any;
+        focus() : void;
     
         /**
          * Called by the view layer to indicate that the pane has lost focus. 
@@ -6461,13 +5655,13 @@ added menu items.
     
         /**
          * Get the items in this pane.
-        Returns an {Array} of items.
+         * Returns an {Array} of items.
          */
         getItems() : any[];
     
         /**
          * Get the active pane item in this pane.
-        Returns a pane item.
+         * Returns a pane item.
          */
         getActiveItem() : any;
     
@@ -6485,7 +5679,7 @@ added menu items.
         /**
          * Return the item at the given index.
          * @param index? - {Number}
-        Returns an item or `null` if no item exists at the given index.
+         * Returns an item or `null` if no item exists at the given index.
          */
         itemAtIndex(index? : number) : any;
     
@@ -6511,7 +5705,7 @@ added menu items.
     
         /**
          * Get the index of the active item.
-        Returns a {Number}.
+         * Returns a {Number}.
          */
         getActiveItemIndex() : number;
     
@@ -6531,22 +5725,20 @@ added menu items.
          * Add the given item to the pane.
          * @param item? - The item to add. It can be a model with an associated view or a view.
          * @param index? - {Number} indicating the index at which to add the item. If omitted, the item is added after the current active item.
-        Returns the added item.
          */
-        addItem(item? : any, index? : number) : any;
+        addItem(item? : any, index? : number) : void;
     
         /**
          * Add the given items to the pane.
          * @param items? - An {Array} of items to add. Items can be views or models with associated views. Any objects that are already present in the pane's current items will not be added again.
          * @param index? - {Number} index at which to add the items. If omitted, the item is #   added after the current active item.
-        Returns an {Array} of added items.
          */
-        addItems(items? : any[], index? : number) : any[];
+        addItems(items? : any, index? : number) : void;
     
         /**
          * This field or method was not documented by atomdoc, assume it is private. Use with caution.
          */
-        removeItem(item? : any, destroyed? : void) : any;
+        removeItem(item? : any, destroyed? : any) : void;
     
         /**
          * Move the given item to the given index.
@@ -6560,7 +5752,7 @@ added menu items.
          * @param pane? - {Pane} to which to move the item.
          * @param index? - {Number} indicating the index to which to move the item in the given pane. 
          */
-        moveItemToPane(item? : any, pane? : Pane, index? : number) : void;
+        moveItemToPane(item? : any, pane? : Pane, index? : number) : Pane;
     
         /**
          * Destroy the active item and activate the next item. 
@@ -6602,14 +5794,14 @@ added menu items.
          * path they select.
          * @param nextAction? - {Function} which will be called after the item is successfully saved. 
          */
-        saveActiveItemAs(nextAction? : Function) : void;
+        saveActiveItemAs(nextAction? : any) : void;
     
         /**
          * Save the given item.
          * @param item? - The item to save.
          * @param nextAction? - {Function} which will be called after the item is successfully saved. 
          */
-        saveItem(item? : any, nextAction? : Function) : void;
+        saveItem(item? : any, nextAction? : any) : void;
     
         /**
          * Prompt the user for a location and save the active item with the
@@ -6617,7 +5809,7 @@ added menu items.
          * @param item? - The item to save.
          * @param nextAction? - {Function} which will be called after the item is successfully saved. 
          */
-        saveItemAs(item? : any, nextAction? : Function) : void;
+        saveItemAs(item? : any, nextAction? : any) : void;
     
         /**
          * Save all items. 
@@ -6668,28 +5860,28 @@ added menu items.
         /**
          * Create a new pane to the left of this pane.
          * @param params? - {Object} with the following keys:
-        Returns the new {Pane}.
+         * Returns the new {Pane}.
          */
         splitLeft(params? : Object) : Pane;
     
         /**
          * Create a new pane to the right of this pane.
          * @param params? - {Object} with the following keys:
-        Returns the new {Pane}.
+         * Returns the new {Pane}.
          */
         splitRight(params? : Object) : Pane;
     
         /**
          * Creates a new pane above the receiver.
          * @param params? - {Object} with the following keys:
-        Returns the new {Pane}.
+         * Returns the new {Pane}.
          */
         splitUp(params? : Object) : Pane;
     
         /**
          * Creates a new pane below the receiver.
          * @param params? - {Object} with the following keys:
-        Returns the new {Pane}.
+         * Returns the new {Pane}.
          */
         splitDown(params? : Object) : Pane;
     
@@ -6715,7 +5907,7 @@ added menu items.
         /**
          * This field or method was not documented by atomdoc, assume it is private. Use with caution.
          */
-        close() : any;
+        close() : void;
     
         /**
          * This field or method was not documented by atomdoc, assume it is private. Use with caution.
@@ -6725,7 +5917,7 @@ added menu items.
         /**
          * This field or method was not documented by atomdoc, assume it is private. Use with caution.
          */
-        handleSaveError(error? : any) : any;
+        handleSaveError(error? : any) : void;
     
     }
 
@@ -6742,7 +5934,7 @@ added menu items.
         /**
          * This field or method was not documented by atomdoc, assume it is private. Use with caution.
          */
-        constructor(location? : any);
+        constructor({ location } : { location? : any });
     
         /**
          * This field or method was not documented by atomdoc, assume it is private. Use with caution.
@@ -6753,17 +5945,17 @@ added menu items.
          * Event Subscription
          * This field or method was marked private by atomdoc. Use with caution.
          */
-        onDidAddPanel(callback? : any) : EventKit.Disposable;
+        onDidAddPanel(callback : Function /* needs to be defined */) : EventKit.Disposable;
     
         /**
          * This field or method was not documented by atomdoc, assume it is private. Use with caution.
          */
-        onDidRemovePanel(callback? : any) : EventKit.Disposable;
+        onDidRemovePanel(callback : Function /* needs to be defined */) : EventKit.Disposable;
     
         /**
          * This field or method was not documented by atomdoc, assume it is private. Use with caution.
          */
-        onDidDestroy(callback? : any) : EventKit.Disposable;
+        onDidDestroy(callback : Function /* needs to be defined */) : EventKit.Disposable;
     
         /**
          * Panels
@@ -6833,7 +6025,7 @@ added menu items.
          * Construction and Destruction
          * This field or method was marked private by atomdoc. Use with caution.
          */
-        constructor(item? : any, visible? : boolean, priority? : any, className? : string);
+        constructor({ item, visible, priority, className } : { item? : any; visible? : boolean; priority? : any; className? : string });
     
         /**
          * Destroy and remove this panel from the UI. 
@@ -6842,15 +6034,15 @@ added menu items.
     
         /**
          * Invoke the given callback when the pane hidden or shown.
-         * @param callback? - {Function} to be called when the pane is destroyed.
+         * @param callback - {Function} to be called when the pane is destroyed.
          */
-        onDidChangeVisible(callback? : Function) : EventKit.Disposable;
+        onDidChangeVisible(callback : Function /* needs to be defined */) : EventKit.Disposable;
     
         /**
          * Invoke the given callback when the pane is destroyed.
-         * @param callback? - {Function} to be called when the pane is destroyed.
+         * @param callback - {Function} to be called when the pane is destroyed.
          */
-        onDidDestroy(callback? : Function) : EventKit.Disposable;
+        onDidDestroy(callback : Function /* needs to be defined */) : EventKit.Disposable;
     
         getItem() : any;
     
@@ -6888,7 +6080,7 @@ added menu items.
          * Construction and Destruction
          * This field or method was marked private by atomdoc. Use with caution.
          */
-        constructor(path? : any, paths? : any, buffers? : any);
+        constructor({ path, paths, buffers } : { path? : string; paths? : string; buffers? : any });
     
         /**
          * This field or method was not documented by atomdoc, assume it is private. Use with caution.
@@ -6913,14 +6105,14 @@ added menu items.
     
         /**
          * Invoke the given callback when the project paths change.
-         * @param callback? - {Function} to be called after the project paths change.
+         * @param callback - {Function} to be called after the project paths change.
          */
-        onDidChangePaths(callback? : Function) : EventKit.Disposable;
+        onDidChangePaths(callback : Function /* needs to be defined */) : EventKit.Disposable;
     
         /**
          * This field or method was not documented by atomdoc, assume it is private. Use with caution.
          */
-        onDidAddBuffer(callback? : any) : EventKit.Disposable;
+        onDidAddBuffer(callback : Function /* needs to be defined */) : EventKit.Disposable;
     
         /**
          * Get an {Array} of {GitRepository}s associated with the project's
@@ -6947,25 +6139,25 @@ added menu items.
          * Get an {Array} of {String}s containing the paths of the project's
          * directories. 
          */
-        getPaths() : any;
+        getPaths() : string[];
     
         /**
          * Set the paths of the project's directories.
          * @param projectPaths? - {Array} of {String} paths. 
          */
-        setPaths(projectPaths? : any[]) : void;
+        setPaths(projectPaths? : string) : string;
     
         /**
          * Add a path to the project's list of root paths
          * @param projectPath? - {String} The path to the directory to add. 
          */
-        addPath(projectPath? : string, options? : any) : any;
+        addPath(projectPath? : string, options? : any) : string;
     
         /**
          * remove a path from the project's list of root paths.
          * @param projectPath? - {String} The path to remove. 
          */
-        removePath(projectPath? : string) : any;
+        removePath(projectPath? : string) : string;
     
         /**
          * Get an {Array} of {Directory}s associated with this project. 
@@ -6975,25 +6167,19 @@ added menu items.
         /**
          * This field or method was not documented by atomdoc, assume it is private. Use with caution.
          */
-        resolvePath(uri? : any) : any;
+        resolvePath(uri? : any) : string;
     
         /**
          * This field or method was not documented by atomdoc, assume it is private. Use with caution.
          */
-        relativize(fullPath? : any) : any;
+        relativize(fullPath? : string) : any;
     
         /**
          * Get the path to the project directory that contains the given path,
          * and the relative path from that project directory to the given path.
          * @param fullPath? - {String} An absolute path.
-        Returns an {Array} with two elements:
-
-* `projectPath` The {String} path to the project directory that contains the
-  given path, or `null` if none is found.
-* `relativePath` {String} The relative path from the project directory to
-  the given path.
          */
-        relativizePath(fullPath? : string) : any[];
+        relativizePath(fullPath? : string) : string;
     
         /**
          * Determines whether the given path (real or symbolic) is inside the
@@ -7002,7 +6188,7 @@ added menu items.
          * This method does not actually check if the path exists, it just checks their
          * locations relative to each other.
          * @param pathToCheck? - {String} path
-        Returns whether the path is inside the project's root directory.
+         * Returns whether the path is inside the project's root directory.
          */
         contains(pathToCheck? : string) : any;
     
@@ -7019,7 +6205,7 @@ added menu items.
          * Retrieves all the {TextBuffer}s in the project; that is, the
          * buffers for all open files.
          * This field or method was marked private by atomdoc. Use with caution.
-        Returns an {Array} of {TextBuffer}s.
+         * Returns an {Array} of {TextBuffer}s.
          */
         getBuffers() : TextBuffer.TextBuffer[];
     
@@ -7027,18 +6213,18 @@ added menu items.
          * Is the buffer for the given path modified? 
          * This field or method was marked private by atomdoc. Use with caution.
          */
-        isPathModified(filePath? : any) : boolean;
+        isPathModified(filePath? : string) : string;
     
         /**
          * This field or method was not documented by atomdoc, assume it is private. Use with caution.
          */
-        findBufferForPath(filePath? : any) : any;
+        findBufferForPath(filePath? : string) : string;
     
         /**
          * Only to be used in specs 
          * This field or method was marked private by atomdoc. Use with caution.
          */
-        bufferForPathSync(filePath? : any) : any;
+        bufferForPathSync(filePath? : string) : string;
     
         /**
          * Given a file path, this retrieves or creates a new {TextBuffer}.
@@ -7047,9 +6233,8 @@ added menu items.
          * `text` is used as the contents of the new buffer.
          * This field or method was marked private by atomdoc. Use with caution.
          * @param filePath? - A {String} representing a path. If `null`, an "Untitled" buffer is created.
-        Returns a promise that resolves to the {TextBuffer}.
          */
-        bufferForPath(filePath? : string) : TextBuffer.TextBuffer;
+        bufferForPath(filePath? : string) : string;
     
         /**
          * This field or method was not documented by atomdoc, assume it is private. Use with caution.
@@ -7060,37 +6245,36 @@ added menu items.
          * Still needed when deserializing a tokenized buffer 
          * This field or method was marked private by atomdoc. Use with caution.
          */
-        buildBufferSync(absoluteFilePath? : any) : any;
+        buildBufferSync(absoluteFilePath? : string) : any;
     
         /**
          * Given a file path, this sets its {TextBuffer}.
          * This field or method was marked private by atomdoc. Use with caution.
          * @param absoluteFilePath? - A {String} representing a path.
-        Returns a promise that resolves to the {TextBuffer}.
+         * Returns a promise that resolves to the {TextBuffer}.
          */
         buildBuffer(absoluteFilePath? : string) : TextBuffer.TextBuffer;
     
         /**
          * This field or method was not documented by atomdoc, assume it is private. Use with caution.
          */
-        addBuffer(buffer? : any, options? : any) : any;
+        addBuffer(buffer? : any, options? : any) : void;
     
         /**
          * This field or method was not documented by atomdoc, assume it is private. Use with caution.
          */
-        addBufferAtIndex(buffer? : any, index? : any, options? : any) : any;
+        addBufferAtIndex(buffer? : any, index? : any, options? : any) : void;
     
         /**
          * Removes a {TextBuffer} association from the project.
          * This field or method was marked private by atomdoc. Use with caution.
-        Returns the removed {TextBuffer}.
          */
-        removeBuffer(buffer? : any) : TextBuffer.TextBuffer;
+        removeBuffer(buffer? : any) : void;
     
         /**
          * This field or method was not documented by atomdoc, assume it is private. Use with caution.
          */
-        removeBufferAtIndex(index? : any, options? : any) : any;
+        removeBufferAtIndex(index? : any, options? : any) : void;
     
         /**
          * This field or method was not documented by atomdoc, assume it is private. Use with caution.
@@ -7122,15 +6306,15 @@ added menu items.
     
         getRegions() : any;
     
-        screenRowRangeForBufferRow(targetBufferRow? : number) : TextBuffer.Range;
+        screenRowRangeForBufferRow(targetBufferRow? : number) : number;
     
-        bufferRowRangeForScreenRow(targetScreenRow? : number) : TextBuffer.Range;
+        bufferRowRangeForScreenRow(targetScreenRow? : number) : number;
     
         /**
          * If the given buffer row is part of a folded row range, returns that
          * row range. Otherwise returns a range spanning only the given buffer row. 
          */
-        bufferRowRangeForBufferRow(targetBufferRow? : number) : TextBuffer.Range;
+        bufferRowRangeForBufferRow(targetBufferRow? : number) : number;
     
         /**
          * Given a starting buffer row, the number of buffer rows to replace,
@@ -7138,7 +6322,7 @@ added menu items.
          * the regions at the appropriate location in the map. This method is used by
          * display buffer to keep the map updated when the underlying buffer changes. 
          */
-        spliceRegions(startBufferRow? : number, bufferRowCount? : any, regions? : any) : any;
+        spliceRegions(startBufferRow? : number, bufferRowCount? : number, regions? : any) : any;
     
         /**
          * This field or method was not documented by atomdoc, assume it is private. Use with caution.
@@ -7155,7 +6339,7 @@ added menu items.
          */
         mergeAdjacentRectangularRegions(startIndex? : any, endIndex? : any) : any;
     
-        inspect() : any;
+        inspect() : boolean;
     
     }
 
@@ -7178,7 +6362,7 @@ added menu items.
         /**
          * Create a {ScopeDescriptor} object.
          */
-        constructor(scopes? : Scope[]);
+        constructor({ scopes } : { scopes? : Scope[] });
     
         getScopesArray() : string[];
     
@@ -7186,11 +6370,6 @@ added menu items.
          * This field or method was not documented by atomdoc, assume it is private. Use with caution.
          */
         getScopeChain() : any;
-    
-        /**
-         * This field or method was not documented by atomdoc, assume it is private. Use with caution.
-         */
-        toString() : any;
     
     }
 
@@ -7202,22 +6381,22 @@ added menu items.
         /**
          * This field or method was not documented by atomdoc, assume it is private. Use with caution.
          */
-        static load(scopedPropertiesPath? : any, callback? : any) : any;
+        static load(scopedPropertiesPath? : string, callback? : any) : any;
     
         /**
          * This field or method was not documented by atomdoc, assume it is private. Use with caution.
          */
-        path: any /* default */;
+        path: string;
     
         /**
          * This field or method was not documented by atomdoc, assume it is private. Use with caution.
          */
-        scopedProperties: ScopedProperties;
+        scopedProperties: any /* default */;
     
         /**
          * This field or method was not documented by atomdoc, assume it is private. Use with caution.
          */
-        constructor(path? : any, scopedProperties? : ScopedProperties);
+        constructor(path? : string, scopedProperties? : any);
     
         /**
          * This field or method was not documented by atomdoc, assume it is private. Use with caution.
@@ -7238,7 +6417,7 @@ added menu items.
         /**
          * This field or method was not documented by atomdoc, assume it is private. Use with caution.
          */
-        initialize() : any;
+        initialize() : boolean;
     
     }
 
@@ -7260,7 +6439,7 @@ added menu items.
         /**
          * This field or method was not documented by atomdoc, assume it is private. Use with caution.
          */
-        constructor(orientation? : any, onScroll? : any);
+        constructor({ orientation, onScroll } : { orientation? : any; onScroll? : any });
     
         /**
          * This field or method was not documented by atomdoc, assume it is private. Use with caution.
@@ -7270,12 +6449,12 @@ added menu items.
         /**
          * This field or method was not documented by atomdoc, assume it is private. Use with caution.
          */
-        updateVertical() : void;
+        updateVertical() : number;
     
         /**
          * This field or method was not documented by atomdoc, assume it is private. Use with caution.
          */
-        updateHorizontal() : void;
+        updateHorizontal() : number;
     
         /**
          * This field or method was not documented by atomdoc, assume it is private. Use with caution.
@@ -7325,7 +6504,7 @@ added menu items.
         /**
          * This field or method was not documented by atomdoc, assume it is private. Use with caution.
          */
-        inputThrottle: any /* default */;
+        inputThrottle: boolean;
     
         /**
          * This field or method was not documented by atomdoc, assume it is private. Use with caution.
@@ -7338,7 +6517,7 @@ added menu items.
          * This method can be overridden by subclasses but `super` should always
          * be called. 
          */
-        initialize() : any;
+        initialize() : boolean;
     
         /**
          * Create a view for the given model item.
@@ -7347,7 +6526,7 @@ added menu items.
          * 
          * This is called when the item is about to appended to the list view.
          * @param item? - The model item being rendered. This will always be one of the items previously passed to {::setItems}.
-        Returns a String of HTML, DOM element, jQuery object, or View.
+         * Returns a String of HTML, DOM element, jQuery object, or View.
          */
         viewForItem(item? : any) : any;
     
@@ -7356,7 +6535,7 @@ added menu items.
          * 
          * This method must be overridden by subclasses.
          * @param item? - The selected model item. This will always be one of the items previously passed to {::setItems}.
-        Returns a DOM element, jQuery object, or {View}.
+         * Returns a DOM element, jQuery object, or {View}.
          */
         confirmed(item? : any) : SpacePen.View;
     
@@ -7367,11 +6546,11 @@ added menu items.
          * called to render the item when it is being appended to the list view.
          * @param items? - The {Array} of model items to display in the list (default: []). 
          */
-        setItems(items? : any[]) : void;
+        setItems(items? : any) : void;
     
         /**
          * Get the model item that is currently selected in the list view.
-        Returns a model item.
+         * Returns a model item.
          */
         getSelectedItem() : any;
     
@@ -7385,7 +6564,7 @@ added menu items.
          * `{"id": 3, "name": "Atom"}` then you would return `"name"` from this method
          * to fuzzy filter by that property when text is entered into this view's
          * editor.
-        Returns the property name to fuzzy filter by.
+         * Returns the property name to fuzzy filter by.
          */
         getFilterKey() : any;
     
@@ -7395,7 +6574,7 @@ added menu items.
          * 
          * By default this method returns the text in the mini editor but it can be
          * overridden by subclasses if needed.
-        Returns a {String} to use when fuzzy filtering the elements to display.
+         * Returns a {String} to use when fuzzy filtering the elements to display.
          */
         getFilterQuery() : string;
     
@@ -7431,7 +6610,6 @@ added menu items.
          * Subclasses may override this method to customize the message.
          * @param itemCount? - The {Number} of items in the array specified to {::setItems}
          * @param filteredItemCount? - The {Number} of items that pass the fuzzy filter test.
-        Returns a {String} message (default: 'No matches found').
          */
         getEmptyMessage(itemCount? : number, filteredItemCount? : number) : string;
     
@@ -7446,13 +6624,13 @@ added menu items.
         /**
          * Focus the fuzzy filter editor view. 
          */
-        focusFilterEditor() : any;
+        focusFilterEditor() : void;
     
         /**
          * Store the currently focused element. This element will be given
          * back focus when {::cancel} is called. 
          */
-        storeFocusedElement() : any;
+        storeFocusedElement() : void;
     
         /**
          * Private
@@ -7468,17 +6646,17 @@ added menu items.
         /**
          * This field or method was not documented by atomdoc, assume it is private. Use with caution.
          */
-        selectItemView(view? : SpacePen.View) : SpacePen.View;
+        selectItemView(view? : any) : SpacePen.View;
     
         /**
          * This field or method was not documented by atomdoc, assume it is private. Use with caution.
          */
-        scrollToItemView(view? : SpacePen.View) : SpacePen.View;
+        scrollToItemView(view? : any) : SpacePen.View;
     
         /**
          * This field or method was not documented by atomdoc, assume it is private. Use with caution.
          */
-        restoreFocus() : any;
+        restoreFocus() : void;
     
         /**
          * This field or method was not documented by atomdoc, assume it is private. Use with caution.
@@ -7524,7 +6702,7 @@ added menu items.
         /**
          * This field or method was not documented by atomdoc, assume it is private. Use with caution.
          */
-        initialScreenRange: TextBuffer.Range;
+        initialScreenRange: Range;
     
         /**
          * This field or method was not documented by atomdoc, assume it is private. Use with caution.
@@ -7534,7 +6712,7 @@ added menu items.
         /**
          * This field or method was not documented by atomdoc, assume it is private. Use with caution.
          */
-        constructor(cursor? : Cursor, marker? : Marker, editor? : TextEditor, id? : any);
+        constructor({ cursor, marker, editor, id } : { cursor? : Cursor; marker? : Marker; editor? : any; id? : any });
     
         /**
          * This field or method was not documented by atomdoc, assume it is private. Use with caution.
@@ -7544,38 +6722,38 @@ added menu items.
         /**
          * This field or method was not documented by atomdoc, assume it is private. Use with caution.
          */
-        isLastSelection() : boolean;
+        isLastSelection() : Selection;
     
         /**
          * Calls your `callback` when the selection was moved.
-         * @param callback? - {Function}
+         * @param callback - {Function}
          */
-        onDidChangeRange(callback? : Function) : TextBuffer.Range;
+        onDidChangeRange(callback : Function /* needs to be defined */) : EventKit.Disposable;
     
         /**
          * Calls your `callback` when the selection was destroyed
-         * @param callback? - {Function}
+         * @param callback - {Function}
          */
-        onDidDestroy(callback? : Function) : EventKit.Disposable;
+        onDidDestroy(callback : Function /* needs to be defined */) : EventKit.Disposable;
     
-        getScreenRange() : TextBuffer.Range;
+        getScreenRange() : Range;
     
         /**
          * Modifies the screen range for the selection.
          * @param screenRange? - The new {Range} to use.
          * @param options? - {Object} options matching those found in {::setBufferRange}. 
          */
-        setScreenRange(screenRange? : TextBuffer.Range, options? : Object) : TextBuffer.Range;
+        setScreenRange(screenRange? : Range, options? : any) : Range;
     
-        getBufferRange() : TextBuffer.Range;
+        getBufferRange() : Range;
     
         /**
          * Modifies the buffer {Range} for the selection.
          * @param options? - {Object} with the keys:
          */
-        setBufferRange(bufferRange? : TextBuffer.Range, options? : Object) : TextBuffer.Range;
+        setBufferRange(bufferRange? : Range, options? : any) : Range;
     
-        getBufferRowRange() : TextBuffer.Range;
+        getBufferRowRange() : Range;
     
         /**
          * This field or method was not documented by atomdoc, assume it is private. Use with caution.
@@ -7610,7 +6788,7 @@ added menu items.
          */
         isReversed() : boolean;
     
-        isSingleScreenLine() : boolean;
+        isSingleScreenLine() : number;
     
         getText() : string;
     
@@ -7618,12 +6796,12 @@ added menu items.
          * Identifies if a selection intersects with a given buffer range.
          * @param bufferRange? - A {Range} to check against.
          */
-        intersectsBufferRange(bufferRange? : TextBuffer.Range) : TextBuffer.Range;
+        intersectsBufferRange(bufferRange? : Range) : Range;
     
         /**
          * This field or method was not documented by atomdoc, assume it is private. Use with caution.
          */
-        intersectsScreenRowRange(startRow? : number, endRow? : number) : TextBuffer.Range;
+        intersectsScreenRowRange(startRow? : number, endRow? : number) : Range;
     
         /**
          * This field or method was not documented by atomdoc, assume it is private. Use with caution.
@@ -7633,15 +6811,14 @@ added menu items.
         /**
          * Identifies if a selection intersects with another selection.
          * @param otherSelection? - A {Selection} to check against.
-        Returns a {Boolean}
          */
-        intersectsWith(otherSelection? : Selection, exclusive? : any) : boolean;
+        intersectsWith(otherSelection? : Selection, exclusive? : boolean) : boolean;
     
         /**
          * Clears the selection, moving the marker to the head.
          * @param options? - {Object} with the following keys:
          */
-        clear(options? : Object) : any;
+        clear(options? : any) : void;
     
         /**
          * Selects the text from the current cursor position to a given screen
@@ -7702,19 +6879,19 @@ added menu items.
          * Selects all the text from the current cursor position to the
          * beginning of the line. 
          */
-        selectToBeginningOfLine() : any;
+        selectToBeginningOfLine() : number;
     
         /**
          * Selects all the text from the current cursor position to the first
          * character of the line. 
          */
-        selectToFirstCharacterOfLine() : any;
+        selectToFirstCharacterOfLine() : number;
     
         /**
          * Selects all the text from the current cursor position to the end of
          * the line. 
          */
-        selectToEndOfLine() : any;
+        selectToEndOfLine() : number;
     
         /**
          * Selects all the text from the current cursor position to the
@@ -7758,7 +6935,7 @@ added menu items.
     
         /**
          * Modifies the selection to encompass the current word.
-        Returns a {Range}.
+         * Returns a {Range}.
          */
         selectWord() : TextBuffer.Range;
     
@@ -7772,7 +6949,7 @@ added menu items.
          * Selects an entire line in the buffer.
          * @param row? - The line {Number} to select (default: the row of the cursor). 
          */
-        selectLine(row? : number) : any;
+        selectLine(row? : number) : number;
     
         /**
          * Expands the newest selection to include the entire line on which
@@ -7780,14 +6957,14 @@ added menu items.
          * 
          * It also includes the newline character. 
          */
-        expandOverLine() : any;
+        expandOverLine() : number;
     
         /**
          * Replaces text at the current selection.
          * @param text? - A {String} representing the text to add
          * @param options? - {Object} with keys:
          */
-        insertText(text? : string, options? : Object) : TextBuffer.Range | boolean;
+        insertText(text? : string, options? : boolean) : TextBuffer.Range | boolean;
     
         /**
          * Removes the first character before the selection if the selection
@@ -7805,7 +6982,7 @@ added menu items.
          * Removes from the beginning of the line which the selection begins on
          * all the way through to the end of the selection. 
          */
-        deleteToBeginningOfLine() : void;
+        deleteToBeginningOfLine() : number;
     
         /**
          * Removes the selection or the next character after the start of the
@@ -7819,7 +6996,7 @@ added menu items.
          * removes the following newline. If the selection isn't empty, only deletes
          * the contents of the selection. 
          */
-        deleteToEndOfLine() : void;
+        deleteToEndOfLine() : number;
     
         /**
          * Removes the selection or all characters from the start of the
@@ -7830,14 +7007,14 @@ added menu items.
         /**
          * Removes only the selected text. 
          */
-        deleteSelectedText() : void;
+        deleteSelectedText() : string;
     
         /**
          * Removes the line at the beginning of the selection if the selection
          * is empty unless the selection spans multiple lines in which case all lines
          * are removed. 
          */
-        deleteLine() : void;
+        deleteLine() : number;
     
         /**
          * Joins the current line with the one below it. Lines will
@@ -7845,7 +7022,7 @@ added menu items.
          * 
          * If there selection spans more than one line, all the lines are joined together. 
          */
-        joinLines() : any;
+        joinLines() : string[];
     
         /**
          * Removes one level of indent from the currently selected rows. 
@@ -7869,7 +7046,7 @@ added menu items.
         /**
          * Cuts the selection until the end of the line. 
          */
-        cutToEndOfLine(maintainClipboard? : Clipboard) : any;
+        cutToEndOfLine(maintainClipboard? : Clipboard) : number;
     
         /**
          * Copies the selection to the clipboard and then deletes it.
@@ -7895,7 +7072,7 @@ added menu items.
          * of levels. Leaves the first line unchanged. 
          * This field or method was marked private by atomdoc. Use with caution.
          */
-        adjustIndent(lines? : any, indentAdjustment? : any) : any;
+        adjustIndent(lines? : string[], indentAdjustment? : any) : any;
     
         /**
          * Indent the current line(s).
@@ -7905,22 +7082,22 @@ added menu items.
          * non empty, calls {::indentSelectedRows}.
          * This field or method was marked private by atomdoc. Use with caution.
          */
-        indent(autoIndent? : any) : any;
+        indent({ autoIndent } : { autoIndent? : boolean }) : boolean;
     
         /**
          * If the selection spans multiple rows, indent all of them. 
          */
-        indentSelectedRows() : number[];
+        indentSelectedRows() : boolean;
     
         /**
          * Moves the selection down one row. 
          */
-        addSelectionBelow() : any;
+        addSelectionBelow() : void;
     
         /**
          * Moves the selection up one row. 
          */
-        addSelectionAbove() : any;
+        addSelectionAbove() : void;
     
         /**
          * Combines the given selection into this selection and then destroys
@@ -7958,7 +7135,7 @@ added menu items.
         /**
          * This field or method was not documented by atomdoc, assume it is private. Use with caution.
          */
-        clearAutoscroll() : any;
+        clearAutoscroll() : void;
     
         /**
          * This field or method was not documented by atomdoc, assume it is private. Use with caution.
@@ -7970,46 +7147,14 @@ added menu items.
          * 
          * This only works if there isn't already a tail position.
          * This field or method was marked private by atomdoc. Use with caution.
-        Returns a {Point} representing the new tail position.
+         * Returns a {Point} representing the new tail position.
          */
         plantTail() : TextBuffer.Point;
     
         /**
          * This field or method was not documented by atomdoc, assume it is private. Use with caution.
          */
-        getGoalScreenRange() : TextBuffer.Range;
-    
-    }
-
-    /**
-     * StorageFolder
-     * This class was not documented by atomdoc, assume it is private. Use with caution.
-     */
-    class StorageFolder {
-        /**
-         * This field or method was not documented by atomdoc, assume it is private. Use with caution.
-         */
-        constructor(containingPath? : any);
-    
-        /**
-         * This field or method was not documented by atomdoc, assume it is private. Use with caution.
-         */
-        store(name? : string, object? : any) : any;
-    
-        /**
-         * This field or method was not documented by atomdoc, assume it is private. Use with caution.
-         */
-        load(name? : string) : any;
-    
-        /**
-         * This field or method was not documented by atomdoc, assume it is private. Use with caution.
-         */
-        pathForKey(name? : string) : any;
-    
-        /**
-         * This field or method was not documented by atomdoc, assume it is private. Use with caution.
-         */
-        getPath() : any;
+        getGoalScreenRange() : Range;
     
     }
 
@@ -8028,27 +7173,27 @@ added menu items.
     
         /**
          * Invoke `callback` for all current and future style elements.
-         * @param callback? - {Function} that is called with style elements.
+         * @param callback - {Function} that is called with style elements.
          */
-        observeStyleElements(callback? : Function) : EventKit.Disposable;
+        observeStyleElements(callback : Function) : EventKit.Disposable;
     
         /**
          * Invoke `callback` when a style element is added.
-         * @param callback? - {Function} that is called with style elements.
+         * @param callback - {Function} that is called with style elements.
          */
-        onDidAddStyleElement(callback? : Function) : EventKit.Disposable;
+        onDidAddStyleElement(callback : Function /* needs to be defined */) : EventKit.Disposable;
     
         /**
          * Invoke `callback` when a style element is removed.
-         * @param callback? - {Function} that is called with style elements.
+         * @param callback - {Function} that is called with style elements.
          */
-        onDidRemoveStyleElement(callback? : Function) : EventKit.Disposable;
+        onDidRemoveStyleElement(callback : Function /* needs to be defined */) : EventKit.Disposable;
     
         /**
          * Invoke `callback` when an existing style element is updated.
-         * @param callback? - {Function} that is called with style elements.
+         * @param callback - {Function} that is called with style elements.
          */
-        onDidUpdateStyleElement(callback? : Function) : EventKit.Disposable;
+        onDidUpdateStyleElement(callback : Function /* needs to be defined */) : EventKit.Disposable;
     
         /**
          * Get all loaded style elements. 
@@ -8058,17 +7203,17 @@ added menu items.
         /**
          * This field or method was not documented by atomdoc, assume it is private. Use with caution.
          */
-        addStyleSheet(source? : any, params? : any) : any;
+        addStyleSheet(source? : any, params? : any) : void;
     
         /**
          * This field or method was not documented by atomdoc, assume it is private. Use with caution.
          */
-        addStyleElement(styleElement? : any) : any;
+        addStyleElement(styleElement? : any) : void;
     
         /**
          * This field or method was not documented by atomdoc, assume it is private. Use with caution.
          */
-        removeStyleElement(styleElement? : any) : any;
+        removeStyleElement(styleElement? : any) : void;
     
         /**
          * This field or method was not documented by atomdoc, assume it is private. Use with caution.
@@ -8078,11 +7223,10 @@ added menu items.
         /**
          * This field or method was not documented by atomdoc, assume it is private. Use with caution.
          */
-        restoreSnapshot(styleElementsToRestore? : any) : any;
+        restoreSnapshot(styleElementsToRestore? : any) : void;
     
         /**
          * Get the path of the user style sheet in `~/.atom`.
-        Returns a {String}.
          */
         getUserStyleSheetPath() : string;
     
@@ -8095,7 +7239,7 @@ added menu items.
         /**
          * A helper method to easily launch and run a task once.
          * @param taskPath? - The {String} path to the CoffeeScript/JavaScript file which exports a single {Function} to execute.
-        Returns the created {Task}.
+         * Returns the created {Task}.
          */
         static once(taskPath? : string, args? : any) : Task;
     
@@ -8120,7 +7264,7 @@ added menu items.
          * Routes messages from the child to the appropriate event. 
          * This field or method was marked private by atomdoc. Use with caution.
          */
-        handleEvents() : any;
+        handleEvents() : void;
     
         /**
          * Starts the task.
@@ -8129,7 +7273,7 @@ added menu items.
          * message to the child process fails.
          * @param callback? - A {Function} to call when the task completes. 
          */
-        start(args? : any, callback? : Function) : any;
+        start(args? : any, callback? : any) : void;
     
         /**
          * Send message to the task.
@@ -8138,13 +7282,13 @@ added menu items.
          * message to the child process fails.
          * @param message? - The message to send to the task. 
          */
-        send(message? : any) : any;
+        send(message? : string) : void;
     
         /**
          * Call a function when an event is emitted by the child process
          * @param eventName? - The {String} name of the event to handle.
          * @param callback? - The {Function} to call when the event is emitted.
-        Returns a {Disposable} that can be used to stop listening for the event.
+         * Returns a {Disposable} that can be used to stop listening for the event.
          */
         on(eventName? : string, callback? : Function) : EventKit.Disposable;
     
@@ -8235,7 +7379,7 @@ added menu items.
         /**
          * This field or method was not documented by atomdoc, assume it is private. Use with caution.
          */
-        heightAndWidthMeasurementRequested: any /* default */;
+        heightAndWidthMeasurementRequested: number;
     
         /**
          * This field or method was not documented by atomdoc, assume it is private. Use with caution.
@@ -8250,7 +7394,7 @@ added menu items.
         /**
          * This field or method was not documented by atomdoc, assume it is private. Use with caution.
          */
-        inputEnabled: any /* default */;
+        inputEnabled: boolean;
     
         /**
          * This field or method was not documented by atomdoc, assume it is private. Use with caution.
@@ -8260,12 +7404,12 @@ added menu items.
         /**
          * This field or method was not documented by atomdoc, assume it is private. Use with caution.
          */
-        measureLineHeightAndDefaultCharWidthWhenShown: any /* default */;
+        measureLineHeightAndDefaultCharWidthWhenShown: number;
     
         /**
          * This field or method was not documented by atomdoc, assume it is private. Use with caution.
          */
-        remeasureCharacterWidthsWhenShown: any /* default */;
+        remeasureCharacterWidthsWhenShown: number;
     
         /**
          * This field or method was not documented by atomdoc, assume it is private. Use with caution.
@@ -8285,7 +7429,7 @@ added menu items.
         /**
          * This field or method was not documented by atomdoc, assume it is private. Use with caution.
          */
-        constructor(editor? : TextEditor, hostElement? : any, rootElement? : any, stylesElement? : any, useShadowDOM? : boolean, lineOverdrawMargin? : any);
+        constructor({ editor, hostElement, rootElement, stylesElement, useShadowDOM, lineOverdrawMargin } : { editor? : any; hostElement? : any; rootElement? : any; stylesElement? : any; useShadowDOM? : any; lineOverdrawMargin? : any });
     
         /**
          * This field or method was not documented by atomdoc, assume it is private. Use with caution.
@@ -8367,7 +7511,7 @@ added menu items.
         /**
          * This field or method was not documented by atomdoc, assume it is private. Use with caution.
          */
-        focused() : any;
+        focused() : void;
     
         /**
          * This field or method was not documented by atomdoc, assume it is private. Use with caution.
@@ -8382,12 +7526,12 @@ added menu items.
         /**
          * This field or method was not documented by atomdoc, assume it is private. Use with caution.
          */
-        onVerticalScroll(scrollTop? : any) : any;
+        onVerticalScroll(scrollTop? : any) : number;
     
         /**
          * This field or method was not documented by atomdoc, assume it is private. Use with caution.
          */
-        onHorizontalScroll(scrollLeft? : any) : any;
+        onHorizontalScroll(scrollLeft? : any) : number;
     
         /**
          * This field or method was not documented by atomdoc, assume it is private. Use with caution.
@@ -8437,7 +7581,7 @@ added menu items.
         /**
          * This field or method was not documented by atomdoc, assume it is private. Use with caution.
          */
-        handleStylingChange() : any;
+        handleStylingChange() : void;
     
         /**
          * This field or method was not documented by atomdoc, assume it is private. Use with caution.
@@ -8462,7 +7606,7 @@ added menu items.
         /**
          * This field or method was not documented by atomdoc, assume it is private. Use with caution.
          */
-        handleDragUntilMouseUp(event? : any, dragHandler? : any) : any;
+        handleDragUntilMouseUp(event? : any, dragHandler? : any) : void;
     
         /**
          * This field or method was not documented by atomdoc, assume it is private. Use with caution.
@@ -8482,7 +7626,7 @@ added menu items.
         /**
          * This field or method was not documented by atomdoc, assume it is private. Use with caution.
          */
-        requestHeightAndWidthMeasurement() : any;
+        requestHeightAndWidthMeasurement() : number;
     
         /**
          * Measure explicitly-styled height and width and relay them to the model. If
@@ -8511,12 +7655,12 @@ added menu items.
         /**
          * This field or method was not documented by atomdoc, assume it is private. Use with caution.
          */
-        measureLineHeightAndDefaultCharWidth() : any;
+        measureLineHeightAndDefaultCharWidth() : number;
     
         /**
          * This field or method was not documented by atomdoc, assume it is private. Use with caution.
          */
-        remeasureCharacterWidths() : any;
+        remeasureCharacterWidths() : number;
     
         /**
          * This field or method was not documented by atomdoc, assume it is private. Use with caution.
@@ -8576,7 +7720,7 @@ added menu items.
         /**
          * This field or method was not documented by atomdoc, assume it is private. Use with caution.
          */
-        setLineHeight(lineHeight? : any) : void;
+        setLineHeight(lineHeight? : number) : number;
     
         /**
          * This field or method was not documented by atomdoc, assume it is private. Use with caution.
@@ -8621,7 +7765,7 @@ added menu items.
         /**
          * This field or method was not documented by atomdoc, assume it is private. Use with caution.
          */
-        updateParentViewMiniClass() : void;
+        updateParentViewMiniClass() : boolean;
     
     }
 
@@ -8638,7 +7782,7 @@ added menu items.
         /**
          * This field or method was not documented by atomdoc, assume it is private. Use with caution.
          */
-        startBlinkingCursorsAfterDelay: any /* default */;
+        startBlinkingCursorsAfterDelay: void;
     
         /**
          * This field or method was not documented by atomdoc, assume it is private. Use with caution.
@@ -8653,7 +7797,7 @@ added menu items.
         /**
          * This field or method was not documented by atomdoc, assume it is private. Use with caution.
          */
-        scopedCharacterWidthsChangeCount: any /* default */;
+        scopedCharacterWidthsChangeCount: number;
     
         /**
          * This field or method was not documented by atomdoc, assume it is private. Use with caution.
@@ -8674,7 +7818,7 @@ added menu items.
          * Calls your `callback` when some changes in the model occurred and the current state has been updated. 
          * This field or method was marked private by atomdoc. Use with caution.
          */
-        onDidUpdateState(callback? : any) : EventKit.Disposable;
+        onDidUpdateState(callback : Function /* needs to be defined */) : EventKit.Disposable;
     
         /**
          * This field or method was not documented by atomdoc, assume it is private. Use with caution.
@@ -8735,17 +7879,17 @@ added menu items.
         /**
          * This field or method was not documented by atomdoc, assume it is private. Use with caution.
          */
-        updateHeightState() : void;
+        updateHeightState() : number;
     
         /**
          * This field or method was not documented by atomdoc, assume it is private. Use with caution.
          */
-        updateVerticalScrollState() : void;
+        updateVerticalScrollState() : number;
     
         /**
          * This field or method was not documented by atomdoc, assume it is private. Use with caution.
          */
-        updateHorizontalScrollState() : void;
+        updateHorizontalScrollState() : number;
     
         /**
          * This field or method was not documented by atomdoc, assume it is private. Use with caution.
@@ -8770,12 +7914,12 @@ added menu items.
         /**
          * This field or method was not documented by atomdoc, assume it is private. Use with caution.
          */
-        updateLineState(row? : number, line? : any) : void;
+        updateLineState(row? : number, line? : number) : void;
     
         /**
          * This field or method was not documented by atomdoc, assume it is private. Use with caution.
          */
-        buildLineState(row? : number, line? : any) : any;
+        buildLineState(row? : number, line? : number) : any;
     
         /**
          * This field or method was not documented by atomdoc, assume it is private. Use with caution.
@@ -8785,7 +7929,7 @@ added menu items.
         /**
          * This field or method was not documented by atomdoc, assume it is private. Use with caution.
          */
-        updateCursorState(cursor? : Cursor, destroyOnly? : void) : void;
+        updateCursorState(cursor? : Cursor, destroyOnly? : any) : void;
     
         /**
          * This field or method was not documented by atomdoc, assume it is private. Use with caution.
@@ -8805,22 +7949,22 @@ added menu items.
         /**
          * This field or method was not documented by atomdoc, assume it is private. Use with caution.
          */
-        updateStartRow() : void;
+        updateStartRow() : number;
     
         /**
          * This field or method was not documented by atomdoc, assume it is private. Use with caution.
          */
-        updateEndRow() : void;
+        updateEndRow() : number;
     
         /**
          * This field or method was not documented by atomdoc, assume it is private. Use with caution.
          */
-        updateScrollWidth() : void;
+        updateScrollWidth() : number;
     
         /**
          * This field or method was not documented by atomdoc, assume it is private. Use with caution.
          */
-        updateScrollHeight() : void;
+        updateScrollHeight() : number;
     
         /**
          * This field or method was not documented by atomdoc, assume it is private. Use with caution.
@@ -8830,12 +7974,12 @@ added menu items.
         /**
          * This field or method was not documented by atomdoc, assume it is private. Use with caution.
          */
-        updateClientHeight() : void;
+        updateClientHeight() : number;
     
         /**
          * This field or method was not documented by atomdoc, assume it is private. Use with caution.
          */
-        updateClientWidth() : void;
+        updateClientWidth() : number;
     
         /**
          * This field or method was not documented by atomdoc, assume it is private. Use with caution.
@@ -8910,32 +8054,32 @@ added menu items.
         /**
          * This field or method was not documented by atomdoc, assume it is private. Use with caution.
          */
-        setHorizontalScrollbarHeight(horizontalScrollbarHeight? : any) : void;
+        setHorizontalScrollbarHeight(horizontalScrollbarHeight? : number) : number;
     
         /**
          * This field or method was not documented by atomdoc, assume it is private. Use with caution.
          */
-        setVerticalScrollbarWidth(verticalScrollbarWidth? : any) : void;
+        setVerticalScrollbarWidth(verticalScrollbarWidth? : number) : number;
     
         /**
          * This field or method was not documented by atomdoc, assume it is private. Use with caution.
          */
-        setAutoHeight(autoHeight? : any) : void;
+        setAutoHeight(autoHeight? : number) : number;
     
         /**
          * This field or method was not documented by atomdoc, assume it is private. Use with caution.
          */
-        setExplicitHeight(explicitHeight? : any) : void;
+        setExplicitHeight(explicitHeight? : number) : number;
     
         /**
          * This field or method was not documented by atomdoc, assume it is private. Use with caution.
          */
-        updateHeight() : void;
+        updateHeight() : number;
     
         /**
          * This field or method was not documented by atomdoc, assume it is private. Use with caution.
          */
-        setContentFrameWidth(contentFrameWidth? : any) : void;
+        setContentFrameWidth(contentFrameWidth? : number) : number;
     
         /**
          * This field or method was not documented by atomdoc, assume it is private. Use with caution.
@@ -8950,42 +8094,42 @@ added menu items.
         /**
          * This field or method was not documented by atomdoc, assume it is private. Use with caution.
          */
-        setWindowSize(width? : any, height? : any) : void;
+        setWindowSize(width? : number, height? : number) : void;
     
         /**
          * This field or method was not documented by atomdoc, assume it is private. Use with caution.
          */
-        setBackgroundColor(backgroundColor? : Color) : void;
+        setBackgroundColor(backgroundColor? : Color) : Color;
     
         /**
          * This field or method was not documented by atomdoc, assume it is private. Use with caution.
          */
-        setGutterBackgroundColor(gutterBackgroundColor? : Color) : void;
+        setGutterBackgroundColor(gutterBackgroundColor? : Color) : Color;
     
         /**
          * This field or method was not documented by atomdoc, assume it is private. Use with caution.
          */
-        setLineHeight(lineHeight? : any) : void;
+        setLineHeight(lineHeight? : number) : number;
     
         /**
          * This field or method was not documented by atomdoc, assume it is private. Use with caution.
          */
-        setMouseWheelScreenRow(mouseWheelScreenRow? : number) : void;
+        setMouseWheelScreenRow(mouseWheelScreenRow? : number) : number;
     
         /**
          * This field or method was not documented by atomdoc, assume it is private. Use with caution.
          */
-        setBaseCharacterWidth(baseCharacterWidth? : any) : void;
+        setBaseCharacterWidth(baseCharacterWidth? : number) : number;
     
         /**
          * This field or method was not documented by atomdoc, assume it is private. Use with caution.
          */
-        getScopedCharacterWidth(scopeNames? : string, char? : any) : any;
+        getScopedCharacterWidth(scopeNames? : string, char? : any) : number;
     
         /**
          * This field or method was not documented by atomdoc, assume it is private. Use with caution.
          */
-        getScopedCharacterWidths(scopeNames? : string) : any;
+        getScopedCharacterWidths(scopeNames? : string) : number;
     
         /**
          * This field or method was not documented by atomdoc, assume it is private. Use with caution.
@@ -8995,17 +8139,17 @@ added menu items.
         /**
          * This field or method was not documented by atomdoc, assume it is private. Use with caution.
          */
-        setScopedCharacterWidth(scopeNames? : string, character? : any, width? : any) : void;
+        setScopedCharacterWidth(scopeNames? : string, character? : any, width? : number) : number;
     
         /**
          * This field or method was not documented by atomdoc, assume it is private. Use with caution.
          */
-        characterWidthsChanged() : any;
+        characterWidthsChanged() : number;
     
         /**
          * This field or method was not documented by atomdoc, assume it is private. Use with caution.
          */
-        clearScopedCharacterWidths() : any;
+        clearScopedCharacterWidths() : number;
     
         /**
          * This field or method was not documented by atomdoc, assume it is private. Use with caution.
@@ -9030,12 +8174,12 @@ added menu items.
         /**
          * This field or method was not documented by atomdoc, assume it is private. Use with caution.
          */
-        pixelRectForScreenRange(screenRange? : TextBuffer.Range) : TextBuffer.Range;
+        pixelRectForScreenRange(screenRange? : Range) : Range;
     
         /**
          * This field or method was not documented by atomdoc, assume it is private. Use with caution.
          */
-        observeDecoration(decoration? : Decoration) : EventKit.Disposable;
+        observeDecoration(decoration? : (decoration: Decoration) => void) : EventKit.Disposable;
     
         /**
          * This field or method was not documented by atomdoc, assume it is private. Use with caution.
@@ -9060,17 +8204,17 @@ added menu items.
         /**
          * This field or method was not documented by atomdoc, assume it is private. Use with caution.
          */
-        updateDecorations() : void;
+        updateDecorations() : Decoration[];
     
         /**
          * This field or method was not documented by atomdoc, assume it is private. Use with caution.
          */
-        removeFromLineDecorationCaches(decoration? : Decoration, range? : TextBuffer.Range) : any;
+        removeFromLineDecorationCaches(decoration? : Decoration, range? : Range) : void;
     
         /**
          * This field or method was not documented by atomdoc, assume it is private. Use with caution.
          */
-        addToLineDecorationCaches(decoration? : Decoration, range? : TextBuffer.Range) : any;
+        addToLineDecorationCaches(decoration? : Decoration, range? : Range) : void;
     
         /**
          * This field or method was not documented by atomdoc, assume it is private. Use with caution.
@@ -9080,17 +8224,17 @@ added menu items.
         /**
          * This field or method was not documented by atomdoc, assume it is private. Use with caution.
          */
-        buildHighlightRegions(screenRange? : TextBuffer.Range) : any;
+        buildHighlightRegions(screenRange? : Range) : any;
     
         /**
          * This field or method was not documented by atomdoc, assume it is private. Use with caution.
          */
-        setOverlayDimensions(decorationId? : any, itemWidth? : any, itemHeight? : any, contentMargin? : any) : void;
+        setOverlayDimensions(decorationId? : any, itemWidth? : number, itemHeight? : number, contentMargin? : any) : void;
     
         /**
          * This field or method was not documented by atomdoc, assume it is private. Use with caution.
          */
-        observeCursor(cursor? : Cursor) : EventKit.Disposable;
+        observeCursor(cursor? : (cursor: Cursor) => void) : EventKit.Disposable;
     
         /**
          * This field or method was not documented by atomdoc, assume it is private. Use with caution.
@@ -9133,7 +8277,7 @@ added menu items.
         /**
          * This field or method was not documented by atomdoc, assume it is private. Use with caution.
          */
-        setModel(model? : Model) : void;
+        setModel(model? : any) : Model;
     
         /**
          * This field or method was not documented by atomdoc, assume it is private. Use with caution.
@@ -9163,7 +8307,7 @@ added menu items.
         /**
          * This field or method was not documented by atomdoc, assume it is private. Use with caution.
          */
-        remove(selector? : any, keepData? : any) : any;
+        remove(selector? : string, keepData? : any) : void;
     
         /**
          * This field or method was not documented by atomdoc, assume it is private. Use with caution.
@@ -9208,7 +8352,7 @@ added menu items.
         /**
          * This field or method was not documented by atomdoc, assume it is private. Use with caution.
          */
-        appendToLinesView(view? : SpacePen.View) : SpacePen.View;
+        appendToLinesView(view? : any) : SpacePen.View;
     
         /**
          * This field or method was not documented by atomdoc, assume it is private. Use with caution.
@@ -9263,12 +8407,12 @@ added menu items.
         /**
          * This field or method was not documented by atomdoc, assume it is private. Use with caution.
          */
-        getFirstVisibleScreenRow() : boolean;
+        getFirstVisibleScreenRow() : number;
     
         /**
          * This field or method was not documented by atomdoc, assume it is private. Use with caution.
          */
-        getLastVisibleScreenRow() : boolean;
+        getLastVisibleScreenRow() : number;
     
         /**
          * This field or method was not documented by atomdoc, assume it is private. Use with caution.
@@ -9293,12 +8437,12 @@ added menu items.
         /**
          * This field or method was not documented by atomdoc, assume it is private. Use with caution.
          */
-        setLineHeight(lineHeight? : any) : void;
+        setLineHeight(lineHeight? : number) : number;
     
         /**
          * This field or method was not documented by atomdoc, assume it is private. Use with caution.
          */
-        setWidthInChars(widthInChars? : any) : void;
+        setWidthInChars(widthInChars? : number) : number;
     
         /**
          * This field or method was not documented by atomdoc, assume it is private. Use with caution.
@@ -9313,7 +8457,7 @@ added menu items.
         /**
          * This field or method was not documented by atomdoc, assume it is private. Use with caution.
          */
-        setShowInvisibles(showInvisibles? : boolean) : void;
+        setShowInvisibles(showInvisibles? : boolean) : boolean;
     
         /**
          * This field or method was not documented by atomdoc, assume it is private. Use with caution.
@@ -9323,7 +8467,7 @@ added menu items.
         /**
          * This field or method was not documented by atomdoc, assume it is private. Use with caution.
          */
-        setText(text? : string) : void;
+        setText(text? : string) : string;
     
         /**
          * This field or method was not documented by atomdoc, assume it is private. Use with caution.
@@ -9363,7 +8507,7 @@ added menu items.
         /**
          * This field or method was not documented by atomdoc, assume it is private. Use with caution.
          */
-        setPlaceholderText(placeholderText? : string) : void;
+        setPlaceholderText(placeholderText? : string) : string;
     
         /**
          * This field or method was not documented by atomdoc, assume it is private. Use with caution.
@@ -9457,7 +8601,7 @@ added menu items.
         /**
          * This field or method was not documented by atomdoc, assume it is private. Use with caution.
          */
-        constructor(softTabs? : any, initialLine? : any, initialColumn? : number, tabLength? : any, softWrapped? : any, displayBuffer? : DisplayBuffer, buffer? : any, registerEditor? : any, suppressCursorCreation? : any, mini? : boolean, placeholderText? : string, gutterVisible? : boolean);
+        constructor({ softTabs, initialLine, initialColumn, tabLength, softWrapped, displayBuffer, buffer, registerEditor, suppressCursorCreation, mini, placeholderText, gutterVisible } : { softTabs? : any; initialLine? : number; initialColumn? : number; tabLength? : number; softWrapped? : any; displayBuffer? : DisplayBuffer; buffer? : any; registerEditor? : any; suppressCursorCreation? : any; mini? : boolean; placeholderText? : string; gutterVisible? : boolean });
     
         /**
          * This field or method was not documented by atomdoc, assume it is private. Use with caution.
@@ -9491,15 +8635,15 @@ added menu items.
     
         /**
          * Calls your `callback` when the buffer's title has changed.
-         * @param callback? - {Function}
+         * @param callback - {Function}
          */
-        onDidChangeTitle(callback? : Function) : EventKit.Disposable;
+        onDidChangeTitle(callback : (title: string) => void) : EventKit.Disposable;
     
         /**
          * Calls your `callback` when the buffer's path, and therefore title, has changed.
-         * @param callback? - {Function}
+         * @param callback - {Function}
          */
-        onDidChangePath(callback? : Function) : EventKit.Disposable;
+        onDidChangePath(callback : (path: string) => void) : EventKit.Disposable;
     
         /**
          * Invoke the given callback synchronously when the content of the
@@ -9508,178 +8652,178 @@ added menu items.
          * Because observers are invoked synchronously, it's important not to perform
          * any expensive operations via this method. Consider {::onDidStopChanging} to
          * delay expensive operations until after changes stop occurring.
-         * @param callback? - {Function}
+         * @param callback - {Function}
          */
-        onDidChange(callback? : Function) : EventKit.Disposable;
+        onDidChange(callback : (item: any) => void) : EventKit.Disposable;
     
         /**
          * Invoke `callback` when the buffer's contents change. It is
          * emit asynchronously 300ms after the last buffer change. This is a good place
          * to handle changes to the buffer without compromising typing performance.
-         * @param callback? - {Function}
+         * @param callback - {Function}
          */
-        onDidStopChanging(callback? : Function) : EventKit.Disposable;
+        onDidStopChanging(callback : () => any) : EventKit.Disposable;
     
         /**
          * Calls your `callback` when a {Cursor} is moved. If there are
          * multiple cursors, your callback will be called for each cursor.
-         * @param callback? - {Function}
+         * @param callback - {Function}
          */
-        onDidChangeCursorPosition(callback? : Function) : TextBuffer.Point;
+        onDidChangeCursorPosition(callback : (event: { oldBufferPosition: TextBuffer.Point; oldScreenPosition: TextBuffer.Point; newBufferPosition: TextBuffer.Point; newScreenPosition: TextBuffer.Point; textChanged: boolean; cursor: Cursor; }) => any) : EventKit.Disposable;
     
         /**
          * Calls your `callback` when a selection's screen range changes.
-         * @param callback? - {Function}
+         * @param callback - {Function}
          */
-        onDidChangeSelectionRange(callback? : Function) : TextBuffer.Range;
+        onDidChangeSelectionRange(callback : (event: { oldBufferRange: TextBuffer.Point; oldScreenRange: TextBuffer.Point; newBufferRange: TextBuffer.Point; newScreenRange: TextBuffer.Point; selection: Selection; }) => any) : EventKit.Disposable;
     
         /**
          * Calls your `callback` when soft wrap was enabled or disabled.
-         * @param callback? - {Function}
+         * @param callback - {Function}
          */
-        onDidChangeSoftWrapped(callback? : Function) : EventKit.Disposable;
+        onDidChangeSoftWrapped(callback : Function) : EventKit.Disposable;
     
         /**
          * Calls your `callback` when the buffer's encoding has changed.
-         * @param callback? - {Function}
+         * @param callback - {Function}
          */
-        onDidChangeEncoding(callback? : Function) : EventKit.Disposable;
+        onDidChangeEncoding(callback : (encoding: string) => void) : EventKit.Disposable;
     
         /**
          * Calls your `callback` when the grammar that interprets and
          * colorizes the text has been changed. Immediately calls your callback with
          * the current grammar.
-         * @param callback? - {Function}
+         * @param callback - {Function}
          */
-        observeGrammar(callback? : Function) : EventKit.Disposable;
+        observeGrammar(callback : (grammar: FirstMate.Grammar) => void) : EventKit.Disposable;
     
         /**
          * Calls your `callback` when the grammar that interprets and
          * colorizes the text has been changed.
-         * @param callback? - {Function}
+         * @param callback - {Function}
          */
-        onDidChangeGrammar(callback? : Function) : EventKit.Disposable;
+        onDidChangeGrammar(callback : (grammar: FirstMate.Grammar) => void) : EventKit.Disposable;
     
         /**
          * Calls your `callback` when the result of {::isModified} changes.
-         * @param callback? - {Function}
+         * @param callback - {Function}
          */
-        onDidChangeModified(callback? : Function) : EventKit.Disposable;
+        onDidChangeModified(callback : Function /* needs to be defined */) : EventKit.Disposable;
     
         /**
          * Calls your `callback` when the buffer's underlying file changes on
          * disk at a moment when the result of {::isModified} is true.
-         * @param callback? - {Function}
+         * @param callback - {Function}
          */
-        onDidConflict(callback? : Function) : EventKit.Disposable;
+        onDidConflict(callback : Function /* needs to be defined */) : EventKit.Disposable;
     
         /**
          * Calls your `callback` before text has been inserted.
-         * @param callback? - {Function}
+         * @param callback - {Function}
          */
-        onWillInsertText(callback? : Function) : EventKit.Disposable;
+        onWillInsertText(callback : (event: { text:string; cancel: Function; }) => void) : EventKit.Disposable;
     
         /**
          * Calls your `callback` adter text has been inserted.
-         * @param callback? - {Function}
+         * @param callback - {Function}
          */
-        onDidInsertText(callback? : Function) : EventKit.Disposable;
+        onDidInsertText(callback : (event: { text:string; }) => void) : EventKit.Disposable;
     
         /**
          * Invoke the given callback after the buffer is saved to disk.
-         * @param callback? - {Function} to be called after the buffer is saved.
+         * @param callback - {Function} to be called after the buffer is saved.
          */
-        onDidSave(callback? : Function) : EventKit.Disposable;
+        onDidSave(callback : (event: { path:string; }) => void) : EventKit.Disposable;
     
         /**
          * Invoke the given callback when the editor is destroyed.
-         * @param callback? - {Function} to be called when the editor is destroyed.
+         * @param callback - {Function} to be called when the editor is destroyed.
          */
-        onDidDestroy(callback? : Function) : EventKit.Disposable;
+        onDidDestroy(callback : Function /* needs to be defined */) : EventKit.Disposable;
     
         /**
          * Calls your `callback` when a {Cursor} is added to the editor.
          * Immediately calls your callback for each existing cursor.
-         * @param callback? - {Function}
+         * @param callback - {Function}
          */
-        observeCursors(callback? : Function) : EventKit.Disposable;
+        observeCursors(callback : Function) : EventKit.Disposable;
     
         /**
          * Calls your `callback` when a {Cursor} is added to the editor.
-         * @param callback? - {Function}
+         * @param callback - {Function}
          */
-        onDidAddCursor(callback? : Function) : EventKit.Disposable;
+        onDidAddCursor(callback : Function /* needs to be defined */) : EventKit.Disposable;
     
         /**
          * Calls your `callback` when a {Cursor} is removed from the editor.
-         * @param callback? - {Function}
+         * @param callback - {Function}
          */
-        onDidRemoveCursor(callback? : Function) : EventKit.Disposable;
+        onDidRemoveCursor(callback : Function /* needs to be defined */) : EventKit.Disposable;
     
         /**
          * Calls your `callback` when a {Selection} is added to the editor.
          * Immediately calls your callback for each existing selection.
-         * @param callback? - {Function}
+         * @param callback - {Function}
          */
-        observeSelections(callback? : Function) : EventKit.Disposable;
+        observeSelections(callback : Function) : EventKit.Disposable;
     
         /**
          * Calls your `callback` when a {Selection} is added to the editor.
-         * @param callback? - {Function}
+         * @param callback - {Function}
          */
-        onDidAddSelection(callback? : Function) : EventKit.Disposable;
+        onDidAddSelection(callback : Function /* needs to be defined */) : EventKit.Disposable;
     
         /**
          * Calls your `callback` when a {Selection} is removed from the editor.
-         * @param callback? - {Function}
+         * @param callback - {Function}
          */
-        onDidRemoveSelection(callback? : Function) : EventKit.Disposable;
+        onDidRemoveSelection(callback : Function /* needs to be defined */) : EventKit.Disposable;
     
         /**
          * Calls your `callback` with each {Decoration} added to the editor.
          * Calls your `callback` immediately for any existing decorations.
-         * @param callback? - {Function}
+         * @param callback - {Function}
          */
-        observeDecorations(callback? : Function) : EventKit.Disposable;
+        observeDecorations(callback : Function) : EventKit.Disposable;
     
         /**
          * Calls your `callback` when a {Decoration} is added to the editor.
-         * @param callback? - {Function}
+         * @param callback - {Function}
          */
-        onDidAddDecoration(callback? : Function) : EventKit.Disposable;
+        onDidAddDecoration(callback : Function /* needs to be defined */) : EventKit.Disposable;
     
         /**
          * Calls your `callback` when a {Decoration} is removed from the editor.
-         * @param callback? - {Function}
+         * @param callback - {Function}
          */
-        onDidRemoveDecoration(callback? : Function) : EventKit.Disposable;
+        onDidRemoveDecoration(callback : Function /* needs to be defined */) : EventKit.Disposable;
     
         /**
          * Calls your `callback` when the placeholder text is changed.
-         * @param callback? - {Function}
+         * @param callback - {Function}
          */
-        onDidChangePlaceholderText(callback? : Function) : EventKit.Disposable;
+        onDidChangePlaceholderText(callback : (text: string) => void) : EventKit.Disposable;
     
         /**
          * This field or method was not documented by atomdoc, assume it is private. Use with caution.
          */
-        onDidChangeCharacterWidths(callback? : any) : EventKit.Disposable;
+        onDidChangeCharacterWidths(callback : (text: number) => void) : EventKit.Disposable;
     
         /**
          * This field or method was not documented by atomdoc, assume it is private. Use with caution.
          */
-        onDidChangeScrollTop(callback? : any) : EventKit.Disposable;
+        onDidChangeScrollTop(callback : (text: number) => void) : EventKit.Disposable;
     
         /**
          * This field or method was not documented by atomdoc, assume it is private. Use with caution.
          */
-        onDidChangeScrollLeft(callback? : any) : EventKit.Disposable;
+        onDidChangeScrollLeft(callback : (text: number) => void) : EventKit.Disposable;
     
         /**
          * TODO Remove once the tabs package no longer uses .on subscriptions 
          * This field or method was marked private by atomdoc. Use with caution.
          */
-        onDidChangeIcon(callback? : any) : EventKit.Disposable;
+        onDidChangeIcon(callback : Function /* needs to be defined */) : EventKit.Disposable;
     
         /**
          * Retrieves the current {TextBuffer}. 
@@ -9702,12 +8846,12 @@ added menu items.
          * Controls visibility based on the given {Boolean}. 
          * This field or method was marked private by atomdoc. Use with caution.
          */
-        setVisible(visible? : boolean) : void;
+        setVisible(visible? : boolean) : boolean;
     
         /**
          * This field or method was not documented by atomdoc, assume it is private. Use with caution.
          */
-        setMini(mini? : boolean) : void;
+        setMini(mini? : boolean) : boolean;
     
         /**
          * This field or method was not documented by atomdoc, assume it is private. Use with caution.
@@ -9717,12 +8861,12 @@ added menu items.
         /**
          * This field or method was not documented by atomdoc, assume it is private. Use with caution.
          */
-        onDidChangeMini(callback? : any) : EventKit.Disposable;
+        onDidChangeMini(callback : Function /* needs to be defined */) : EventKit.Disposable;
     
         /**
          * This field or method was not documented by atomdoc, assume it is private. Use with caution.
          */
-        setGutterVisible(gutterVisible? : boolean) : void;
+        setGutterVisible(gutterVisible? : boolean) : boolean;
     
         /**
          * This field or method was not documented by atomdoc, assume it is private. Use with caution.
@@ -9732,7 +8876,7 @@ added menu items.
         /**
          * This field or method was not documented by atomdoc, assume it is private. Use with caution.
          */
-        onDidChangeGutterVisible(callback? : any) : EventKit.Disposable;
+        onDidChangeGutterVisible(callback : Function /* needs to be defined */) : EventKit.Disposable;
     
         /**
          * Set the number of characters that can be displayed horizontally in the
@@ -9740,7 +8884,7 @@ added menu items.
          * This field or method was marked private by atomdoc. Use with caution.
          * @param editorWidthInChars? - A {Number} representing the width of the {TextEditorView} in characters. 
          */
-        setEditorWidthInChars(editorWidthInChars? : number) : void;
+        setEditorWidthInChars(editorWidthInChars? : number) : number;
     
         /**
          * Get the editor's title for display in other parts of the
@@ -9748,7 +8892,7 @@ added menu items.
          * 
          * If the editor's buffer is saved, its title is the file name. If it is
          * unsaved, its title is "untitled".
-        Returns a {String}.
+         * Returns a {String}.
          */
         getTitle() : string;
     
@@ -9758,7 +8902,7 @@ added menu items.
          * 
          * If the editor's buffer is saved, its long title is formatted as
          * "<filename> - <directory>". If it is unsaved, its title is "untitled"
-        Returns a {String}.
+         * Returns a {String}.
          */
         getLongTitle() : string;
     
@@ -9771,7 +8915,7 @@ added menu items.
          * buffer.
          * @param encoding? - The {String} character set encoding name such as 'utf8' 
          */
-        setEncoding(encoding? : string) : void;
+        setEncoding(encoding? : string) : string;
     
         isModified() : boolean;
     
@@ -9803,7 +8947,7 @@ added menu items.
          * this editor. 
          * This field or method was marked private by atomdoc. Use with caution.
          */
-        shouldPromptToSave(windowCloseRequested? : any) : boolean;
+        shouldPromptToSave({ windowCloseRequested } : { windowCloseRequested? : boolean }) : boolean;
     
         /**
          * This field or method was not documented by atomdoc, assume it is private. Use with caution.
@@ -9816,7 +8960,7 @@ added menu items.
          * Get the text in the given {Range} in buffer coordinates.
          * @param range? - A {Range} or range-compatible {Array}.
          */
-        getTextInBufferRange(range? : TextBuffer.Range) : TextBuffer.Range;
+        getTextInBufferRange(range? : Range) : Range;
     
         getLineCount() : number;
     
@@ -9863,7 +9007,7 @@ added menu items.
          * {Delegates to: DisplayBuffer.getMaxLineLength} 
          * This field or method was marked private by atomdoc. Use with caution.
          */
-        getMaxScreenLineLength() : any;
+        getMaxScreenLineLength() : number;
     
         /**
          * This field or method was not documented by atomdoc, assume it is private. Use with caution.
@@ -9875,15 +9019,14 @@ added menu items.
          * This field or method was marked private by atomdoc. Use with caution.
          * @param row? - A row {Number}.
          * @param options? - An options hash with an `includeNewline` key.
-        undefined
          */
-        bufferRangeForBufferRow(row? : number, options? : (includeNewline? : any) => any) : TextBuffer.Range;
+        bufferRangeForBufferRow(row? : number, options? : (includeNewline? : number) => any) : number;
     
         /**
          * Get the text in the given {Range}.
          * This field or method was marked private by atomdoc. Use with caution.
          */
-        getTextInRange(range? : TextBuffer.Range) : TextBuffer.Range;
+        getTextInRange(range? : Range) : Range;
     
         /**
          * {Delegates to: TextBuffer.isRowBlank} 
@@ -9907,12 +9050,12 @@ added menu items.
          * Get the {Range} of the paragraph surrounding the most recently added
          * cursor.
          */
-        getCurrentParagraphBufferRange() : TextBuffer.Range;
+        getCurrentParagraphBufferRange() : Range;
     
         /**
          * Replaces the entire contents of the buffer with the given {String}. 
          */
-        setText(text? : string) : void;
+        setText(text? : string) : string;
     
         /**
          * Set the text in the given {Range} in buffer coordinates.
@@ -9920,14 +9063,14 @@ added menu items.
          * @param text? - A {String}
          * @param options? - {Object}
          */
-        setTextInBufferRange(range? : TextBuffer.Range, text? : string, options? : Object) : TextBuffer.Range;
+        setTextInBufferRange(range? : Range, text? : string, options? : any) : Range;
     
         /**
          * For each selection, replace the selected text with the given text.
          * @param text? - A {String} representing the text to insert.
          * @param options? - See {Selection::insertText}.
          */
-        insertText(text? : string, options? : any) : TextBuffer.Range | boolean;
+        insertText(text? : string, options? : boolean) : TextBuffer.Range | boolean;
     
         /**
          * For each selection, replace the selected text with a newline. 
@@ -9973,7 +9116,7 @@ added menu items.
          * Duplicate the most recent cursor's current line. 
          * This field or method was marked private by atomdoc. Use with caution.
          */
-        duplicateLines() : any;
+        duplicateLines() : string[];
     
         /**
          * This field or method was not documented by atomdoc, assume it is private. Use with caution.
@@ -9988,7 +9131,7 @@ added menu items.
          * the same original area. 
          * This field or method was marked private by atomdoc. Use with caution.
          */
-        splitSelectionsIntoLines() : any;
+        splitSelectionsIntoLines() : string[];
     
         /**
          * For each selection, transpose the selected text.
@@ -10032,7 +9175,7 @@ added menu items.
          * the contents of each of the original non-empty lines separated by a space. 
          * This field or method was marked private by atomdoc. Use with caution.
          */
-        joinLines() : any;
+        joinLines() : string[];
     
         /**
          * For each cursor, insert a newline at beginning the following line. 
@@ -10056,7 +9199,7 @@ added menu items.
          * of the containing line that precede the cursor. Otherwise delete the
          * selected text. 
          */
-        deleteToBeginningOfLine() : void;
+        deleteToBeginningOfLine() : number;
     
         /**
          * For each selection, if the selection is not empty, deletes the
@@ -10064,7 +9207,7 @@ added menu items.
          * following the cursor. If the cursor is already at the end of the line,
          * deletes the following newline. 
          */
-        deleteToEndOfLine() : void;
+        deleteToEndOfLine() : number;
     
         /**
          * For each selection, if the selection is empty, delete all characters
@@ -10076,7 +9219,7 @@ added menu items.
         /**
          * Delete all lines intersecting selections. 
          */
-        deleteLine() : void;
+        deleteLine() : number;
     
         /**
          * Undo the last change. 
@@ -10165,13 +9308,13 @@ added menu items.
          * Convert a range in buffer-coordinates to screen-coordinates.
          * @param bufferRange? - {Range} in buffer coordinates to translate into screen coordinates.
          */
-        screenRangeForBufferRange(bufferRange? : TextBuffer.Range) : TextBuffer.Range;
+        screenRangeForBufferRange(bufferRange? : Range) : Range;
     
         /**
          * Convert a range in screen-coordinates to buffer-coordinates.
          * @param screenRange? - {Range} in screen coordinates to translate into buffer coordinates.
          */
-        bufferRangeForScreenRange(screenRange? : TextBuffer.Range) : TextBuffer.Range;
+        bufferRangeForScreenRange(screenRange? : Range) : Range;
     
         /**
          * Clip the given {Point} to a valid position in the buffer.
@@ -10189,7 +9332,7 @@ added menu items.
          * buffer. See {::clipBufferPosition} for more information.
          * @param range? - The {Range} to clip.
          */
-        clipBufferRange(range? : TextBuffer.Range) : TextBuffer.Range;
+        clipBufferRange(range? : Range) : Range;
     
         /**
          * Clip the given {Point} to a valid position on screen.
@@ -10209,7 +9352,7 @@ added menu items.
          * @param range? - The {Range} to clip.
          * @param options? - See {::clipScreenPosition} `options`. Returns a {Range}. 
          */
-        clipScreenRange(range? : TextBuffer.Range, options? : TextBuffer.Range) : TextBuffer.Range;
+        clipScreenRange(range? : Range, options? : TextBuffer.Range) : Range;
     
         /**
          * Adds a decoration that tracks a {Marker}. When the marker moves,
@@ -10242,7 +9385,7 @@ added menu items.
          * @param startScreenRow? - the {Number} beginning screen row
          * @param endScreenRow? - the {Number} end screen row (inclusive)
          */
-        decorationsForScreenRowRange(startScreenRow? : number, endScreenRow? : number) : TextBuffer.Range;
+        decorationsForScreenRowRange(startScreenRow? : number, endScreenRow? : number) : Range;
     
         /**
          * Get all decorations.
@@ -10285,7 +9428,7 @@ added menu items.
          * you mark a particular word, the marker will remain over that word even if
          * the word's location in the buffer changes.
          */
-        markBufferRange(args? : any) : TextBuffer.Range;
+        markBufferRange(args? : Marker) : Marker;
     
         /**
          * Create a marker with the given range in screen coordinates. This
@@ -10293,17 +9436,17 @@ added menu items.
          * you mark a particular word, the marker will remain over that word even if
          * the word's location in the buffer changes.
          */
-        markScreenRange(args? : any) : TextBuffer.Range;
+        markScreenRange(args? : Marker) : Marker;
     
         /**
          * Mark the given position in buffer coordinates.
          */
-        markBufferPosition(args? : any) : TextBuffer.Point;
+        markBufferPosition(args? : Marker) : Marker;
     
         /**
          * Mark the given position in screen coordinates.
          */
-        markScreenPosition(args? : any) : TextBuffer.Point;
+        markScreenPosition(args? : Marker) : Marker;
     
         /**
          * Find all {Marker}s that match the given properties.
@@ -10329,7 +9472,6 @@ added menu items.
     
         /**
          * Get the number of markers in this editor's buffer.
-        Returns a {Number}.
          */
         getMarkerCount() : number;
     
@@ -10337,7 +9479,7 @@ added menu items.
          * {Delegates to: DisplayBuffer.destroyMarker} 
          * This field or method was marked private by atomdoc. Use with caution.
          */
-        destroyMarker(args? : any) : void;
+        destroyMarker(args? : any) : Marker;
     
         /**
          * Get the position of the most recently added cursor in buffer
@@ -10357,7 +9499,7 @@ added menu items.
          * @param position? - A {Point} or {Array} of `[row, column]`
          * @param options? - An {Object} combining options for {::clipScreenPosition} with:
          */
-        setCursorBufferPosition(position? : TextBuffer.Point | { row: number; column: number } | [number, number], options? : Object) : TextBuffer.Point;
+        setCursorBufferPosition(position? : TextBuffer.Point | { row: number; column: number } | [number, number], options? : any) : TextBuffer.Point;
     
         /**
          * Get the position of the most recently added cursor in screen
@@ -10377,7 +9519,7 @@ added menu items.
          * @param position? - A {Point} or {Array} of `[row, column]`
          * @param options? - An {Object} combining options for {::clipScreenPosition} with:
          */
-        setCursorScreenPosition(position? : TextBuffer.Point | { row: number; column: number } | [number, number], options? : Object) : TextBuffer.Point;
+        setCursorScreenPosition(position? : TextBuffer.Point | { row: number; column: number } | [number, number], options? : any) : TextBuffer.Point;
     
         /**
          * Add a cursor at the given position in buffer coordinates.
@@ -10420,27 +9562,27 @@ added menu items.
         /**
          * Move every cursor to the beginning of its line in buffer coordinates. 
          */
-        moveToBeginningOfLine() : void;
+        moveToBeginningOfLine() : number;
     
         /**
          * Move every cursor to the beginning of its line in screen coordinates. 
          */
-        moveToBeginningOfScreenLine() : void;
+        moveToBeginningOfScreenLine() : number;
     
         /**
          * Move every cursor to the first non-whitespace character of its line. 
          */
-        moveToFirstCharacterOfLine() : void;
+        moveToFirstCharacterOfLine() : number;
     
         /**
          * Move every cursor to the end of its line in buffer coordinates. 
          */
-        moveToEndOfLine() : void;
+        moveToEndOfLine() : number;
     
         /**
          * Move every cursor to the end of its line in screen coordinates. 
          */
-        moveToEndOfScreenLine() : void;
+        moveToEndOfScreenLine() : number;
     
         /**
          * Move every cursor to the beginning of its surrounding word. 
@@ -10510,7 +9652,7 @@ added menu items.
          * Add a cursor based on the given {Marker}. 
          * This field or method was marked private by atomdoc. Use with caution.
          */
-        addCursor(marker? : Cursor) : Cursor;
+        addCursor(marker? : Marker) : Cursor;
     
         /**
          * Remove the given cursor from this editor. 
@@ -10521,7 +9663,7 @@ added menu items.
         /**
          * This field or method was not documented by atomdoc, assume it is private. Use with caution.
          */
-        moveCursors(fn? : any) : void;
+        moveCursors(fn? : any) : Cursor[];
     
         /**
          * This field or method was not documented by atomdoc, assume it is private. Use with caution.
@@ -10548,14 +9690,14 @@ added menu items.
          * Get the {Range} of the most recently added selection in buffer
          * coordinates.
          */
-        getSelectedBufferRange() : TextBuffer.Range;
+        getSelectedBufferRange() : Range;
     
         /**
          * Get the {Range}s of all selections in buffer coordinates.
          * 
          * The ranges are sorted by when the selections were added. Most recent at the end.
          */
-        getSelectedBufferRanges() : TextBuffer.Range[];
+        getSelectedBufferRanges() : Range[];
     
         /**
          * Set the selected range in buffer coordinates. If there are multiple
@@ -10563,7 +9705,7 @@ added menu items.
          * @param bufferRange? - A {Range} or range-compatible {Array}.
          * @param options? - An options {Object}:
          */
-        setSelectedBufferRange(bufferRange? : TextBuffer.Range, options? : Object) : TextBuffer.Range;
+        setSelectedBufferRange(bufferRange? : Range, options? : any) : Range;
     
         /**
          * Set the selected ranges in buffer coordinates. If there are multiple
@@ -10571,20 +9713,20 @@ added menu items.
          * @param bufferRanges? - An {Array} of {Range}s or range-compatible {Array}s.
          * @param options? - An options {Object}:
          */
-        setSelectedBufferRanges(bufferRanges? : any[], options? : Object) : TextBuffer.Range[];
+        setSelectedBufferRanges(bufferRanges? : Range[], options? : any) : Range[];
     
         /**
          * Get the {Range} of the most recently added selection in screen
          * coordinates.
          */
-        getSelectedScreenRange() : TextBuffer.Range;
+        getSelectedScreenRange() : Range;
     
         /**
          * Get the {Range}s of all selections in screen coordinates.
          * 
          * The ranges are sorted by when the selections were added. Most recent at the end.
          */
-        getSelectedScreenRanges() : TextBuffer.Range[];
+        getSelectedScreenRanges() : Range[];
     
         /**
          * Set the selected range in screen coordinates. If there are multiple
@@ -10592,7 +9734,7 @@ added menu items.
          * @param screenRange? - A {Range} or range-compatible {Array}.
          * @param options? - An options {Object}:
          */
-        setSelectedScreenRange(screenRange? : TextBuffer.Range, options? : Object) : TextBuffer.Range;
+        setSelectedScreenRange(screenRange? : Range, options? : any) : Range;
     
         /**
          * Set the selected ranges in screen coordinates. If there are multiple
@@ -10600,21 +9742,21 @@ added menu items.
          * @param screenRanges? - An {Array} of {Range}s or range-compatible {Array}s.
          * @param options? - An options {Object}:
          */
-        setSelectedScreenRanges(screenRanges? : any[], options? : Object) : TextBuffer.Range[];
+        setSelectedScreenRanges(screenRanges? : Range[], options? : any) : Range[];
     
         /**
          * Add a selection for the given range in buffer coordinates.
          * @param bufferRange? - A {Range}
          * @param options? - An options {Object}:
          */
-        addSelectionForBufferRange(bufferRange? : TextBuffer.Range, options? : Object) : TextBuffer.Range;
+        addSelectionForBufferRange(bufferRange? : Range, options? : any) : Range;
     
         /**
          * Add a selection for the given range in screen coordinates.
          * @param screenRange? - A {Range}
          * @param options? - An options {Object}:
          */
-        addSelectionForScreenRange(screenRange? : TextBuffer.Range, options? : Object) : TextBuffer.Range;
+        addSelectionForScreenRange(screenRange? : Range, options? : any) : Range;
     
         /**
          * Select from the current cursor position to the given position in
@@ -10699,7 +9841,7 @@ added menu items.
          * 
          * This method may merge selections that end up intesecting. 
          */
-        selectToBeginningOfLine() : any;
+        selectToBeginningOfLine() : number;
     
         /**
          * Move the cursor of each selection to the first non-whitespace
@@ -10709,7 +9851,7 @@ added menu items.
          * 
          * This method may merge selections that end up intersecting. 
          */
-        selectToFirstCharacterOfLine() : any;
+        selectToFirstCharacterOfLine() : number;
     
         /**
          * Move the cursor of each selection to the end of its line while
@@ -10717,7 +9859,7 @@ added menu items.
          * 
          * This method may merge selections that end up intersecting. 
          */
-        selectToEndOfLine() : any;
+        selectToEndOfLine() : number;
     
         /**
          * Expand selections to the beginning of their containing word.
@@ -10814,7 +9956,7 @@ added menu items.
          * selection.
          * @param bufferRange? - A {Range} or range-compatible {Array}.
          */
-        selectionIntersectsBufferRange(bufferRange? : TextBuffer.Range) : TextBuffer.Range;
+        selectionIntersectsBufferRange(bufferRange? : Range) : Range;
     
         /**
          * Add a similarly-shaped selection to the next eligible line below
@@ -10827,7 +9969,7 @@ added menu items.
          * starting at the same column as the current selection to be added to it. 
          * This field or method was marked private by atomdoc. Use with caution.
          */
-        addSelectionBelow() : any;
+        addSelectionBelow() : void;
     
         /**
          * Add a similarly-shaped selection to the next eligible line above
@@ -10840,7 +9982,7 @@ added menu items.
          * starting at the same column as the current selection to be added to it. 
          * This field or method was marked private by atomdoc. Use with caution.
          */
-        addSelectionAbove() : any;
+        addSelectionAbove() : void;
     
         /**
          * Calls the given function with each selection, then merges selections 
@@ -10889,7 +10031,7 @@ added menu items.
          * @param marker? - The {Marker} to highlight
          * @param options? - An {Object} that pertains to the {Selection} constructor.
          */
-        addSelection(marker? : Selection, options? : Object) : Selection;
+        addSelection(marker? : Marker, options? : any) : Selection;
     
         /**
          * Remove the given selection. 
@@ -10936,7 +10078,7 @@ added menu items.
          * @param range? - A {Range} in which to search.
          * @param iterator? - A {Function} that's called on each match with an {Object} containing the following keys:
          */
-        scanInBufferRange(regex? : RegExp, range? : TextBuffer.Range, iterator? : Function) : TextBuffer.Range;
+        scanInBufferRange(regex? : RegExp, range? : Range, iterator? : Function) : Range;
     
         /**
          * Scan regular expression matches in a given range in reverse order,
@@ -10945,7 +10087,7 @@ added menu items.
          * @param range? - A {Range} in which to search.
          * @param iterator? - A {Function} that's called on each match with an {Object} containing the following keys:
          */
-        backwardsScanInBufferRange(regex? : RegExp, range? : TextBuffer.Range, iterator? : Function) : TextBuffer.Range;
+        backwardsScanInBufferRange(regex? : RegExp, range? : Range, iterator? : Function) : Range;
     
         getSoftTabs() : boolean;
     
@@ -10962,7 +10104,6 @@ added menu items.
     
         /**
          * Get the on-screen length of tab characters.
-        Returns a {Number}.
          */
         getTabLength() : number;
     
@@ -10971,7 +10112,7 @@ added menu items.
          * {Number} This will override the `editor.tabLength` setting.
          * @param tabLength? - {Number} length of a single tab. Setting to `null` will fallback to using the `editor.tabLength` config setting 
          */
-        setTabLength(tabLength? : number) : void;
+        setTabLength(tabLength? : number) : number;
     
         /**
          * Determine if the buffer uses hard or soft tabs.
@@ -10991,12 +10132,12 @@ added menu items.
          * {Range}. 
          * This field or method was marked private by atomdoc. Use with caution.
          */
-        normalizeTabsInBufferRange(bufferRange? : TextBuffer.Range) : TextBuffer.Range;
+        normalizeTabsInBufferRange(bufferRange? : Range) : Range;
     
         /**
          * Determine whether lines in this editor are soft-wrapped.
          */
-        isSoftWrapped(softWrapped? : any) : boolean;
+        isSoftWrapped(softWrapped? : boolean) : boolean;
     
         /**
          * Enable or disable soft wrapping for this editor.
@@ -11006,7 +10147,7 @@ added menu items.
     
         /**
          * Toggle soft wrapping for this editor
-        Returns a {Boolean}.
+         * Returns a {Boolean}.
          */
         toggleSoftWrapped() : boolean;
     
@@ -11032,12 +10173,12 @@ added menu items.
          * @param options? - An {Object} with the following keys:
          * @param preserveLeadingWhitespace? - `true` to preserve any whitespace already at  the beginning of the line (default: false). 
          */
-        setIndentationForBufferRow(bufferRow? : number, newLevel? : number, options? : { preserveLeadingWhitespace? : any }) : void;
+        setIndentationForBufferRow(bufferRow? : number, newLevel? : number, options? : any) : number;
     
         /**
          * Indent rows intersecting selections by one level. 
          */
-        indentSelectedRows() : number[];
+        indentSelectedRows() : boolean;
     
         /**
          * Outdent rows intersecting selections by one level. 
@@ -11046,15 +10187,8 @@ added menu items.
     
         /**
          * Get the indentation level of the given line of text.
-        Returns how deeply the given line is indented based on the soft tabs and
-tab length settings of this editor. Note that if soft tabs are enabled and
-the tab length is 2, a row with 4 leading spaces would have an indentation
-level of 2.
-
-* `line` A {String} representing a line of text.
-        Returns a {Number}.
          */
-        indentLevelForLine(line? : any) : string | number;
+        indentLevelForLine(line? : number) : number;
     
         /**
          * Indent rows intersecting selections based on the grammar's suggested
@@ -11067,7 +10201,7 @@ level of 2.
          * information. 
          * This field or method was marked private by atomdoc. Use with caution.
          */
-        indent(options? : any) : any;
+        indent(options? : boolean) : boolean;
     
         /**
          * Constructs the string used for tabs. 
@@ -11087,7 +10221,7 @@ level of 2.
          * grammar.
          * @param grammar? - {Grammar} 
          */
-        setGrammar(grammar? : FirstMate.Grammar) : void;
+        setGrammar(grammar? : FirstMate.Grammar) : FirstMate.Grammar;
     
         /**
          * Reload the grammar based on the file name. 
@@ -11116,7 +10250,7 @@ level of 2.
          * could call `editor.bufferRangeForScopeAtCursor(".string.quoted")`.
          * @param scopeSelector? - {String} selector. e.g. `'.source.ruby'`
          */
-        bufferRangeForScopeAtCursor(scopeSelector? : string) : TextBuffer.Range;
+        bufferRangeForScopeAtCursor(scopeSelector? : string) : Cursor;
     
         /**
          * Determine if the given row is entirely a comment 
@@ -11160,7 +10294,7 @@ level of 2.
          * of the containing line following the cursor. Otherwise cut the selected
          * text. 
          */
-        cutToEndOfLine() : any;
+        cutToEndOfLine() : number;
     
         /**
          * Fold the most recent cursor's row based on its indentation level.
@@ -11195,7 +10329,7 @@ level of 2.
         /**
          * For each selection, fold the rows it intersects. 
          */
-        foldSelectedLines() : any;
+        foldSelectedLines() : string[];
     
         /**
          * Fold all foldable lines. 
@@ -11219,14 +10353,14 @@ level of 2.
          * A *foldable* row is a row that *starts* a row range that can be folded.
          * @param bufferRow? - A {Number}
          */
-        isFoldableAtBufferRow(bufferRow? : number) : boolean;
+        isFoldableAtBufferRow(bufferRow? : number) : number;
     
         /**
          * Determine whether the given row in screen coordinates is foldable.
          * 
          * A *foldable* row is a row that *starts* a row range that can be folded.
          */
-        isFoldableAtScreenRow(screenRow? : number) : boolean;
+        isFoldableAtScreenRow(screenRow? : number) : number;
     
         /**
          * Fold the given buffer row if it isn't currently folded, and unfold
@@ -11237,19 +10371,19 @@ level of 2.
         /**
          * Determine whether the most recently added cursor's row is folded.
          */
-        isFoldedAtCursorRow() : boolean;
+        isFoldedAtCursorRow() : number;
     
         /**
          * Determine whether the given row in buffer coordinates is folded.
          * @param bufferRow? - A {Number}
          */
-        isFoldedAtBufferRow(bufferRow? : number) : boolean;
+        isFoldedAtBufferRow(bufferRow? : number) : number;
     
         /**
          * Determine whether the given row in screen coordinates is folded.
          * @param screenRow? - A {Number}
          */
-        isFoldedAtScreenRow(screenRow? : number) : boolean;
+        isFoldedAtScreenRow(screenRow? : number) : number;
     
         /**
          * Rename to foldRowRange? 
@@ -11266,13 +10400,13 @@ level of 2.
          * Remove any {Fold}s found that intersect the given buffer range. 
          * This field or method was marked private by atomdoc. Use with caution.
          */
-        destroyFoldsIntersectingBufferRange(bufferRange? : TextBuffer.Range) : TextBuffer.Range;
+        destroyFoldsIntersectingBufferRange(bufferRange? : Range) : Range;
     
         /**
          * Remove any {Fold}s found that contain the given buffer range. 
          * This field or method was marked private by atomdoc. Use with caution.
          */
-        destroyFoldsContainingBufferRange(bufferRange? : TextBuffer.Range) : TextBuffer.Range;
+        destroyFoldsContainingBufferRange(bufferRange? : Range) : Range;
     
         /**
          * {Delegates to: DisplayBuffer.largestFoldContainingBufferRow} 
@@ -11290,7 +10424,7 @@ level of 2.
          * {Delegates to: DisplayBuffer.outermostFoldsForBufferRowRange} 
          * This field or method was marked private by atomdoc. Use with caution.
          */
-        outermostFoldsInBufferRowRange(startRow? : number, endRow? : number) : TextBuffer.Range;
+        outermostFoldsInBufferRowRange(startRow? : number, endRow? : number) : Range;
     
         /**
          * Scroll the editor to reveal the most recently added cursor if it is
@@ -11304,14 +10438,14 @@ level of 2.
          * @param bufferPosition? - An object that represents a buffer position. It can be either an {Object} (`{row, column}`), {Array} (`[row, column]`), or {Point}
          * @param options? - {Object}
          */
-        scrollToBufferPosition(bufferPosition? : Object, options? : Object) : TextBuffer.Point;
+        scrollToBufferPosition(bufferPosition? : TextBuffer.Point | { row: number; column: number } | [number, number], options? : Object) : TextBuffer.Point;
     
         /**
          * Scrolls the editor to the given screen position.
          * @param screenPosition? - An object that represents a buffer position. It can be either  an {Object} (`{row, column}`), {Array} (`[row, column]`), or {Point}
          * @param options? - {Object}
          */
-        scrollToScreenPosition(screenPosition? : Object, options? : Object) : TextBuffer.Point;
+        scrollToScreenPosition(screenPosition? : TextBuffer.Point | { row: number; column: number } | [number, number], options? : Object) : TextBuffer.Point;
     
         /**
          * Scrolls the editor to the top 
@@ -11326,37 +10460,37 @@ level of 2.
         /**
          * This field or method was not documented by atomdoc, assume it is private. Use with caution.
          */
-        scrollToScreenRange(screenRange? : TextBuffer.Range, options? : any) : TextBuffer.Range;
+        scrollToScreenRange(screenRange? : Range, options? : any) : Range;
     
         /**
          * This field or method was not documented by atomdoc, assume it is private. Use with caution.
          */
-        horizontallyScrollable() : any;
+        horizontallyScrollable() : number;
     
         /**
          * This field or method was not documented by atomdoc, assume it is private. Use with caution.
          */
-        verticallyScrollable() : any;
+        verticallyScrollable() : number;
     
         /**
          * This field or method was not documented by atomdoc, assume it is private. Use with caution.
          */
-        getHorizontalScrollbarHeight() : any;
+        getHorizontalScrollbarHeight() : number;
     
         /**
          * This field or method was not documented by atomdoc, assume it is private. Use with caution.
          */
-        setHorizontalScrollbarHeight(height? : any) : void;
+        setHorizontalScrollbarHeight(height? : number) : number;
     
         /**
          * This field or method was not documented by atomdoc, assume it is private. Use with caution.
          */
-        getVerticalScrollbarWidth() : any;
+        getVerticalScrollbarWidth() : number;
     
         /**
          * This field or method was not documented by atomdoc, assume it is private. Use with caution.
          */
-        setVerticalScrollbarWidth(width? : any) : void;
+        setVerticalScrollbarWidth(width? : number) : number;
     
         /**
          * This field or method was not documented by atomdoc, assume it is private. Use with caution.
@@ -11381,7 +10515,7 @@ level of 2.
         /**
          * 
          * This field or method was marked private by atomdoc. Use with caution.
-        Returns the number of rows per page
+         * Returns the number of rows per page
          */
         getRowsPerPage() : any;
     
@@ -11404,23 +10538,23 @@ level of 2.
         /**
          * This field or method was not documented by atomdoc, assume it is private. Use with caution.
          */
-        updateInvisibles() : void;
+        updateInvisibles() : boolean;
     
         /**
          * Event Handlers
          * This field or method was marked private by atomdoc. Use with caution.
          */
-        handleTokenization() : any;
+        handleTokenization() : void;
     
         /**
          * This field or method was not documented by atomdoc, assume it is private. Use with caution.
          */
-        handleGrammarChange() : any;
+        handleGrammarChange() : void;
     
         /**
          * This field or method was not documented by atomdoc, assume it is private. Use with caution.
          */
-        handleMarkerCreated(marker? : Marker) : any;
+        handleMarkerCreated(marker? : Marker) : void;
     
         /**
          * Retrieves the greyed out placeholder of a mini editor.
@@ -11432,17 +10566,17 @@ level of 2.
          * will be displayed when the editor has no content.
          * @param placeholderText? - {String} text that is displayed when the editor has no content. 
          */
-        setPlaceholderText(placeholderText? : string) : void;
+        setPlaceholderText(placeholderText? : string) : string;
     
         /**
          * This field or method was not documented by atomdoc, assume it is private. Use with caution.
          */
-        getFirstVisibleScreenRow(suppressDeprecation? : any) : boolean;
+        getFirstVisibleScreenRow(suppressDeprecation? : any) : number;
     
         /**
          * This field or method was not documented by atomdoc, assume it is private. Use with caution.
          */
-        getLastVisibleScreenRow(suppressDeprecation? : any) : boolean;
+        getLastVisibleScreenRow(suppressDeprecation? : any) : number;
     
         /**
          * This field or method was not documented by atomdoc, assume it is private. Use with caution.
@@ -11462,32 +10596,32 @@ level of 2.
         /**
          * This field or method was not documented by atomdoc, assume it is private. Use with caution.
          */
-        getVerticalScrollMargin() : any;
+        getVerticalScrollMargin() : number;
     
         /**
          * This field or method was not documented by atomdoc, assume it is private. Use with caution.
          */
-        setVerticalScrollMargin(verticalScrollMargin? : any) : void;
+        setVerticalScrollMargin(verticalScrollMargin? : number) : number;
     
         /**
          * This field or method was not documented by atomdoc, assume it is private. Use with caution.
          */
-        getHorizontalScrollMargin() : any;
+        getHorizontalScrollMargin() : number;
     
         /**
          * This field or method was not documented by atomdoc, assume it is private. Use with caution.
          */
-        setHorizontalScrollMargin(horizontalScrollMargin? : any) : void;
+        setHorizontalScrollMargin(horizontalScrollMargin? : number) : number;
     
         /**
          * This field or method was not documented by atomdoc, assume it is private. Use with caution.
          */
-        getLineHeightInPixels() : any;
+        getLineHeightInPixels() : number;
     
         /**
          * This field or method was not documented by atomdoc, assume it is private. Use with caution.
          */
-        setLineHeightInPixels(lineHeightInPixels? : any) : void;
+        setLineHeightInPixels(lineHeightInPixels? : number) : number;
     
         /**
          * This field or method was not documented by atomdoc, assume it is private. Use with caution.
@@ -11497,57 +10631,57 @@ level of 2.
         /**
          * This field or method was not documented by atomdoc, assume it is private. Use with caution.
          */
-        getScopedCharWidth(scopeNames? : string, char? : any) : any;
+        getScopedCharWidth(scopeNames? : string, char? : any) : number;
     
         /**
          * This field or method was not documented by atomdoc, assume it is private. Use with caution.
          */
-        setScopedCharWidth(scopeNames? : string, char? : any, width? : any) : void;
+        setScopedCharWidth(scopeNames? : string, char? : any, width? : number) : number;
     
         /**
          * This field or method was not documented by atomdoc, assume it is private. Use with caution.
          */
-        getScopedCharWidths(scopeNames? : string) : any;
+        getScopedCharWidths(scopeNames? : string) : number;
     
         /**
          * This field or method was not documented by atomdoc, assume it is private. Use with caution.
          */
-        clearScopedCharWidths() : any;
+        clearScopedCharWidths() : number;
     
         /**
          * This field or method was not documented by atomdoc, assume it is private. Use with caution.
          */
-        getDefaultCharWidth() : any;
+        getDefaultCharWidth() : number;
     
         /**
          * This field or method was not documented by atomdoc, assume it is private. Use with caution.
          */
-        setDefaultCharWidth(defaultCharWidth? : any) : void;
+        setDefaultCharWidth(defaultCharWidth? : number) : number;
     
         /**
          * This field or method was not documented by atomdoc, assume it is private. Use with caution.
          */
-        setHeight(height? : any) : void;
+        setHeight(height? : number) : number;
     
         /**
          * This field or method was not documented by atomdoc, assume it is private. Use with caution.
          */
-        getHeight() : any;
+        getHeight() : number;
     
         /**
          * This field or method was not documented by atomdoc, assume it is private. Use with caution.
          */
-        getClientHeight() : any;
+        getClientHeight() : number;
     
         /**
          * This field or method was not documented by atomdoc, assume it is private. Use with caution.
          */
-        setWidth(width? : any) : void;
+        setWidth(width? : number) : number;
     
         /**
          * This field or method was not documented by atomdoc, assume it is private. Use with caution.
          */
-        getWidth() : any;
+        getWidth() : number;
     
         /**
          * This field or method was not documented by atomdoc, assume it is private. Use with caution.
@@ -11592,27 +10726,27 @@ level of 2.
         /**
          * This field or method was not documented by atomdoc, assume it is private. Use with caution.
          */
-        getScrollHeight() : any;
+        getScrollHeight() : number;
     
         /**
          * This field or method was not documented by atomdoc, assume it is private. Use with caution.
          */
-        getScrollWidth() : any;
+        getScrollWidth() : number;
     
         /**
          * This field or method was not documented by atomdoc, assume it is private. Use with caution.
          */
-        getVisibleRowRange() : TextBuffer.Range;
+        getVisibleRowRange() : Range;
     
         /**
          * This field or method was not documented by atomdoc, assume it is private. Use with caution.
          */
-        intersectsVisibleRowRange(startRow? : number, endRow? : number) : TextBuffer.Range;
+        intersectsVisibleRowRange(startRow? : number, endRow? : number) : Range;
     
         /**
          * This field or method was not documented by atomdoc, assume it is private. Use with caution.
          */
-        selectionIntersectsVisibleRowRange(selection? : Range) : TextBuffer.Range;
+        selectionIntersectsVisibleRowRange(selection? : Selection) : Range;
     
         /**
          * This field or method was not documented by atomdoc, assume it is private. Use with caution.
@@ -11622,18 +10756,18 @@ level of 2.
         /**
          * This field or method was not documented by atomdoc, assume it is private. Use with caution.
          */
-        pixelRectForScreenRange(screenRange? : TextBuffer.Range) : TextBuffer.Range;
+        pixelRectForScreenRange(screenRange? : Range) : Range;
     
         /**
          * Utility
          * This field or method was marked private by atomdoc. Use with caution.
          */
-        inspect() : any;
+        inspect() : boolean;
     
         /**
          * This field or method was not documented by atomdoc, assume it is private. Use with caution.
          */
-        logScreenLines(start? : any, end? : any) : any;
+        logScreenLines(start? : any, end? : any) : string[];
     
     }
 
@@ -11649,12 +10783,12 @@ level of 2.
         /**
          * This field or method was not documented by atomdoc, assume it is private. Use with caution.
          */
-        resourcePath: any /* default */;
+        resourcePath: string;
     
         /**
          * This field or method was not documented by atomdoc, assume it is private. Use with caution.
          */
-        configDirPath: any /* default */;
+        configDirPath: string;
     
         /**
          * This field or method was not documented by atomdoc, assume it is private. Use with caution.
@@ -11664,7 +10798,7 @@ level of 2.
         /**
          * This field or method was not documented by atomdoc, assume it is private. Use with caution.
          */
-        constructor(packageManager? : PackageManager, resourcePath? : any, configDirPath? : any, safeMode? : any);
+        constructor({ packageManager, resourcePath, configDirPath, safeMode } : { packageManager? : PackageManager; resourcePath? : string; configDirPath? : string; safeMode? : boolean });
     
         /**
          * This field or method was not documented by atomdoc, assume it is private. Use with caution.
@@ -11679,14 +10813,14 @@ level of 2.
         /**
          * This field or method was not documented by atomdoc, assume it is private. Use with caution.
          */
-        styleElementUpdated(sheet? : any) : any;
+        styleElementUpdated({ sheet } : { sheet? : any }) : any;
     
         /**
          * Invoke `callback` when style sheet changes associated with
          * updating the list of active themes have completed.
-         * @param callback? - {Function} 
+         * @param callback - {Function} 
          */
-        onDidChangeActiveThemes(callback? : Function) : EventKit.Disposable;
+        onDidChangeActiveThemes(callback : Function /* needs to be defined */) : EventKit.Disposable;
     
         /**
          * Accessing Available Themes
@@ -11730,8 +10864,8 @@ level of 2.
          * This supports both CSS and Less stylsheets.
          * This field or method was marked private by atomdoc. Use with caution.
          * @param stylesheetPath? - A {String} path to the stylesheet that can be an absolute path or a relative path that will be resolved against the load path.
-        Returns a {Disposable} on which `.dispose()` can be called to remove the
-required stylesheet.
+         * Returns a {Disposable} on which `.dispose()` can be called to remove the
+         * required stylesheet.
          */
         requireStylesheet(stylesheetPath? : string) : EventKit.Disposable;
     
@@ -11753,7 +10887,7 @@ required stylesheet.
         /**
          * This field or method was not documented by atomdoc, assume it is private. Use with caution.
          */
-        reloadBaseStylesheets() : any;
+        reloadBaseStylesheets() : void;
     
         /**
          * This field or method was not documented by atomdoc, assume it is private. Use with caution.
@@ -11763,27 +10897,27 @@ required stylesheet.
         /**
          * This field or method was not documented by atomdoc, assume it is private. Use with caution.
          */
-        resolveStylesheet(stylesheetPath? : any) : any;
+        resolveStylesheet(stylesheetPath? : string) : any;
     
         /**
          * This field or method was not documented by atomdoc, assume it is private. Use with caution.
          */
-        loadStylesheet(stylesheetPath? : any, importFallbackVariables? : any) : any;
+        loadStylesheet(stylesheetPath? : string, importFallbackVariables? : any) : any;
     
         /**
          * This field or method was not documented by atomdoc, assume it is private. Use with caution.
          */
-        loadLessStylesheet(lessStylesheetPath? : any, importFallbackVariables? : any) : any;
+        loadLessStylesheet(lessStylesheetPath? : string, importFallbackVariables? : any) : any;
     
         /**
          * This field or method was not documented by atomdoc, assume it is private. Use with caution.
          */
-        removeStylesheet(stylesheetPath? : any) : any;
+        removeStylesheet(stylesheetPath? : string) : void;
     
         /**
          * This field or method was not documented by atomdoc, assume it is private. Use with caution.
          */
-        applyStylesheet(path? : any, text? : string) : any;
+        applyStylesheet(path? : string, text? : string) : any;
     
         /**
          * This field or method was not documented by atomdoc, assume it is private. Use with caution.
@@ -11808,12 +10942,12 @@ required stylesheet.
         /**
          * This field or method was not documented by atomdoc, assume it is private. Use with caution.
          */
-        addActiveThemeClasses() : any;
+        addActiveThemeClasses() : void;
     
         /**
          * This field or method was not documented by atomdoc, assume it is private. Use with caution.
          */
-        removeActiveThemeClasses() : any;
+        removeActiveThemeClasses() : void;
     
         /**
          * This field or method was not documented by atomdoc, assume it is private. Use with caution.
@@ -11823,7 +10957,7 @@ required stylesheet.
         /**
          * This field or method was not documented by atomdoc, assume it is private. Use with caution.
          */
-        getImportPaths() : any;
+        getImportPaths() : string[];
     
     }
 
@@ -11921,12 +11055,12 @@ required stylesheet.
         /**
          * This field or method was not documented by atomdoc, assume it is private. Use with caution.
          */
-        constructor(value? : any, scopes? : Scope[], isAtomic? : boolean, bufferDelta? : any, isHardTab? : boolean, hasPairedCharacter? : any, isSoftWrapIndentation? : boolean);
+        constructor({ value, scopes, isAtomic, bufferDelta, isHardTab, hasPairedCharacter, isSoftWrapIndentation } : { value? : any; scopes? : Scope[]; isAtomic? : any; bufferDelta? : any; isHardTab? : any; hasPairedCharacter? : any; isSoftWrapIndentation? : any });
     
         /**
          * This field or method was not documented by atomdoc, assume it is private. Use with caution.
          */
-        isEqual(other? : any) : boolean;
+        isEqual(other? : boolean) : boolean;
     
         /**
          * This field or method was not documented by atomdoc, assume it is private. Use with caution.
@@ -11941,12 +11075,12 @@ required stylesheet.
         /**
          * This field or method was not documented by atomdoc, assume it is private. Use with caution.
          */
-        whitespaceRegexForTabLength(tabLength? : any) : any;
+        whitespaceRegexForTabLength(tabLength? : number) : number;
     
         /**
          * This field or method was not documented by atomdoc, assume it is private. Use with caution.
          */
-        breakOutAtomicTokens(tabLength? : any, breakOutLeadingSoftTabs? : any, startColumn? : number) : Token[];
+        breakOutAtomicTokens(tabLength? : number, breakOutLeadingSoftTabs? : any, startColumn? : number) : Token[];
     
         /**
          * This field or method was not documented by atomdoc, assume it is private. Use with caution.
@@ -11961,22 +11095,22 @@ required stylesheet.
         /**
          * This field or method was not documented by atomdoc, assume it is private. Use with caution.
          */
-        buildHardTabToken(tabLength? : any, column? : number) : Token;
+        buildHardTabToken(tabLength? : number, column? : number) : Token;
     
         /**
          * This field or method was not documented by atomdoc, assume it is private. Use with caution.
          */
-        buildSoftTabToken(tabLength? : any) : Token;
+        buildSoftTabToken(tabLength? : number) : Token;
     
         /**
          * This field or method was not documented by atomdoc, assume it is private. Use with caution.
          */
-        buildTabToken(tabLength? : any, isHardTab? : boolean, column? : number) : Token;
+        buildTabToken(tabLength? : number, isHardTab? : any, column? : number) : Token;
     
         /**
          * This field or method was not documented by atomdoc, assume it is private. Use with caution.
          */
-        buildSoftWrapIndentationToken(length? : any) : Token;
+        buildSoftWrapIndentationToken(length? : number) : Token;
     
         /**
          * This field or method was not documented by atomdoc, assume it is private. Use with caution.
@@ -11986,12 +11120,12 @@ required stylesheet.
         /**
          * This field or method was not documented by atomdoc, assume it is private. Use with caution.
          */
-        matchesScopeSelector(selector? : FirstMate.ScopeSelector) : FirstMate.ScopeSelector;
+        matchesScopeSelector(selector? : string) : FirstMate.ScopeSelector;
     
         /**
          * This field or method was not documented by atomdoc, assume it is private. Use with caution.
          */
-        getValueAsHtml(hasIndentGuide? : any) : any;
+        getValueAsHtml({ hasIndentGuide } : { hasIndentGuide? : any }) : any;
     
         /**
          * This field or method was not documented by atomdoc, assume it is private. Use with caution.
@@ -12043,7 +11177,7 @@ required stylesheet.
         /**
          * This field or method was not documented by atomdoc, assume it is private. Use with caution.
          */
-        tabLength: any /* default */;
+        tabLength: number;
     
         /**
          * This field or method was not documented by atomdoc, assume it is private. Use with caution.
@@ -12058,7 +11192,7 @@ required stylesheet.
         /**
          * This field or method was not documented by atomdoc, assume it is private. Use with caution.
          */
-        invalidRows: number[];
+        invalidRows: boolean;
     
         /**
          * This field or method was not documented by atomdoc, assume it is private. Use with caution.
@@ -12068,7 +11202,7 @@ required stylesheet.
         /**
          * This field or method was not documented by atomdoc, assume it is private. Use with caution.
          */
-        constructor(buffer? : any, tabLength? : any, invisibles? : boolean);
+        constructor({ buffer, tabLength, invisibles } : { buffer? : any; tabLength? : number; invisibles? : boolean });
     
         /**
          * This field or method was not documented by atomdoc, assume it is private. Use with caution.
@@ -12088,22 +11222,22 @@ required stylesheet.
         /**
          * This field or method was not documented by atomdoc, assume it is private. Use with caution.
          */
-        observeGrammar(callback? : any) : EventKit.Disposable;
+        observeGrammar(callback : (any: any) => void) : EventKit.Disposable;
     
         /**
          * This field or method was not documented by atomdoc, assume it is private. Use with caution.
          */
-        onDidChangeGrammar(callback? : any) : EventKit.Disposable;
+        onDidChangeGrammar(callback : Function /* needs to be defined */) : EventKit.Disposable;
     
         /**
          * This field or method was not documented by atomdoc, assume it is private. Use with caution.
          */
-        onDidChange(callback? : any) : EventKit.Disposable;
+        onDidChange(callback : Function /* needs to be defined */) : EventKit.Disposable;
     
         /**
          * This field or method was not documented by atomdoc, assume it is private. Use with caution.
          */
-        onDidTokenize(callback? : any) : EventKit.Disposable;
+        onDidTokenize(callback : Function /* needs to be defined */) : EventKit.Disposable;
     
         /**
          * This field or method was not documented by atomdoc, assume it is private. Use with caution.
@@ -12113,7 +11247,7 @@ required stylesheet.
         /**
          * This field or method was not documented by atomdoc, assume it is private. Use with caution.
          */
-        setGrammar(grammar? : FirstMate.Grammar, score? : any) : void;
+        setGrammar(grammar? : FirstMate.Grammar, score? : any) : FirstMate.Grammar;
     
         /**
          * This field or method was not documented by atomdoc, assume it is private. Use with caution.
@@ -12123,32 +11257,32 @@ required stylesheet.
         /**
          * This field or method was not documented by atomdoc, assume it is private. Use with caution.
          */
-        hasTokenForSelector(selector? : ScopedPropertyStore.Selector) : ScopedPropertyStore.Selector;
+        hasTokenForSelector(selector? : string) : ScopedPropertyStore.Selector;
     
         /**
          * This field or method was not documented by atomdoc, assume it is private. Use with caution.
          */
-        retokenizeLines() : any;
+        retokenizeLines() : string[];
     
         /**
          * This field or method was not documented by atomdoc, assume it is private. Use with caution.
          */
-        setVisible(visible? : boolean) : void;
+        setVisible(visible? : boolean) : boolean;
     
         /**
          * This field or method was not documented by atomdoc, assume it is private. Use with caution.
          */
-        getTabLength() : any;
+        getTabLength() : number;
     
         /**
          * This field or method was not documented by atomdoc, assume it is private. Use with caution.
          */
-        setTabLength(tabLength? : any) : void;
+        setTabLength(tabLength? : number) : number;
     
         /**
          * This field or method was not documented by atomdoc, assume it is private. Use with caution.
          */
-        setInvisibles(invisibles? : boolean) : void;
+        setInvisibles(invisibles? : boolean) : boolean;
     
         /**
          * This field or method was not documented by atomdoc, assume it is private. Use with caution.
@@ -12163,7 +11297,7 @@ required stylesheet.
         /**
          * This field or method was not documented by atomdoc, assume it is private. Use with caution.
          */
-        markTokenizationComplete() : any;
+        markTokenizationComplete() : Marker;
     
         /**
          * This field or method was not documented by atomdoc, assume it is private. Use with caution.
@@ -12183,12 +11317,12 @@ required stylesheet.
         /**
          * This field or method was not documented by atomdoc, assume it is private. Use with caution.
          */
-        updateInvalidRows(start? : any, end? : any, delta? : any) : void;
+        updateInvalidRows(start? : any, end? : any, delta? : any) : number[];
     
         /**
          * This field or method was not documented by atomdoc, assume it is private. Use with caution.
          */
-        handleBufferChange(e? : any) : any;
+        handleBufferChange(e? : any) : void;
     
         /**
          * This field or method was not documented by atomdoc, assume it is private. Use with caution.
@@ -12203,18 +11337,18 @@ required stylesheet.
         /**
          * This field or method was not documented by atomdoc, assume it is private. Use with caution.
          */
-        isFoldableAtRow(row? : number) : boolean;
+        isFoldableAtRow(row? : number) : number;
     
         /**
          * 
          * This field or method was marked private by atomdoc. Use with caution.
          */
-        isFoldableCodeAtRow(row? : number) : boolean;
+        isFoldableCodeAtRow(row? : number) : number;
     
         /**
          * This field or method was not documented by atomdoc, assume it is private. Use with caution.
          */
-        isFoldableCommentAtRow(row? : number) : boolean;
+        isFoldableCommentAtRow(row? : number) : number;
     
         /**
          * This field or method was not documented by atomdoc, assume it is private. Use with caution.
@@ -12239,7 +11373,7 @@ required stylesheet.
         /**
          * This field or method was not documented by atomdoc, assume it is private. Use with caution.
          */
-        buildTokenizedLineForRowWithText(row? : number, line? : any, ruleStack? : any) : string;
+        buildTokenizedLineForRowWithText(row? : number, line? : number, ruleStack? : any) : string;
     
         /**
          * This field or method was not documented by atomdoc, assume it is private. Use with caution.
@@ -12259,7 +11393,7 @@ required stylesheet.
         /**
          * This field or method was not documented by atomdoc, assume it is private. Use with caution.
          */
-        indentLevelForLine(line? : any) : any;
+        indentLevelForLine(line? : number) : number;
     
         /**
          * This field or method was not documented by atomdoc, assume it is private. Use with caution.
@@ -12279,17 +11413,17 @@ required stylesheet.
         /**
          * This field or method was not documented by atomdoc, assume it is private. Use with caution.
          */
-        bufferRangeForScopeAtPosition(selector? : ScopedPropertyStore.Selector, position? : TextBuffer.Point | { row: number; column: number } | [number, number]) : TextBuffer.Range;
+        bufferRangeForScopeAtPosition(selector? : string, position? : TextBuffer.Point | { row: number; column: number } | [number, number]) : TextBuffer.Range;
     
         /**
          * This field or method was not documented by atomdoc, assume it is private. Use with caution.
          */
-        iterateTokensInBufferRange(bufferRange? : TextBuffer.Range, iterator? : any) : TextBuffer.Range;
+        iterateTokensInBufferRange(bufferRange? : Range, iterator? : any) : Range;
     
         /**
          * This field or method was not documented by atomdoc, assume it is private. Use with caution.
          */
-        backwardsIterateTokensInBufferRange(bufferRange? : TextBuffer.Range, iterator? : any) : TextBuffer.Range;
+        backwardsIterateTokensInBufferRange(bufferRange? : Range, iterator? : any) : Range;
     
         /**
          * This field or method was not documented by atomdoc, assume it is private. Use with caution.
@@ -12310,12 +11444,12 @@ required stylesheet.
         /**
          * This field or method was not documented by atomdoc, assume it is private. Use with caution.
          */
-        getLineCount() : any;
+        getLineCount() : number;
     
         /**
          * This field or method was not documented by atomdoc, assume it is private. Use with caution.
          */
-        logLines(start? : any, end? : any) : any;
+        logLines(start? : any, end? : any) : string[];
     
     }
 
@@ -12347,12 +11481,12 @@ required stylesheet.
         /**
          * This field or method was not documented by atomdoc, assume it is private. Use with caution.
          */
-        tabLength: any /* default */;
+        tabLength: number;
     
         /**
          * This field or method was not documented by atomdoc, assume it is private. Use with caution.
          */
-        indentLevel: any /* default */;
+        indentLevel: boolean;
     
         /**
          * This field or method was not documented by atomdoc, assume it is private. Use with caution.
@@ -12382,7 +11516,7 @@ required stylesheet.
         /**
          * This field or method was not documented by atomdoc, assume it is private. Use with caution.
          */
-        constructor(tokens? : Token[], lineEnding? : any, ruleStack? : any, startBufferColumn? : number, fold? : Fold, tabLength? : any, indentLevel? : any, invisibles? : boolean);
+        constructor({ tokens, lineEnding, ruleStack, startBufferColumn, fold, tabLength, indentLevel, invisibles } : { tokens? : Token[]; lineEnding? : any; ruleStack? : any; startBufferColumn? : number; fold? : Fold; tabLength? : number; indentLevel? : any; invisibles? : boolean });
     
         /**
          * This field or method was not documented by atomdoc, assume it is private. Use with caution.
@@ -12443,7 +11577,7 @@ required stylesheet.
         /**
          * This field or method was not documented by atomdoc, assume it is private. Use with caution.
          */
-        buildSoftWrapIndentationTokens(token? : Token[], hangingIndent? : any) : Token[];
+        buildSoftWrapIndentationTokens(token? : Token, hangingIndent? : any) : Token[];
     
         /**
          * This field or method was not documented by atomdoc, assume it is private. Use with caution.
@@ -12498,7 +11632,7 @@ required stylesheet.
         /**
          * This field or method was not documented by atomdoc, assume it is private. Use with caution.
          */
-        markLeadingAndTrailingWhitespaceTokens() : Token[];
+        markLeadingAndTrailingWhitespaceTokens() : Marker;
     
         /**
          * This field or method was not documented by atomdoc, assume it is private. Use with caution.
@@ -12528,7 +11662,7 @@ required stylesheet.
         /**
          * This field or method was not documented by atomdoc, assume it is private. Use with caution.
          */
-        getTokenCount() : any;
+        getTokenCount() : number;
     
         /**
          * This field or method was not documented by atomdoc, assume it is private. Use with caution.
@@ -12577,10 +11711,8 @@ required stylesheet.
          * Add a tooltip to the given element.
          * @param target? - An `HTMLElement`
          * @param options? - See http://getbootstrap.com/javascript/#tooltips for a full list of options. You can also supply the following additional options:
-        Returns a {Disposable} on which `.dispose()` can be called to remove the
-tooltip.
          */
-        add(target? : any, options? : any) : EventKit.Disposable;
+        add(target? : HTMLElement, options? : { animation?: boolean;  html?: boolean; placement?: any; selector?: string; title?: any; trigger?: string; delay?: any; container?: any; keyBindingCommand?: string; keyBindingTarget?: string; }) : EventKit.Disposable;
     
     }
 
@@ -12619,10 +11751,8 @@ tooltip.
         /**
          * Add a provider that will be used to construct views in the
          * workspace's view layer based on model objects in its model layer.
-        Returns a {Disposable} on which `.dispose()` can be called to remove the
-added provider.
          */
-        addViewProvider(modelConstructor? : any, createView? : (model: any) => HTMLElement) : EventKit.Disposable;
+        addViewProvider(modelConstructor? : any, createView? : (model: any) => HTMLElement) : void;
     
         /**
          * Get the view associated with an object in the workspace.
@@ -12667,7 +11797,7 @@ added provider.
         /**
          * This field or method was not documented by atomdoc, assume it is private. Use with caution.
          */
-        clearDocumentRequests() : any;
+        clearDocumentRequests() : void;
     
         /**
          * This field or method was not documented by atomdoc, assume it is private. Use with caution.
@@ -12682,7 +11812,7 @@ added provider.
         /**
          * This field or method was not documented by atomdoc, assume it is private. Use with caution.
          */
-        startPollingDocument() : any;
+        startPollingDocument() : void;
     
         /**
          * This field or method was not documented by atomdoc, assume it is private. Use with caution.
@@ -12730,7 +11860,7 @@ added provider.
         /**
          * This field or method was not documented by atomdoc, assume it is private. Use with caution.
          */
-        openLink(target? : any, currentTarget? : any) : any;
+        openLink({ target, currentTarget } : { target? : any; currentTarget? : any }) : void;
     
         /**
          * This field or method was not documented by atomdoc, assume it is private. Use with caution.
@@ -12740,12 +11870,12 @@ added provider.
         /**
          * This field or method was not documented by atomdoc, assume it is private. Use with caution.
          */
-        focusNext() : any;
+        focusNext() : void;
     
         /**
          * This field or method was not documented by atomdoc, assume it is private. Use with caution.
          */
-        focusPrevious() : any;
+        focusPrevious() : void;
     
     }
 
@@ -12767,7 +11897,7 @@ added provider.
         /**
          * This field or method was not documented by atomdoc, assume it is private. Use with caution.
          */
-        setModel(model? : Model) : void;
+        setModel(model? : any) : Model;
     
         /**
          * This field or method was not documented by atomdoc, assume it is private. Use with caution.
@@ -12873,25 +12003,25 @@ added provider.
          * Focus the pane directly above the active pane. 
          * This field or method was marked private by atomdoc. Use with caution.
          */
-        focusPaneViewAbove() : any;
+        focusPaneViewAbove() : void;
     
         /**
          * Focus the pane directly below the active pane. 
          * This field or method was marked private by atomdoc. Use with caution.
          */
-        focusPaneViewBelow() : any;
+        focusPaneViewBelow() : void;
     
         /**
          * Focus the pane directly to the left of the active pane. 
          * This field or method was marked private by atomdoc. Use with caution.
          */
-        focusPaneViewOnLeft() : any;
+        focusPaneViewOnLeft() : void;
     
         /**
          * Focus the pane directly to the right of the active pane. 
          * This field or method was marked private by atomdoc. Use with caution.
          */
-        focusPaneViewOnRight() : any;
+        focusPaneViewOnRight() : void;
     
         /**
          * Prompts to save all unsaved items 
@@ -12946,12 +12076,12 @@ added provider.
         /**
          * This field or method was not documented by atomdoc, assume it is private. Use with caution.
          */
-        editorAdded(editor? : TextEditor) : any;
+        editorAdded(editor? : any) : any;
     
         /**
          * This field or method was not documented by atomdoc, assume it is private. Use with caution.
          */
-        installShellCommands() : any;
+        installShellCommands() : string;
     
         /**
          * This field or method was not documented by atomdoc, assume it is private. Use with caution.
@@ -12982,90 +12112,90 @@ added provider.
         /**
          * Invoke the given callback with all current and future panes items
          * in the workspace.
-         * @param callback? - {Function} to be called with current and future pane items.
+         * @param callback - {Function} to be called with current and future pane items.
          */
-        observePaneItems(callback? : Function) : EventKit.Disposable;
+        observePaneItems(callback : Function) : EventKit.Disposable;
     
         /**
          * Invoke the given callback when the active pane item changes.
-         * @param callback? - {Function} to be called when the active pane item changes.
+         * @param callback - {Function} to be called when the active pane item changes.
          */
-        onDidChangeActivePaneItem(callback? : Function) : EventKit.Disposable;
+        onDidChangeActivePaneItem(callback : Function /* needs to be defined */) : EventKit.Disposable;
     
         /**
          * Invoke the given callback with the current active pane item and
          * with all future active pane items in the workspace.
-         * @param callback? - {Function} to be called when the active pane item changes.
+         * @param callback - {Function} to be called when the active pane item changes.
          */
-        observeActivePaneItem(callback? : Function) : EventKit.Disposable;
+        observeActivePaneItem(callback : Function) : EventKit.Disposable;
     
         /**
          * Invoke the given callback whenever an item is opened. Unlike
          * {::onDidAddPaneItem}, observers will be notified for items that are already
          * present in the workspace when they are reopened.
-         * @param callback? - {Function} to be called whenever an item is opened.
+         * @param callback - {Function} to be called whenever an item is opened.
          */
-        onDidOpen(callback? : Function) : EventKit.Disposable;
+        onDidOpen(callback : Function /* needs to be defined */) : EventKit.Disposable;
     
         /**
          * Invoke the given callback when a pane is added to the workspace.
-         * @param callback? - {Function} to be called panes are added.
+         * @param callback - {Function} to be called panes are added.
          */
-        onDidAddPane(callback? : Function) : EventKit.Disposable;
+        onDidAddPane(callback : Function /* needs to be defined */) : EventKit.Disposable;
     
         /**
          * Invoke the given callback when a pane is destroyed in the
          * workspace.
-         * @param callback? - {Function} to be called panes are destroyed.
+         * @param callback - {Function} to be called panes are destroyed.
          */
-        onDidDestroyPane(callback? : Function) : EventKit.Disposable;
+        onDidDestroyPane(callback : Function /* needs to be defined */) : EventKit.Disposable;
     
         /**
          * Invoke the given callback with all current and future panes in the
          * workspace.
-         * @param callback? - {Function} to be called with current and future panes.
+         * @param callback - {Function} to be called with current and future panes.
          */
-        observePanes(callback? : Function) : EventKit.Disposable;
+        observePanes(callback : Function) : EventKit.Disposable;
     
         /**
          * Invoke the given callback when the active pane changes.
-         * @param callback? - {Function} to be called when the active pane changes.
+         * @param callback - {Function} to be called when the active pane changes.
          */
-        onDidChangeActivePane(callback? : Function) : EventKit.Disposable;
+        onDidChangeActivePane(callback : Function /* needs to be defined */) : EventKit.Disposable;
     
         /**
          * Invoke the given callback with the current active pane and when
          * the active pane changes.
-         * @param callback? - {Function} to be called with the current and future active# panes.
+         * @param callback - {Function} to be called with the current and future active# panes.
          */
-        observeActivePane(callback? : Function) : EventKit.Disposable;
+        observeActivePane(callback : Function) : EventKit.Disposable;
     
         /**
          * Invoke the given callback when a pane item is added to the
          * workspace.
-         * @param callback? - {Function} to be called when pane items are added.
+         * @param callback - {Function} to be called when pane items are added.
          */
-        onDidAddPaneItem(callback? : Function) : EventKit.Disposable;
+        onDidAddPaneItem(callback : Function /* needs to be defined */) : EventKit.Disposable;
     
         /**
          * Invoke the given callback when a pane item is about to be
          * destroyed, before the user is prompted to save it.
-         * @param callback? - {Function} to be called before pane items are destroyed.
+         * @param callback - {Function} to be called before pane items are destroyed.
          */
-        onWillDestroyPaneItem(callback? : Function) : EventKit.Disposable;
+        onWillDestroyPaneItem(callback : Function) : EventKit.Disposable;
     
         /**
          * Invoke the given callback when a pane item is destroyed.
-         * @param callback? - {Function} to be called when pane items are destroyed.
+         * @param callback - {Function} to be called when pane items are destroyed.
          */
-        onDidDestroyPaneItem(callback? : Function) : EventKit.Disposable;
+        onDidDestroyPaneItem(callback : Function /* needs to be defined */) : EventKit.Disposable;
     
         /**
          * Invoke the given callback when a text editor is added to the
          * workspace.
-         * @param callback? - {Function} to be called panes are added.
+         * @param callback - {Function} to be called panes are added.
          */
-        onDidAddTextEditor(callback? : Function) : EventKit.Disposable;
+        onDidAddTextEditor(callback : Function /* needs to be defined */) : EventKit.Disposable;
     
         /**
          * Opens the given URI in Atom asynchronously.
@@ -13075,13 +12205,13 @@ added provider.
          * @param uri? - A {String} containing a URI.
          * @param options? - {Object}
          */
-        open(uri? : string, options? : Object) : Q.Promise<TextEditor>;
+        open(uri? : string, options? : Q.Promise<TextEditor>) : Q.Promise<TextEditor>;
     
         /**
          * Open Atom's license in the active pane. 
          * This field or method was marked private by atomdoc. Use with caution.
          */
-        openLicense() : any;
+        openLicense() : void;
     
         /**
          * Synchronously open the given URI in the active pane. **Only use this method
@@ -13091,7 +12221,7 @@ added provider.
          * @param uri? - A {String} containing a URI.
          * @param options? - An optional options {Object}
          */
-        openSync(uri? : string, options? : Object) : any;
+        openSync(uri? : string, options? : any) : void;
     
         /**
          * This field or method was not documented by atomdoc, assume it is private. Use with caution.
@@ -13101,7 +12231,7 @@ added provider.
         /**
          * Asynchronously reopens the last-closed item's URI if it hasn't already been
          * reopened.
-        Returns a promise that is resolved when the item is opened
+         * Returns a promise that is resolved when the item is opened
          */
         reopenItem() : any;
     
@@ -13110,10 +12240,8 @@ added provider.
          * 
          * An {TextEditor} will be used if no openers return a value.
          * @param opener? - A {Function} to be called when a path is being opened.
-        Returns a {Disposable} on which `.dispose()` can be called to remove the
-opener.
          */
-        addOpener(opener? : Function) : EventKit.Disposable;
+        addOpener(opener? : any) : void;
     
         /**
          * This field or method was not documented by atomdoc, assume it is private. Use with caution.
@@ -13122,13 +12250,13 @@ opener.
     
         /**
          * Get all pane items in the workspace.
-        Returns an {Array} of items.
+         * Returns an {Array} of items.
          */
         getPaneItems() : any[];
     
         /**
          * Get the active {Pane}'s active item.
-        Returns an pane item {Object}.
+         * Returns an pane item {Object}.
          */
         getActivePaneItem() : Object;
     
@@ -13196,24 +12324,24 @@ opener.
         /**
          * Make the next pane active. 
          */
-        activateNextPane() : void;
+        activateNextPane() : Pane;
     
         /**
          * Make the previous pane active. 
          */
-        activatePreviousPane() : void;
+        activatePreviousPane() : Pane;
     
         /**
          * Get the first {Pane} with an item for the given URI.
          * @param uri? - {String} uri
-        Returns a {Pane} or `` if no pane exists for the given URI.
+         * Returns a {Pane} or `` if no pane exists for the given URI.
          */
         paneForURI(uri? : string) : Pane;
     
         /**
          * Get the {Pane} containing the given item.
          * @param item? - Item the returned pane contains.
-        Returns a {Pane} or `` if no pane exists for the given item.
+         * Returns a {Pane} or `` if no pane exists for the given item.
          */
         paneForItem(item? : any) : Pane;
     
@@ -13221,19 +12349,19 @@ opener.
          * Destroy (close) the active pane. 
          * This field or method was marked private by atomdoc. Use with caution.
          */
-        destroyActivePane() : void;
+        destroyActivePane() : Pane;
     
         /**
          * Destroy the active pane item or the active pane if it is empty. 
          * This field or method was marked private by atomdoc. Use with caution.
          */
-        destroyActivePaneItemOrEmptyPane() : void;
+        destroyActivePaneItemOrEmptyPane() : Pane;
     
         /**
          * Increase the editor font size by 1px. 
          * This field or method was marked private by atomdoc. Use with caution.
          */
-        increaseFontSize() : void;
+        increaseFontSize() : boolean;
     
         /**
          * Decrease the editor font size by 1px. 
@@ -13257,7 +12385,7 @@ opener.
          * Adds the destroyed item's uri to the list of items to reopen. 
          * This field or method was marked private by atomdoc. Use with caution.
          */
-        didDestroyPaneItem(item? : any) : any;
+        didDestroyPaneItem({ item } : { item? : any }) : any;
     
         /**
          * Called by Model superclass when destroyed 
@@ -13274,7 +12402,7 @@ opener.
          * Adds a panel item to the bottom of the editor window.
          * @param options? - {Object}
          */
-        addBottomPanel(options? : { item: Node | JQuery | Object; visible?: boolean; priority?: number; }) : Panel;
+        addBottomPanel(options? : any) : Panel;
     
         /**
          * Get an {Array} of all the panel items to the left of the editor window. 
@@ -13285,7 +12413,7 @@ opener.
          * Adds a panel item to the left of the editor window.
          * @param options? - {Object}
          */
-        addLeftPanel(options? : { item: Node | JQuery | Object; visible?: boolean; priority?: number; }) : Panel;
+        addLeftPanel(options? : any) : Panel;
     
         /**
          * Get an {Array} of all the panel items to the right of the editor window. 
@@ -13296,7 +12424,7 @@ opener.
          * Adds a panel item to the right of the editor window.
          * @param options? - {Object}
          */
-        addRightPanel(options? : { item: Node | JQuery | Object; visible?: boolean; priority?: number; }) : Panel;
+        addRightPanel(options? : any) : Panel;
     
         /**
          * Get an {Array} of all the panel items at the top of the editor window. 
@@ -13307,7 +12435,7 @@ opener.
          * Adds a panel item to the top of the editor window above the tabs.
          * @param options? - {Object}
          */
-        addTopPanel(options? : { item: Node | JQuery | Object; visible?: boolean; priority?: number; }) : Panel;
+        addTopPanel(options? : any) : Panel;
     
         /**
          * Get an {Array} of all the modal panel items 
@@ -13318,7 +12446,7 @@ opener.
          * Adds a panel item as a modal dialog.
          * @param options? - {Object}
          */
-        addModalPanel(options? : { item: Node | JQuery | Object; visible?: boolean; priority?: number; }) : Panel;
+        addModalPanel(options? : any) : Panel;
     
         panelForItem(item? : any) : Panel | any;
     
@@ -13337,7 +12465,7 @@ opener.
          * @param regex? - {RegExp} to search with.
          * @param options? - {Object} (default: {})
          * @param iterator? - {Function} callback on each file found
-        Returns a `Promise`.
+         * Returns a `Promise`.
          */
         scan(regex? : RegExp, options? : Object, iterator? : Function) : any;
     
@@ -13347,12 +12475,14 @@ opener.
          * @param replacementText? - Text to replace all matches of regex with
          * @param filePaths? - List of file path strings to run the replace on.
          * @param iterator? - A {Function} callback on each file with replacements:
-        Returns a `Promise`.
+         * Returns a `Promise`.
          */
-        replace(regex? : RegExp, replacementText? : string, filePaths? : any, iterator? : Function) : any;
+        replace(regex? : RegExp, replacementText? : string, filePaths? : string, iterator? : Function) : any;
     
     }
 
+    interface MenuItem { label:string; accelerator?:string; metadata?: any, submenu?: MenuItem[], click?: () => void }
+    interface ContextMenuItem { label?:string; command?:string; submenu: ContextMenuItem[]; type: string; created: (event: Event) => void; shouldDisplay: (event: Event) => void; }
 }
 declare module "atom" {
     class BufferedNodeProcess extends Atom.BufferedNodeProcess {}

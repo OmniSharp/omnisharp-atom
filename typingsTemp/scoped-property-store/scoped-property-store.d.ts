@@ -50,12 +50,12 @@ declare module ScopedPropertyStore {
         /**
          * This field or method was not documented by atomdoc, assume it is private. Use with caution.
          */
-        has(keyPath? : any) : any;
+        has(keyPath? : string) : any;
     
         /**
          * This field or method was not documented by atomdoc, assume it is private. Use with caution.
          */
-        get(keyPath? : any) : any;
+        get(keyPath? : string) : any;
     
     }
 
@@ -72,29 +72,27 @@ declare module ScopedPropertyStore {
          * Add scoped properties to be queried with {::get}
          * @param source? - A string describing these properties to allow them to be removed later.
          * @param propertiesBySelector? - An {Object} containing CSS-selectors mapping to {Objects} containing properties. For example: `{'.foo .bar': {x: 1, y: 2}`
-        Returns a {Disposable} on which you can call `.dispose()` to remove the
-added properties.
          */
-        addProperties(source? : any, propertiesBySelector? : Object, options? : any) : EventKit.Disposable;
+        addProperties(source? : any, propertiesBySelector? : Selector, options? : any) : void;
     
         /**
          * Get the value of a previously stored key-path in a given scope.
          * @param scopeChain? - This describes a location in the document. It uses the same syntax as selectors, with each space-separated component representing one element.
          * @param keyPath? - A `.` separated string of keys to traverse in the properties.
          * @param options? - {Object}
-        Returns the property value or `` if none is found.
+         * Returns the property value or `` if none is found.
          */
-        getPropertyValue(scopeChain? : any, keyPath? : any, options? : Object) : any;
+        getPropertyValue(scopeChain? : any, keyPath? : string, options? : Object) : any;
     
         /**
          * Get *all* values for the given key-path in a given scope. 
          */
-        getAll(scopeChain? : any, keyPath? : any, options? : any) : any;
+        getAll(scopeChain? : any, keyPath? : string, options? : any) : any;
     
         /**
          * Get *all* properties for a given source.
          * @param source? - {String}
-        Returns an {Object} in the format {scope: {property: value}}
+         * Returns an {Object} in the format {scope: {property: value}}
          */
         propertiesForSource(source? : string) : Object;
     
@@ -115,7 +113,7 @@ added properties.
          * Remove all properties for a given source.
          * @param source? - {String} 
          */
-        removePropertiesForSource(source? : string) : any;
+        removePropertiesForSource(source? : string) : void;
     
         /**
          * Remove all properties for a given source.
@@ -194,7 +192,7 @@ added properties.
         /**
          * This field or method was not documented by atomdoc, assume it is private. Use with caution.
          */
-        isEqual(other? : any) : boolean;
+        isEqual(other? : boolean) : boolean;
     
         /**
          * This field or method was not documented by atomdoc, assume it is private. Use with caution.
