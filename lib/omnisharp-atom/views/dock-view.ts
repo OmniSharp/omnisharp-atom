@@ -129,7 +129,7 @@ class DockView extends spacePenViews.View {
         });
     }
 
-    constructor(private omnisharpAtom : OmniSharpAtom) {
+    constructor(private omnisharpAtom : typeof OmniSharpAtom) {
         super();
     }
 

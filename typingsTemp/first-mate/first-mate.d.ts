@@ -18,16 +18,16 @@ declare module FirstMate {
     
         /**
          * Invoke the given callback when a grammar is added to the registry.
-         * @param callback? - {Function} to call when a grammar is added.
+         * @param callback - {Function} to call when a grammar is added.
          */
-        onDidAddGrammar(callback? : Function) : EventKit.Disposable;
+        onDidAddGrammar(callback : Function /* needs to be defined */) : EventKit.Disposable;
     
         /**
          * Invoke the given callback when a grammar is updated due to a grammar
          * it depends on being added or removed from the registry.
-         * @param callback? - {Function} to call when a grammar is updated.
+         * @param callback - {Function} to call when a grammar is updated.
          */
-        onDidUpdateGrammar(callback? : Function) : EventKit.Disposable;
+        onDidUpdateGrammar(callback : Function /* needs to be defined */) : EventKit.Disposable;
     
         /**
          * Get all the grammars in this registry.
@@ -62,7 +62,7 @@ declare module FirstMate {
         /**
          * Read a grammar synchronously but don't add it to the registry.
          * @param grammarPath? - A {String} absolute file path to a grammar file.
-        Returns a {Grammar}.
+         * Returns a {Grammar}.
          */
         readGrammarSync(grammarPath? : string) : Grammar;
     
@@ -76,7 +76,7 @@ declare module FirstMate {
         /**
          * Read a grammar synchronously and add it to this registry.
          * @param grammarPath? - A {String} absolute file path to a grammar file.
-        Returns a {Grammar}.
+         * Returns a {Grammar}.
          */
         loadGrammarSync(grammarPath? : string) : Grammar;
     
@@ -90,29 +90,26 @@ declare module FirstMate {
         /**
          * Get the grammar override for the given file path.
          * @param filePath? - A {String} file path.
-        Returns a {Grammar} or .
          */
-        grammarOverrideForPath(filePath? : string) : Grammar;
+        grammarOverrideForPath(filePath? : string) : string;
     
         /**
          * Set the grammar override for the given file path.
          * @param filePath? - A non-empty {String} file path.
          * @param scopeName? - A {String} such as `"source.js"`.
          */
-        setGrammarOverrideForPath(filePath? : string, scopeName? : string) : void;
+        setGrammarOverrideForPath(filePath? : string, scopeName? : string) : string;
     
         /**
          * Remove the grammar override for the given file path.
          * @param filePath? - A {String} file path.
-        Returns .
          */
-        clearGrammarOverrideForPath(filePath? : string) : any;
+        clearGrammarOverrideForPath(filePath? : string) : string;
     
         /**
          * Remove all grammar overrides.
-        Returns .
          */
-        clearGrammarOverrides() : any;
+        clearGrammarOverrides() : void;
     
         /**
          * Select a grammar for the given file path and file contents.
@@ -127,7 +124,7 @@ declare module FirstMate {
         /**
          * This field or method was not documented by atomdoc, assume it is private. Use with caution.
          */
-        createToken(value? : any, scopes? : Atom.Token[]) : Atom.Token;
+        createToken(value? : any, scopes? : Atom.Scope[]) : Atom.Token;
     
         /**
          * This field or method was not documented by atomdoc, assume it is private. Use with caution.
@@ -137,7 +134,7 @@ declare module FirstMate {
         /**
          * This field or method was not documented by atomdoc, assume it is private. Use with caution.
          */
-        createGrammar(grammarPath? : any, object? : any) : Grammar;
+        createGrammar(grammarPath? : string, object? : any) : Grammar;
     
     }
 
@@ -163,30 +160,23 @@ declare module FirstMate {
         /**
          * Invoke the given callback when this grammar is updated due to a
          * grammar it depends on being added or removed from the registry.
-         * @param callback? - {Function} to call when this grammar is updated.
+         * @param callback - {Function} to call when this grammar is updated.
          */
-        onDidUpdate(callback? : Function) : EventKit.Disposable;
+        onDidUpdate(callback : Function /* needs to be defined */) : EventKit.Disposable;
     
         /**
          * Tokenize all lines in the given text.
          * @param text? - A {String} containing one or more lines.
-        Returns an {Array} of token arrays for each line tokenized.
          */
-        tokenizeLines(text? : string) : any[];
+        tokenizeLines(text? : string) : string[];
     
         /**
          * Tokenize the line of text.
          * @param line? - A {String} of text to tokenize.
          * @param ruleStack? - An optional {Array} of rules previously returned from this method. This should be null when tokenizing the first line in the file.
          * @param firstLine? - A optional {Boolean} denoting whether this is the first line in the file which defaults to `false`. This should be `true` when tokenizing the first line in the file.
-        Returns an {Object} containing the following properties:
-
-* `token` An {Array} of tokens covering the entire line of text.
-* `ruleStack` An {Array} of rules representing the tokenized state at the
-  end of the line. These should be passed back into this method when
-  tokenizing the next line in the file.
          */
-        tokenizeLine(line? : string, ruleStack? : any[], firstLine? : boolean) : Object;
+        tokenizeLine(line? : string, ruleStack? : any[], firstLine? : boolean) : number;
     
         /**
          * This field or method was not documented by atomdoc, assume it is private. Use with caution.
@@ -226,7 +216,7 @@ declare module FirstMate {
         /**
          * This field or method was not documented by atomdoc, assume it is private. Use with caution.
          */
-        getScore(filePath? : any, contents? : any) : any;
+        getScore(filePath? : string, contents? : any) : any;
     
         /**
          * This field or method was not documented by atomdoc, assume it is private. Use with caution.
@@ -236,12 +226,12 @@ declare module FirstMate {
         /**
          * This field or method was not documented by atomdoc, assume it is private. Use with caution.
          */
-        getPathScore(filePath? : any) : any;
+        getPathScore(filePath? : string) : string;
     
         /**
          * This field or method was not documented by atomdoc, assume it is private. Use with caution.
          */
-        createToken(value? : any, scopes? : Atom.Token[]) : Atom.Token;
+        createToken(value? : any, scopes? : Atom.Scope[]) : Atom.Token;
     
         /**
          * This field or method was not documented by atomdoc, assume it is private. Use with caution.
@@ -256,7 +246,7 @@ declare module FirstMate {
         /**
          * This field or method was not documented by atomdoc, assume it is private. Use with caution.
          */
-        getMaxTokensPerLine() : any;
+        getMaxTokensPerLine() : number;
     
         /**
          * This field or method was not documented by atomdoc, assume it is private. Use with caution.
@@ -280,7 +270,7 @@ declare module FirstMate {
         /**
          * This field or method was not documented by atomdoc, assume it is private. Use with caution.
          */
-        constructor(grammar? : Grammar, injections? : Injections);
+        constructor(grammar? : Grammar, injections? : any);
     
         /**
          * This field or method was not documented by atomdoc, assume it is private. Use with caution.
@@ -334,7 +324,7 @@ declare module FirstMate {
         /**
          * This field or method was not documented by atomdoc, assume it is private. Use with caution.
          */
-        getRegex(firstLine? : any, position? : TextBuffer.Point | { row: number; column: number } | [number, number], anchorPosition? : TextBuffer.Point | { row: number; column: number } | [number, number]) : any;
+        getRegex(firstLine? : number, position? : TextBuffer.Point | { row: number; column: number } | [number, number], anchorPosition? : TextBuffer.Point | { row: number; column: number } | [number, number]) : any;
     
         /**
          * This field or method was not documented by atomdoc, assume it is private. Use with caution.
@@ -344,12 +334,12 @@ declare module FirstMate {
         /**
          * This field or method was not documented by atomdoc, assume it is private. Use with caution.
          */
-        replaceAnchor(firstLine? : any, offset? : any, anchor? : any) : any;
+        replaceAnchor(firstLine? : number, offset? : any, anchor? : any) : any;
     
         /**
          * This field or method was not documented by atomdoc, assume it is private. Use with caution.
          */
-        resolveBackReferences(line? : any, beginCaptureIndices? : any) : any;
+        resolveBackReferences(line? : number, beginCaptureIndices? : any) : any;
     
         /**
          * This field or method was not documented by atomdoc, assume it is private. Use with caution.
@@ -359,22 +349,22 @@ declare module FirstMate {
         /**
          * This field or method was not documented by atomdoc, assume it is private. Use with caution.
          */
-        getIncludedPatterns(baseGrammar? : Pattern[], included? : any) : Pattern[];
+        getIncludedPatterns(baseGrammar? : Grammar, included? : any) : Pattern[];
     
         /**
          * This field or method was not documented by atomdoc, assume it is private. Use with caution.
          */
-        resolveScopeName(scopeName? : string, line? : any, captureIndices? : any) : string;
+        resolveScopeName(scopeName? : string, line? : number, captureIndices? : any) : string;
     
         /**
          * This field or method was not documented by atomdoc, assume it is private. Use with caution.
          */
-        handleMatch(stack? : any, line? : any, captureIndices? : any, rule? : Rule, endPatternMatch? : any) : any;
+        handleMatch(stack? : any, line? : number, captureIndices? : any, rule? : Rule, endPatternMatch? : any) : void;
     
         /**
          * This field or method was not documented by atomdoc, assume it is private. Use with caution.
          */
-        getTokensForCaptureRule(rule? : Rule, line? : any, captureStart? : any, captureEnd? : any, scopes? : Rule[], stack? : any) : Rule;
+        getTokensForCaptureRule(rule? : Rule, line? : number, captureStart? : any, captureEnd? : any, scopes? : Atom.Scope[], stack? : any) : Rule;
     
         /**
          * Get the tokens for the capture indices.
@@ -389,9 +379,9 @@ declare module FirstMate {
          * scopes - An array of scopes.
          * stack - An array of rules.
          * This field or method was marked private by atomdoc. Use with caution.
-        Returns a non-null but possibly empty array of tokens
+         * Returns a non-null but possibly empty array of tokens
          */
-        getTokensForCaptureIndices(line? : any, currentCaptureIndices? : any, allCaptureIndices? : any, scopes? : Atom.Scope[], stack? : any) : any;
+        getTokensForCaptureIndices(line? : number, currentCaptureIndices? : any, allCaptureIndices? : any, scopes? : Atom.Scope[], stack? : any) : any;
     
     }
 
@@ -438,7 +428,7 @@ declare module FirstMate {
         /**
          * This field or method was not documented by atomdoc, assume it is private. Use with caution.
          */
-        getIncludedPatterns(baseGrammar? : Pattern[], included? : any) : Pattern[];
+        getIncludedPatterns(baseGrammar? : Grammar, included? : any) : Pattern[];
     
         /**
          * This field or method was not documented by atomdoc, assume it is private. Use with caution.
@@ -448,32 +438,32 @@ declare module FirstMate {
         /**
          * This field or method was not documented by atomdoc, assume it is private. Use with caution.
          */
-        getScanner(baseGrammar? : Scanner) : Scanner;
+        getScanner(baseGrammar? : Grammar) : Scanner;
     
         /**
          * This field or method was not documented by atomdoc, assume it is private. Use with caution.
          */
-        scanInjections(ruleStack? : any, line? : any, position? : TextBuffer.Point | { row: number; column: number } | [number, number], firstLine? : any) : Injections;
+        scanInjections(ruleStack? : any, line? : number, position? : TextBuffer.Point | { row: number; column: number } | [number, number], firstLine? : number) : any;
     
         /**
          * This field or method was not documented by atomdoc, assume it is private. Use with caution.
          */
-        normalizeCaptureIndices(line? : any, captureIndices? : any) : any;
+        normalizeCaptureIndices(line? : number, captureIndices? : any) : any;
     
         /**
          * This field or method was not documented by atomdoc, assume it is private. Use with caution.
          */
-        findNextMatch(ruleStack? : any, line? : any, position? : TextBuffer.Point | { row: number; column: number } | [number, number], firstLine? : any) : any;
+        findNextMatch(ruleStack? : any, line? : number, position? : TextBuffer.Point | { row: number; column: number } | [number, number], firstLine? : number) : any;
     
         /**
          * This field or method was not documented by atomdoc, assume it is private. Use with caution.
          */
-        getNextTokens(ruleStack? : any, line? : any, position? : TextBuffer.Point | { row: number; column: number } | [number, number], firstLine? : any) : Atom.Token[];
+        getNextTokens(ruleStack? : any, line? : number, position? : TextBuffer.Point | { row: number; column: number } | [number, number], firstLine? : number) : Atom.Token[];
     
         /**
          * This field or method was not documented by atomdoc, assume it is private. Use with caution.
          */
-        getRuleToPush(line? : any, beginPatternCaptureIndices? : any) : any;
+        getRuleToPush(line? : number, beginPatternCaptureIndices? : any) : any;
     
     }
 
@@ -496,13 +486,13 @@ declare module FirstMate {
          * Create a new {OnigScanner} with the given options. 
          * This field or method was marked private by atomdoc. Use with caution.
          */
-        createScanner(firstLine? : any, position? : TextBuffer.Point | { row: number; column: number } | [number, number], anchorPosition? : TextBuffer.Point | { row: number; column: number } | [number, number]) : Scanner;
+        createScanner(firstLine? : number, position? : TextBuffer.Point | { row: number; column: number } | [number, number], anchorPosition? : TextBuffer.Point | { row: number; column: number } | [number, number]) : Scanner;
     
         /**
          * Get the {OnigScanner} for the given position and options. 
          * This field or method was marked private by atomdoc. Use with caution.
          */
-        getScanner(firstLine? : any, position? : TextBuffer.Point | { row: number; column: number } | [number, number], anchorPosition? : TextBuffer.Point | { row: number; column: number } | [number, number]) : Scanner;
+        getScanner(firstLine? : number, position? : TextBuffer.Point | { row: number; column: number } | [number, number], anchorPosition? : TextBuffer.Point | { row: number; column: number } | [number, number]) : Scanner;
     
         /**
          * Find the next match on the line start at the given position
@@ -511,9 +501,9 @@ declare module FirstMate {
          * firstLine - true if the first line is being scanned.
          * position - numeric position to start scanning at.
          * anchorPosition - numeric position of the last anchored match.
-        Returns an Object with details about the match or null if no match found.
+         * Returns an Object with details about the match or null if no match found.
          */
-        findNextMatch(line? : any, firstLine? : any, position? : TextBuffer.Point | { row: number; column: number } | [number, number], anchorPosition? : TextBuffer.Point | { row: number; column: number } | [number, number]) : any;
+        findNextMatch(line? : number, firstLine? : number, position? : TextBuffer.Point | { row: number; column: number } | [number, number], anchorPosition? : TextBuffer.Point | { row: number; column: number } | [number, number]) : any;
     
         /**
          * Handle the given match by calling `handleMatch` on the
@@ -524,9 +514,8 @@ declare module FirstMate {
          * line - The string being scanned.
          * rule - The rule that matched.
          * endPatternMatch - true if the rule's end pattern matched.
-        Returns an array of tokens representing the match.
          */
-        handleMatch(match? : any, stack? : any, line? : any, rule? : Rule, endPatternMatch? : any) : any;
+        handleMatch(match? : any, stack? : any, line? : number, rule? : Rule, endPatternMatch? : any) : void;
     
     }
 
@@ -749,7 +738,7 @@ declare module FirstMate {
          * 
          * scopes - An {Array} of {String}s or a single {String}.
          * This field or method was marked private by atomdoc. Use with caution.
-        Returns a {Boolean}.
+         * Returns a {Boolean}.
          */
         matches(scopes? : Atom.Scope[]) : boolean;
     

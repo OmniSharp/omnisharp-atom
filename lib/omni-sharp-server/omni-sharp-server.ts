@@ -73,7 +73,7 @@ class OmniSharpServerInstance {
 
 
         var path = finder.findProject(atom && atom.project && atom.project.getPaths()[0]);
-        var serverArguments = ["--stdio", "-s", path, "--hostPID", process.pid];
+        var serverArguments = ["--stdio", "-s", path, "--hostPID", <any>process.pid];
         this.child = spawn(executablePath, serverArguments);
         atom.emitter.emit("omni-sharp-server:start", { pid: this.child.pid, path: path, exePath: executablePath});
         atom.emitter.emit("omni-sharp-server:state-change", "loading");

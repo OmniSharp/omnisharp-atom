@@ -1,4 +1,4 @@
-// Type definitions for scandal (v2.0.3)
+// Type definitions for scandal (v2.0.0)
 // Project: https://github.com/atom/scandal
 // Definitions by: david-driscoll <https://github.com/david-driscoll/>
 // Definitions: https://github.com/borisyankov/DefinitelyTyped
@@ -14,7 +14,7 @@ declare module Scandal {
         /**
          * This field or method was not documented by atomdoc, assume it is private. Use with caution.
          */
-        execPathFn: any /* default */;
+        execPathFn: string;
     
         /**
          * Construct a {ChunkedExecutor}
@@ -22,7 +22,7 @@ declare module Scandal {
          * @param pathQueue? - {Array} of paths
          * @param execPathFn? - {Function} that will execute on each path
          */
-        constructor(pathQueue? : any[], execPathFn? : Function);
+        constructor(pathQueue? : string, execPathFn? : string);
     
         /**
          * Begin execution of the `pathQueue`
@@ -42,12 +42,12 @@ declare module Scandal {
          * Lifecycle Methods
          * This field or method was marked private by atomdoc. Use with caution.
          */
-        executeNextPathIfPossible() : any;
+        executeNextPathIfPossible() : string;
     
         /**
          * This field or method was not documented by atomdoc, assume it is private. Use with caution.
          */
-        executePath(filePath? : any) : any;
+        executePath(filePath? : string) : string;
     
         /**
          * This field or method was not documented by atomdoc, assume it is private. Use with caution.
@@ -79,17 +79,17 @@ declare module Scandal {
         /**
          * This field or method was not documented by atomdoc, assume it is private. Use with caution.
          */
-        filePath: any /* default */;
+        filePath: string;
     
         /**
          * This field or method was not documented by atomdoc, assume it is private. Use with caution.
          */
-        constructor(filePath? : any);
+        constructor(filePath? : string);
     
         /**
          * This field or method was not documented by atomdoc, assume it is private. Use with caution.
          */
-        isBinaryFile() : boolean;
+        isBinaryFile() : Pathwatcher.File;
     
         /**
          * This field or method was not documented by atomdoc, assume it is private. Use with caution.
@@ -111,7 +111,7 @@ declare module Scandal {
         /**
          * This field or method was not documented by atomdoc, assume it is private. Use with caution.
          */
-        constructor(scanner? : FirstMate.Scanner, execPathFn? : any);
+        constructor(scanner? : FirstMate.Scanner, execPathFn? : string);
     
         /**
          * This field or method was not documented by atomdoc, assume it is private. Use with caution.
@@ -172,18 +172,18 @@ declare module Scandal {
         /**
          * This field or method was not documented by atomdoc, assume it is private. Use with caution.
          */
-        isPathAccepted(fileOrDirectory? : Pathwatcher.Directory, filepath? : any) : boolean;
+        isPathAccepted(fileOrDirectory? : Pathwatcher.Directory, filepath? : string) : string;
     
         /**
          * Private Methods
          * This field or method was marked private by atomdoc. Use with caution.
          */
-        isPathIgnored(fileOrDirectory? : Pathwatcher.Directory, filepath? : any) : boolean;
+        isPathIgnored(fileOrDirectory? : Pathwatcher.Directory, filepath? : string) : string;
     
         /**
          * This field or method was not documented by atomdoc, assume it is private. Use with caution.
          */
-        isPathIncluded(fileOrDirectory? : Pathwatcher.Directory, filepath? : any) : boolean;
+        isPathIncluded(fileOrDirectory? : Pathwatcher.Directory, filepath? : string) : string;
     
         /**
          * This field or method was not documented by atomdoc, assume it is private. Use with caution.
@@ -198,65 +198,6 @@ declare module Scandal {
     }
 
     /**
-     * ReplaceTransformer
-     * This class was not documented by atomdoc, assume it is private. Use with caution.
-     */
-    class ReplaceTransformer /*extends .Transform*/ {
-        /**
-         * This field or method was not documented by atomdoc, assume it is private. Use with caution.
-         */
-        regex: any /* default */;
-    
-        /**
-         * This field or method was not documented by atomdoc, assume it is private. Use with caution.
-         */
-        replacementText: string;
-    
-        /**
-         * This field or method was not documented by atomdoc, assume it is private. Use with caution.
-         */
-        dryReplace: any /* default */;
-    
-        /**
-         * This field or method was not documented by atomdoc, assume it is private. Use with caution.
-         */
-        constructor(regex? : any, replacementText? : string, options? : (dryReplace? : any) => any);
-    
-        /**
-         * This field or method was not documented by atomdoc, assume it is private. Use with caution.
-         */
-        _transform(chunk? : any, encoding? : string, done? : any) : any;
-    
-    }
-
-    /**
-     * PathReplacer
-     * This class was not documented by atomdoc, assume it is private. Use with caution.
-     */
-    class PathReplacer /*extends NodeJS.EventEmitter*/ {
-        /**
-         * This field or method was not documented by atomdoc, assume it is private. Use with caution.
-         */
-        dryReplace: any /* default */;
-    
-        /**
-         * This field or method was not documented by atomdoc, assume it is private. Use with caution.
-         */
-        constructor(dryReplace? : any);
-    
-        /**
-         * This field or method was not documented by atomdoc, assume it is private. Use with caution.
-         */
-        replacePaths(regex? : any, replacementText? : string, paths? : any, doneCallback? : any) : any;
-    
-        /**
-         * This field or method was not documented by atomdoc, assume it is private. Use with caution.
-         */
-        replacePath(regex? : any, replacementText? : string, filePath? : any, doneCallback? : any) : any;
-    
-    }
-
-    /**
      * Scans a directory and emits events when paths matching input options
      * have been found.
      */
@@ -264,7 +205,7 @@ declare module Scandal {
         /**
          * This field or method was not documented by atomdoc, assume it is private. Use with caution.
          */
-        rootPath: any /* default */;
+        rootPath: string;
     
         /**
          * This field or method was not documented by atomdoc, assume it is private. Use with caution.
@@ -286,27 +227,22 @@ declare module Scandal {
         /**
          * This field or method was not documented by atomdoc, assume it is private. Use with caution.
          */
-        readDir(filePath? : any) : any;
+        readDir(filePath? : string) : any;
     
         /**
          * This field or method was not documented by atomdoc, assume it is private. Use with caution.
          */
-        relativize(filePath? : any) : any;
+        relativize(filePath? : string) : any;
     
         /**
          * This field or method was not documented by atomdoc, assume it is private. Use with caution.
          */
-        processFile(filePath? : any) : Pathwatcher.File;
+        processFile(filePath? : string) : Pathwatcher.File;
     
         /**
          * This field or method was not documented by atomdoc, assume it is private. Use with caution.
          */
-        stat(filePath? : any) : any;
-    
-        /**
-         * This field or method was not documented by atomdoc, assume it is private. Use with caution.
-         */
-        isInternalSymlink(filePath? : any) : boolean;
+        stat(filePath? : string) : any;
     
         /**
          * This field or method was not documented by atomdoc, assume it is private. Use with caution.
@@ -327,7 +263,7 @@ declare module Scandal {
         /**
          * This field or method was not documented by atomdoc, assume it is private. Use with caution.
          */
-        maxLineLength: any /* default */;
+        maxLineLength: number;
     
         /**
          * This field or method was not documented by atomdoc, assume it is private. Use with caution.
@@ -337,7 +273,7 @@ declare module Scandal {
         /**
          * Construct a {PathSearcher} object.
          */
-        constructor(maxLineLength? : any, wordBreakRegex? : any);
+        constructor({ maxLineLength, wordBreakRegex } : { maxLineLength? : number; wordBreakRegex? : any });
     
         /**
          * Search an array of paths.
@@ -349,7 +285,7 @@ declare module Scandal {
          * @param paths? - {Array} of {String} file paths to search
          * @param doneCallback? - called when searching the entire array of paths has finished
          */
-        searchPaths(regex? : RegExp, paths? : any[], doneCallback? : any) : any;
+        searchPaths(regex? : RegExp, paths? : string, doneCallback? : any) : string;
     
         /**
          * Search a file path for a regex
@@ -357,17 +293,17 @@ declare module Scandal {
          * @param filePath? - {String} file path to search
          * @param doneCallback? - called when searching the entire array of paths has finished
          */
-        searchPath(regex? : RegExp, filePath? : string, doneCallback? : any) : any;
+        searchPath(regex? : RegExp, filePath? : string, doneCallback? : any) : string;
     
         /**
          * This field or method was not documented by atomdoc, assume it is private. Use with caution.
          */
-        searchLine(regex? : any, line? : any, lineNumber? : any) : any;
+        searchLine(regex? : any, line? : number, lineNumber? : any) : number;
     
         /**
          * This field or method was not documented by atomdoc, assume it is private. Use with caution.
          */
-        findWordBreak(line? : any, offset? : any, increment? : any) : any;
+        findWordBreak(line? : number, offset? : any, increment? : any) : any;
     
     }
 
