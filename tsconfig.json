@@ -1,11 +1,12 @@
 {
-    "version": "1.5.0-beta",
+    "version": "1.4.1",
     "compilerOptions": {
         "target": "es5",
         "module": "commonjs",
         "declaration": false,
         "noImplicitAny": false,
-        "removeComments": false
+        "removeComments": true,
+        "noLib": false
     },
     "formatCodeOptions": {
         "indentSize": 4,
@@ -21,7 +22,7 @@
         "placeOpenBraceOnNewLineForFunctions": false,
         "placeOpenBraceOnNewLineForControlBlocks": false
     },
-    "compileOnSave": true,
+    "compileOnSave": false,
     "filesGlob": [
         "./**/*.ts",
         "!./typings/**/*.d.ts",
@@ -61,6 +62,7 @@
         "./lib/omnisharp-atom/features/navigate-up-down.ts",
         "./lib/omnisharp-atom/features/notification-handler.ts",
         "./lib/omnisharp-atom/features/package-restore.ts",
+        "./lib/omnisharp-atom/features/project-lock.ts",
         "./lib/omnisharp-atom/features/rename.ts",
         "./lib/omnisharp-atom/features/run-tests.ts",
         "./lib/omnisharp-atom/features/server-information.ts",
