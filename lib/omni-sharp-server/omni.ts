@@ -116,7 +116,11 @@ class Omni {
     }
 
     public static packageRestore() {
-        Omni.reql("filesChanged", "package-restore");
+        return Omni.reql("filesChanged", "package-restore");
+    }
+
+    public static filesChanged(file) {
+        return Omni.reql("filesChanged", file);
     }
 
     public static autocomplete(wordToComplete: string) {
