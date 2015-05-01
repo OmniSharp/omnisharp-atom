@@ -81,7 +81,7 @@ class Client extends omnisharp.OmnisharpClient {
         });
 
         this.responses.subscribe(data => {
-            console.log("omni:" + event, data);
+            console.log("omni:" + data.command, data.request, data.response);
         });
     }
 
