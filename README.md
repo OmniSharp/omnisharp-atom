@@ -20,6 +20,8 @@ apm install omnisharp-atom
 
 - Open a c# file
 
+- or open a scriptcs file
+
 When the flame icon in the bottom left corner turns green, the server has started!
 
 # Features
