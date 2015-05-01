@@ -31,7 +31,7 @@ export interface Suggestion {
 
 export var CompletionProvider = {
 
-    selector: '.source.cs',
+    selector: '.source.cs, .source.csx',
     disableForSelector: 'source.cs .comment',
 
     inclusionPriority: 1,

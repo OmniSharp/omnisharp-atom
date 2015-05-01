@@ -99,7 +99,7 @@ class OmniSharpAtom {
         this.observeEditors = atom.workspace.observeTextEditors((editor: Atom.TextEditor) => {
             var editorFilePath;
             var grammarName = editor.getGrammar().name;
-            if (grammarName === 'C#') {
+            if (grammarName === 'C#' || grammarName === 'C# Script File') {
                 this.emitter.emit('omnisharp-atom-editor', editor);
                 editorFilePath = editor.buffer.file.path;
                 editor.onDidDestroy(() => this.emitter.emit('omnisharp-atom-editor-destroyed', editorFilePath));
