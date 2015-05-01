@@ -2,7 +2,7 @@ import fs = require('fs');
 import _ = require('lodash');
 import path = require('path');
 var glob = require('glob');
-var filesToSearch = ['global.json', '*.sln', 'project.json', '*.csproj'];
+var filesToSearch = ['global.json', '*.sln', 'project.json', '*.csproj', '*.csx'];
 
 export function findProject(location: string) {
     location = _.trimRight(location, path.sep);
