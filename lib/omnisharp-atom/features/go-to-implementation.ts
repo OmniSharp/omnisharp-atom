@@ -15,7 +15,7 @@ class GoToImplementation {
             var req: any = Omni.makeRequest();
             req.word = <any>editor.getWordUnderCursor();
 
-            Omni.client.findimplementationsPromise(Omni.makeRequest());
+            Omni.client.findimplementationsPromise(req);
         }
     }
 

@@ -9,7 +9,7 @@ class GoToDefinition {
             var req: any = Omni.makeRequest();
             req.word = <any>editor.getWordUnderCursor();
 
-            Omni.client.gotodefinitionPromise(Omni.makeRequest());
+            Omni.client.gotodefinitionPromise(req);
         }
     }
 
