@@ -2,6 +2,9 @@ import Omni = require('../../../omni-sharp-server/omni')
 
 import _ = require('lodash')
 import rx = require('rx')
+var filter = require('fuzzaldrin').filter;
+
+var cachedValue: rx.IPromise<OmniSharp.Models.AutoCompleteResponse[]> = null;
 
 export interface RequestOptions {
     editor: Atom.TextEditor;
@@ -11,7 +14,6 @@ export interface RequestOptions {
 }
 
 export interface Suggestion {
-
     //Either text or snippet is required
     text?: string;
     snippet?: string;
@@ -30,6 +32,7 @@ export interface Suggestion {
 
 var subject = new rx.Subject<RequestOptions>();
 
+// Detect when the cursor has moved a good distance
 var bufferMovement = rx.Observable.zip(subject, subject.skip(1), (previous, current) => {
     // If the row changes we moved lines, we should refetch the completions
     // (Is it possible it will be the same set?)
@@ -37,20 +40,27 @@ var bufferMovement = rx.Observable.zip(subject, subject.skip(1), (previous, curr
     // If the column jumped over 5 places, lets get them again to be safe.
     var column = Math.abs(current.bufferPosition.column - previous.bufferPosition.column) > 5;
 
-    return { doLoad: row || column || false, options: current };
-}).filter(z => z.doLoad).map(z => z.options);
+    return row || column || false;
+}).filter(z => z);
 
 // Always reset if the value is a dot
-var prefixChange = subject.where(z => z.prefix === ".");
+var prefixChange = subject.where(z => z.prefix === "." || !z.prefix).map(z => true);
+// reset after x seconds
+//var reset = subject.debounce(1000).map(z => true);
 
-var suggestionSubject = new rx.BehaviorSubject<OmniSharp.Models.AutoCompleteResponse[]>([]);
+rx.Observable.merge(bufferMovement, prefixChange)//, reset)
+    .subscribe(x => cachedValue = null);
 
-var observable: rx.Observable<RequestOptions> = (<any>rx.Observable.merge(prefixChange, bufferMovement)).throttleFirst(100);
-observable.flatMap(options => CompletionProvider.getResults(options)).subscribe((results) => suggestionSubject.onNext(results));
-function removeReplacementPrefix(s: Suggestion) {
-    delete s.replacementPrefix;
-    return s;
-}
+function getCachedValue(options: RequestOptions) {
+    if (cachedValue) {
+        return cachedValue;
+    }
+
+    var o = CompletionProvider.getResults(options);
+    if (o) cachedValue = o.toPromise();
+
+    return cachedValue;
+};
 
 export var CompletionProvider = {
 
@@ -60,33 +70,37 @@ export var CompletionProvider = {
     inclusionPriority: 1,
     excludeLowerPriority: true,
 
-    getResults(options: RequestOptions) {
-        var wordRegex = /[A-Z_0-9]+/i;
+    getWord(options: RequestOptions) {
         var buffer = options.editor.getBuffer();
-
-        var end = options.bufferPosition.column;
-
         var data = buffer.getLines()[options.bufferPosition.row].substring(0, end + 1);
-        var lastCharacterTyped = data[end - 1];
-        if (!/[A-Z_0-9.]+/i.test(lastCharacterTyped)) {
-            return;
-        }
-
+        var end = options.bufferPosition.column;
         var start = end;
+        var wordRegex = /[A-Z_0-9]+/i;
 
         do {
             start--;
         } while (wordRegex.test(data.charAt(start)));
 
-        var word = data.substring(start + 1, end);
+        return data.substring(start + 1, end);
+    },
+
+    getResults(options: RequestOptions) {
+        var buffer = options.editor.getBuffer();
+        var data = buffer.getLines()[options.bufferPosition.row].substring(0, end + 1);
+        var end = options.bufferPosition.column;
+        var lastCharacterTyped = data[end - 1];
+        if (!/[A-Z_0-9.]+/i.test(lastCharacterTyped)) {
+            return;
+        }
+
         return Omni.client.autocomplete(Omni.makeDataRequest<OmniSharp.Models.AutoCompleteRequest>({
-            WordToComplete: word,
+            WordToComplete: '',
             WantDocumentationForEveryCompletionResult: false,
             WantKind: true,
             WantSnippet: true,
             WantReturnType: true
         }))
-        .map(completions => {
+            .map(completions => {
             if (completions == null) {
                 completions = [];
             }
@@ -94,8 +108,9 @@ export var CompletionProvider = {
         });
     },
 
-    makeSuggestion(item : OmniSharp.Models.AutoCompleteResponse) {
+    makeSuggestion(item: OmniSharp.Models.AutoCompleteResponse) {
         return {
+            _search: item.DisplayText,
             snippet: item.Snippet,
             type: item.Kind,
             iconHTML: this.renderIcon(item),
@@ -110,10 +125,24 @@ export var CompletionProvider = {
             return;
         }
 
+        /*var r = CompletionProvider.getResults(options);
+        if (r)
+            return CompletionProvider.getResults(options).toPromise().then(response => response.map(s => this.makeSuggestion(s)));
+        return;*/
+
         console.log('getSuggestions', options);
         //if (options.prefix === '.') // Always reset on dot
+        var search = options.prefix;
+        if (search === ".")
+            search = "";
+
         subject.onNext(options);
-        return suggestionSubject.take(1).toPromise().then(z => z.map(x => this.makeSuggestion(x)));
+        var result = getCachedValue(options);
+        if (result) {
+            return result.then(response =>
+                response.map(s => this.makeSuggestion(s)))
+                .then(s => filter(s, search, { key: '_search' }));
+        }
     },
 
     onDidInsertSuggestion(editor: Atom.TextEditor, triggerPosition: TextBuffer.Point, suggestion: any) {
