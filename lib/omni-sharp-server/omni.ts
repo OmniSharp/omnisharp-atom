@@ -59,7 +59,7 @@ class Omni {
         this.vm.isNotError = !this.vm.isError;
         this.vm.isLoadingOrReady = this.vm.isLoading || this.vm.isReady;
         this.vm.iconText = this.vm.isError ? "omni error occured" : "";
-    };
+    }
 }
 
 export = Omni
