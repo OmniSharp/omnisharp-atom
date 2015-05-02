@@ -24,8 +24,8 @@ class RenameView extends spacePenViews.View {
     }
 
     public initialize() {
-        this.on('core:confirm', () => this.rename());
-        this.on('core:cancel', () => this.destroy());
+        atom.commands.add('workspace', 'core:confirm', () => this.rename());
+        atom.commands.add('workspace', 'core:cancel', () => this.destroy());
     }
 
     public configure(wordToRename) {
