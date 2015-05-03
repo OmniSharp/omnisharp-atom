@@ -55,7 +55,7 @@
   "linter-package": true,
   "linter-implementation": "omnisharp-atom/linter",
   "scripts": {
-    "postinstall": "tsd reinstall & grunt copy --force & grunt clean --force"
+    "postinstall": "tsd reinstall & grunt copy & grunt clean"
   },
   "dependencies": {
     "ansi-to-html": "~0.1.0",
