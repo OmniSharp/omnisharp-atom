@@ -14,6 +14,14 @@ module.exports = (grunt) ->
                     '<%= meta.src %>'
                 ]
                 tasks: ['coffeelint']
+        copy:
+            main:
+                cwd: 'node_modules/omnisharp-node-client/node_modules/omnisharp-server-roslyn-binaries/'
+                src: '**'
+                dest: 'node_modules/omnisharp-server-roslyn-binaries/'
+                mode: true
+                expand: true
+        clean: ['node_modules/omnisharp-node-client/node_modules/omnisharp-server-roslyn-binaries/']
 
         coffeelint:
             app: [
@@ -22,6 +30,8 @@ module.exports = (grunt) ->
             ]
 
     grunt.loadNpmTasks 'grunt-contrib-watch'
+    grunt.loadNpmTasks 'grunt-contrib-copy'
+    grunt.loadNpmTasks 'grunt-contrib-clean'
     grunt.loadNpmTasks 'grunt-coffeelint'
 
     grunt.registerTask 'default', ['watch']
