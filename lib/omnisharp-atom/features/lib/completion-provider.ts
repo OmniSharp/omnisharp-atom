@@ -111,7 +111,6 @@ export var CompletionProvider = {
             return;
         }
 
-        console.log('getSuggestions', options);
         var search = options.prefix;
         if (search === ".")
             search = "";
@@ -126,11 +125,9 @@ export var CompletionProvider = {
     },
 
     onDidInsertSuggestion(editor: Atom.TextEditor, triggerPosition: TextBuffer.Point, suggestion: any) {
-        console.log('onDidInsertSuggestion', suggestion);
     },
 
     dispose() {
-        console.log('dispose');
     },
 
     renderReturnType(returnType: string) {
