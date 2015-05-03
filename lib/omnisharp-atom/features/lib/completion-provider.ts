@@ -45,7 +45,7 @@ var bufferMovement = rx.Observable.zip(subject, subject.skip(1), (previous, curr
 
 // Always reset if the value is a dot
 var prefixChange = subject.where(z => z.prefix === "." || !z.prefix).map(z => true);
-// reset after x seconds
+// TODO: reset after x seconds?
 //var reset = subject.debounce(1000).map(z => true);
 
 rx.Observable.merge(bufferMovement, prefixChange)//, reset)
@@ -69,20 +69,6 @@ export var CompletionProvider = {
 
     inclusionPriority: 1,
     excludeLowerPriority: true,
-
-    getWord(options: RequestOptions) {
-        var buffer = options.editor.getBuffer();
-        var data = buffer.getLines()[options.bufferPosition.row].substring(0, end + 1);
-        var end = options.bufferPosition.column;
-        var start = end;
-        var wordRegex = /[A-Z_0-9]+/i;
-
-        do {
-            start--;
-        } while (wordRegex.test(data.charAt(start)));
-
-        return data.substring(start + 1, end);
-    },
 
     getResults(options: RequestOptions) {
         var buffer = options.editor.getBuffer();
@@ -125,13 +111,7 @@ export var CompletionProvider = {
             return;
         }
 
-        /*var r = CompletionProvider.getResults(options);
-        if (r)
-            return CompletionProvider.getResults(options).toPromise().then(response => response.map(s => this.makeSuggestion(s)));
-        return;*/
-
         console.log('getSuggestions', options);
-        //if (options.prefix === '.') // Always reset on dot
         var search = options.prefix;
         if (search === ".")
             search = "";
@@ -161,7 +141,6 @@ export var CompletionProvider = {
     },
 
     renderIcon(item) {
-
         // todo: move additional styling to css
         return '<img height="16px" width="16px" src="atom://omnisharp-atom/styles/icons/autocomplete_' + item.Kind.toLowerCase() + '@3x.png" /> '
     }
