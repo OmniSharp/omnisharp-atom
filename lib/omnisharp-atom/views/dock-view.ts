@@ -3,6 +3,7 @@ var $ = spacePenViews.jQuery;
 var Convert = require('ansi-to-html')
 import Vue = require('vue')
 
+import Omni = require('../../omni-sharp-server/omni')
 import OmniSharpAtom = require("../omnisharp-atom");
 import FindPaneView = require('./find-pane-view')
 import BuildOutputPaneView = require('./build-output-pane-view')

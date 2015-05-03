@@ -3,11 +3,11 @@ var $ = spacePenViews.jQuery;
 var Convert = require('ansi-to-html')
 import Vue = require('vue')
 import _ = require('lodash')
-import OmniSharpServer = require('../../omni-sharp-server/omni-sharp-server')
+import Omni = require('../../omni-sharp-server/omni')
 
 // Internal: A tool-panel view for find usages/implementations
 class FindPaneView extends spacePenViews.View {
-    private vm: { usages:any[] };
+    private vm: { usages: any[] };
 
     public static content() {
         return this.div({
@@ -65,20 +65,30 @@ class FindPaneView extends spacePenViews.View {
 
         var viewModel = new Vue({
             el: this[0],
-            data: _.extend(OmniSharpServer.vm, {
+            data: _.extend(Omni.vm, {
                 usages: []
             }),
             methods: {
                 gotoUsage: (arg) => {
                     var targetVM;
                     targetVM = arg.targetVM;
-                    return atom.emitter.emit("omni:navigate-to", targetVM.$data);
+                    Omni.navigateTo(targetVM.$data);
                 }
             }
         });
         this.vm = <any>viewModel;
 
-        return atom.emitter.on("omni:find-usages", (data) => this.vm.usages = data.QuickFixes);
+        Omni.registerConfiguration(client => {
+            client.observeFindusages.subscribe((data) => {
+                this.vm.usages = data.response.QuickFixes;
+            });
+
+            client.observeFindimplementations.subscribe((data) => {
+                if (data.response.QuickFixes.length > 1) {
+                    this.vm.usages = data.response.QuickFixes;
+                }
+            });
+        });
     }
 
     public destroy() {

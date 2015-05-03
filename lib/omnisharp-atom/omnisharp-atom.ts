@@ -3,8 +3,8 @@ import fs = require('fs')
 import a = require("atom")
 var Emitter = (<any>a).Emitter
 
-import OmniSharpServer = require('../omni-sharp-server/omni-sharp-server')
 import Omni = require('../omni-sharp-server/omni')
+import ClientManager = require('../omni-sharp-server/client-manager')
 
 import CompletionProvider = require("./features/lib/completion-provider")
 import dependencyChecker = require('./dependency-checker')
@@ -45,6 +45,7 @@ class OmniSharpAtom {
     private menu: EventKit.Disposable;
 
     public activate(state) {
+        ClientManager.activate();
         atom.commands.add('atom-workspace', 'omnisharp-atom:toggle', () => this.toggle());
         atom.commands.add('atom-workspace', 'omnisharp-atom:new-application', () => this.generator.run("aspnet:app"));
         atom.commands.add('atom-workspace', 'omnisharp-atom:new-class', () => this.generator.run("aspnet:Class"));
@@ -125,17 +126,17 @@ class OmniSharpAtom {
             return; //short out, if setting to not auto start is enabled
         }
         if (grammar.name === 'C#') {
-            if (OmniSharpServer.vm.isOff) {
+            if (Omni.vm.isOff) {
                 this.toggle();
             }
         } else if (grammar.name === "JSON") {
             if (path.basename(editor.getPath()) === "project.json") {
-                if (OmniSharpServer.vm.isOff) {
+                if (Omni.vm.isOff) {
                     this.toggle();
                 }
             }
         } else if (grammar.name === "C# Script File") {
-            if (OmniSharpServer.vm.isOff) {
+            if (Omni.vm.isOff) {
                 this.toggle()
             }
         }
@@ -154,15 +155,15 @@ class OmniSharpAtom {
 
         var dependencyErrors = dependencyChecker.errors();
         if (dependencyErrors.length === 0) {
-            if (OmniSharpServer.vm.isOff) {
+            if (Omni.vm.isOff) {
                 this.menu = atom.menu.add(menuJson.menu);
             } else if (this.menu) {
                 this.menu.dispose();
                 this.menu = null;
             }
-            return OmniSharpServer.get().toggle();
+            Omni.toggle();
         } else {
-            return _.map(dependencyErrors, missingDependency => alert(missingDependency));
+            _.map(dependencyErrors, missingDependency => alert(missingDependency));
         }
     }
 
@@ -176,7 +177,7 @@ class OmniSharpAtom {
         this.statusBarView && this.statusBarView.destroy();
         this.outputView && this.outputView.destroy();
         this.autoCompleteProvider && this.autoCompleteProvider.destroy();
-        return OmniSharpServer.get().stop();
+        Omni.client.disconnect();
     }
 
     public consumeStatusBar(statusBar) {

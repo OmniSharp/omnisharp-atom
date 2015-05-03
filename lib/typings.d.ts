@@ -1,5 +1,19 @@
-/// <reference path="./models.d.ts" />
 /// <reference path="../typingsTemp/atom/atom.d.ts" />
+
+interface WeakMap<K, V> {
+    clear(): void;
+    delete(key: K): boolean;
+    get(key: K): V;
+    has(key: K): boolean;
+    set(key: K, value?: V): WeakMap<K, V>;
+}
+
+interface WeakMapConstructor {
+    new <K, V>(): WeakMap<K, V>;
+    prototype: WeakMap<any, any>;
+}
+
+declare var WeakMap: WeakMapConstructor;
 
 declare module OmniSharp {
     interface IFeature {
@@ -17,13 +31,8 @@ declare module OmniSharp {
         isNotReady: boolean;
         isReady: boolean;
         isNotError: boolean;
-        isOffOrError: boolean;
-        isOffAndNotError: boolean;
         isError: boolean;
         isLoadingOrReady: boolean;
-        isLoadingOrReadyOrError: boolean;
-        state: string;
-        previousState: string;
         iconText: string;
         isOpen: boolean;
     }

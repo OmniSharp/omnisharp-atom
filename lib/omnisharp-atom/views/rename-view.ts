@@ -34,7 +34,9 @@ class RenameView extends spacePenViews.View {
     }
 
     public rename() {
-        Omni.rename(this.miniEditor.getText());
+        Omni.client.renamePromise(Omni.makeDataRequest({
+            RenameTo: this.miniEditor.getText()
+        }));
         return this.destroy();
     }
 

@@ -1,5 +1,5 @@
 /// <reference path="tsd.d.ts" />
-var OmniSharpServer = require('../lib/omni-sharp-server/omni-sharp-server');
+var Omni = require('../lib/omni-sharp-server/omni');
 describe('OmniSharp Atom', function () {
     var statusBar = null, workspaceView;
     beforeEach(function () {
@@ -42,7 +42,7 @@ describe('OmniSharp Atom', function () {
                 atom.commands.dispatch(atom.views.getView(atom.workspace), 'omnisharp-atom:toggle');
             });
             return it('should start the omnisharp server', function () {
-                return expect(OmniSharpServer.vm.isNotOff).toBeTruthy();
+                return expect(Omni.vm.isNotOff).toBeTruthy();
             });
         });
     });
