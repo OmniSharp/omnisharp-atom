@@ -74,7 +74,8 @@
     "tsd": "~0.6.0-beta.5",
     "vue": "~0.10.6",
     "yeoman-environment": "^1.2.5",
-    "yo": "^1.4.6"
+    "yo": "^1.4.6",
+    "pathwatcher": "^4.4.0"
   },
   "consumedServices": {
     "status-bar": {
