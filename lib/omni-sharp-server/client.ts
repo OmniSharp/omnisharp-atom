@@ -16,6 +16,7 @@ class Client extends omnisharp.OmnisharpClient {
             atom.emitter.emit("omni-sharp-server:start", { pid: this.id, path: this.projectPath, exePath: this.serverPath});
         } else {
             this.disconnect();
+            atom.emitter.emit("omni-sharp-server:stop");
         }
     }
 

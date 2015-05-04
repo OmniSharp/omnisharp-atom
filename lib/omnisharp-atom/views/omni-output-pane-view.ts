@@ -81,11 +81,11 @@ class OmniOutputPaneView extends spacePenViews.View {
             });
         });
         atom.emitter.on("omni-sharp-server:stop", () => {
-          this.vm.output = <OmniSharp.VueArray<any>> [];
-          return this.vm.output.push({
-              message: "Omnisharp server stopped."
-          });
-      });
+            this.vm.output = <OmniSharp.VueArray<any>> [];
+            return this.vm.output.push({
+                message: "Omnisharp server stopped."
+            });
+        });
 
         return atom.emitter.on("omni-sharp-server:start", (data) => {
             this.vm.uninitialized = false;

@@ -152,12 +152,12 @@ class OmniSharpAtom {
         var menuJsonFile = this.getPackageDir() + "/omnisharp-atom/menus/omnisharp-menu.json";
         var menuJson = JSON.parse(fs.readFileSync(menuJsonFile, 'utf8'));
 
-
         var dependencyErrors = dependencyChecker.errors();
         if (dependencyErrors.length === 0) {
             if (Omni.vm.isOff) {
                 this.menu = atom.menu.add(menuJson.menu);
             } else if (this.menu) {
+                this.turnOffIcon();
                 this.menu.dispose();
                 this.menu = null;
             }
@@ -168,7 +168,6 @@ class OmniSharpAtom {
     }
 
     private turnOffIcon() {
-        Omni.stopServer();
         this.statusBarView.turnOffIcon();
     }
 
