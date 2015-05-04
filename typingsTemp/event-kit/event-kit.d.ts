@@ -93,7 +93,7 @@ declare module EventKit {
          * the given name are emitted via {::emit}.
          * @param eventName - {String} naming the event that you want to invoke the handler when emitted.
          * @param handler? - {Function} to invoke when {::emit} is called with the given event name.
-        Returns a {Disposable} on which `.dispose()` can be called to unsubscribe.
+         * Returns a {Disposable} on which `.dispose()` can be called to unsubscribe.
          */
         on(eventName : string, handler? : (...value: any[]) => void, unshift? : any) : Disposable;
     
@@ -110,7 +110,7 @@ declare module EventKit {
          * methods based on `::preempt` private.
          * @param eventName - {String} naming the event that you want to invoke the handler when emitted.
          * @param handler? - {Function} to invoke when {::emit} is called with the given event name.
-        Returns a {Disposable} on which `.dispose()` can be called to unsubscribe.
+         * Returns a {Disposable} on which `.dispose()` can be called to unsubscribe.
          */
         preempt(eventName : string, handler? : (...value: any[]) => void) : Disposable;
     

@@ -1,4 +1,4 @@
-// Type definitions for atom-keymap (v5.1.2)
+// Type definitions for atom-keymap (v5.1.0)
 // Project: https://github.com/atom/atom-keymap
 // Definitions by: david-driscoll <https://github.com/david-driscoll/>
 // Definitions: https://github.com/borisyankov/DefinitelyTyped
@@ -60,7 +60,7 @@ declare module AtomKeymap {
         /**
          * This field or method was not documented by atomdoc, assume it is private. Use with caution.
          */
-        command: any /* default */;
+        command: string;
     
         /**
          * This field or method was not documented by atomdoc, assume it is private. Use with caution.
@@ -75,7 +75,7 @@ declare module AtomKeymap {
         /**
          * This field or method was not documented by atomdoc, assume it is private. Use with caution.
          */
-        constructor(source? : any, command? : any, keystrokes? : any, selector? : ScopedPropertyStore.Selector);
+        constructor(source? : any, command? : string, keystrokes? : any, selector? : string);
     
         /**
          * This field or method was not documented by atomdoc, assume it is private. Use with caution.
@@ -147,54 +147,54 @@ declare module AtomKeymap {
         /**
          * Invoke the given callback when one or more keystrokes completely
          * match a key binding.
-         * @param callback? - {Function} to be called when keystrokes match a binding.
+         * @param callback - {Function} to be called when keystrokes match a binding.
          */
-        onDidMatchBinding(callback? : Function) : EventKit.Disposable;
+        onDidMatchBinding(callback : Function /* needs to be defined */) : EventKit.Disposable;
     
         /**
          * Invoke the given callback when one or more keystrokes partially
          * match a binding.
-         * @param callback? - {Function} to be called when keystrokes partially match a binding.
+         * @param callback - {Function} to be called when keystrokes partially match a binding.
          */
-        onDidPartiallyMatchBindings(callback? : Function) : EventKit.Disposable;
+        onDidPartiallyMatchBindings(callback : Function /* needs to be defined */) : EventKit.Disposable;
     
         /**
          * Invoke the given callback when one or more keystrokes fail to match
          * any bindings.
-         * @param callback? - {Function} to be called when keystrokes fail to match any bindings.
+         * @param callback - {Function} to be called when keystrokes fail to match any bindings.
          */
-        onDidFailToMatchBinding(callback? : Function) : EventKit.Disposable;
+        onDidFailToMatchBinding(callback : Function /* needs to be defined */) : EventKit.Disposable;
     
         /**
          * Invoke the given callback when a keymap file is reloaded.
          * This field or method was marked private by atomdoc. Use with caution.
-         * @param callback? - {Function} to be called when a keymap file is reloaded.
+         * @param callback - {Function} to be called when a keymap file is reloaded.
          */
-        onDidReloadKeymap(callback? : Function) : EventKit.Disposable;
+        onDidReloadKeymap(callback : Function /* needs to be defined */) : EventKit.Disposable;
     
         /**
          * Invoke the given callback when a keymap file is unloaded.
          * This field or method was marked private by atomdoc. Use with caution.
-         * @param callback? - {Function} to be called when a keymap file is unloaded.
+         * @param callback - {Function} to be called when a keymap file is unloaded.
          */
-        onDidUnloadKeymap(callback? : Function) : EventKit.Disposable;
+        onDidUnloadKeymap(callback : Function /* needs to be defined */) : EventKit.Disposable;
     
         /**
          * Invoke the given callback when a keymap file not able to be loaded.
-         * @param callback? - {Function} to be called when a keymap file is unloaded.
+         * @param callback - {Function} to be called when a keymap file is unloaded.
          */
-        onDidFailToReadFile(callback? : Function) : EventKit.Disposable;
+        onDidFailToReadFile(callback : Function /* needs to be defined */) : EventKit.Disposable;
     
         /**
          * Add sets of key bindings grouped by CSS selector.
          * @param source? - A {String} (usually a path) uniquely identifying the given bindings so they can be removed later.
          */
-        add(source? : string, keyBindingsBySelector? : ScopedPropertyStore.Selector) : any;
+        add(source? : string, keyBindingsBySelector? : ScopedPropertyStore.Selector) : void;
     
         /**
          * This field or method was not documented by atomdoc, assume it is private. Use with caution.
          */
-        removeBindingsFromSource(source? : any) : any;
+        removeBindingsFromSource(source? : any) : void;
     
         /**
          * Get all current key bindings.
@@ -211,7 +211,7 @@ declare module AtomKeymap {
          * Load the key bindings from the given path.
          * @param options? - An {Object} containing the following optional keys:
          */
-        loadKeymap(bindingsPath? : any, options? : Object) : any;
+        loadKeymap(bindingsPath? : string, options? : Object) : any;
     
         /**
          * Cause the keymap to reload the key bindings file at the given path
@@ -220,19 +220,19 @@ declare module AtomKeymap {
          * This method doesn't perform the initial load of the key bindings file. If
          * that's what you're looking for, call {::loadKeymap} with `watch: true`.
          */
-        watchKeymap(filePath? : any) : any;
+        watchKeymap(filePath? : string) : any;
     
         /**
          * Called by the path watcher callback to reload a file at the given path. If
          * we can't read the file cleanly, we don't proceed with the reload. 
          * This field or method was marked private by atomdoc. Use with caution.
          */
-        reloadKeymap(filePath? : any) : any;
+        reloadKeymap(filePath? : string) : void;
     
         /**
          * This field or method was not documented by atomdoc, assume it is private. Use with caution.
          */
-        readKeymap(filePath? : any, suppressErrors? : any) : any;
+        readKeymap(filePath? : string, suppressErrors? : any) : any;
     
         /**
          * Determine if the given path should be loaded on this platform. If the
@@ -242,7 +242,7 @@ declare module AtomKeymap {
          * returns true. 
          * This field or method was marked private by atomdoc. Use with caution.
          */
-        filePathMatchesPlatform(filePath? : any) : any;
+        filePathMatchesPlatform(filePath? : string) : string;
     
         /**
          * Dispatch a custom event associated with the matching key binding for
@@ -266,19 +266,19 @@ declare module AtomKeymap {
          * target is `.defaultTarget` if that property is assigned on the keymap.
          * @param event? - A `KeyboardEvent` of type 'keydown' 
          */
-        handleKeyboardEvent(event? : any, replaying? : any) : any;
+        handleKeyboardEvent(event? : any, replaying? : any) : void;
     
         /**
          * Translate a keydown event to a keystroke string.
          * @param event? - A `KeyboardEvent` of type 'keydown'
-        Returns a {String} describing the keystroke.
+         * Returns a {String} describing the keystroke.
          */
         keystrokeForKeyboardEvent(event? : any) : string;
     
         /**
          * Get the number of milliseconds allowed before pending states caused
          * by partial matches of multi-keystroke bindings are terminated.
-        Returns a {Number}
+         * Returns a {Number}
          */
         getPartialMatchTimeout() : number;
     
@@ -291,9 +291,9 @@ declare module AtomKeymap {
         /**
          * 
          * This field or method was marked private by atomdoc. Use with caution.
-        Private: Finds all key bindings whose keystrokes match the given keystrokes.
-        Returns
-both partial and exact matches.
+         * Private: Finds all key bindings whose keystrokes match the given keystrokes.
+         * Returns
+         * both partial and exact matches.
          */
         findMatchCandidates(keystrokes? : any) : any;
     
@@ -317,7 +317,7 @@ both partial and exact matches.
         /**
          * This field or method was not documented by atomdoc, assume it is private. Use with caution.
          */
-        clearQueuedKeystrokes() : any;
+        clearQueuedKeystrokes() : void;
     
         /**
          * This field or method was not documented by atomdoc, assume it is private. Use with caution.
@@ -344,7 +344,12 @@ both partial and exact matches.
          * based on the binding's command. 
          * This field or method was marked private by atomdoc. Use with caution.
          */
-        dispatchCommandEvent(command? : any, target? : any, keyboardEvent? : any) : CommandEvent;
+        dispatchCommandEvent(command? : string, target? : any, keyboardEvent? : any) : CommandEvent;
+    
+        /**
+         * This field or method was not documented by atomdoc, assume it is private. Use with caution.
+         */
+        isValidSelector(selector? : string) : ScopedPropertyStore.Selector;
     
         /**
          * Chromium does not bubble events dispatched on detached targets, which makes

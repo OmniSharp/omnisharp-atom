@@ -3,13 +3,14 @@ import fs = require('fs')
 import a = require("atom")
 var Emitter = (<any>a).Emitter
 
-import OmniSharpServer = require('../omni-sharp-server/omni-sharp-server')
 import Omni = require('../omni-sharp-server/omni')
+import ClientManager = require('../omni-sharp-server/client-manager')
 
 import CompletionProvider = require("./features/lib/completion-provider")
 import dependencyChecker = require('./dependency-checker')
 import StatusBarView = require('./views/status-bar-view')
 import DockView = require('./views/dock-view')
+import path = require('path');
 //import autoCompleteProvider = require('./features/lib/completion-provider');
 
 
@@ -34,15 +35,20 @@ class Feature implements OmniSharp.IFeature {
 
 class OmniSharpAtom {
     private features: OmniSharp.IFeature[];
-    private observeEditors: {dispose: Function};
+    private observeEditors: { dispose: Function };
     private emitter: EventKit.Emitter;
     public statusBarView;
     public outputView;
     private autoCompleteProvider;
     private statusBar;
+    private generator: { run(generator: string, path?: string): void; start(prefix: string, path?:string): void;  };
+    private menu: EventKit.Disposable;
 
     public activate(state) {
+        ClientManager.activate();
         atom.commands.add('atom-workspace', 'omnisharp-atom:toggle', () => this.toggle());
+        atom.commands.add('atom-workspace', 'omnisharp-atom:new-application', () => this.generator.run("aspnet:app"));
+        atom.commands.add('atom-workspace', 'omnisharp-atom:new-class', () => this.generator.run("aspnet:Class"));
 
         if (dependencyChecker.findAllDeps(this.getPackageDir())) {
             this.emitter = new Emitter;
@@ -91,18 +97,50 @@ class OmniSharpAtom {
         return features;
     }
     public subscribeToEvents() {
-        return this.observeEditors = atom.workspace.observeTextEditors((editor: Atom.TextEditor) => {
+        this.observeEditors = atom.workspace.observeTextEditors((editor: Atom.TextEditor) => {
             var editorFilePath;
             var grammarName = editor.getGrammar().name;
-            if (grammarName === 'C#') {
+            if (grammarName === 'C#' || grammarName === 'C# Script File') {
                 this.emitter.emit('omnisharp-atom-editor', editor);
                 editorFilePath = editor.buffer.file.path;
-                return editor.onDidDestroy(() => this.emitter.emit('omnisharp-atom-editor-destroyed', editorFilePath));
-            } else if (grammarName=== "JSON") {
+                editor.onDidDestroy(() => this.emitter.emit('omnisharp-atom-editor-destroyed', editorFilePath));
+            } else if (grammarName === "JSON") {
                 this.emitter.emit('omnisharp-atom-config-editor', editor);
-                return editor.onDidDestroy(() => this.emitter.emit('omnisharp-atom-config-editor-destroyed', editor.buffer.file.path));
+                editor.onDidDestroy(() => this.emitter.emit('omnisharp-atom-config-editor-destroyed', editor.buffer.file.path));
             }
-        })
+
+            this.detectAutoToggleGrammar(editor);
+        });
+    }
+
+    private detectAutoToggleGrammar(editor: Atom.TextEditor) {
+        var grammar = editor.getGrammar();
+
+        this.detectGrammar(editor, grammar);
+        editor.onDidChangeGrammar((grammar: FirstMate.Grammar) => this.detectGrammar(editor, grammar));
+    }
+
+    private detectGrammar(editor: Atom.TextEditor, grammar: FirstMate.Grammar) {
+
+        if (!atom.config.get('omnisharp-atom.autoStartOnCompatibleFile')) {
+            return; //short out, if setting to not auto start is enabled
+        }
+        if (grammar.name === 'C#') {
+            if (Omni.vm.isOff) {
+                this.toggle();
+            }
+        } else if (grammar.name === "JSON") {
+            if (path.basename(editor.getPath()) === "project.json") {
+                if (Omni.vm.isOff) {
+                    this.toggle();
+                }
+            }
+        } else if (grammar.name === "C# Script File") {
+            if (Omni.vm.isOff) {
+                this.toggle()
+            }
+        }
+
     }
 
     public buildStatusBarAndDock() {
@@ -111,13 +149,21 @@ class OmniSharpAtom {
     }
 
     public toggle() {
+        var menuJsonFile = this.getPackageDir() + "/omnisharp-atom/menus/omnisharp-menu.json";
+        var menuJson = JSON.parse(fs.readFileSync(menuJsonFile, 'utf8'));
+
+
         var dependencyErrors = dependencyChecker.errors();
         if (dependencyErrors.length === 0) {
-            OmniSharpServer.get().toggle();
-            if (!OmniSharpServer.get().isStarted()) this.turnOffIcon();
-            return;
+            if (Omni.vm.isOff) {
+                this.menu = atom.menu.add(menuJson.menu);
+            } else if (this.menu) {
+                this.menu.dispose();
+                this.menu = null;
+            }
+            Omni.toggle();
         } else {
-            return _.map(dependencyErrors, missingDependency => alert(missingDependency));
+            _.map(dependencyErrors, missingDependency => alert(missingDependency));
         }
     }
 
@@ -136,7 +182,7 @@ class OmniSharpAtom {
         this.statusBarView && this.statusBarView.destroy();
         this.outputView && this.outputView.destroy();
         this.autoCompleteProvider && this.autoCompleteProvider.destroy();
-        return OmniSharpServer.get().stop();
+        Omni.client.disconnect();
     }
 
     public consumeStatusBar(statusBar) {
@@ -144,11 +190,26 @@ class OmniSharpAtom {
         this.outputView = new DockView(this);
     }
 
+    public consumeYeomanEnvironment(generatorService : { run(generator: string, path: string): void; start(prefix: string, path:string): void;  }) {
+
+        console.log('generatorService')
+        this.generator = generatorService;
+    }
+
     public provideAutocomplete() {
 
         this.autoCompleteProvider = CompletionProvider.CompletionProvider;
 
         return this.autoCompleteProvider;
+    }
+
+    public config = {
+        autoStartOnCompatibleFile: {
+            title: "Autostart Omnisharp Roslyn",
+            description: "Automatically starts Omnisharp Roslyn when a compatible file is opened.",
+            type: 'boolean',
+            default: true
+        }
     }
 
 }

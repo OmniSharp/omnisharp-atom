@@ -107,13 +107,13 @@
     padding: 0px;
     border:none;
   }
-  .pending {
+  .pending, .WARNING {
     color: @text-color-warning;
   }
   .success {
     color: @text-color-success;
   }
-  .fail {
+  .fail, .ERROR {
     color: @text-color-error;
   }
 }
@@ -154,14 +154,10 @@ atom-text-editor::shadow
   }
 }
 
-//autocomplete overrides
-
-autocomplete-suggestion-list.select-list.popover-list {
-    max-width:1200px; //HACK: Override for longer C# method names
+//autocomplete overrides, this is to keep @davidfowl happy
+li.autocomplete-omnisharp-atom .icon {
+    line-height:1.5em !important;
 }
-autocomplete-suggestion-list span.left-label {
-    max-width:200px;
-    text-overflow:ellipsis;
-    white-space:nowrap;
-    overflow:hidden;
+li.autocomplete-omnisharp-atom {
+    line-height:1.5em !important;
 }

@@ -20,12 +20,12 @@ declare module Pathwatcher {
         /**
          * This field or method was not documented by atomdoc, assume it is private. Use with caution.
          */
-        realPath: any /* default */;
+        realPath: string;
     
         /**
          * This field or method was not documented by atomdoc, assume it is private. Use with caution.
          */
-        subscriptionCount: any /* default */;
+        subscriptionCount: number;
     
         /**
          * Configures a new Directory instance, no files are accessed.
@@ -42,9 +42,9 @@ declare module Pathwatcher {
     
         /**
          * Invoke the given callback when the directory's contents change.
-         * @param callback? - {Function} to be called when the directory's contents change.
+         * @param callback - {Function} to be called when the directory's contents change.
          */
-        onDidChange(callback? : Function) : EventKit.Disposable;
+        onDidChange(callback : Function /* needs to be defined */) : EventKit.Disposable;
     
         /**
          * This field or method was not documented by atomdoc, assume it is private. Use with caution.
@@ -61,9 +61,9 @@ declare module Pathwatcher {
          */
         trackUnsubscription(subscription? : any) : any;
     
-        isFile() : boolean;
+        isFile() : File;
     
-        isDirectory() : boolean;
+        isDirectory() : Directory;
     
         exists() : boolean;
     
@@ -80,7 +80,6 @@ declare module Pathwatcher {
          * 
          * This may include unfollowed symlinks or relative directory entries. Or it
          * may be fully resolved, it depends on what you give it. 
-        Returns the directory's {String} path.
          */
         getPath() : string;
     
@@ -89,27 +88,26 @@ declare module Pathwatcher {
          * 
          * All relative directory entries are removed and symlinks are resolved to
          * their final destination. 
-        Returns this directory's completely resolved {String} path.
          */
         getRealPathSync() : string;
     
         getBaseName() : string;
     
-        relativize(fullPath? : any) : string;
+        relativize(fullPath? : string) : string;
     
         /**
          * Given a relative path, this resolves it to an absolute path relative to this
          * directory. If the path is already absolute or prefixed with a URI scheme, it
          * is returned unchanged.
          * This field or method was marked private by atomdoc. Use with caution.
-        Returns a {String} containing an absolute path or `` if the given
-URI is falsy.
+         * Returns a {String} containing an absolute path or `` if the given
+         * URI is falsy.
          */
-        resolve(relativePath? : any) : string;
+        resolve(relativePath? : string) : string;
     
         /**
          * Traverse to the parent directory.
-        Returns a {Directory}.
+         * Returns a {Directory}.
          */
         getParent() : Directory;
     
@@ -128,7 +126,7 @@ URI is falsy.
     
         /**
          * Reads file entries in this directory from disk synchronously.
-        Returns an {Array} of {File} and {Directory} objects.
+         * Returns an {Array} of {File} and {Directory} objects.
          */
         getEntriesSync() : File[];
     
@@ -138,7 +136,7 @@ URI is falsy.
          */
         getEntries(callback? : Function) : any;
     
-        contains(pathToCheck? : any) : any;
+        contains(pathToCheck? : string) : any;
     
         /**
          * Private
@@ -155,7 +153,7 @@ URI is falsy.
          * Does given full path start with the given prefix? 
          * This field or method was marked private by atomdoc. Use with caution.
          */
-        isPathPrefixOf(prefix? : any, fullPath? : any) : boolean;
+        isPathPrefixOf(prefix? : boolean, fullPath? : string) : string;
     
     }
 
@@ -177,12 +175,12 @@ URI is falsy.
         /**
          * This field or method was not documented by atomdoc, assume it is private. Use with caution.
          */
-        realPath: any /* default */;
+        realPath: string;
     
         /**
          * This field or method was not documented by atomdoc, assume it is private. Use with caution.
          */
-        subscriptionCount: any /* default */;
+        subscriptionCount: number;
     
         /**
          * Configures a new File instance, no files are accessed.
@@ -194,37 +192,37 @@ URI is falsy.
         /**
          * Creates the file on disk that corresponds to `::getPath()` if no
          * such file already exists.
-        Returns a {Promise} that resolves once the file is created on disk. It
-resolves to a boolean value that is true if the file was created or false if
-it already existed.
+         * Returns a {Promise} that resolves once the file is created on disk. It
+         * resolves to a boolean value that is true if the file was created or false if
+         * it already existed.
          */
         create() : Q.Promise<any>;
     
         /**
          * Invoke the given callback when the file's contents change.
-         * @param callback? - {Function} to be called when the file's contents change.
+         * @param callback - {Function} to be called when the file's contents change.
          */
-        onDidChange(callback? : Function) : EventKit.Disposable;
+        onDidChange(callback : Function /* needs to be defined */) : EventKit.Disposable;
     
         /**
          * Invoke the given callback when the file's path changes.
-         * @param callback? - {Function} to be called when the file's path changes.
+         * @param callback - {Function} to be called when the file's path changes.
          */
-        onDidRename(callback? : Function) : EventKit.Disposable;
+        onDidRename(callback : Function /* needs to be defined */) : EventKit.Disposable;
     
         /**
          * Invoke the given callback when the file is deleted.
-         * @param callback? - {Function} to be called when the file is deleted.
+         * @param callback - {Function} to be called when the file is deleted.
          */
-        onDidDelete(callback? : Function) : EventKit.Disposable;
+        onDidDelete(callback : Function /* needs to be defined */) : EventKit.Disposable;
     
         /**
          * Invoke the given callback when there is an error with the watch.
          * When your callback has been invoked, the file will have unsubscribed from
          * the file watches.
-         * @param callback? - {Function} callback
+         * @param callback - {Function} callback
          */
-        onWillThrowWatchError(callback? : Function) : EventKit.Disposable;
+        onWillThrowWatchError(callback : Function) : EventKit.Disposable;
     
         /**
          * This field or method was not documented by atomdoc, assume it is private. Use with caution.
@@ -241,9 +239,9 @@ it already existed.
          */
         trackUnsubscription(subscription? : any) : any;
     
-        isFile() : boolean;
+        isFile() : File;
     
-        isDirectory() : boolean;
+        isDirectory() : Directory;
     
         exists() : boolean;
     
@@ -251,13 +249,13 @@ it already existed.
     
         /**
          * Get the SHA-1 digest of this file
-        Returns a promise that resolves to a {String}.
+         * Returns a promise that resolves to a {String}.
          */
         getDigest() : string;
     
         /**
          * Get the SHA-1 digest of this file
-        Returns a {String}.
+         * Returns a {String}.
          */
         getDigestSync() : string;
     
@@ -270,7 +268,7 @@ it already existed.
          * Sets the file's character set encoding name.
          * @param encoding? - The {String} encoding to use (default: 'utf8') 
          */
-        setEncoding(encoding? : string) : void;
+        setEncoding(encoding? : string) : string;
     
         getEncoding() : string;
     
@@ -280,7 +278,7 @@ it already existed.
          * Sets the path for the file. 
          * This field or method was marked private by atomdoc. Use with caution.
          */
-        setPath(path? : any) : void;
+        setPath(path? : string) : string;
     
         getRealPathSync() : string;
     
@@ -305,33 +303,33 @@ it already existed.
         /**
          * This field or method was not documented by atomdoc, assume it is private. Use with caution.
          */
-        writeFileSync(filePath? : any, contents? : any) : any;
+        writeFileSync(filePath? : string, contents? : any) : any;
     
         /**
          * Reads the contents of the file.
          * @param flushCache? - A {Boolean} indicating whether to require a direct read or if a cached copy is acceptable.
-        Returns a promise that resovles to a String.
+         * Returns a promise that resovles to a String.
          */
         read(flushCache? : boolean) : any;
     
         /**
          * Overwrites the file with the given text.
          * @param text? - The {String} text to write to the underlying file.
-        Returns a {Promise} that resolves when the file has been written.
+         * Returns a {Promise} that resolves when the file has been written.
          */
         write(text? : string) : Q.Promise<any>;
     
         /**
          * Overwrites the file with the given text.
          * @param text? - The {String} text to write to the underlying file.
-        Returns .
+         * Returns .
          */
         writeSync(text? : string) : any;
     
         /**
          * This field or method was not documented by atomdoc, assume it is private. Use with caution.
          */
-        writeFile(filePath? : any, contents? : any) : File;
+        writeFile(filePath? : string, contents? : any) : File;
     
         /**
          * Writes the text to specified path.
@@ -340,13 +338,13 @@ it already existed.
          * permission to the path. 
          * This field or method was marked private by atomdoc. Use with caution.
          */
-        writeFileWithPrivilegeEscalationSync(filePath? : any, text? : string) : any;
+        writeFileWithPrivilegeEscalationSync(filePath? : string, text? : string) : any;
     
         /**
          * Private
          * This field or method was marked private by atomdoc. Use with caution.
          */
-        handleNativeChangeEvent(eventType? : any, eventPath? : any) : any;
+        handleNativeChangeEvent(eventType? : any, eventPath? : string) : void;
     
         /**
          * This field or method was not documented by atomdoc, assume it is private. Use with caution.
@@ -378,32 +376,32 @@ it already existed.
         /**
          * This field or method was not documented by atomdoc, assume it is private. Use with caution.
          */
-        path: any /* default */;
+        path: string;
     
         /**
          * This field or method was not documented by atomdoc, assume it is private. Use with caution.
          */
-        constructor(path? : any);
+        constructor(path? : string);
     
         /**
          * This field or method was not documented by atomdoc, assume it is private. Use with caution.
          */
-        onEvent(event? : any, filePath? : any, oldFilePath? : any) : any;
+        onEvent(event? : any, filePath? : string, oldFilePath? : string) : any;
     
         /**
          * This field or method was not documented by atomdoc, assume it is private. Use with caution.
          */
-        start() : any;
+        start() : void;
     
         /**
          * This field or method was not documented by atomdoc, assume it is private. Use with caution.
          */
-        closeIfNoListener() : any;
+        closeIfNoListener() : void;
     
         /**
          * This field or method was not documented by atomdoc, assume it is private. Use with caution.
          */
-        close() : any;
+        close() : void;
     
     }
 
@@ -420,7 +418,7 @@ it already existed.
         /**
          * This field or method was not documented by atomdoc, assume it is private. Use with caution.
          */
-        path: any /* default */;
+        path: string;
     
         /**
          * This field or method was not documented by atomdoc, assume it is private. Use with caution.
@@ -430,12 +428,12 @@ it already existed.
         /**
          * This field or method was not documented by atomdoc, assume it is private. Use with caution.
          */
-        constructor(filePath? : any, callback? : any);
+        constructor(filePath? : string, callback? : any);
     
         /**
          * This field or method was not documented by atomdoc, assume it is private. Use with caution.
          */
-        close() : any;
+        close() : void;
     
     }
 

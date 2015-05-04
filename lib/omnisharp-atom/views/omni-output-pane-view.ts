@@ -3,11 +3,11 @@ var $ = spacePenViews.jQuery;
 var Convert = require('ansi-to-html')
 import Vue = require('vue')
 import _ = require('lodash')
-import OmniSharpServer = require('../../omni-sharp-server/omni-sharp-server')
+import Omni = require('../../omni-sharp-server/omni')
 
 // Internal: A tool-panel view for the test result output.
 class OmniOutputPaneView extends spacePenViews.View {
-    private vm : {uninitialized: boolean; initialized: boolean; output: OmniSharp.VueArray<any> };
+    private vm: { uninitialized: boolean; initialized: boolean; output: OmniSharp.VueArray<any> };
     private convert: typeof Convert;
 
     public static content() {
@@ -31,7 +31,7 @@ class OmniOutputPaneView extends spacePenViews.View {
                     'v-class': 'hide: uninitialized'
                 }, () => {
                         return this.pre({
-                            'v-class': 'text-error: l.isError',
+                            'v-class': 'l.logLevel',
                             'v-repeat': 'l :output'
                         }, '{{ l.message | ansi-to-html }}');
                     });
@@ -55,7 +55,7 @@ class OmniOutputPaneView extends spacePenViews.View {
         });
         var viewModel = new Vue({
             el: this[0],
-            data: _.extend(OmniSharpServer.vm, {
+            data: _.extend(Omni.vm, {
                 uninitialized: true,
                 initialized: false,
                 output: []
@@ -67,7 +67,8 @@ class OmniOutputPaneView extends spacePenViews.View {
                 this.vm.output.$remove(0);
             }
             return this.vm.output.push({
-                message: data
+                message: data.message,
+                logLevel: data.logLevel
             });
         });
         atom.emitter.on("omni-sharp-server:err", (data) => {
@@ -75,8 +76,8 @@ class OmniOutputPaneView extends spacePenViews.View {
                 this.vm.output.$remove(0);
             }
             return this.vm.output.push({
-                message: data,
-                isError: true
+                message: data.message,
+                logLevel: data.logLevel
             });
         });
         atom.emitter.on("omni-sharp-server:stop", () => {
@@ -85,12 +86,22 @@ class OmniOutputPaneView extends spacePenViews.View {
               message: "Omnisharp server stopped."
           });
       });
-        return atom.emitter.on("omni-sharp-server:start", (pid, port) => {
+
+        return atom.emitter.on("omni-sharp-server:start", (data) => {
             this.vm.uninitialized = false;
             this.vm.initialized = true;
             this.vm.output = <OmniSharp.VueArray<any>> [];
-            return this.vm.output.push({
-                message: "Starting Omnisharp server (pid:" + pid + ", port:" + port + ")"
+            this.vm.output.push({
+                message: "Starting OmniSharp server (pid:" + data.pid + ")"
+            });
+            this.vm.output.push({
+                message: "OmniSharp Location: " + data.exePath
+            });
+            this.vm.output.push({
+                message: "Change the location that OmniSharp is loaded from by setting the OMNISHARP environment variable"
+            });
+            this.vm.output.push({
+                message: "OmniSharp Path: " + data.path
             });
         });
     }

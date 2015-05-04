@@ -24,8 +24,8 @@ class RenameView extends spacePenViews.View {
     }
 
     public initialize() {
-        this.on('core:confirm', () => this.rename());
-        return this.on('core:cancel', () => this.destroy());
+        atom.commands.add('workspace', 'core:confirm', () => this.rename());
+        atom.commands.add('workspace', 'core:cancel', () => this.destroy());
     }
 
     public configure(wordToRename) {
@@ -34,7 +34,9 @@ class RenameView extends spacePenViews.View {
     }
 
     public rename() {
-        Omni.rename(this.miniEditor.getText());
+        Omni.client.renamePromise(Omni.makeDataRequest({
+            RenameTo: this.miniEditor.getText()
+        }));
         return this.destroy();
     }
 

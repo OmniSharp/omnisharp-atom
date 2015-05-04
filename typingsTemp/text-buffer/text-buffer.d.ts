@@ -17,12 +17,12 @@ declare module TextBuffer {
         /**
          * This field or method was not documented by atomdoc, assume it is private. Use with caution.
          */
-        oldRange: TextBuffer.Range;
+        oldRange: Atom.Range;
     
         /**
          * This field or method was not documented by atomdoc, assume it is private. Use with caution.
          */
-        newRange: TextBuffer.Range;
+        newRange: Atom.Range;
     
         /**
          * This field or method was not documented by atomdoc, assume it is private. Use with caution.
@@ -52,7 +52,7 @@ declare module TextBuffer {
         /**
          * This field or method was not documented by atomdoc, assume it is private. Use with caution.
          */
-        constructor(oldRange? : Range, newRange? : Range, oldText? : string, newText? : string, normalizeLineEndings? : any, newMarkersSnapshot? : any, oldMarkersSnapshot? : any);
+        constructor(oldRange? : Atom.Range, newRange? : Atom.Range, oldText? : string, newText? : string, normalizeLineEndings? : any, newMarkersSnapshot? : any, oldMarkersSnapshot? : any);
     
         /**
          * This field or method was not documented by atomdoc, assume it is private. Use with caution.
@@ -67,7 +67,7 @@ declare module TextBuffer {
         /**
          * This field or method was not documented by atomdoc, assume it is private. Use with caution.
          */
-        invert(buffer? : any) : any;
+        invert(buffer? : boolean) : boolean;
     
         /**
          * This field or method was not documented by atomdoc, assume it is private. Use with caution.
@@ -90,7 +90,7 @@ declare module TextBuffer {
         /**
          * This field or method was not documented by atomdoc, assume it is private. Use with caution.
          */
-        static version: any /* default */;
+        static version: number;
     
         /**
          * This field or method was not documented by atomdoc, assume it is private. Use with caution.
@@ -125,7 +125,7 @@ declare module TextBuffer {
         /**
          * This field or method was not documented by atomdoc, assume it is private. Use with caution.
          */
-        constructor(buffer? : any, undoStack? : void, redoStack? : void);
+        constructor(buffer? : any, undoStack? : any, redoStack? : any);
     
         /**
          * Used by {Serializable} during serialization 
@@ -199,12 +199,12 @@ declare module TextBuffer {
         /**
          * This field or method was not documented by atomdoc, assume it is private. Use with caution.
          */
-        clearUndoStack() : any;
+        clearUndoStack() : void;
     
         /**
          * This field or method was not documented by atomdoc, assume it is private. Use with caution.
          */
-        clearRedoStack() : any;
+        clearRedoStack() : void;
     
     }
 
@@ -220,7 +220,7 @@ declare module TextBuffer {
         /**
          * This field or method was not documented by atomdoc, assume it is private. Use with caution.
          */
-        markers: Atom.Marker[];
+        markers: Marker;
     
         /**
          * This field or method was not documented by atomdoc, assume it is private. Use with caution.
@@ -254,12 +254,12 @@ declare module TextBuffer {
         /**
          * This field or method was not documented by atomdoc, assume it is private. Use with caution.
          */
-        markRange(range? : Range, properties? : any) : Range;
+        markRange(range? : Marker, properties? : Marker) : Marker;
     
         /**
          * This field or method was not documented by atomdoc, assume it is private. Use with caution.
          */
-        markPosition(position? : Point, properties? : any) : Point;
+        markPosition(position? : Marker, properties? : Marker) : Marker;
     
         /**
          * This field or method was not documented by atomdoc, assume it is private. Use with caution.
@@ -274,7 +274,7 @@ declare module TextBuffer {
         /**
          * This field or method was not documented by atomdoc, assume it is private. Use with caution.
          */
-        getMarkerCount() : any;
+        getMarkerCount() : number;
     
         /**
          * This field or method was not documented by atomdoc, assume it is private. Use with caution.
@@ -299,7 +299,7 @@ declare module TextBuffer {
         /**
          * This field or method was not documented by atomdoc, assume it is private. Use with caution.
          */
-        handleBufferChange(patch? : any) : any;
+        handleBufferChange(patch? : any) : void;
     
         /**
          * This field or method was not documented by atomdoc, assume it is private. Use with caution.
@@ -362,7 +362,7 @@ declare module TextBuffer {
         /**
          * This field or method was not documented by atomdoc, assume it is private. Use with caution.
          */
-        invert() : any;
+        invert() : boolean;
     
         /**
          * This field or method was not documented by atomdoc, assume it is private. Use with caution.
@@ -417,24 +417,24 @@ declare module TextBuffer {
     
         /**
          * Invoke the given callback when the marker is destroyed.
-         * @param callback? - {Function} to be called when the marker is destroyed.
+         * @param callback - {Function} to be called when the marker is destroyed.
          */
-        onDidDestroy(callback? : Function) : EventKit.Disposable;
+        onDidDestroy(callback : Function /* needs to be defined */) : EventKit.Disposable;
     
         /**
          * Invoke the given callback when the state of the marker changes.
-         * @param callback? - {Function} to be called when the marker changes.
+         * @param callback - {Function} to be called when the marker changes.
          */
-        onDidChange(callback? : Function) : EventKit.Disposable;
+        onDidChange(callback : Function /* needs to be defined */) : EventKit.Disposable;
     
-        getRange() : Range;
+        getRange() : Atom.Range;
     
         /**
          * Sets the range of the marker.
          * @param range? - A {Range} or range-compatible {Array}. The range will be clipped before it is assigned.
          * @param properties? - {Object} properties to associate with the marker.
          */
-        setRange(range? : Range, properties? : Object) : Range;
+        setRange(range? : Atom.Range, properties? : any) : Atom.Range;
     
         getHeadPosition() : Point;
     
@@ -443,7 +443,7 @@ declare module TextBuffer {
          * @param position? - A {Point} or point-compatible {Array}. The position will be clipped before it is assigned.
          * @param properties? - {Object} properties to associate with the marker. 
          */
-        setHeadPosition(position? : Point, properties? : Object) : Point;
+        setHeadPosition(position? : Point, properties? : any) : Point;
     
         getTailPosition() : Point;
     
@@ -453,7 +453,7 @@ declare module TextBuffer {
          * @param position? - A {Point} or point-compatible {Array}. The position will be clipped before it is assigned.
          * @param properties? - {Object} properties to associate with the marker. 
          */
-        setTailPosition(position? : Point, properties? : Object) : Point;
+        setTailPosition(position? : Point, properties? : any) : Point;
     
         getStartPosition() : Point;
     
@@ -465,7 +465,7 @@ declare module TextBuffer {
          * again.
          * @param properties? - {Object} properties to associate with the marker. 
          */
-        clearTail(properties? : Object) : any;
+        clearTail(properties? : any) : void;
     
         /**
          * Plants the marker's tail at the current head position. After calling
@@ -489,13 +489,13 @@ declare module TextBuffer {
          */
         isDestroyed() : boolean;
     
-        isEqual(other? : Marker) : boolean;
+        isEqual(other? : boolean) : boolean;
     
         /**
          * Get the invalidation strategy for this marker.
          * 
          * Valid values include: `never`, `surround`, `overlap`, `inside`, and `touch`.
-        Returns a {String}.
+         * Returns a {String}.
          */
         getInvalidationStrategy() : string;
     
@@ -506,14 +506,14 @@ declare module TextBuffer {
          * existing properties.
          * @param properties? - {Object} 
          */
-        setProperties(properties? : Object) : void;
+        setProperties(properties? : any) : void;
     
         /**
          * Creates and returns a new {Marker} with the same properties as this
          * marker.
          * @param params? - {Object} 
          */
-        copy(params? : Object) : Marker;
+        copy(params? : Marker) : Marker;
     
         /**
          * Destroys the marker, causing it to emit the 'destroyed' event. Once
@@ -535,16 +535,16 @@ declare module TextBuffer {
         /**
          * 
          * This field or method was marked private by atomdoc. Use with caution.
-        Returns whether this marker matches the given parameters. The parameters
-are the same as {MarkerManager::findMarkers}.
+         * Returns whether this marker matches the given parameters. The parameters
+         * are the same as {MarkerManager::findMarkers}.
          */
         matchesParams(params? : any) : any;
     
         /**
          * 
          * This field or method was marked private by atomdoc. Use with caution.
-        Returns whether this marker matches the given parameter name and value.
-The parameters are the same as {MarkerManager::findMarkers}.
+         * Returns whether this marker matches the given parameter name and value.
+         * The parameters are the same as {MarkerManager::findMarkers}.
          */
         matchesParam(key? : any, value? : any) : any;
     
@@ -558,12 +558,12 @@ The parameters are the same as {MarkerManager::findMarkers}.
          * based on the given {BufferPatch}. 
          * This field or method was marked private by atomdoc. Use with caution.
          */
-        handleBufferChange(patch? : any) : any;
+        handleBufferChange(patch? : any) : void;
     
         /**
          * This field or method was not documented by atomdoc, assume it is private. Use with caution.
          */
-        update(options? : (range? : Range,reversed? : any,tailed? : any,valid? : any,properties? : any) => any, textChanged? : any) : void;
+        update(options? : (range? : Atom.Range,reversed? : any,tailed? : any,valid? : any,properties? : any) => any, textChanged? : any) : void;
     
         /**
          * Updates the interval index on the marker manager with the marker's current
@@ -592,7 +592,7 @@ The parameters are the same as {MarkerManager::findMarkers}.
          * Convert any point-compatible object to a {Point}.
          * @param object? - This can be an object that's already a {Point}, in which case it's simply returned, or an array containing two {Number}s representing the row and column.
          * @param copy? - An optional boolean indicating whether to force the copying of objects that are already points.
-        Returns: A {Point} based on the given object.
+         * Returns: A {Point} based on the given object.
          */
         static fromObject(object? : Point, copy? : any) : Point;
     
@@ -621,7 +621,7 @@ The parameters are the same as {MarkerManager::findMarkers}.
     
         /**
          * Makes this point immutable and returns itself.
-        Returns an immutable version of this {Point}
+         * Returns an immutable version of this {Point}
          */
         freeze() : Point;
     
@@ -629,7 +629,7 @@ The parameters are the same as {MarkerManager::findMarkers}.
          * Build and return a new point by adding the rows and columns of
          * the given point.
          * @param other? - A {Point} whose row and column will be added to this point's row and column to build the returned point.
-        Returns a {Point}.
+         * Returns a {Point}.
          */
         translate(other? : Point) : Point;
     
@@ -643,7 +643,7 @@ The parameters are the same as {MarkerManager::findMarkers}.
          * traversed, a carriage return occurs that returns the columns to 0 before
          * continuing the traversal.
          * @param other? - A {Point} providing the rows and columns to traverse by.
-        Returns a {Point}.
+         * Returns a {Point}.
          */
         traverse(other? : Point) : Point;
     
@@ -654,15 +654,15 @@ The parameters are the same as {MarkerManager::findMarkers}.
     
         compare(other? : Point) : any;
     
-        isEqual(other? : Point) : boolean;
+        isEqual(other? : boolean) : boolean;
     
-        isLessThan(other? : Point) : boolean;
+        isLessThan(other? : boolean) : boolean;
     
-        isLessThanOrEqual(other? : Point) : boolean;
+        isLessThanOrEqual(other? : boolean) : boolean;
     
-        isGreaterThan(other? : Point) : boolean;
+        isGreaterThan(other? : boolean) : boolean;
     
-        isGreaterThanOrEqual(other? : Point) : boolean;
+        isGreaterThanOrEqual(other? : boolean) : boolean;
     
         toArray() : any;
     
@@ -680,7 +680,7 @@ The parameters are the same as {MarkerManager::findMarkers}.
          * Convert any range-compatible object to a {Range}.
          * @param object? - This can be an object that's already a {Range}, in which case it's simply returned, or an array containing two {Point}s or point-compatible arrays.
          * @param copy? - An optional boolean indicating whether to force the copying of objects that are already ranges.˚
-        Returns: A {Range} based on the given object.
+         * Returns: A {Range} based on the given object.
          */
         static fromObject(object? : Range, copy? : any) : Range;
     
@@ -696,14 +696,14 @@ The parameters are the same as {MarkerManager::findMarkers}.
          * @param startPoint? - A {Point} or point-compatible {Array}
          * @param rowDelta? - A {Number} indicating how many rows to add to the start point to get the end point.
          * @param columnDelta? - A {Number} indicating how many rows to columns to the start point to get the end point. 
-        Returns a {Range} that starts at the given point and ends at the
-start point plus the given row and column deltas.
+         * Returns a {Range} that starts at the given point and ends at the
+         * start point plus the given row and column deltas.
          */
         static fromPointWithDelta(startPoint? : Point, rowDelta? : number, columnDelta? : number) : Range;
     
         /**
          * Call this with the result of {Range::serialize} to construct a new Range.
-         * @param array? - {Array} of params to pass to the {::constructor} 
+         * @param array? - {array} of params to pass to the {::constructor} 
          */
         static deserialize(array? : any[]) : any;
     
@@ -723,11 +723,10 @@ start point plus the given row and column deltas.
          */
         isEmpty() : boolean;
     
-        isSingleLine() : boolean;
+        isSingleLine() : number;
     
         /**
          * Get the number of rows in this range.
-        Returns a {Number}.
          */
         getRowCount() : number;
     
@@ -736,18 +735,18 @@ start point plus the given row and column deltas.
         /**
          * Freezes the range and its start and end point so it becomes
          * immutable and returns itself.
-        Returns an immutable version of this {Range}
+         * Returns an immutable version of this {Range}
          */
         freeze() : Range;
     
-        union(otherRange? : Range) : any;
+        union(otherRange? : Atom.Range) : any;
     
         /**
          * Build and return a new range by translating this range's start and
          * end points by the given delta(s).
          * @param startDelta? - A {Point} by which to translate the start of this range.
          * @param endDelta? - A {Point} to by which to translate the end of this range. If omitted, the `startDelta` will be used instead.
-        Returns a {Range}.
+         * Returns a {Range}.
          */
         translate(startDelta? : Point, endDelta? : Point) : Range;
     
@@ -757,19 +756,19 @@ start point plus the given row and column deltas.
          * 
          * See {Point::traverse} for details of how traversal differs from translation.
          * @param delta? - A {Point} containing the rows and columns to traverse to derive the new range.
-        Returns a {Range}.
+         * Returns a {Range}.
          */
         traverse(delta? : Point) : Range;
     
         /**
          * Compare two Ranges
-        Returns `-1` if this range starts before the argument or contains it.
-        Returns `0` if this range is equivalent to the argument.
-        Returns `1` if this range starts after the argument or is contained by it.
+         * Returns `-1` if this range starts before the argument or contains it.
+         * Returns `0` if this range is equivalent to the argument.
+         * Returns `1` if this range starts after the argument or is contained by it.
          */
         compare(other? : any) : any;
     
-        isEqual(other? : any) : boolean;
+        isEqual(other? : boolean) : boolean;
     
         coversSameRows(other? : any) : number[];
     
@@ -777,17 +776,16 @@ start point plus the given row and column deltas.
          * Determines whether this range intersects with the argument.
          * @param otherRange? - A {Range} or range-compatible {Array}
          * @param exclusive? - {Boolean} indicating whether to exclude endpoints   when testing for intersection. Defaults to `false`.
-        Returns a {Boolean}.
          */
-        intersectsWith(otherRange? : Range, exclusive? : boolean) : boolean;
+        intersectsWith(otherRange? : Atom.Range, exclusive? : boolean) : boolean;
     
-        containsRange(otherRange? : Range, exclusive? : any) : Range;
+        containsRange(otherRange? : Atom.Range, exclusive? : any) : Atom.Range;
     
         containsPoint(point? : Point, exclusive? : any) : Point;
     
         intersectsRow(row? : number) : number;
     
-        intersectsRowRange(startRow? : number, endRow? : number) : Range;
+        intersectsRowRange(startRow? : number, endRow? : number) : Atom.Range;
     
         /**
          * Conversion
@@ -812,7 +810,7 @@ start point plus the given row and column deltas.
         /**
          * This field or method was not documented by atomdoc, assume it is private. Use with caution.
          */
-        static Range: TextBuffer.Range;
+        static Range: Atom.Range;
     
         /**
          * This field or method was not documented by atomdoc, assume it is private. Use with caution.
@@ -857,7 +855,7 @@ start point plus the given row and column deltas.
         /**
          * This field or method was not documented by atomdoc, assume it is private. Use with caution.
          */
-        refcount: any /* default */;
+        refcount: number;
     
         /**
          * This field or method was not documented by atomdoc, assume it is private. Use with caution.
@@ -888,9 +886,9 @@ start point plus the given row and column deltas.
          * 
          * Because observers are invoked synchronously, it's important not to perform
          * any expensive operations via this method.
-         * @param callback? - {Function} to be called when the buffer changes.
+         * @param callback - {Function} to be called when the buffer changes.
          */
-        onWillChange(callback? : Function) : EventKit.Disposable;
+        onWillChange(callback : Function) : EventKit.Disposable;
     
         /**
          * Invoke the given callback synchronously when the content of the
@@ -899,9 +897,9 @@ start point plus the given row and column deltas.
          * Because observers are invoked synchronously, it's important not to perform
          * any expensive operations via this method. Consider {::onDidStopChanging} to
          * delay expensive operations until after changes stop occurring.
-         * @param callback? - {Function} to be called when the buffer changes.
+         * @param callback - {Function} to be called when the buffer changes.
          */
-        onDidChange(callback? : Function) : EventKit.Disposable;
+        onDidChange(callback : Function /* needs to be defined */) : EventKit.Disposable;
     
         /**
          * This field or method was not documented by atomdoc, assume it is private. Use with caution.
@@ -916,22 +914,22 @@ start point plus the given row and column deltas.
          * This method can be used to perform potentially expensive operations that
          * don't need to be performed synchronously. If you need to run your callback
          * synchronously, use {::onDidChange} instead.
-         * @param callback? - {Function} to be called when the buffer stops changing.
+         * @param callback - {Function} to be called when the buffer stops changing.
          */
-        onDidStopChanging(callback? : Function) : EventKit.Disposable;
+        onDidStopChanging(callback : Function /* needs to be defined */) : EventKit.Disposable;
     
         /**
          * Invoke the given callback when the in-memory contents of the
          * buffer become in conflict with the contents of the file on disk.
-         * @param callback? - {Function} to be called when the buffer enters conflict.
+         * @param callback - {Function} to be called when the buffer enters conflict.
          */
-        onDidConflict(callback? : Function) : EventKit.Disposable;
+        onDidConflict(callback : Function /* needs to be defined */) : EventKit.Disposable;
     
         /**
          * Invoke the given callback the value of {::isModified} changes.
-         * @param callback? - {Function} to be called when {::isModified} changes.
+         * @param callback - {Function} to be called when {::isModified} changes.
          */
-        onDidChangeModified(callback? : Function) : EventKit.Disposable;
+        onDidChangeModified(callback : Function /* needs to be defined */) : EventKit.Disposable;
     
         /**
          * Invoke the given callback when all marker `::onDidChange`
@@ -948,78 +946,78 @@ start point plus the given row and column deltas.
          * 
          * Basically, this method gives you a way to take action after both a buffer
          * change and all associated marker changes.
-         * @param callback? - {Function} to be called after markers are updated.
+         * @param callback - {Function} to be called after markers are updated.
          */
-        onDidUpdateMarkers(callback? : Function) : EventKit.Disposable;
+        onDidUpdateMarkers(callback : Function /* needs to be defined */) : EventKit.Disposable;
     
         /**
          * Invoke the given callback when a marker is created.
-         * @param callback? - {Function} to be called when a marker is created.
+         * @param callback - {Function} to be called when a marker is created.
          */
-        onDidCreateMarker(callback? : Function) : EventKit.Disposable;
+        onDidCreateMarker(callback : Function /* needs to be defined */) : EventKit.Disposable;
     
         /**
          * Invoke the given callback when the value of {::getPath} changes.
-         * @param callback? - {Function} to be called when the path changes.
+         * @param callback - {Function} to be called when the path changes.
          */
-        onDidChangePath(callback? : Function) : EventKit.Disposable;
+        onDidChangePath(callback : Function /* needs to be defined */) : EventKit.Disposable;
     
         /**
          * Invoke the given callback when the value of {::getEncoding} changes.
-         * @param callback? - {Function} to be called when the encoding changes.
+         * @param callback - {Function} to be called when the encoding changes.
          */
-        onDidChangeEncoding(callback? : Function) : EventKit.Disposable;
+        onDidChangeEncoding(callback : Function /* needs to be defined */) : EventKit.Disposable;
     
         /**
          * Invoke the given callback before the buffer is saved to disk.
-         * @param callback? - {Function} to be called before the buffer is saved.
+         * @param callback - {Function} to be called before the buffer is saved.
          */
-        onWillSave(callback? : Function) : EventKit.Disposable;
+        onWillSave(callback : Function) : EventKit.Disposable;
     
         /**
          * Invoke the given callback after the buffer is saved to disk.
-         * @param callback? - {Function} to be called after the buffer is saved.
+         * @param callback - {Function} to be called after the buffer is saved.
          */
-        onDidSave(callback? : Function) : EventKit.Disposable;
+        onDidSave(callback : Function /* needs to be defined */) : EventKit.Disposable;
     
         /**
          * Invoke the given callback after the file backing the buffer is
          * deleted.
-         * @param callback? - {Function} to be called after the buffer is deleted.
+         * @param callback - {Function} to be called after the buffer is deleted.
          */
-        onDidDelete(callback? : Function) : EventKit.Disposable;
+        onDidDelete(callback : Function /* needs to be defined */) : EventKit.Disposable;
     
         /**
          * Invoke the given callback before the buffer is reloaded from the
          * contents of its file on disk.
-         * @param callback? - {Function} to be called before the buffer is reloaded.
+         * @param callback - {Function} to be called before the buffer is reloaded.
          */
-        onWillReload(callback? : Function) : EventKit.Disposable;
+        onWillReload(callback : Function) : EventKit.Disposable;
     
         /**
          * Invoke the given callback after the buffer is reloaded from the
          * contents of its file on disk.
-         * @param callback? - {Function} to be called after the buffer is reloaded.
+         * @param callback - {Function} to be called after the buffer is reloaded.
          */
-        onDidReload(callback? : Function) : EventKit.Disposable;
+        onDidReload(callback : Function /* needs to be defined */) : EventKit.Disposable;
     
         /**
          * Invoke the given callback when the buffer is destroyed.
-         * @param callback? - {Function} to be called when the buffer is destroyed.
+         * @param callback - {Function} to be called when the buffer is destroyed.
          */
-        onDidDestroy(callback? : Function) : EventKit.Disposable;
+        onDidDestroy(callback : Function /* needs to be defined */) : EventKit.Disposable;
     
         /**
          * Invoke the given callback when there is an error in watching the
          * file.
-         * @param callback? - {Function} callback
+         * @param callback - {Function} callback
          */
-        onWillThrowWatchError(callback? : Function) : EventKit.Disposable;
+        onWillThrowWatchError(callback : Function) : EventKit.Disposable;
     
         /**
          * Get the number of milliseconds that will elapse without a change
          * before {::onDidStopChanging} observers are invoked following a change.
-        Returns a {Number}.
+         * Returns a {Number}.
          */
         getStoppedChangingDelay() : number;
     
@@ -1039,7 +1037,6 @@ start point plus the given row and column deltas.
     
         /**
          * Get the path of the associated file.
-        Returns a {String}.
          */
         getPath() : string;
     
@@ -1047,13 +1044,13 @@ start point plus the given row and column deltas.
          * Set the path for the buffer's associated file.
          * @param filePath? - A {String} representing the new file path 
          */
-        setPath(filePath? : string) : void;
+        setPath(filePath? : string) : string;
     
         /**
          * Sets the character set encoding for this buffer.
          * @param encoding? - The {String} encoding to use (default: 'utf8'). 
          */
-        setEncoding(encoding? : string) : void;
+        setEncoding(encoding? : string) : string;
     
         getEncoding() : string;
     
@@ -1085,20 +1082,18 @@ start point plus the given row and column deltas.
          * Get the text in a range.
          * @param range? - A {Range}
          */
-        getTextInRange(range? : Range) : Range;
+        getTextInRange(range? : Atom.Range) : Atom.Range;
     
         /**
          * Get the text of all lines in the buffer, without their line endings.
-        Returns an {Array} of {String}s.
          */
         getLines() : string[];
     
         /**
          * Get the text of the last line of the buffer, without its line
          * ending.
-        Returns a {String}.
          */
-        getLastLine() : string;
+        getLastLine() : number;
     
         /**
          * Get the text of the line at the given row, without its line ending.
@@ -1141,14 +1136,14 @@ start point plus the given row and column deltas.
          * Replace the entire contents of the buffer with the given text.
          * @param text? - A {String}
          */
-        setText(text? : string) : void;
+        setText(text? : string) : string;
     
         /**
          * Replace the current buffer contents by applying a diff based on the
          * given text.
          * @param text? - A {String} containing the new buffer contents. 
          */
-        setTextViaDiff(text? : string) : void;
+        setTextViaDiff(text? : string) : string;
     
         /**
          * Set the text in the given range.
@@ -1156,7 +1151,7 @@ start point plus the given row and column deltas.
          * @param text? - A {String}
          * @param options? - {Object}
          */
-        setTextInRange(range? : Range, text? : string, options? : Object) : Range;
+        setTextInRange(range? : Atom.Range, text? : string, options? : any) : Atom.Range;
     
         /**
          * Insert text at the given position.
@@ -1164,13 +1159,13 @@ start point plus the given row and column deltas.
          * @param text? - A {String} representing the text to insert.
          * @param options? - {Object}
          */
-        insert(position? : Point, text? : string, options? : Object) : Range | boolean;
+        insert(position? : boolean, text? : string, options? : boolean) : Range | boolean;
     
         /**
          * Append text to the end of the buffer.
          * @param text? - A {String} representing the text text to append.
          * @param options? - {Object}
-        Returns the {Range} of the inserted text
+         * Returns the {Range} of the inserted text
          */
         append(text? : string, options? : Object) : Range;
     
@@ -1179,7 +1174,7 @@ start point plus the given row and column deltas.
          * pushed into the undo history so it can be undone. 
          * This field or method was marked private by atomdoc. Use with caution.
          */
-        buildPatch(oldRange? : Range, newText? : string, normalizeLineEndings? : any) : any;
+        buildPatch(oldRange? : Atom.Range, newText? : string, normalizeLineEndings? : any) : any;
     
         /**
          * Applies a {BufferPatch} to the buffer based on its old range and new text.
@@ -1192,13 +1187,13 @@ start point plus the given row and column deltas.
          * Delete the text in the given range.
          * @param range? - A {Range} in which to delete. The range is clipped before deleting.
          */
-        delete(range? : Range) : void;
+        delete(range? : Atom.Range) : void;
     
         /**
          * Delete the line associated with a specified row.
          * @param row? - A {Number} representing the 0-indexed row to delete.
          */
-        deleteRow(row? : number) : void;
+        deleteRow(row? : number) : number;
     
         /**
          * Delete the lines associated with the specified row range.
@@ -1208,7 +1203,7 @@ start point plus the given row and column deltas.
          * @param startRow? - A {Number} representing the first row to delete.
          * @param endRow? - A {Number} representing the last row to delete, inclusive.
          */
-        deleteRows(startRow? : number, endRow? : number) : void;
+        deleteRows(startRow? : number, endRow? : number) : number[];
     
         /**
          * Create a marker with the given range. This marker will maintain
@@ -1218,14 +1213,14 @@ start point plus the given row and column deltas.
          * @param range? - A {Range} or range-compatible {Array}
          * @param properties? - A hash of key-value pairs to associate with the marker. There are also reserved property names that have marker-specific meaning.
          */
-        markRange(range? : Range, properties? : any) : Range;
+        markRange(range? : Marker, properties? : Marker) : Marker;
     
         /**
          * Create a marker at the given position with no tail.
          * @param position? - {Point} or point-compatible {Array}
          * @param properties? - This is the same as the `properties` parameter in {::markRange}
          */
-        markPosition(position? : Point, properties? : any) : Point;
+        markPosition(position? : Marker, properties? : Marker) : Marker;
     
         /**
          * Get all existing markers on the buffer.
@@ -1249,14 +1244,13 @@ start point plus the given row and column deltas.
     
         /**
          * Get the number of markers in the buffer.
-        Returns a {Number}.
          */
         getMarkerCount() : number;
     
         /**
          * This field or method was not documented by atomdoc, assume it is private. Use with caution.
          */
-        destroyMarker(id? : any) : void;
+        destroyMarker(id? : any) : Atom.Marker;
     
         /**
          * Undo the last operation. If a transaction is in progress, aborts it. 
@@ -1283,7 +1277,7 @@ start point plus the given row and column deltas.
         /**
          * Clear the undo stack. 
          */
-        clearUndoStack() : any;
+        clearUndoStack() : void;
     
         /**
          * Create a pointer to the current state of the buffer for use
@@ -1337,7 +1331,7 @@ start point plus the given row and column deltas.
          * @param range? - A {Range} in which to search.
          * @param iterator? - A {Function} that's called on each match with an {Object} containing the following keys:
          */
-        scanInRange(regex? : RegExp, range? : Range, iterator? : Function, reverse? : any) : Range;
+        scanInRange(regex? : RegExp, range? : Atom.Range, iterator? : Function, reverse? : any) : Atom.Range;
     
         /**
          * Scan regular expression matches in a given range in reverse order,
@@ -1346,13 +1340,13 @@ start point plus the given row and column deltas.
          * @param range? - A {Range} in which to search.
          * @param iterator? - A {Function} that's called on each match with an {Object} containing the following keys:
          */
-        backwardsScanInRange(regex? : RegExp, range? : Range, iterator? : Function) : Range;
+        backwardsScanInRange(regex? : RegExp, range? : Atom.Range, iterator? : Function) : Atom.Range;
     
         /**
          * Replace all regular expression matches in the entire buffer.
          * @param regex? - A {RegExp} representing the matches to be replaced.
          * @param replacementText? - A {String} representing the text to replace each match.
-        Returns a {Number} representing the number of replacements made.
+         * Returns a {Number} representing the number of replacements made.
          */
         replace(regex? : RegExp, replacementText? : string) : number;
     
@@ -1363,16 +1357,15 @@ start point plus the given row and column deltas.
          * @param startIndex? - A {Number} representing the starting character offset.
          * @param endIndex? - A {Number} representing the ending character offset.
          */
-        matchesInCharacterRange(regex? : RegExp, startIndex? : number, endIndex? : number) : Range;
+        matchesInCharacterRange(regex? : RegExp, startIndex? : number, endIndex? : number) : Atom.Range;
     
         /**
          * Get the range spanning from `[0, 0]` to {::getEndPosition}.
          */
-        getRange() : Range;
+        getRange() : Atom.Range;
     
         /**
          * Get the number of lines in the buffer.
-        Returns a {Number}.
          */
         getLineCount() : number;
     
@@ -1394,7 +1387,7 @@ start point plus the given row and column deltas.
     
         /**
          * Get the length of the buffer in characters.
-        Returns a {Number}.
+         * Returns a {Number}.
          */
         getMaxCharacterIndex() : number;
     
@@ -1403,7 +1396,7 @@ start point plus the given row and column deltas.
          * @param row? - A {Number} representing a 0-indexed row.
          * @param includeNewline? - A {Boolean} indicating whether or not to include the newline, which results in a range that extends to the start of the next line.
          */
-        rangeForRow(row? : number, includeNewline? : boolean) : Range;
+        rangeForRow(row? : number, includeNewline? : boolean) : number;
     
         /**
          * Convert a position in the buffer in row/column coordinates to an
@@ -1430,7 +1423,7 @@ start point plus the given row and column deltas.
          * only 10 characters long, and it would be clipped to `(1, 10)`.
          * @param range? - A {Range} or range-compatible {Array} to clip.
          */
-        clipRange(range? : Range) : Range;
+        clipRange(range? : Atom.Range) : Atom.Range;
     
         /**
          * Clip the given point so it is at a valid position in the buffer.
@@ -1450,14 +1443,14 @@ start point plus the given row and column deltas.
          * Save the buffer at a specific path.
          * @param filePath? - The path to save at. 
          */
-        saveAs(filePath? : any) : void;
+        saveAs(filePath? : string) : void;
     
         /**
          * Reload the buffer's contents from disk.
          * 
          * Sets the buffer's content to the cached disk contents 
          */
-        reload() : any;
+        reload() : void;
     
         /**
          * Rereads the contents of the file, and stores them in the cache. 
@@ -1469,21 +1462,21 @@ start point plus the given row and column deltas.
          * Rereads the contents of the file, and stores them in the cache.
          * This field or method was marked private by atomdoc. Use with caution.
          * @param flushCache? - {Boolean} flush option to pass through to
-        ```
-                 {File::read} (default: false).
-        ```
+```
+         {File::read} (default: false).
+```
          * @param callback? - {Function} to call after the cached contents have
-        ```
-                 been updated.
-        ```
+```
+         been updated.
+```
          */
-        updateCachedDiskContents(flushCache? : boolean, callback? : Function) : void;
+        updateCachedDiskContents(flushCache? : boolean, callback? : any) : void;
     
         /**
          * Private Utility Methods
          * This field or method was marked private by atomdoc. Use with caution.
          */
-        markerCreated(marker? : Atom.Marker) : any;
+        markerCreated(marker? : Marker) : Marker;
     
         /**
          * This field or method was not documented by atomdoc, assume it is private. Use with caution.
@@ -1540,7 +1533,7 @@ start point plus the given row and column deltas.
          * 
          * For example, if the {EditorView} was split.
          * This field or method was marked private by atomdoc. Use with caution.
-        Returns a {Boolean}.
+         * Returns a {Boolean}.
          */
         hasMultipleEditors() : boolean;
     
@@ -1557,12 +1550,12 @@ start point plus the given row and column deltas.
         /**
          * This field or method was not documented by atomdoc, assume it is private. Use with caution.
          */
-        emitModifiedStatusChanged(modifiedStatus? : any) : any;
+        emitModifiedStatusChanged(modifiedStatus? : any) : void;
     
         /**
          * This field or method was not documented by atomdoc, assume it is private. Use with caution.
          */
-        logLines(start? : any, end? : any) : any;
+        logLines(start? : any, end? : any) : string[];
     
     }
 
@@ -1608,7 +1601,7 @@ start point plus the given row and column deltas.
         /**
          * This field or method was not documented by atomdoc, assume it is private. Use with caution.
          */
-        invert(buffer? : any) : any;
+        invert(buffer? : boolean) : boolean;
     
         /**
          * This field or method was not documented by atomdoc, assume it is private. Use with caution.

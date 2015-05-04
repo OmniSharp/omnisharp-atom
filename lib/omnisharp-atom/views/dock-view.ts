@@ -3,6 +3,7 @@ var $ = spacePenViews.jQuery;
 var Convert = require('ansi-to-html')
 import Vue = require('vue')
 
+import Omni = require('../../omni-sharp-server/omni')
 import OmniSharpAtom = require("../omnisharp-atom");
 import FindPaneView = require('./find-pane-view')
 import BuildOutputPaneView = require('./build-output-pane-view')
@@ -118,7 +119,8 @@ class DockView extends spacePenViews.View {
         atom.commands.add('atom-workspace', "omnisharp-atom:show-build", () => this.selectPane("build"));
         atom.commands.add('atom-workspace', "omnisharp-atom:show-omni", () => this.selectPane("omni"));
 
-        this.on('core:cancel core:close', () => this.hideView());
+        atom.commands.add('atom-workspace', 'core:close', () => this.hideView());
+        atom.commands.add('atom-workspace', 'core:cancel', () => this.hideView());
 
         this.on('mousedown', '.omnisharp-atom-output-resizer', e => this.resizeStarted(e));
 
@@ -129,7 +131,7 @@ class DockView extends spacePenViews.View {
         });
     }
 
-    constructor(private omnisharpAtom : OmniSharpAtom) {
+    constructor(private omnisharpAtom : typeof OmniSharpAtom) {
         super();
     }
 

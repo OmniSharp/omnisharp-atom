@@ -1,46 +1,45 @@
 import Omni = require('../../../omni-sharp-server/omni')
-import OmniServer = require("../../../omni-sharp-server/omni-sharp-server");
 
 import _ = require('lodash')
 
 export interface RequestOptions {
-            editor: Atom.TextEditor;
-            bufferPosition: TextBuffer.Point; // the position of the cursor
-            prefix: string;
-            scopeDescriptor: { scopes: string[] };
+    editor: Atom.TextEditor;
+    bufferPosition: TextBuffer.Point; // the position of the cursor
+    prefix: string;
+    scopeDescriptor: { scopes: string[] };
 }
 
 export interface Suggestion {
 
-       //Either text or snippet is required
-       text?: string;
-       snippet?: string;
-       displayText?: string;
-       replacementPrefix?: string;
-       type: string;
-       leftLabel?: string;
-       leftLabelHTML?: string;
-       rightLabel?: string;
-       rightLabelHTML?: string;
-       iconHTML?: string;
-       description?: string;
-       descriptionMoreURL?: string;
-
-   }
+    //Either text or snippet is required
+    text?: string;
+    snippet?: string;
+    displayText?: string;
+    replacementPrefix?: string;
+    type: string;
+    leftLabel?: string;
+    leftLabelHTML?: string;
+    rightLabel?: string;
+    rightLabelHTML?: string;
+    iconHTML?: string;
+    description?: string;
+    descriptionMoreURL?: string;
+    className?: string;
+}
 
 
 export var CompletionProvider = {
 
-    selector: '.source.cs',
+    selector: '.source.cs, .source.csx',
     disableForSelector: 'source.cs .comment',
 
     inclusionPriority: 1,
     excludeLowerPriority: true,
 
-    getSuggestions(options : RequestOptions) : Promise<Suggestion[]> {
+    getSuggestions(options: RequestOptions): Promise<Suggestion[]> {
         return new Promise<Suggestion[]>(resolve => {
 
-            if (OmniServer.vm.isOff) {
+            if (!Omni.vm.isReady) {
                 return;
             }
 
@@ -62,20 +61,25 @@ export var CompletionProvider = {
             } while (wordRegex.test(data.charAt(start)));
 
             var word = data.substring(start + 1, end);
-
-            Omni.autocomplete(word)
-                .then(completions => {
+            var p = Omni.client.autocompletePromise(Omni.makeDataRequest<OmniSharp.Models.AutoCompleteRequest>({
+                WordToComplete: word,
+                WantDocumentationForEveryCompletionResult: false,
+                WantKind: true,
+                WantSnippet: true,
+                WantReturnType: true
+            }))
+            .then(completions => {
                 if (completions == null) {
                     completions = [];
                 }
 
-                var result = _.map(completions, (item) : Suggestion => ({
+                var result = _.map(completions, (item): Suggestion => ({
                     snippet: item.Snippet,
                     type: item.Kind,
-                    displayText: _.escape(item.DisplayText),
-                    leftLabelHTML: '<span class="text-smaller">' + _.escape(item.ReturnType)  +'</span>',
-                    rightLabelHTML: '<span class="text-smaller">' + _.escape(item.Kind)  +'</span>',
-                    iconHTML: this.renderIcon(item)
+                    iconHTML: this.renderIcon(item),
+                    displayText: item.MethodHeader,
+                    className: 'autocomplete-omnisharp-atom',
+                    description: this.renderReturnType(item.ReturnType)
                 }));
 
                 // TODO: reoslve issue in bluebird.d.ts
@@ -84,10 +88,14 @@ export var CompletionProvider = {
         })
     },
 
-    renderIcon(item) {
-        //todo: fix icon images
-        if (item.Kind === 'NamedType' || item.Kind === 'Parameter' || item.Kind === 'Local')
+    renderReturnType(returnType :string) {
+        if (returnType === null) {
             return;
+        }
+        return `Returns: ${returnType}`;
+    },
+
+    renderIcon(item) {
 
         // todo: move additional styling to css
         return '<img height="16px" width="16px" src="atom://omnisharp-atom/styles/icons/autocomplete_' + item.Kind.toLowerCase() + '@3x.png" /> '
