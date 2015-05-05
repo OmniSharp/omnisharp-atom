@@ -69,6 +69,10 @@ class ClientManager {
 
     public registerConfiguration(callback: (client: Client) => void) {
         this._configurations.push(callback);
+
+        _.each(this._clients, (client) => {
+            callback(client);
+        });
     }
 }
 
