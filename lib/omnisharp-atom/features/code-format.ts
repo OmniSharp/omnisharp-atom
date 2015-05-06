@@ -33,15 +33,6 @@ class CodeFormat {
                 .then((data) => {
                 var buffer = editor.getBuffer();
 
-                /*var changes = data.Changes.sort((change1, change2) => {
-                    if (change1.EndLine > change2.EndLine) return 1;
-                    if (change2.EndLine > change1.EndLine) return -1;
-                    if (change1.EndColumn > change2.EndColumn) return 1;
-                    if (change2.EndColumn > change1.EndColumn) return -1;
-
-                    return 0;
-                });*/
-
                 data.Changes.forEach((change) => {
                     var range = new Range([change.StartLine - 1, change.StartColumn - 1], [change.EndLine - 1, change.EndColumn - 1]);
                     buffer.setTextInRange(range, change.NewText);

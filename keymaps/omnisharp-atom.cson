@@ -22,7 +22,6 @@
   'ctrl-alt-m': 'omnisharp-atom:code-format'
   ';': 'omnisharp-atom:code-format-on-semicolon'
   '}': 'omnisharp-atom:code-format-on-curly-brace'
-
   'alt-r': 'omnisharp-atom:rename'
   'ctrl-F12': 'omnisharp-atom:go-to-implementation'
   'enter': 'omnisharp-atom:code-format-on-enter'
