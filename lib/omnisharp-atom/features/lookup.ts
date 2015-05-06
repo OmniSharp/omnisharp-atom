@@ -53,15 +53,41 @@ class Tooltip implements rx.Disposable {
             lastExprTypeBufferPt = bufferPt;
 
             this.clearExprTypeTimeout();
-            this.exprTypeTimeout = setTimeout(() => this.showExpressionType(e), 100);
+            this.exprTypeTimeout = setTimeout(() => this.showExpressionTypeOnMouseOver(e), 100);
         }));
         cd.add(mouseout.subscribe((e) => this.clearExprTypeTimeout()));
         cd.add(keydown.subscribe((e) => this.clearExprTypeTimeout()));
 
         editor.onDidDestroy(() => this.dispose());
+
+        atom.commands.add("atom-text-editor", "omnisharp-atom:type-lookup", () => {
+            this.showExpressionTypeOnCommand();
+        })
     }
 
-    private showExpressionType(e: MouseEvent) {
+    private showExpressionTypeOnCommand() {
+        if (this.editor.cursors.length < 1) return;
+
+        var buffer = this.editor.getBuffer();
+        var bufferPt = this.editor.getCursorBufferPosition();
+
+        if (!this.checkPosition(bufferPt)) return;
+
+        // find out show position
+        var offset = (this.rawView.component.getFontSize() * bufferPt.column) * 0.7;
+        var rect = this.getFromShadowDom(this.editorView, '.cursor-line')[0].getBoundingClientRect();
+
+        var tooltipRect = {
+            left: rect.left - offset,
+            right: rect.left + offset,
+            top: rect.bottom,
+            bottom: rect.bottom
+        };
+
+        this.showToolTip(bufferPt, tooltipRect);
+    }
+
+    private showExpressionTypeOnMouseOver(e: MouseEvent) {
 
         // If we are already showing we should wait for that to clear
         if (this.exprTypeTooltip) return;
@@ -70,10 +96,8 @@ class Tooltip implements rx.Disposable {
         // TODO: Update typings
         var screenPt = this.editor.screenPositionForPixelPosition(pixelPt);
         var bufferPt = this.editor.bufferPositionForScreenPosition(screenPt);
-        var curCharPixelPt = this.rawView.pixelPositionForBufferPosition([bufferPt.row, bufferPt.column]);
-        var nextCharPixelPt = this.rawView.pixelPositionForBufferPosition([bufferPt.row, bufferPt.column + 1]);
 
-        if (curCharPixelPt.left >= nextCharPixelPt.left) return;
+        if (!this.checkPosition(bufferPt)) return;
 
         // find out show position
         var offset = (<any>this.editor).getLineHeightInPixels() * 0.7;
@@ -83,6 +107,19 @@ class Tooltip implements rx.Disposable {
             top: e.clientY - offset,
             bottom: e.clientY + offset
         };
+
+        this.showToolTip(bufferPt, tooltipRect);
+    }
+
+    private checkPosition(bufferPt) {
+        var curCharPixelPt = this.rawView.pixelPositionForBufferPosition([bufferPt.row, bufferPt.column]);
+        var nextCharPixelPt = this.rawView.pixelPositionForBufferPosition([bufferPt.row, bufferPt.column + 1]);
+
+        if (curCharPixelPt.left >= nextCharPixelPt.left) { return false; }
+        else { return true };
+    }
+
+    private showToolTip(bufferPt, tooltipRect) {
         this.exprTypeTooltip = new TooltipView(tooltipRect);
 
         var buffer = this.editor.getBuffer();

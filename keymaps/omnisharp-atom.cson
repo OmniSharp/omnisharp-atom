@@ -22,3 +22,4 @@
   'ctrl-alt-m': 'omnisharp-atom:code-format'
   'alt-r': 'omnisharp-atom:rename'
   'ctrl-F12': 'omnisharp-atom:go-to-implementation'
+  'f1': 'omnisharp-atom:type-lookup'
