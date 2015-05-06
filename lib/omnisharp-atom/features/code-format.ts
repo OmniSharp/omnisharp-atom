@@ -1,5 +1,7 @@
 import Omni = require('../../omni-sharp-server/omni')
 
+var Range = require("atom").Range;
+
 class CodeFormat {
 
     public activate() {
@@ -12,6 +14,40 @@ class CodeFormat {
                         .then((data) => editor.setText(data.Buffer));
                 }
             });
+
+        atom.commands.add('atom-workspace', 'omnisharp-atom:code-format-on-semicolon',
+            () => { this.formatOnKeystroke(';'); });
+        atom.commands.add('atom-workspace', 'omnisharp-atom:code-format-on-curly-brace',
+            () => { this.formatOnKeystroke('}'); });
+    }
+
+    private formatOnKeystroke(char: string): any {
+        var editor = atom.workspace.getActiveTextEditor();
+        if (editor) {
+            editor.insertText(char);
+
+            var request = <OmniSharp.Models.FormatAfterKeystrokeRequest>Omni.makeRequest();
+            request.Character = char;
+
+            Omni.client.formatAfterKeystrokePromise(request)
+                .then((data) => {
+                var buffer = editor.getBuffer();
+
+                /*var changes = data.Changes.sort((change1, change2) => {
+                    if (change1.EndLine > change2.EndLine) return 1;
+                    if (change2.EndLine > change1.EndLine) return -1;
+                    if (change1.EndColumn > change2.EndColumn) return 1;
+                    if (change2.EndColumn > change1.EndColumn) return -1;
+
+                    return 0;
+                });*/
+
+                data.Changes.forEach((change) => {
+                    var range = new Range([change.StartLine - 1, change.StartColumn - 1], [change.EndLine - 1, change.EndColumn - 1]);
+                    buffer.setTextInRange(range, change.NewText);
+                });
+            });
+        }
     }
 }
 export = CodeFormat
