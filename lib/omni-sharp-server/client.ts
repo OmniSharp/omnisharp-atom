@@ -51,6 +51,7 @@ class Client extends omnisharp.OmnisharpClient {
 
     public makeDataRequest<T>(data: T, editor?: Atom.TextEditor, buffer?: TextBuffer.TextBuffer) {
         return <T>_.extend(data, this.makeRequest(editor, buffer));
+    }
 
     public navigateTo(response: { FileName: string; Line: number; Column: number; }) {
         atom.workspace.open(response.FileName, undefined)
