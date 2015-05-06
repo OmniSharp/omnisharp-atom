@@ -1,5 +1,5 @@
-import spacePen = require("atom-space-pen-views");
-import $ = require('jquery');
+import spacePen = require('atom-space-pen-views');
+var $ = spacePen.jQuery;
 
 interface Rect {
     left: number;
@@ -17,6 +17,7 @@ class TooltipView extends spacePen.View {
     }
 
     private inner: JQuery;
+
     static content() {
         return this.div({ class: 'atom-typescript-tooltip tooltip' }, () => {
             this.div({ class: 'tooltip-inner', outlet: 'inner' })
