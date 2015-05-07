@@ -126,14 +126,6 @@ export var CompletionProvider = {
         if (search === ".")
             search = "";
 
-        /*var buffer = options.editor.getBuffer();
-        var end = options.bufferPosition.column;
-        var data = buffer.getLines()[options.bufferPosition.row].substring(0, end + 1);
-        var lastCharacterTyped = data[end - 1];
-        if (!/[A-Z_0-9.]+/i.test(lastCharacterTyped)) {
-            return;
-        }*/
-
         dataSource.onNext(options);
         return dataSource.promise()
             .then(response => response.map(s => this.makeSuggestion(s)))
