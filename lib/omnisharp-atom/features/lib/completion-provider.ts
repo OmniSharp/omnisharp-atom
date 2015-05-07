@@ -66,10 +66,9 @@ var dataSource = (function() {
     var bufferMovement = rx.Observable.zip(requestSubject, requestSubject.skip(1), (previous, current) => {
         // If the row changes we moved lines, we should refetch the completions
         // (Is it possible it will be the same set?)
-        var row = Math.abs(current.bufferPosition.row - previous.bufferPosition.row) > 1;
+        var row = Math.abs(current.bufferPosition.row - previous.bufferPosition.row) > 0;
         // If the column jumped, lets get them again to be safe.
-        var column = Math.abs(current.bufferPosition.column - previous.bufferPosition.column) > 4;
-
+        var column = Math.abs(current.bufferPosition.column - previous.bufferPosition.column) > 1;
         return { reset: row || column || false, previous: previous, current: current };
     }).where(z => z.reset).select(x => x.current);
 
@@ -161,5 +160,4 @@ export var CompletionProvider = {
         // todo: move additional styling to css
         return '<img height="16px" width="16px" src="atom://omnisharp-atom/styles/icons/autocomplete_' + item.Kind.toLowerCase() + '@3x.png" /> '
     }
-
 }
