@@ -25,3 +25,8 @@
   'alt-r': 'omnisharp-atom:rename'
   'ctrl-F12': 'omnisharp-atom:go-to-implementation'
   'f1': 'omnisharp-atom:type-lookup'
+
+'atom-text-editor.autocomplete-active:not([mini])[data-grammar~="cs"]':
+  'space': 'omnisharp-atom:intellisense-space'
+  '.': 'omnisharp-atom:intellisense-dot'
+  'enter': 'autocomplete-plus:confirm'
