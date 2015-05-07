@@ -88,6 +88,9 @@ class Tooltip implements rx.Disposable {
     }
 
     private showExpressionTypeOnMouseOver(e: MouseEvent) {
+        if (Omni.client === undefined) {
+            return;
+        }
 
         // If we are already showing we should wait for that to clear
         if (this.exprTypeTooltip) return;
