@@ -29,4 +29,5 @@
 '.autocomplete-active:not([mini])[data-grammar~="cs"], .autocomplete-active:not([mini])[data-grammar~="csx"]':
   'space': 'omnisharp-atom:intellisense-space'
   '.': 'omnisharp-atom:intellisense-dot'
+  ';': 'omnisharp-atom:intellisense-semicolon'
   'enter': 'autocomplete-plus:confirm'

@@ -12,6 +12,10 @@ class Intellisense {
 
         atom.commands.add('atom-workspace', 'omnisharp-atom:intellisense-space',
             (event) => this.complete(event, ' '));
+
+        atom.commands.add('atom-workspace', 'omnisharp-atom:intellisense-semicolon',
+            (event) => this.complete(event, ';'));
+
     }
 
     private complete(event: Event, char: string) {
