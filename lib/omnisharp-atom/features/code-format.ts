@@ -16,12 +16,12 @@ class CodeFormat {
             });
 
         atom.commands.add('atom-workspace', 'omnisharp-atom:code-format-on-semicolon',
-            () => { this.formatOnKeystroke(';'); });
+            (event) => this.formatOnKeystroke(event, ';'));
         atom.commands.add('atom-workspace', 'omnisharp-atom:code-format-on-curly-brace',
-            () => { this.formatOnKeystroke('}'); });
+            (event) => this.formatOnKeystroke(event, '}'));
     }
 
-    private formatOnKeystroke(char: string): any {
+    private formatOnKeystroke(event: Event, char: string): any {
         var editor = atom.workspace.getActiveTextEditor();
         if (editor) {
             editor.insertText(char);
@@ -39,6 +39,10 @@ class CodeFormat {
                 });
             });
         }
+        event.preventDefault();
+        event.stopImmediatePropagation();
+        event.stopPropagation();
+        return false;
     }
 }
 export = CodeFormat
