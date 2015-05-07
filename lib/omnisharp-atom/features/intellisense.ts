@@ -4,7 +4,11 @@ class Intellisense {
 
     public activate() {
         atom.commands.add('atom-workspace', 'omnisharp-atom:intellisense-dot',
-            (event) => this.complete(event, '.'));
+            (event) => {
+                this.complete(event, '.');
+                setTimeout(() =>
+                    atom.commands.dispatch(atom.views.getView(atom.workspace.getActiveTextEditor()), 'autocomplete-plus:activate'), 0);
+            });
 
         atom.commands.add('atom-workspace', 'omnisharp-atom:intellisense-space',
             (event) => this.complete(event, ' '));
@@ -16,10 +20,6 @@ class Intellisense {
             var view = atom.views.getView(editor);
             atom.commands.dispatch(atom.views.getView(editor), 'autocomplete-plus:confirm');
             editor.insertText(char);
-            if (char == '.') {
-                setTimeout(() => 
-                    atom.commands.dispatch(atom.views.getView(editor), 'autocomplete-plus:activate') , 0);
-            }
         }
     }
 }
