@@ -55,7 +55,7 @@
   "linter-package": true,
   "linter-implementation": "omnisharp-atom/linter",
   "scripts": {
-    "postinstall": "tsd reinstall & grunt copy --force & grunt clean --force"
+    "postinstall": "tsd reinstall & grunt copy & grunt clean"
   },
   "dependencies": {
     "ansi-to-html": "~0.1.0",
@@ -64,6 +64,7 @@
     "bluebird": "~2.3.2",
     "event-kit": "0.7.2",
     "fs-plus": "^2.3.1",
+    "fuzzaldrin": "^2.1.0",
     "generator-aspnet": "0.0.32",
     "glob": "^5.0.5",
     "grunt": "^0.4.5",
