@@ -62,6 +62,17 @@ var dataSource = (function() {
     var getLatestValueObservable = requestSubject.flatMap(getResults);
     var getSuggestionsSubject = new rx.BehaviorSubject<rx.IPromise<OmniSharp.Models.AutoCompleteResponse[]>>(getLatestValueObservable.take(1).toPromise());
 
+    // Detect when the cursor has moved a good distance
+    var bufferMovement = rx.Observable.zip(requestSubject, requestSubject.skip(1), (previous, current) => {
+        // If the row changes we moved lines, we should refetch the completions
+        // (Is it possible it will be the same set?)
+        var row = Math.abs(current.bufferPosition.row - previous.bufferPosition.row) > 1;
+        // If the column jumped, lets get them again to be safe.
+        var column = Math.abs(current.bufferPosition.column - previous.bufferPosition.column) > 4;
+
+        return { reset: row || column || false, previous: previous, current: current };
+    }).where(z => z.reset).select(x => x.current);
+
     // Clear when auto-complete is opening.
     // TODO: Update atom typings
     atom.commands.onWillDispatch(function(event: Event) {
@@ -76,9 +87,9 @@ var dataSource = (function() {
 
     // Always reset if the value is a dot
     var clearCacheWithDotPrefixObservable = requestSubject
-        .where(z => z.prefix === "." || (z.prefix && !_.trim(z.prefix)) || !z.prefix)
-        .subscribe(justResults);
+        .where(z => z.prefix === "." || (z.prefix && !_.trim(z.prefix)) || !z.prefix);
 
+    rx.Observable.merge(bufferMovement, clearCacheWithDotPrefixObservable).subscribe(justResults);
     rx.Observable.merge(clearCacheSubject).subscribe(nextResults);
 
     function clearCachedValue() {
