@@ -20,6 +20,11 @@ class Intellisense {
             var view = atom.views.getView(editor);
             atom.commands.dispatch(atom.views.getView(editor), 'autocomplete-plus:confirm');
             editor.insertText(char);
+
+            event.preventDefault();
+            event.stopImmediatePropagation();
+            event.stopPropagation();
+            return false;
         }
     }
 }
