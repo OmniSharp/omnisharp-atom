@@ -30,6 +30,9 @@
   'ctrl-f12': 'omnisharp-atom:go-to-implementation'
   'f1': 'omnisharp-atom:type-lookup'
 
+'.platform-darwin atom-text-editor:not([mini])[data-grammar~="cs"], atom-text-editor:not([mini])[data-grammar~="csx"]':
+  'cmd-d': 'omnisharp-atom:go-to-definition'
+
 '.autocomplete-active:not([mini])[data-grammar~="cs"], .autocomplete-active:not([mini])[data-grammar~="csx"]':
   'space': 'omnisharp-atom:intellisense-space'
   '.': 'omnisharp-atom:intellisense-dot'
