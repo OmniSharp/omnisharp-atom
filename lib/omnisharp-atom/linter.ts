@@ -48,6 +48,10 @@ class LinterCSharp extends Linter.Linter {
     }
 
     public lintFile(filePath: string, callback): any {
+        if (Omni.client === undefined) {
+            return;
+        }
+        
         Omni.client.codecheckPromise(Omni.makeRequest(this.editor))
             .then(data => {
 
