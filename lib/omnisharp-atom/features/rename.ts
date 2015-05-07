@@ -7,7 +7,12 @@ class Rename {
 
     public activate() {
         this.renameView = new RenameView();
-        atom.commands.add('atom-text-editor', 'omnisharp-atom:rename', () => this.rename());
+        atom.commands.add('atom-text-editor', 'omnisharp-atom:rename', (e) => {
+            e.stopImmediatePropagation();
+            e.stopPropagation();
+            e.preventDefault();
+            this.rename();
+        });
         Omni.registerConfiguration(client => {
             client.observeRename.subscribe((data) => {
                 this.applyChanges(data.response.Changes)

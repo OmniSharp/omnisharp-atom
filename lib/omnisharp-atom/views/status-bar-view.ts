@@ -21,12 +21,8 @@ class StatusBarView extends spacePenViews.View {
         }, () => {
                 this.span({
                     "class": 'icon icon-flame',
-                    'v-class': 'text-subtle: isOff, text-success: isReady, text-error: isError'
+                    'v-class': 'text-subtle: isOff, text-success: isReady, text-error: isError, icon-flame-loading: isLoading'
                 }, '{{iconText}}');
-                return this.progress({
-                    "class": 'inline-block',
-                    'v-class': 'hide: isNotLoading'
-                });
             });
     }
 

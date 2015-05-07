@@ -18,8 +18,9 @@ class LinterCSharp extends Linter.Linter {
     static syntax: string = "source.cs";
     static regex: string = "";
 
-    constructor(public editor) {
+    constructor(public editor : Atom.TextEditor) {
         super(editor);
+        this.editor = editor;
     }
 
     getWordAt(str: string, pos: number) {
@@ -47,7 +48,11 @@ class LinterCSharp extends Linter.Linter {
     }
 
     public lintFile(filePath: string, callback): any {
-        Omni.client.codecheckPromise(Omni.makeRequest())
+        if (Omni.client === undefined) {
+            return;
+        }
+        
+        Omni.client.codecheckPromise(Omni.makeRequest(this.editor))
             .then(data => {
 
             var errors = _.map(data.QuickFixes, (error: OmniSharp.Models.DiagnosticLocation): LinterError => {

@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 {
     "version": "1.4.1",
     "compilerOptions": {
@@ -56,3 +57,66 @@
         "./tsd.d.ts"
     ]
 }
+=======
+{
+    "version": "1.4.1",
+    "compilerOptions": {
+        "target": "es5",
+        "module": "commonjs",
+        "declaration": false,
+        "noImplicitAny": false,
+        "removeComments": true,
+        "noLib": false
+    },
+    "formatCodeOptions": {
+        "indentSize": 4,
+        "tabSize": 4,
+        "newLineCharacter": "\r\n",
+        "convertTabsToSpaces": true,
+        "insertSpaceAfterCommaDelimiter": true,
+        "insertSpaceAfterSemicolonInForStatements": true,
+        "insertSpaceBeforeAndAfterBinaryOperators": true,
+        "insertSpaceAfterKeywordsInControlFlowStatements": true,
+        "insertSpaceAfterFunctionKeywordForAnonymousFunctions": false,
+        "insertSpaceAfterOpeningAndBeforeClosingNonemptyParenthesis": false,
+        "placeOpenBraceOnNewLineForFunctions": false,
+        "placeOpenBraceOnNewLineForControlBlocks": false
+    },
+    "compileOnSave": false,
+    "filesGlob": [
+        "./**/*.ts",
+        "!./typings/**/*.d.ts",
+        "!./typingsTemp/**/*.d.ts",
+        "!./node_modules/**/*.ts"
+    ],
+    "files": [
+        "./lib/omni-sharp-server/client-manager.ts",
+        "./lib/omni-sharp-server/client.ts",
+        "./lib/omni-sharp-server/omni.ts",
+        "./lib/omnisharp-atom/dependency-checker.ts",
+        "./lib/omnisharp-atom/features/code-format.ts",
+        "./lib/omnisharp-atom/features/error-handler.ts",
+        "./lib/omnisharp-atom/features/find-usages.ts",
+        "./lib/omnisharp-atom/features/go-to-definition.ts",
+        "./lib/omnisharp-atom/features/go-to-implementation.ts",
+        "./lib/omnisharp-atom/features/intellisense.ts",
+        "./lib/omnisharp-atom/features/lib/completion-provider.ts",
+        "./lib/omnisharp-atom/features/lookup.ts",
+        "./lib/omnisharp-atom/features/package-restore.ts",
+        "./lib/omnisharp-atom/features/rename.ts",
+        "./lib/omnisharp-atom/linter.ts",
+        "./lib/omnisharp-atom/omnisharp-atom.ts",
+        "./lib/omnisharp-atom/views/build-output-pane-view.ts",
+        "./lib/omnisharp-atom/views/dock-view.ts",
+        "./lib/omnisharp-atom/views/find-pane-view.ts",
+        "./lib/omnisharp-atom/views/omni-output-pane-view.ts",
+        "./lib/omnisharp-atom/views/rename-view.ts",
+        "./lib/omnisharp-atom/views/status-bar-view.ts",
+        "./lib/omnisharp-atom/views/tooltip-view.ts",
+        "./lib/typings.d.ts",
+        "./spec/omnisharp-atom-spec.ts",
+        "./spec/tsd.d.ts",
+        "./tsd.d.ts"
+    ]
+}
+>>>>>>> master

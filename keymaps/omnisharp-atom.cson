@@ -15,10 +15,19 @@
   'ctrl-alt-b': 'omnisharp-atom:show-build'
   'ctrl-shift-b': 'omnisharp-atom:build'
 
-'atom-text-editor:not([mini])[data-grammar~="cs"]':
+'atom-text-editor:not([mini])[data-grammar~="cs"], atom-text-editor:not([mini])[data-grammar~="csx"]':
   'alt-F12': 'omnisharp-atom:go-to-definition'
   'shift-F12': 'omnisharp-atom:find-usages'
   'ctrl-alt-u': 'omnisharp-atom:fix-usings'
   'ctrl-alt-m': 'omnisharp-atom:code-format'
+  ';': 'omnisharp-atom:code-format-on-semicolon'
+  '}': 'omnisharp-atom:code-format-on-curly-brace'
   'alt-r': 'omnisharp-atom:rename'
   'ctrl-F12': 'omnisharp-atom:go-to-implementation'
+  'f1': 'omnisharp-atom:type-lookup'
+
+'.autocomplete-active:not([mini])[data-grammar~="cs"], .autocomplete-active:not([mini])[data-grammar~="csx"]':
+  'space': 'omnisharp-atom:intellisense-space'
+  '.': 'omnisharp-atom:intellisense-dot'
+  ';': 'omnisharp-atom:intellisense-semicolon'
+  'enter': 'autocomplete-plus:confirm'
