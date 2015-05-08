@@ -1,6 +1,7 @@
 import _ = require('lodash')
 import RenameView = require('../views/rename-view')
 import Omni = require('../../omni-sharp-server/omni')
+import applyChanges = require('./lib/apply-changes')
 
 class Rename {
     private renameView: RenameView
@@ -15,7 +16,7 @@ class Rename {
         });
         Omni.registerConfiguration(client => {
             client.observeRename.subscribe((data) => {
-                this.applyChanges(data.response.Changes)
+                this.applyAllChanges(data.response.Changes)
             })
         });
     }
@@ -31,9 +32,9 @@ class Rename {
         return this.renameView.configure(wordToRename);
     }
 
-    public applyChanges(changes: any[]) {
+    public applyAllChanges(changes: any[]) {
         return _.each(changes, (change) => atom.workspace.open(change.FileName, undefined)
-            .then((editor) => editor.setText(change.Buffer)))
+            .then((editor) => { applyChanges(editor, change.Changes) }))
     }
 }
 export =  Rename
