@@ -16,7 +16,10 @@ class Rename {
         });
         Omni.registerConfiguration(client => {
             client.observeRename.subscribe((data) => {
-                this.applyAllChanges(data.response.Changes)
+                // events are firing twice sometimes but not always.
+                // applying changes twice is _really_ bad.
+                // I have no idea why yet :(
+                _.debounce(this.applyAllChanges(data.response.Changes), 20);
             })
         });
     }
@@ -33,11 +36,22 @@ class Rename {
     }
 
     public applyAllChanges(changes: any[]) {
-        return _.each(changes, (change) => {
-            atom.workspace.open(change.FileName, undefined)
-            .then((editor) => {
-                Changes.applyChanges(editor, change.Changes)
-            })});
+        var grouped = _.groupBy(changes, 'FileName');
+
+        return _.each(grouped, (changesByFileName) => {
+            var fileName = changesByFileName[0].FileName;
+            var dedupedChanges = this.flattenAndDedupeChanges(changesByFileName);
+            atom.workspace.open(fileName, undefined)
+                .then((editor) => { Changes.applyChanges(editor, dedupedChanges); })
+        });
+    }
+
+    private flattenAndDedupeChanges(changes) {
+        // hacky workaround for a server issue that is waiting for a Roslyn fix.
+        var changeLists = _.map(changes, (change) => { return change.Changes; });
+        return  _.uniq(_.flatten(changeLists, true), false, (change) => {
+            return change.StartColumn * 17 + change.StartLine * 23 + change.EndColumn * 31 + change.EndLine;
+        });
     }
 }
 export =  Rename
