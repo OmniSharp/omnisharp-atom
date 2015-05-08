@@ -11,4 +11,4 @@ class Changes {
     }
 }
 
-export = Changes.applyChanges
+export = Changes

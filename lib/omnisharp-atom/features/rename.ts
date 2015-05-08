@@ -1,7 +1,7 @@
 import _ = require('lodash')
 import RenameView = require('../views/rename-view')
 import Omni = require('../../omni-sharp-server/omni')
-import applyChanges = require('./lib/apply-changes')
+import Changes = require('./lib/apply-changes')
 
 class Rename {
     private renameView: RenameView
@@ -33,8 +33,11 @@ class Rename {
     }
 
     public applyAllChanges(changes: any[]) {
-        return _.each(changes, (change) => atom.workspace.open(change.FileName, undefined)
-            .then((editor) => { applyChanges(editor, change.Changes) }))
+        return _.each(changes, (change) => {
+            atom.workspace.open(change.FileName, undefined)
+            .then((editor) => {
+                Changes.applyChanges(editor, change.Changes)
+            })});
     }
 }
 export =  Rename
