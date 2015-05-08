@@ -16,6 +16,10 @@ describe('OmniSharp Atom', function () {
         });
     });
     describe('when the package is activated', function () {
+        // TODO: Figure out the best way to test this without workspaceView
+        //it('should display the atom sharper button in the status bar', () => {
+        //    return expect(statusBar.find('.omnisharp-atom-button')).toExist();
+        //});
         it('should not display the atom sharper pane', function () {
             return expect(workspaceView.find('.omnisharp-atom-pane')).not.toExist();
         });
