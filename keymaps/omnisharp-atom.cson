@@ -16,15 +16,22 @@
   'ctrl-shift-b': 'omnisharp-atom:build'
 
 'atom-text-editor:not([mini])[data-grammar~="cs"], atom-text-editor:not([mini])[data-grammar~="csx"]':
-  'alt-F12': 'omnisharp-atom:go-to-definition'
-  'shift-F12': 'omnisharp-atom:find-usages'
+  'f12': 'omnisharp-atom:go-to-definition'
+  'shift-f12': 'omnisharp-atom:find-usages'
   'ctrl-alt-u': 'omnisharp-atom:fix-usings'
-  'ctrl-alt-m': 'omnisharp-atom:code-format'
+  'ctrl-k ctrl-d': 'omnisharp-atom:code-format'
+  'ctrl-k ctrl-c': 'editor:toggle-line-comments'
+  'ctrl-k ctrl-u': 'editor:toggle-line-comments'
   ';': 'omnisharp-atom:code-format-on-semicolon'
   '}': 'omnisharp-atom:code-format-on-curly-brace'
   'alt-r': 'omnisharp-atom:rename'
-  'ctrl-F12': 'omnisharp-atom:go-to-implementation'
+  'f2': 'omnisharp-atom:rename'
+  'ctrl-r ctrl-r': 'omnisharp-atom:rename'
+  'ctrl-f12': 'omnisharp-atom:go-to-implementation'
   'f1': 'omnisharp-atom:type-lookup'
+
+'.platform-darwin atom-text-editor:not([mini])[data-grammar~="cs"], atom-text-editor:not([mini])[data-grammar~="csx"]':
+  'cmd-d': 'omnisharp-atom:go-to-definition'
 
 '.autocomplete-active:not([mini])[data-grammar~="cs"], .autocomplete-active:not([mini])[data-grammar~="csx"]':
   'space': 'omnisharp-atom:intellisense-space'

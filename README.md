@@ -26,9 +26,12 @@ When the flame icon in the bottom left corner turns green, the server has starte
 
 # Features
 
-- `alt-F12` Go to definition
+- `F12` or `cmd-d` Go to definition
 - `ctrl-F12` Go to implementation
 - `shift-F12` Find usages
+- `ctrl-k, ctrl-d` Format document
+- `ctrl-k ctrl-c` Comment selection
+- `f2` Rename
 - Completions appear as you type. To select an item, press the TAB key.
 - Type lookup on mouse over or from cursor (`f1`).
 - Editor adornments (squigglies) appear for errors and code hints as you type.
