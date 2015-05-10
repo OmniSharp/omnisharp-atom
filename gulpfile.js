@@ -102,6 +102,7 @@ gulp.task('clean:spec', function(done) {
 });
 
 gulp.task('watch', function() {
+    // Auto restart watch when gulpfile is changed.
     var p = spawn(gulpPath, ['file-watch'], {stdio: 'inherit'});
     return watch('gulpfile.js', function() {
         p.kill();
@@ -123,20 +124,9 @@ gulp.task('file-watch', function() {
     return merge(lib, spec);
 });
 
-gulp.task('tsd-reinstall', function() {
-    var tsd = require('tsd');
-    var tsdApi = tsd.getAPI('./tsd-config.json');
+gulp.task('npm-postinstall', ['typescript', 'copy-omnisharp-server-roslyn-binaries']);
 
-    var result = tsdApi.reinstall(new tsd.Options());
-    console.log(tsdApi.context.config.getInstalled());
-    result.then(function(z) { console.log(z); });
-
-    return result;
-});
-
-gulp.task('npm-post-install', ['typescript', 'copy-omnisharp-server-roslyn-binaries', 'tsd-reinstall'], function() {
-});
+gulp.task('npm-prepublish', ['typescript']);
 
 // The default task (called when you run `gulp` from CLI)
-gulp.task('default', ['typescript'], function() {
-});
+gulp.task('default', ['typescript']);

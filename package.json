@@ -44,6 +44,10 @@
       "url": "https://twitter.com/jasonimison"
     }
   ],
+  "scripts": {
+    "postinstall": "./node_modules/.bin/gulp npm-postinstall",
+    "prepublish": "./node_modules/.bin/gulp npm-prepublish"
+  },
   "license": "MIT",
   "engines": {
     "atom": ">=0.192.0 <2.0.0"
@@ -78,7 +82,6 @@
     "rx": "^2.5.2",
     "semver": "^4.2.0",
     "through2": "^0.6.5",
-    "tsd": "^0.6.0-beta.5",
     "typescript": "^1.5.0-beta",
     "vue": "~0.10.6"
   },
