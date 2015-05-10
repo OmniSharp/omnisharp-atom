@@ -105,9 +105,6 @@
       }
     }
   },
-  "devDependencies": {
-    "coffeelint": "^1.6.0"
-  },
   "package-dependencies": {
     "autocomplete-plus": "^2.0.2",
     "language-csharp": ">=0.3.0",
