@@ -38,11 +38,6 @@ When the flame icon in the bottom left corner turns green, the server has starte
 - Automatic Package restore in vNext when you save `project.json` files
 - Enjoy!
 
-# Development Setup
-- clone repo
-- `npm install`
-- `tsd reinstall`
-
 # Wiki
 
 https://github.com/OmniSharp/omnisharp-atom/wiki
