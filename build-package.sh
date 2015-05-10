@@ -1,5 +1,5 @@
 #!/bin/sh
-
+set -e
 echo "Downloading latest Atom release..."
 curl -s -L "https://atom.io/download/mac" \
   -H 'Accept: application/octet-stream' \
@@ -23,19 +23,6 @@ if [ "$TEST_PACKAGES" != "none" ]; then
   for pack in $TEST_PACKAGES ; do
     atom/Atom.app/Contents/Resources/app/apm/node_modules/.bin/apm install $pack
   done
-fi
-
-if [ -f ./node_modules/.bin/coffeelint ]; then
-  if [ -d ./lib ]; then
-    echo "Linting package..."
-    ./node_modules/.bin/coffeelint lib
-    rc=$?; if [[ $rc != 0 ]]; then exit $rc; fi
-  fi
-  if [ -d ./spec ]; then
-    echo "Linting package specs..."
-    ./node_modules/.bin/coffeelint spec
-    rc=$?; if [[ $rc != 0 ]]; then exit $rc; fi
-  fi
 fi
 
 echo "Running specs..."
