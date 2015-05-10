@@ -16,10 +16,7 @@ class Rename {
         });
         Omni.registerConfiguration(client => {
             client.observeRename.subscribe((data) => {
-                // events are firing twice sometimes but not always.
-                // applying changes twice is _really_ bad.
-                // I have no idea why yet :(
-                _.debounce(this.applyAllChanges(data.response.Changes), 20);
+                this.applyAllChanges(data.response.Changes);
             })
         });
     }
