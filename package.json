@@ -44,6 +44,10 @@
       "url": "https://twitter.com/jasonimison"
     }
   ],
+  "scripts": {
+    "postinstall": "./node_modules/.bin/gulp npm-postinstall",
+    "prepublish": "./node_modules/.bin/gulp npm-prepublish"
+  },
   "license": "MIT",
   "engines": {
     "atom": ">=0.192.0 <2.0.0"
@@ -59,25 +63,27 @@
     "atom-package-dependencies": "https://github.com/basarat/atom-package-dependencies/archive/cb1.tar.gz",
     "atom-space-pen-views": "^2.0.5",
     "bluebird": "~2.3.2",
+    "del": "^1.1.1",
     "event-kit": "0.7.2",
     "fs-plus": "^2.3.1",
     "fuzzaldrin": "^2.1.0",
-    "generator-aspnet": "0.0.32",
+    "generator-aspnet": "0.0.34",
     "glob": "^5.0.5",
-    "grunt": "^0.4.5",
-    "grunt-cli": "^0.1.13",
-    "grunt-contrib-clean": "^0.6.0",
-    "grunt-contrib-copy": "^0.8.0",
+    "gulp": "^3.8.11",
+    "gulp-newer": "^0.5.0",
+    "gulp-plumber": "^1.0.0",
+    "gulp-util": "^3.0.4",
+    "gulp-watch": "^4.2.4",
     "jquery": "^2.1.1",
     "lodash": "^3.6.0",
+    "merge-stream": "^0.1.7",
     "omnisharp-node-client": "^1.1.4",
     "request-promise": "~0.1.2",
     "rx": "^2.5.2",
     "semver": "^4.2.0",
-    "tsd": "~0.6.0-beta.5",
-    "vue": "~0.10.6",
-    "yeoman-environment": "^1.2.5",
-    "yo": "^1.4.6"
+    "through2": "^0.6.5",
+    "typescript": "^1.5.0-beta",
+    "vue": "~0.10.6"
   },
   "consumedServices": {
     "status-bar": {
@@ -98,11 +104,6 @@
         "2.0.0": "provideAutocomplete"
       }
     }
-  },
-  "devDependencies": {
-    "coffeelint": "^1.6.0",
-    "grunt-coffeelint": "0.0.13",
-    "grunt-contrib-watch": "^0.6.1"
   },
   "package-dependencies": {
     "autocomplete-plus": "^2.0.2",
