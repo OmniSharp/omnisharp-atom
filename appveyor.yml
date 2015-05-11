@@ -9,7 +9,7 @@ install:
   - "%LOCALAPPDATA%/atom/bin/apm install"
 
 build_script:
-#  - cd %APPVEYOR_BUILD_FOLDER%
+  - cd %APPVEYOR_BUILD_FOLDER%
 # - "%LOCALAPPDATA%/atom/bin/apm test --path %LOCALAPPDATA%/atom/bin/atom.cmd"
 
 test: off
