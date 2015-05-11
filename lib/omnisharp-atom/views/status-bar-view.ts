@@ -47,6 +47,10 @@ class StatusBarView extends spacePenViews.View {
         return this.vm.isOpen = !this.vm.isOpen;
     }
 
+    public turnOffIcon() {
+      return this.find('.icon-flame').removeClass("text-success");
+    }
+
     //Returns nothing.
     public destroy() {
         return this.detach();
