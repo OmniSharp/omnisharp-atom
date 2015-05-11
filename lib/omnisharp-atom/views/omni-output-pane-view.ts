@@ -33,7 +33,7 @@ class OmniOutputPaneView extends spacePenViews.View {
                         return this.pre({
                             'v-class': 'l.logLevel',
                             'v-repeat': 'l :output'
-                        }, '{{ l.message | ansi-to-html }}');
+                        }, '{{{ l.message | ansi-to-html }}}');
                     });
             });
     }
