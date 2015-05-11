@@ -54,10 +54,12 @@ class ClientManager {
         }
 
         var location = editor.getPath();
-
-        var locations = location.split(path.sep);
-        var mappedLocations = locations.map((loc, index) => {
-            return _.take(locations, index + 1).join(path.sep);
+        if (location === undefined) {
+            return;
+        }
+        var segments = location.split(path.sep);
+        var mappedLocations = segments.map((loc, index) => {
+            return _.take(segments, index + 1).join(path.sep);
         });
 
         var intersect = _.intersection(mappedLocations, this._paths);
