@@ -132,11 +132,23 @@ export var CompletionProvider = {
             return;
         }
 
+        dataSource.onNext(options);
+
+        var buffer = options.editor.getBuffer();
+        var end = options.bufferPosition.column;
+
+        var data = buffer.getLines()[options.bufferPosition.row].substring(0, end + 1);
+
+        var lastCharacterTyped = data[end - 1];
+        console.log(lastCharacterTyped);
+        if (!/[A-Z_0-9.]+/i.test(lastCharacterTyped)) {
+            return;
+        }
+
         var search = options.prefix;
         if (search === ".")
             search = "";
 
-        dataSource.onNext(options);
         return dataSource.promise()
             .then(response => response.map(s => this.makeSuggestion(s)))
             .then(s => filter(s, search, { key: '_search' }));
