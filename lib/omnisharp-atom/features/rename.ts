@@ -1,6 +1,7 @@
 import _ = require('lodash')
 import RenameView = require('../views/rename-view')
 import Omni = require('../../omni-sharp-server/omni')
+import Changes = require('./lib/apply-changes')
 
 class Rename {
     private renameView: RenameView
@@ -15,7 +16,7 @@ class Rename {
         });
         Omni.registerConfiguration(client => {
             client.observeRename.subscribe((data) => {
-                this.applyChanges(data.response.Changes)
+                this.applyAllChanges(data.response.Changes);
             })
         });
     }
@@ -31,9 +32,23 @@ class Rename {
         return this.renameView.configure(wordToRename);
     }
 
-    public applyChanges(changes: any[]) {
-        return _.each(changes, (change) => atom.workspace.open(change.FileName, undefined)
-            .then((editor) => editor.setText(change.Buffer)))
+    public applyAllChanges(changes: any[]) {
+        var grouped = _.groupBy(changes, 'FileName');
+
+        return _.each(grouped, (changesByFileName) => {
+            var fileName = changesByFileName[0].FileName;
+            var dedupedChanges = this.flattenAndDedupeChanges(changesByFileName);
+            atom.workspace.open(fileName, undefined)
+                .then((editor) => { Changes.applyChanges(editor, dedupedChanges); })
+        });
+    }
+
+    private flattenAndDedupeChanges(changes) {
+        // hacky workaround for a server issue that is waiting for a Roslyn fix.
+        var changeLists = _.map(changes, (change) => { return change.Changes; });
+        return  _.uniq(_.flatten(changeLists, true), false, (change) => {
+            return change.StartColumn * 17 + change.StartLine * 23 + change.EndColumn * 31 + change.EndLine;
+        });
     }
 }
 export =  Rename

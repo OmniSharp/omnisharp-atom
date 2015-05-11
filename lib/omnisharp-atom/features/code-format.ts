@@ -1,6 +1,5 @@
 import Omni = require('../../omni-sharp-server/omni')
-
-var Range = require("atom").Range;
+import applyChanges = require('./lib/apply-changes');
 
 class CodeFormat {
 
@@ -31,12 +30,7 @@ class CodeFormat {
 
             Omni.client.formatAfterKeystrokePromise(request)
                 .then((data) => {
-                var buffer = editor.getBuffer();
-
-                data.Changes.forEach((change) => {
-                    var range = new Range([change.StartLine - 1, change.StartColumn - 1], [change.EndLine - 1, change.EndColumn - 1]);
-                    buffer.setTextInRange(range, change.NewText);
-                });
+                applyChanges(editor, data.Changes);
             });
         }
         event.preventDefault();
