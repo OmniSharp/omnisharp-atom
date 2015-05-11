@@ -1,4 +1,4 @@
-# omnisharp-atom package [![build status](https://travis-ci.org/OmniSharp/omnisharp-atom.svg)](https://travis-ci.org/OmniSharp/omnisharp-atom/)
+# omnisharp-atom package [![build status](https://travis-ci.org/OmniSharp/omnisharp-atom.svg)](https://travis-ci.org/OmniSharp/omnisharp-atom/)  [![Windows Build Status](https://ci.appveyor.com/api/projects/status/github/OmniSharp/omnisharp-atom?branch=master&svg=true)](https://ci.appveyor.com/project/nosami/omnisharp-atom)
 
 ###(The hackable IDE)
 
