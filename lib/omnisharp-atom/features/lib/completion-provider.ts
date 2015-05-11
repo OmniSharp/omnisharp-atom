@@ -140,7 +140,7 @@ export var CompletionProvider = {
         var data = buffer.getLines()[options.bufferPosition.row].substring(0, end + 1);
 
         var lastCharacterTyped = data[end - 1];
-        console.log(lastCharacterTyped);
+
         if (!/[A-Z_0-9.]+/i.test(lastCharacterTyped)) {
             return;
         }
