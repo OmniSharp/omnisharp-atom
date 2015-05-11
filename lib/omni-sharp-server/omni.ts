@@ -25,7 +25,7 @@ class Omni {
     }
 
     public static toggle() {
-        let client = manager.getClientForActiveEditor();
+        var client = manager.getClientForActiveEditor();
         if (client) {
             client.toggle();
         }
