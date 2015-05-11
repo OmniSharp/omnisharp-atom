@@ -41,7 +41,7 @@ class OmniSharpAtom {
     public outputView;
     private autoCompleteProvider;
     private statusBar;
-    private generator: { run(generator: string, path?: string): void; start(prefix: string, path?:string): void;  };
+    private generator: { run(generator: string, path?: string): void; start(prefix: string, path?: string): void; };
     private menu: EventKit.Disposable;
 
     public activate(state) {
@@ -49,6 +49,10 @@ class OmniSharpAtom {
         atom.commands.add('atom-workspace', 'omnisharp-atom:toggle', () => this.toggle());
         atom.commands.add('atom-workspace', 'omnisharp-atom:new-application', () => this.generator.run("aspnet:app"));
         atom.commands.add('atom-workspace', 'omnisharp-atom:new-class', () => this.generator.run("aspnet:Class"));
+
+        // This needs to be set earlier so that the auto-start can also connect
+        // to the output
+        this.outputView = new DockView(this);
 
         if (dependencyChecker.findAllDeps(this.getPackageDir())) {
             this.emitter = new Emitter;
@@ -96,6 +100,7 @@ class OmniSharpAtom {
         var features = _.map(featureFiles, (feature: string) => new Feature(this, feature));
         return features;
     }
+
     public subscribeToEvents() {
         this.observeEditors = atom.workspace.observeTextEditors((editor: Atom.TextEditor) => {
             var editorFilePath;
@@ -145,19 +150,22 @@ class OmniSharpAtom {
 
     public buildStatusBarAndDock() {
         this.statusBar = new StatusBarView;
-        this.outputView = new DockView(this);
+
+        if (!this.outputView) {
+            this.outputView = new DockView(this);
+        }
     }
 
     public toggle() {
         var menuJsonFile = this.getPackageDir() + "/omnisharp-atom/menus/omnisharp-menu.json";
         var menuJson = JSON.parse(fs.readFileSync(menuJsonFile, 'utf8'));
 
-
         var dependencyErrors = dependencyChecker.errors();
         if (dependencyErrors.length === 0) {
             if (Omni.vm.isOff) {
                 this.menu = atom.menu.add(menuJson.menu);
             } else if (this.menu) {
+                this.turnOffIcon();
                 this.menu.dispose();
                 this.menu = null;
             }
@@ -165,6 +173,10 @@ class OmniSharpAtom {
         } else {
             _.map(dependencyErrors, missingDependency => alert(missingDependency));
         }
+    }
+
+    private turnOffIcon() {
+        this.statusBarView.turnOffIcon();
     }
 
     public deactivate() {
@@ -182,10 +194,12 @@ class OmniSharpAtom {
 
     public consumeStatusBar(statusBar) {
         this.statusBarView = new StatusBarView(statusBar);
-        this.outputView = new DockView(this);
+        if (!this.outputView) {
+            this.outputView = new DockView(this);
+        }
     }
 
-    public consumeYeomanEnvironment(generatorService : { run(generator: string, path: string): void; start(prefix: string, path:string): void;  }) {
+    public consumeYeomanEnvironment(generatorService: { run(generator: string, path: string): void; start(prefix: string, path: string): void; }) {
 
         console.log('generatorService')
         this.generator = generatorService;
