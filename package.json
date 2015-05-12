@@ -70,7 +70,7 @@
     "gulp-util": "^3.0.4",
     "jquery": "^2.1.1",
     "lodash": "^3.6.0",
-    "omnisharp-node-client": "^1.1.4",
+    "omnisharp-node-client": "^1.2.1",
     "request-promise": "~0.1.2",
     "rx": "^2.5.2",
     "semver": "^4.2.0",
