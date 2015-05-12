@@ -27,7 +27,8 @@ class ClientManager {
 
         _.each(addedClients, project => {
             var client = new Client({
-                projectPath: project
+                projectPath: project,
+                findProject: true
             });
 
             _.each(this._configurations, config => config(client));
