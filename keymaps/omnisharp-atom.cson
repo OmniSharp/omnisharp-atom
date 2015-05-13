@@ -29,6 +29,8 @@
   'ctrl-r ctrl-r': 'omnisharp-atom:rename'
   'ctrl-f12': 'omnisharp-atom:go-to-implementation'
   'f1': 'omnisharp-atom:type-lookup'
+  'ctrl-alt-up': 'omnisharp-atom:navigate-up'
+  'ctrl-alt-down': 'omnisharp-atom:navigate-down'
 
 '.platform-darwin atom-text-editor:not([mini])[data-grammar~="cs"], atom-text-editor:not([mini])[data-grammar~="csx"]':
   'cmd-d': 'omnisharp-atom:go-to-definition'
