@@ -8,13 +8,14 @@ import OmniSharpAtom = require("../omnisharp-atom");
 import FindPaneView = require('./find-pane-view')
 import BuildOutputPaneView = require('./build-output-pane-view')
 import OmniOutputPaneView = require('./omni-output-pane-view')
-
+import CodeCheckOutputPaneView = require('./codecheck-output-pane-view');
 
 class DockView extends spacePenViews.View {
 
     private findOutput;
     private buildOutput;
     private omniOutput;
+    private errorsOutput;
     private vm: { selected: string; };
     private panel: any;
     private fixedTop: number;
@@ -53,6 +54,7 @@ class DockView extends spacePenViews.View {
                                         return this.div({
                                             "class": 'btn-group btn-toggle'
                                         }, () => {
+                                                btn("errors", "Errors & Warnings")
                                                 btn("find", "Find");
                                                 btn("build", "Build output");
                                                 return btn("omni", "Omnisharp output");
@@ -96,6 +98,7 @@ class DockView extends spacePenViews.View {
         this.findOutput.append(new FindPaneView());
         this.buildOutput.append(new BuildOutputPaneView());
         this.omniOutput.append(new OmniOutputPaneView());
+        this.errorsOutput.append(new CodeCheckOutputPaneView());
 
         var viewModel = new Vue({
             el: this[0],
@@ -118,6 +121,7 @@ class DockView extends spacePenViews.View {
         atom.commands.add('atom-workspace', "omnisharp-atom:show-find", () => this.selectPane("find"));
         atom.commands.add('atom-workspace', "omnisharp-atom:show-build", () => this.selectPane("build"));
         atom.commands.add('atom-workspace', "omnisharp-atom:show-omni", () => this.selectPane("omni"));
+        atom.commands.add('atom-workspace', 'omnisharp-atom:show-errors', () => this.selectPane("errors"));
 
         atom.commands.add('atom-workspace', 'core:close', () => this.hideView());
         atom.commands.add('atom-workspace', 'core:cancel', () => this.hideView());

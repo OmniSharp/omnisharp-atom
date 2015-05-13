@@ -126,6 +126,24 @@
   }
 }
 
+.codecheck {
+    padding-left: 20px;
+    background-color: #161719;
+
+    &.Hidden, &.Warning {
+        background-image: url('atom://omnisharp-atom/styles/icons/codecheck-warning.png');
+        background-repeat: no-repeat;
+        background-position: 0px 0px;
+    }
+    &.Error {
+        background-image: url('atom://omnisharp-atom/styles/icons/codecheck-error.png');
+        background-repeat: no-repeat;
+        background-position: 0px 0px;
+    }
+    pre {
+        padding: 2px 0px;
+    }
+}
 
 
 
