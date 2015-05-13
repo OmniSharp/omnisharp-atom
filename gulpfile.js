@@ -116,16 +116,16 @@ gulp.task('file-watch', function() {
     var watch = require('gulp-watch');
     var plumber = require('gulp-plumber');
     var newer = require('gulp-newer');
-    
+
     var lib = tsTranspiler(gulp.src(metadata.lib)
         .pipe(watch(metadata.lib))
         .pipe(plumber())
-        .pipe(newer(dest)), './lib')
+        .pipe(newer('./lib')), './lib')
 
     var spec = tsTranspiler(gulp.src(metadata.spec)
         .pipe(watch(metadata.spec))
         .pipe(plumber())
-        .pipe(newer(dest)), './spec');
+        .pipe(newer('./spec')), './spec');
 
     return merge(lib, spec);
 });
