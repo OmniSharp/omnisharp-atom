@@ -1,3 +1,4 @@
+import _ = require('lodash');
 import Omni = require('../../omni-sharp-server/omni');
 import omnisharp = require("omnisharp-node-client");
 import OmniSharpAtom = require('../omnisharp-atom');
@@ -9,7 +10,7 @@ class CodeCheck {
 
     public activate() {
 
-        this.atomSharper.onEditor( (editor: Atom.TextEditor) => {
+        this.atomSharper.onEditor((editor: Atom.TextEditor) => {
 
             editor.getBuffer().onDidStopChanging(() => this.doCodeCheck(editor));
             editor.getBuffer().onDidSave(() => this.doCodeCheck(editor));
@@ -29,12 +30,14 @@ class CodeCheck {
 
     public doCodeCheck(editor: Atom.TextEditor) {
         if (Omni.client === undefined || Omni.client.currentState !== omnisharp.DriverState.Connected) return;
-        var request = <OmniSharp.Models.FormatRangeRequest>Omni.makeRequest(editor);
-        Omni.client.updatebufferPromise(request)
-        .then(() => {
-            request.FileName = null;
-            Omni.client.codecheck(request);
-        });
+        _.debounce(() => {
+            var request = <OmniSharp.Models.FormatRangeRequest>Omni.makeRequest(editor);
+            Omni.client.updatebufferPromise(request)
+                .then(() => {
+                request.FileName = null;
+                Omni.client.codecheck(request);
+            });
+        }, 500)();
     }
 }
 
