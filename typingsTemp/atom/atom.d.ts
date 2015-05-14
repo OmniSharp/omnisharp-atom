@@ -2508,17 +2508,17 @@ declare module Atom {
         /**
          * This field or method was not documented by atomdoc, assume it is private. Use with caution.
          */
-        pixelPositionForScreenPosition(screenPosition? : TextBuffer.Point | { row: number; column: number } | [number, number], clip? : any) : TextBuffer.Point;
+        pixelPositionForScreenPosition(screenPosition? : { top: number; left: number; }, clip? : { top: number; left: number; }) : { top: number; left: number; };
     
         /**
          * This field or method was not documented by atomdoc, assume it is private. Use with caution.
          */
-        screenPositionForPixelPosition(pixelPosition? : TextBuffer.Point | { row: number; column: number } | [number, number]) : TextBuffer.Point;
+        screenPositionForPixelPosition(pixelPosition? : { top: number; left: number; }) : TextBuffer.Point;
     
         /**
          * This field or method was not documented by atomdoc, assume it is private. Use with caution.
          */
-        pixelPositionForBufferPosition(bufferPosition? : TextBuffer.Point | { row: number; column: number } | [number, number]) : TextBuffer.Point;
+        pixelPositionForBufferPosition(bufferPosition? : { top: number; left: number; }) : { top: number; left: number; };
     
         /**
          * Gets the number of screen lines.
@@ -4319,7 +4319,7 @@ declare module Atom {
         /**
          * This field or method was not documented by atomdoc, assume it is private. Use with caution.
          */
-        renderOverlay(state? : any, decorationId? : any, options? : (item? : any,pixelPosition? : TextBuffer.Point | { row: number; column: number } | [number, number]) => any) : any;
+        renderOverlay(state? : any, decorationId? : any, options? : (item? : any,pixelPosition? : { top: number; left: number; }) => any) : any;
     
     }
 
@@ -7740,7 +7740,7 @@ declare module Atom {
         /**
          * This field or method was not documented by atomdoc, assume it is private. Use with caution.
          */
-        pixelPositionForMouseEvent(event? : any) : TextBuffer.Point;
+        pixelPositionForMouseEvent(event? : { top: number; left: number; }) : { top: number; left: number; };
     
         /**
          * This field or method was not documented by atomdoc, assume it is private. Use with caution.
@@ -8159,7 +8159,7 @@ declare module Atom {
         /**
          * This field or method was not documented by atomdoc, assume it is private. Use with caution.
          */
-        pixelPositionForScreenPosition(screenPosition? : TextBuffer.Point | { row: number; column: number } | [number, number], clip? : any) : TextBuffer.Point;
+        pixelPositionForScreenPosition(screenPosition? : { top: number; left: number; }, clip? : { top: number; left: number; }) : { top: number; left: number; };
     
         /**
          * This field or method was not documented by atomdoc, assume it is private. Use with caution.
@@ -8342,12 +8342,12 @@ declare module Atom {
         /**
          * This field or method was not documented by atomdoc, assume it is private. Use with caution.
          */
-        pixelPositionForBufferPosition(bufferPosition? : TextBuffer.Point | { row: number; column: number } | [number, number]) : TextBuffer.Point;
+        pixelPositionForBufferPosition(bufferPosition? : { top: number; left: number; }) : { top: number; left: number; };
     
         /**
          * This field or method was not documented by atomdoc, assume it is private. Use with caution.
          */
-        pixelPositionForScreenPosition(screenPosition? : TextBuffer.Point | { row: number; column: number } | [number, number]) : TextBuffer.Point;
+        pixelPositionForScreenPosition(screenPosition? : { top: number; left: number; }) : { top: number; left: number; };
     
         /**
          * This field or method was not documented by atomdoc, assume it is private. Use with caution.
@@ -10581,12 +10581,12 @@ declare module Atom {
         /**
          * This field or method was not documented by atomdoc, assume it is private. Use with caution.
          */
-        pixelPositionForBufferPosition(bufferPosition? : TextBuffer.Point | { row: number; column: number } | [number, number], suppressDeprecation? : any) : TextBuffer.Point;
+        pixelPositionForBufferPosition(bufferPosition? : { top: number; left: number; }, suppressDeprecation? : { top: number; left: number; }) : { top: number; left: number; };
     
         /**
          * This field or method was not documented by atomdoc, assume it is private. Use with caution.
          */
-        pixelPositionForScreenPosition(screenPosition? : TextBuffer.Point | { row: number; column: number } | [number, number], suppressDeprecation? : any) : TextBuffer.Point;
+        pixelPositionForScreenPosition(screenPosition? : { top: number; left: number; }, suppressDeprecation? : { top: number; left: number; }) : { top: number; left: number; };
     
         /**
          * This field or method was not documented by atomdoc, assume it is private. Use with caution.
@@ -10751,7 +10751,7 @@ declare module Atom {
         /**
          * This field or method was not documented by atomdoc, assume it is private. Use with caution.
          */
-        screenPositionForPixelPosition(pixelPosition? : TextBuffer.Point | { row: number; column: number } | [number, number]) : TextBuffer.Point;
+        screenPositionForPixelPosition(pixelPosition? : { top: number; left: number; }) : TextBuffer.Point;
     
         /**
          * This field or method was not documented by atomdoc, assume it is private. Use with caution.

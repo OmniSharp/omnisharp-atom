@@ -1,6 +1,6 @@
 import _ = require('lodash');
 import Omni = require('../../omni-sharp-server/omni');
-import omnisharp = require("omnisharp-node-client");
+import omnisharp = require("omnisharp-client");
 import OmniSharpAtom = require('../omnisharp-atom');
 
 class CodeCheck {
