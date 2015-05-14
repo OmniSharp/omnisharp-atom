@@ -52,6 +52,10 @@
   "menus": [
     "atom-sharper.cson"
   ],
+  "scripts": {
+    "postinstall": "./node_modules/.bin/gulp npm-postinstall",
+    "prepublish": "./node_modules/.bin/gulp npm-prepublish"
+  },
   "linter-package": true,
   "linter-implementation": "omnisharp-atom/linter",
   "dependencies": {
@@ -59,22 +63,24 @@
     "atom-package-dependencies": "https://github.com/basarat/atom-package-dependencies/archive/cb1.tar.gz",
     "atom-space-pen-views": "^2.0.5",
     "bluebird": "~2.3.2",
+    "del": "^1.1.1",
     "event-kit": "0.7.2",
     "fs-plus": "^2.3.1",
     "fuzzaldrin": "^2.1.0",
     "generator-aspnet": "0.0.32",
     "glob": "^5.0.5",
     "gulp": "^3.8.11",
-    "gulp-newer": "^0.5.0",
-    "gulp-plumber": "^1.0.0",
     "gulp-util": "^3.0.4",
     "jquery": "^2.1.1",
     "lodash": "^3.6.0",
+    "merge-stream": "^0.1.7",
     "omnisharp-node-client": "^1.2.1",
     "request-promise": "~0.1.2",
     "rx": "^2.5.2",
     "semver": "^4.2.0",
+    "through2": "^0.6.5",
     "tsd": "~0.6.0-beta.5",
+    "typescript": "^1.5.0-beta",
     "vue": "~0.10.6",
     "yeoman-environment": "^1.2.5",
     "yo": "^1.4.6"
