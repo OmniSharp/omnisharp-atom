@@ -136,9 +136,12 @@ class Tooltip implements rx.Disposable {
             Column: bufferPt.column + 1,
             FileName: this.editor.getURI()
         }).then((response: OmniSharp.Models.TypeLookupResponse) => {
-            var message = `<b>${response.Type}</b>`;
+            if (response.Type === null) {
+                return;
+            }
+            var message = `<b>${this.htmlEscape(response.Type)}</b>`;
             if (response.Documentation) {
-                message = message + `<br/><i>${response.Documentation}</i>`;
+                message = message + `<br/><i>${this.htmlEscape(response.Documentation)}</i>`;
             }
             // Sorry about this "if". It's in the code I copied so I guess its there for a reason
             if (this.exprTypeTooltip) {
@@ -151,6 +154,16 @@ class Tooltip implements rx.Disposable {
         this.disposable.dispose();
         this.clearExprTypeTimeout();
     }
+
+    private htmlEscape(str) {
+        return String(str)
+            .replace(/&/g, '&amp;')
+            .replace(/"/g, '&quot;')
+            .replace(/'/g, '&#39;')
+            .replace(/</g, '&lt;')
+            .replace(/>/g, '&gt;');
+    }
+
     /** clears the timeout && the tooltip */
     private clearExprTypeTimeout() {
         if (this.exprTypeTimeout) {
