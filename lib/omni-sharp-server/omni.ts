@@ -1,6 +1,6 @@
 import manager = require("./client-manager");
 import Client = require("./client");
-import omnisharp = require("omnisharp-node-client");
+import omnisharp = require("omnisharp-client");
 
 manager.registerConfiguration(client => client.state.subscribe(z => Omni.updateState(z)));
 
