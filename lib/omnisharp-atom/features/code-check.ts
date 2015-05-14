@@ -29,7 +29,7 @@ class CodeCheck {
     }
 
     public doCodeCheck(editor: Atom.TextEditor) {
-        if (Omni.client === undefined || Omni.client.currentState !== omnisharp.DriverState.Connected) return;
+        if (editor == undefined || Omni.client === undefined || Omni.client.currentState !== omnisharp.DriverState.Connected) return;
         _.debounce(() => {
             var request = <OmniSharp.Models.FormatRangeRequest>Omni.makeRequest(editor);
             Omni.client.updatebufferPromise(request)
