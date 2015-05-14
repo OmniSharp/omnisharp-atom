@@ -103,8 +103,6 @@ gulp.task('file-watch', function() {
     return merge(lib, spec);
 });
 
-gulp.task('npm-postinstall', ['typescript', 'copy-omnisharp-server-roslyn-binaries']);
-
 gulp.task('npm-prepublish', ['typescript']);
 
 // The default task (called when you run `gulp` from CLI)
