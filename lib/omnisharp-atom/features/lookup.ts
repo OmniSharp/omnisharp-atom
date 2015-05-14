@@ -136,6 +136,9 @@ class Tooltip implements rx.Disposable {
             Column: bufferPt.column + 1,
             FileName: this.editor.getURI()
         }).then((response: OmniSharp.Models.TypeLookupResponse) => {
+            if (response.Type === null) {
+                return;
+            }
             var message = `<b>${this.htmlEscape(response.Type)}</b>`;
             if (response.Documentation) {
                 message = message + `<br/><i>${this.htmlEscape(response.Documentation)}</i>`;
