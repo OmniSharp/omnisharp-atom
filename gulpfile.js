@@ -44,33 +44,6 @@ var metadata = {
     spec: ['spec/**/*.ts'],
 }
 
-// Copies the roslyn binaries, if and only if the user is a windows user and has not done any funky symlink work (if you're developing)
-gulp.task('copy-omnisharp-server-roslyn-binaries', function() {
-    if (win32 && fs.existsSync('./node_modules/omnisharp-node-client/node_modules/omnisharp-server-roslyn-binaries/')) {
-
-        var localServer = fs.existsSync('./node_modules/omnisharp-server-roslyn-binaries/');
-        if (localServer) {
-            var localSymlink = fs.lstatSync('./node_modules/omnisharp-server-roslyn-binaries/').isSymbolicLink();
-        }
-
-        // See if we've already copied the server (if so lets remove it incase it's been updated!)
-        if (localServer && fs.existsSync('./node_modules/omnisharp-node-client/node_modules/omnisharp-server-roslyn-binaries/')) {
-            // If the server is a symlink don't remove... someone could be developing
-            if (!localSymlink) {
-                gutil.log("Removing " + gutil.colors.yellow("/node_modules/omnisharp-server-roslyn-binaries/"));
-                del.sync(['./node_modules/omnisharp-server-roslyn-binaries/']);
-            }
-        }
-
-        // See we didn't find the server, or the existing one was not a symlink.
-        if (!localServer || !localSymlink) {
-            gutil.log("Copying " + gutil.colors.green("/node_modules/omnisharp-node-client/node_modules/omnisharp-server-roslyn-binaries/ -> /node_modules/omnisharp-server-roslyn-binaries/"));
-            return gulp.src('./node_modules/omnisharp-node-client/node_modules/omnisharp-server-roslyn-binaries/**/*')
-                .pipe(gulp.dest('./node_modules/omnisharp-server-roslyn-binaries/'));
-        }
-    }
-});
-
 gulp.task('typescript', ['clean'], function() {
     var lib = tsTranspiler(gulp.src(metadata.lib), './lib');
     var spec = tsTranspiler(gulp.src(metadata.spec), './spec');
@@ -129,8 +102,6 @@ gulp.task('file-watch', function() {
 
     return merge(lib, spec);
 });
-
-gulp.task('npm-postinstall', ['typescript', 'copy-omnisharp-server-roslyn-binaries']);
 
 gulp.task('npm-prepublish', ['typescript']);
 

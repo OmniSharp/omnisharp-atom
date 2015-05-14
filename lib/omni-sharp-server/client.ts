@@ -1,5 +1,5 @@
 import _ = require('lodash')
-import omnisharp = require("omnisharp-node-client");
+import omnisharp = require("omnisharp-client");
 
 class Client extends omnisharp.OmnisharpClient {
     constructor(options: omnisharp.OmnisharpClientOptions) {

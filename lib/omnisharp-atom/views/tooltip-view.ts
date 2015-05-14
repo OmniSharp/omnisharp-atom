@@ -28,7 +28,7 @@ class TooltipView extends spacePen.View {
         this.inner.html(text);
         this.inner.css({'white-space' : 'pre', 'text-align' : 'left'});
         this.updatePosition();
-        this.fadeTo(300, 1);
+        (<any>this).fadeTo(300, 1);
     }
 
     updatePosition() {
