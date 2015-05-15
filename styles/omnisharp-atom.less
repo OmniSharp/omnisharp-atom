@@ -187,3 +187,26 @@ li.autocomplete-omnisharp-atom .icon {
 li.autocomplete-omnisharp-atom {
     line-height:1.5em !important;
 }
+
+.error-warning-summary {
+    padding-left: 10px;
+    color: @text-color;
+    cursor:pointer;
+    &:focus {
+        text-decoration: none;
+        color: @text-color;
+    }
+    &:hover {
+        color: @text-color;
+        text-decoration: none;
+    }
+    span {
+        padding-left: 5px;
+    }
+    .icon-issue-opened {
+        color: @text-color-error;
+    }
+    .icon-alert {
+        color: @text-color-warning;
+    }
+}
