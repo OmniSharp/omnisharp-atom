@@ -66,7 +66,7 @@ class Client extends OmnisharpClient {
             Column: marker.column,
             FileName: editor.getURI(),
             Line: marker.row,
-            Buffer: buffer
+            Buffer: null
         };
     }
 
@@ -85,7 +85,7 @@ class Client extends OmnisharpClient {
             Column: marker.column,
             FileName: editor.getURI(),
             Line: marker.row,
-            Buffer: bufferText
+            Buffer: null
         };
     }
 
