@@ -1,10 +1,13 @@
 import _ = require('lodash')
 import path = require('path');
 import Client = require('./client');
+import {findCandidates} from "omnisharp-client";
 
 class ClientManager {
     private _clients: { [path:string] : Client } = {};
     private _configurations : ((client: Client) => void)[] = [];
+    private _projectClientPaths: { [key: string]: string[] } = {};
+    private _clientPaths: string[] = [];
     private _paths: string[] = [];
     private _activated = false;
 
@@ -26,13 +29,18 @@ class ClientManager {
         });
 
         _.each(addedClients, project => {
-            var client = new Client({
-                projectPath: project,
-                findProject: true
-            });
+            var localPaths = this._projectClientPaths[project] = [];
+            for (var candidate of findCandidates(project, console)) {
+                localPaths.push(candidate);
+                this._clientPaths.push(candidate);
 
-            _.each(this._configurations, config => config(client));
-            this._clients[project] = client;
+                var client = new Client({
+                    projectPath: candidate
+                });
+
+                _.each(this._configurations, config => config(client));
+                this._clients[candidate] = client;
+            }
         });
 
         this._paths = paths;
@@ -44,7 +52,7 @@ class ClientManager {
             return this.getClientForEditor(editor);
 
         // No window is open
-        return this._clients[this._paths[0]];
+        return this._clients[this._clientPaths[0]];
     }
 
     public getClientForEditor(editor: Atom.TextEditor) {
@@ -58,12 +66,13 @@ class ClientManager {
         if (location === undefined) {
             return;
         }
+        
         var segments = location.split(path.sep);
         var mappedLocations = segments.map((loc, index) => {
             return _.take(segments, index + 1).join(path.sep);
         });
 
-        var intersect = _.intersection(mappedLocations, this._paths);
+        var intersect = _.intersection(mappedLocations, this._clientPaths);
         if (intersect.length) {
             (<any>editor).omniProject = intersect[0];
             return this._clients[intersect[0]];

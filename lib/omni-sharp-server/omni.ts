@@ -1,6 +1,6 @@
 import manager = require("./client-manager");
 import Client = require("./client");
-import omnisharp = require("omnisharp-client");
+import {DriverState} from "omnisharp-client";
 
 manager.registerConfiguration(client => client.state.subscribe(z => Omni.updateState(z)));
 
@@ -60,12 +60,12 @@ class Omni {
     }
 
     public static updateState(state) {
-        this.vm.isLoading = state === omnisharp.DriverState.Connecting;
+        this.vm.isLoading = state === DriverState.Connecting;
         this.vm.isNotLoading = !this.vm.isLoading;
-        this.vm.isOff = state === omnisharp.DriverState.Disconnected;
+        this.vm.isOff = state === DriverState.Disconnected;
         this.vm.isNotOff = !this.vm.isOff;
-        this.vm.isOn = state === omnisharp.DriverState.Connecting || state === omnisharp.DriverState.Connected;
-        this.vm.isReady = state === omnisharp.DriverState.Connected;
+        this.vm.isOn = state === DriverState.Connecting || state === DriverState.Connected;
+        this.vm.isReady = state === DriverState.Connected;
         this.vm.isNotReady = !this.vm.isReady
         this.vm.isNotError = !this.vm.isError;
         this.vm.isLoadingOrReady = this.vm.isLoading || this.vm.isReady;
