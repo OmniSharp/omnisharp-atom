@@ -10769,6 +10769,8 @@ declare module Atom {
          */
         logScreenLines(start? : any, end? : any) : string[];
     
+    
+        active: boolean;
     }
 
     /**
