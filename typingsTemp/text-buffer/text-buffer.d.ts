@@ -230,7 +230,7 @@ declare module TextBuffer {
         /**
          * This field or method was not documented by atomdoc, assume it is private. Use with caution.
          */
-        constructor(buffer? : any, markers? : Atom.Marker[]);
+        constructor(buffer? : any, markers? : Marker);
     
         /**
          * Builds the ::intervals indexing structure, which allows for quick retrieval
@@ -254,12 +254,12 @@ declare module TextBuffer {
         /**
          * This field or method was not documented by atomdoc, assume it is private. Use with caution.
          */
-        markRange(range? : Marker, properties? : Marker) : Marker;
+        markRange(range? : Atom.Range, properties? : any) : Marker;
     
         /**
          * This field or method was not documented by atomdoc, assume it is private. Use with caution.
          */
-        markPosition(position? : Marker, properties? : Marker) : Marker;
+        markPosition(position? : Point, properties? : any) : Marker;
     
         /**
          * This field or method was not documented by atomdoc, assume it is private. Use with caution.
@@ -1213,14 +1213,14 @@ declare module TextBuffer {
          * @param range? - A {Range} or range-compatible {Array}
          * @param properties? - A hash of key-value pairs to associate with the marker. There are also reserved property names that have marker-specific meaning.
          */
-        markRange(range? : Marker, properties? : Marker) : Marker;
+        markRange(range? : Atom.Range, properties? : any) : Marker;
     
         /**
          * Create a marker at the given position with no tail.
          * @param position? - {Point} or point-compatible {Array}
          * @param properties? - This is the same as the `properties` parameter in {::markRange}
          */
-        markPosition(position? : Marker, properties? : Marker) : Marker;
+        markPosition(position? : Point, properties? : any) : Marker;
     
         /**
          * Get all existing markers on the buffer.
