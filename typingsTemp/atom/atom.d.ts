@@ -2713,7 +2713,7 @@ declare module Atom {
          * range - The marker {Range} (representing the distance between the head and tail)
          * options - Options to pass to the {Marker} constructor
          */
-        markScreenRange(args? : Marker) : Marker;
+        markScreenRange(args? : any) : Marker;
     
         /**
          * Constructs a new marker at the given buffer range.
@@ -2721,7 +2721,7 @@ declare module Atom {
          * range - The marker {Range} (representing the distance between the head and tail)
          * options - Options to pass to the {Marker} constructor
          */
-        markBufferRange(range? : Marker, options? : Marker) : Marker;
+        markBufferRange(range? : Range, options? : any) : Marker;
     
         /**
          * Constructs a new marker at the given screen position.
@@ -2729,7 +2729,7 @@ declare module Atom {
          * range - The marker {Range} (representing the distance between the head and tail)
          * options - Options to pass to the {Marker} constructor
          */
-        markScreenPosition(screenPosition? : Marker, options? : Marker) : Marker;
+        markScreenPosition(screenPosition? : TextBuffer.Point | { row: number; column: number } | [number, number], options? : any) : Marker;
     
         /**
          * Constructs a new marker at the given buffer position.
@@ -2737,7 +2737,7 @@ declare module Atom {
          * range - The marker {Range} (representing the distance between the head and tail)
          * options - Options to pass to the {Marker} constructor
          */
-        markBufferPosition(bufferPosition? : Marker, options? : Marker) : Marker;
+        markBufferPosition(bufferPosition? : TextBuffer.Point | { row: number; column: number } | [number, number], options? : any) : Marker;
     
         /**
          * Removes the marker with the given id.
@@ -9428,7 +9428,7 @@ declare module Atom {
          * you mark a particular word, the marker will remain over that word even if
          * the word's location in the buffer changes.
          */
-        markBufferRange(args? : Marker) : Marker;
+        markBufferRange(args? : any) : Marker;
     
         /**
          * Create a marker with the given range in screen coordinates. This
@@ -9436,17 +9436,17 @@ declare module Atom {
          * you mark a particular word, the marker will remain over that word even if
          * the word's location in the buffer changes.
          */
-        markScreenRange(args? : Marker) : Marker;
+        markScreenRange(args? : any) : Marker;
     
         /**
          * Mark the given position in buffer coordinates.
          */
-        markBufferPosition(args? : Marker) : Marker;
+        markBufferPosition(args? : any) : Marker;
     
         /**
          * Mark the given position in screen coordinates.
          */
-        markScreenPosition(args? : Marker) : Marker;
+        markScreenPosition(args? : any) : Marker;
     
         /**
          * Find all {Marker}s that match the given properties.
@@ -10769,6 +10769,8 @@ declare module Atom {
          */
         logScreenLines(start? : any, end? : any) : string[];
     
+    
+        active: boolean;
     }
 
     /**
