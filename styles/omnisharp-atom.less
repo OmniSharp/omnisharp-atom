@@ -190,21 +190,23 @@ li.autocomplete-omnisharp-atom {
 
 .error-warning-summary {
     padding-left: 10px;
+    color: @text-color;
     cursor:pointer;
     &:focus {
         text-decoration: none;
-        color: #c8d5ee;
+        color: @text-color;
     }
     &:hover {
+        color: @text-color;
         text-decoration: none;
     }
     span {
         padding-left: 5px;
     }
     .icon-issue-opened {
-        color: @red-color;
+        color: @text-color-error;
     }
     .icon-alert {
-        color: #e2c08d;
+        color: @text-color-warning;
     }
 }
