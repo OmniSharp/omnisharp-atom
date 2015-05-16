@@ -1,15 +1,15 @@
 import _ = require('lodash');
 import {Observable} from 'rx';
-import omnisharp = require("omnisharp-client");
+import {OmnisharpClient, DriverState, OmnisharpClientOptions} from "omnisharp-client";
 
-class Client extends omnisharp.OmnisharpClient {
-    constructor(options: omnisharp.OmnisharpClientOptions) {
+class Client extends  OmnisharpClient {
+    constructor(options: OmnisharpClientOptions) {
         super(options);
         this.configureClient();
     }
 
     public toggle() {
-        if (this.currentState === omnisharp.DriverState.Disconnected) {
+        if (this.currentState === DriverState.Disconnected) {
             var path = atom && atom.project && atom.project.getPaths()[0];
             this.connect({
                 projectPath: path
@@ -91,7 +91,7 @@ class Client extends omnisharp.OmnisharpClient {
         if (request['abort']) {
             return Observable.empty<TResponse>();
         }
-        return omnisharp.OmnisharpClient.prototype.request.call(this, action, request);
+        return OmnisharpClient.prototype.request.call(this, action, request);
     }
 }
 

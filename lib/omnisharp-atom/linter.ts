@@ -1,6 +1,7 @@
 var linterPath = atom.packages.resolvePackagePath("linter");
 var Linter = { Linter: <typeof Linter.Linter>require(`${linterPath}/lib/linter`) };
 import Omni = require('../omni-sharp-server/omni');
+import ClientManager = require('../omni-sharp-server/client-manager');
 import _ = require('lodash');
 var Range = require('atom').Range;
 
@@ -52,33 +53,36 @@ class LinterCSharp extends Linter.Linter {
             return;
         }
 
-        Omni.client.codecheckPromise(Omni.makeRequest(this.editor))
-            .then(data => {
+        var client = ClientManager.getClientForPath(filePath);
+        if (client) {
+            client.codecheckPromise(Omni.makeRequest(this.editor))
+                .then(data => {
 
-            var errors = _.map(data.QuickFixes, (error: OmniSharp.Models.DiagnosticLocation): LinterError => {
-                var line = error.Line - 1;
-                var column = error.Column - 1;
-                var text = this.editor.lineTextForBufferRow(line);
-                var wordLocation = this.getWordAt(text, column);
-                var level = error.LogLevel.toLowerCase();
+                var errors = _.map(data.QuickFixes, (error: OmniSharp.Models.DiagnosticLocation): LinterError => {
+                    var line = error.Line - 1;
+                    var column = error.Column - 1;
+                    var text = this.editor.lineTextForBufferRow(line);
+                    var wordLocation = this.getWordAt(text, column);
+                    var level = error.LogLevel.toLowerCase();
 
-                if (level === "hidden") {
-                    level = "info"
-                }
+                    if (level === "hidden") {
+                        level = "info"
+                    }
 
-                return {
-                    message: error.Text,
-                    line: line + 1,
-                    col: column,
-                    level: level,
-                    range: new Range([line, wordLocation.start], [line, wordLocation.end]),
-                    linter: "C#"
-                }
+                    return {
+                        message: error.Text,
+                        line: line + 1,
+                        col: column,
+                        level: level,
+                        range: new Range([line, wordLocation.start], [line, wordLocation.end]),
+                        linter: "C#"
+                    }
+                });
+
+                return callback(errors)
+
             });
-
-            return callback(errors)
-
-        });
+        }
     }
 }
 

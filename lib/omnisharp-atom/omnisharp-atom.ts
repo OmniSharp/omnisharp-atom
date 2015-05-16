@@ -169,7 +169,6 @@ class OmniSharpAtom {
                 this.menu.dispose();
                 this.menu = null;
             }
-            Omni.toggle();
         } else {
             _.map(dependencyErrors, missingDependency => alert(missingDependency));
         }
