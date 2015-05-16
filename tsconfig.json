@@ -22,7 +22,7 @@
         "placeOpenBraceOnNewLineForFunctions": false,
         "placeOpenBraceOnNewLineForControlBlocks": false
     },
-    "compileOnSave": false,
+    "compileOnSave": true,
     "filesGlob": [
         "./**/*.ts",
         "!./typings/**/*.d.ts",

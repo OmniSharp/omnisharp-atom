@@ -1,4 +1,5 @@
-import _ = require('lodash')
+import _ = require('lodash');
+import {Observable} from 'rx';
 import omnisharp = require("omnisharp-client");
 
 class Client extends omnisharp.OmnisharpClient {
@@ -37,6 +38,10 @@ class Client extends omnisharp.OmnisharpClient {
 
     public makeRequest(editor?: Atom.TextEditor, buffer?: TextBuffer.TextBuffer) {
         editor = editor || atom.workspace.getActiveTextEditor();
+        // TODO: update and add to typings.
+        if (_.has(editor, 'alive') && !editor.alive) {
+            return <OmniSharp.Models.Request>{ abort: true };
+        }
         buffer = buffer || editor.getBuffer();
 
         var bufferText = buffer.getLines().join('\n');
@@ -52,13 +57,6 @@ class Client extends omnisharp.OmnisharpClient {
 
     public makeDataRequest<T>(data: T, editor?: Atom.TextEditor, buffer?: TextBuffer.TextBuffer) {
         return <T>_.extend(data, this.makeRequest(editor, buffer));
-    }
-
-    public navigateTo(response: { FileName: string; Line: number; Column: number; }) {
-        atom.workspace.open(response.FileName, undefined)
-            .then((editor) => {
-            editor.setCursorBufferPosition([response.Line && response.Line - 1, response.Column && response.Column - 1])
-        });
     }
 
     private configureClient() {
@@ -88,7 +86,13 @@ class Client extends omnisharp.OmnisharpClient {
         });
     }
 
-
+    public request<TRequest, TResponse>(action: string, request?: TRequest): Rx.Observable<TResponse> {
+        // Custom property that we set inside make request if the editor is no longer active.
+        if (request['abort']) {
+            return Observable.empty<TResponse>();
+        }
+        return omnisharp.OmnisharpClient.prototype.request.call(this, action, request);
+    }
 }
 
 export = Client;

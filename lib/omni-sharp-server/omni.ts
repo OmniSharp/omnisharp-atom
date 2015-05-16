@@ -44,7 +44,10 @@ class Omni {
     }
 
     public static navigateTo(response: { FileName: string; Line: number; Column: number; }) {
-        return manager.getClientForActiveEditor().navigateTo(response);
+        atom.workspace.open(response.FileName, undefined)
+            .then((editor) => {
+            editor.setCursorBufferPosition([response.Line && response.Line - 1, response.Column && response.Column - 1])
+        });
     }
 
     public static registerConfiguration(callback: (client: Client) => void) {
