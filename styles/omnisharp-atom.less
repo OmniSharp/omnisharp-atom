@@ -131,21 +131,19 @@
     background-color: @base-background-color;
 
     &.Hidden, &.Warning {
-        background-image: url('atom://omnisharp-atom/styles/icons/codecheck-warning.png');
-        background-repeat: no-repeat;
-        background-position: 0px 0px;
+      background-image: url('atom://omnisharp-atom/styles/icons/codecheck-warning.png');
+      background-repeat: no-repeat;
+      background-position: 0px 0px;
     }
     &.Error {
-        background-image: url('atom://omnisharp-atom/styles/icons/codecheck-error.png');
-        background-repeat: no-repeat;
-        background-position: 0px 0px;
+      background-image: url('atom://omnisharp-atom/styles/icons/codecheck-error.png');
+      background-repeat: no-repeat;
+      background-position: 0px 0px;
     }
     pre {
-        padding: 2px 0px;
+      padding: 2px 0px;
     }
 }
-
-
 
 @red-color: @syntax-color-removed;
 @green-color: @syntax-color-added;
@@ -177,6 +175,13 @@ atom-text-editor::shadow
     background-image: url('atom://omnisharp-atom/styles/wiggle-green.png');
     background-repeat: repeat-x;
     background-position: bottom;
+  }
+
+  .gotodefinition-underline .region {
+    border-bottom: 1px solid @text-color !important;
+    pointer-events: auto !important;
+    z-index: 1 !important;
+    cursor: pointer;
   }
 }
 
