@@ -7,7 +7,6 @@
       { "label": "Go to Definition", "command": "omnisharp-atom:go-to-definition" },
       { "label": "Go to Implementation", "command": "omnisharp-atom:go-to-implementation" },
       { "label": "Rename", "command": "omnisharp-atom:rename"},
-      { "label": "Fix Usings", "command": "omnisharp-atom:fix-usings" },
       { "label": "Code Format", "command": "omnisharp-atom:code-format" },
       { "label": "Lookup type", "command": "omnisharp-atom:type-lookup" }
     ]
