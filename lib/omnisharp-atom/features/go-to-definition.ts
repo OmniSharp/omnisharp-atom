@@ -96,10 +96,13 @@ class GoToDefinition {
         var endColumn = bufferPt.column;
         var line = buffer.getLines()[bufferPt.row];
 
-        while (startColumn > 0 && /[A-Z_0-9]+/i.test(line[--startColumn])) {
+        if (!/[A-Z_0-9]/i.test(line[bufferPt.column]))
+            return;
+
+        while (startColumn > 0 && /[A-Z_0-9]/i.test(line[--startColumn])) {
         }
 
-        while (endColumn < line.length && /[A-Z_0-9]+/i.test(line[++endColumn])) {
+        while (endColumn < line.length && /[A-Z_0-9]/i.test(line[++endColumn])) {
         }
 
         var wordRange = new Range([bufferPt.row, startColumn + 1], [bufferPt.row, endColumn]);
