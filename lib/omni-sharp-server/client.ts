@@ -91,7 +91,7 @@ class Client extends  OmnisharpClient {
         if (request['abort']) {
             return Observable.empty<TResponse>();
         }
-        return omnisharp.OmnisharpClient.prototype.request.call(this, action, request);
+        return OmnisharpClient.prototype.request.call(this, action, request);
     }
 }
 

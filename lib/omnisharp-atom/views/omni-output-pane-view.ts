@@ -56,8 +56,7 @@ class OmniOutputPaneView extends spacePenViews.View {
         var viewModel = new Vue({
             el: this[0],
             data: _.extend(Omni.vm, {
-                uninitialized: true,
-                initialized: false,
+                initialized: true,
                 output: []
             })
         });
@@ -88,7 +87,6 @@ class OmniOutputPaneView extends spacePenViews.View {
         });
 
         return atom.emitter.on("omni-sharp-server:start", (data) => {
-            this.vm.uninitialized = false;
             this.vm.initialized = true;
             this.vm.output = <OmniSharp.VueArray<any>> [];
             this.vm.output.push({

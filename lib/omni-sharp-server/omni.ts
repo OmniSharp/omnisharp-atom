@@ -30,9 +30,10 @@ class Omni {
     }
 
     public static toggle() {
-        var client = manager.getClientForActiveEditor();
-        if (client) {
-            client.toggle();
+        if (manager.connected) {
+            manager.disconnect();
+        } else {
+            manager.connect();
         }
     }
 
