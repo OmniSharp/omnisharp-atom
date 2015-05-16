@@ -24,6 +24,11 @@ class Omni {
         return Omni._vm;
     }
 
+    public static get turnedOnAndReady()
+    {
+      return Omni._vm.isReady;
+    }
+
     public static toggle() {
         var client = manager.getClientForActiveEditor();
         if (client) {
