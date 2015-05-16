@@ -8,7 +8,7 @@ import TooltipView = require('../views/tooltip-view');
 import rx = require('rx');
 import $ = require('jquery');
 import omnisharpAtom = require('../omnisharp-atom');
-//import escape = require('escape-html');
+import omnisharp = require("omnisharp-client");
 
 class TypeLookup {
     public activate() {
@@ -90,7 +90,7 @@ class Tooltip implements rx.Disposable {
     }
 
     private showExpressionTypeOnMouseOver(e: MouseEvent) {
-        if (Omni.client === undefined) {
+        if (Omni.client === null) {
             return;
         }
 
@@ -141,9 +141,9 @@ class Tooltip implements rx.Disposable {
             if (response.Type === null) {
                 return;
             }
-            var message = `<b>${this.htmlEscape(response.Type)}</b>`;
+            var message = `<b>${this.htmlEscape(response.Type) }</b>`;
             if (response.Documentation) {
-                message = message + `<br/><i>${this.htmlEscape(response.Documentation)}</i>`;
+                message = message + `<br/><i>${this.htmlEscape(response.Documentation) }</i>`;
             }
             // Sorry about this "if". It's in the code I copied so I guess its there for a reason
             if (this.exprTypeTooltip) {

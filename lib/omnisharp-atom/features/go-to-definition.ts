@@ -108,7 +108,10 @@ class GoToDefinition {
         var wordRange = new Range([bufferPt.row, startColumn + 1], [bufferPt.row, endColumn]);
         if (this.marker !== null && this.marker.bufferMarker.range.compare(wordRange) === 0)
             return;
-
+        if (Omni.client === null) {
+            return;
+        }
+        
         Omni.client.gotodefinitionPromise({
             Line: bufferPt.row + 1,
             Column: bufferPt.column + 1,
