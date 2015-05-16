@@ -46,7 +46,7 @@
   ],
   "license": "MIT",
   "engines": {
-    "atom": ">=0.192.0 <2.0.0"
+    "atom": ">=0.199.0 <2.0.0"
   },
   "activationCommands": [],
   "menus": [
@@ -110,7 +110,6 @@
     "grunt-contrib-watch": "^0.6.1"
   },
   "package-dependencies": {
-    "autocomplete-plus": "^2.0.2",
     "language-csharp": ">=0.3.0",
     "linter": ">=0.12.0",
     "atom-yeoman": ">=0.1.5"
