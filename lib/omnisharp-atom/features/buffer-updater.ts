@@ -2,28 +2,28 @@ import Omni = require('../../omni-sharp-server/omni');
 import OmniSharpAtom = require('../omnisharp-atom');
 import OmniSharpClient = require('omnisharp-client');
 import _ = require('lodash');
-//import omnisharp = require("omnisharp-client");
 
-class Range implements OmniSharp.Models.ChangeBufferRequest {
-    FileName: string;
-    StartLine: number;
-    StartColumn: number;
-    EndLine: number;
-    EndColumn: number;
-    NewText: string;
-}
 
 class BufferUpdater {
 
+
     public activate() {
 
-        // add temp command to update complete buffer
-        atom.commands.add('atom-workspace', 'omnisharp-atom:temp', () => this.updateBuffer());
         OmniSharpAtom.onEditor((editor: Atom.TextEditor) => {
 
-            editor.getBuffer()
-            .onDidChange(event => {
-                console.log(event);
+            var buffer = editor.getBuffer();
+
+            buffer.onDidChange(event => {
+                if (Omni.vm.isNotReady) return;
+
+                //if marker exists then buffer was changed from server changes
+                // don't send to server again.
+                var markers = buffer.findMarkers({"omnisharp-buffer": false});
+
+                if (markers.length > 0) {
+                    markers.forEach(marker => marker.destroy());
+                    return;
+                }
 
                 var request = <OmniSharp.Models.ChangeBufferRequest>{
                         FileName: editor.getPath(),
@@ -38,21 +38,28 @@ class BufferUpdater {
                 request.StartColumn = event.oldRange.start.column + 1;
                 request.EndLine = event.oldRange.end.row + 1;
                 request.EndColumn = event.oldRange.end.column + 1;
-                
+
                 Omni.client.changebuffer(request);
+
             });
         });
 
+        atom.workspace.observeActivePaneItem((pane: Atom.Pane) => {
+            this.updateBuffer(atom.workspace.getActiveTextEditor());
+        });
     }
 
-    public updateBuffer() {
-        var editor = atom.workspace.getActiveTextEditor();
+    public updateBuffer(editor: Atom.TextEditor) {
+        if (Omni.vm.isNotReady || editor === undefined) return;
+
         var request = <OmniSharp.Models.FormatRangeRequest>Omni.makeRequest(editor);
 
+        //TODO: enable to create request with or without the buffer
         request.Buffer = editor.getBuffer().getLines().join('\n');
 
         Omni.client.updatebufferPromise(request);
     }
+
 }
 
 export = BufferUpdater;
