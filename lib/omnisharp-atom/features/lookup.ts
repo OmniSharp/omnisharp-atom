@@ -63,6 +63,8 @@ class Tooltip implements rx.Disposable {
         atom.commands.add("atom-text-editor", "omnisharp-atom:type-lookup", () => {
             this.showExpressionTypeOnCommand();
         })
+
+        atom.workspace.onDidChangeActivePaneItem((activeItem) => this.hideExpressionType());
     }
 
     private showExpressionTypeOnCommand() {
