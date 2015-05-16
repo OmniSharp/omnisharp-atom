@@ -1,4 +1,5 @@
 var Range = require('atom').Range;
+import Omni = require('../../../omni-sharp-server/omni');
 
 class Changes {
     public static applyChanges(editor: Atom.TextEditor, response: { Changes: OmniSharp.Models.LinePositionSpanTextChange[]; });

@@ -43,6 +43,7 @@
         "./lib/omnisharp-atom/atom/update-projects.ts",
         "./lib/omnisharp-atom/configure-rx.ts",
         "./lib/omnisharp-atom/dependency-checker.ts",
+        "./lib/omnisharp-atom/features/buffer-updater.ts",
         "./lib/omnisharp-atom/features/build.ts",
         "./lib/omnisharp-atom/features/code-action.ts",
         "./lib/omnisharp-atom/features/code-check.ts",
