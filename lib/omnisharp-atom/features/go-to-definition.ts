@@ -87,9 +87,6 @@ class GoToDefinition {
     }
 
     private underlineIfNavigable(editor, view, event) {
-        var req: any = Omni.makeRequest();
-        req.word = <any>editor.getWordUnderCursor();
-
         var pixelPt = this.pixelPositionFromMouseEvent(view, event);
         var screenPt = editor.screenPositionForPixelPosition(pixelPt);
         var bufferPt = editor.bufferPositionForScreenPosition(screenPt);
@@ -143,4 +140,5 @@ class GoToDefinition {
         }
     }
 }
+
 export = GoToDefinition;
