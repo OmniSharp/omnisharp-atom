@@ -218,6 +218,12 @@ class OmniSharpAtom {
             description: "Automatically starts Omnisharp Roslyn when a compatible file is opened.",
             type: 'boolean',
             default: true
+        },
+        developerMode: {
+            title: 'Developer Mode',
+            description: 'Outputs detailed server calls in console.log',
+            type: 'boolean',
+            default: false
         }
     }
 

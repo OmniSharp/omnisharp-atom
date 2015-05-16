@@ -82,7 +82,9 @@ class Client extends omnisharp.OmnisharpClient {
         });
 
         this.responses.subscribe(data => {
-            console.log("omni:" + data.command, data.request, data.response);
+            if (atom.config.get('omnisharp-atom.developerMode')) {
+                console.log("omni:" + data.command, data.request, data.response);
+            }
         });
     }
 
