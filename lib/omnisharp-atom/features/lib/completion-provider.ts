@@ -140,7 +140,7 @@ export var CompletionProvider = {
         var data = buffer.getLines()[options.bufferPosition.row].substring(0, end + 1);
 
         var lastCharacterTyped = data[end - 1];
-        
+
         if (!/[A-Z_0-9.]+/i.test(lastCharacterTyped)) {
             return;
         }
@@ -149,9 +149,11 @@ export var CompletionProvider = {
         if (search === ".")
             search = "";
 
-        return dataSource.promise()
-            .then(response => response.map(s => this.makeSuggestion(s)))
-            .then(s => filter(s, search, { key: '_search' }));
+        var p = dataSource.promise();
+        if (search)
+            p = p.then(s => filter(s, search, { key: 'CompletionText' }));
+
+        return p.then(response => response.map(s => this.makeSuggestion(s)))
     },
 
     onDidInsertSuggestion(editor: Atom.TextEditor, triggerPosition: TextBuffer.Point, suggestion: any) {
