@@ -2,64 +2,109 @@ import Omni = require('../../omni-sharp-server/omni');
 import OmniSharpAtom = require('../omnisharp-atom');
 import OmniSharpClient = require('omnisharp-client');
 import _ = require('lodash');
-
+import EventKit = require('event-kit');
+import ClientManager = require('../../omni-sharp-server/client-manager');
 
 class BufferUpdater {
+    private disposables: EventKit.CompositeDisposable;
+    private editor: Atom.TextEditor;
+    private emitter: EventKit.Emitter;
 
+    constructor(editor: Atom.TextEditor) {
+        this.disposables = new EventKit.CompositeDisposable();
+        this.emitter = new EventKit.Emitter();
+        this.editor = editor;
 
-    public activate() {
+        var buffer = editor.getBuffer();
 
-        OmniSharpAtom.onEditor((editor: Atom.TextEditor) => {
+        this.disposables.add(buffer.onDidSave(() => this.updateBuffer(editor)));
+        this.disposables.add(buffer.onDidReload(() => this.updateBuffer(editor)));
+        this.disposables.add(buffer.onDidDestroy(() => this.dispose()));
 
-            var buffer = editor.getBuffer();
+        this.disposables.add(buffer.onDidChange(event =>  this.changeBuffer(editor, event)));
 
-            buffer.onDidChange(event => {
-                if (Omni.vm.isNotReady) return;
+        this.disposables.add(atom.workspace.observeActivePaneItem((pane: Atom.Pane) => {
+            var activeEditor = atom.workspace.getActiveTextEditor();
+            if (activeEditor != null && this.editor.id == activeEditor.id)
+                this.updateBuffer(this.editor);
+        }));
 
-                //if marker exists then buffer was changed from server changes
-                // don't send to server again.
-                var markers = buffer.findMarkers({"omnisharp-buffer": false});
+    }
 
-                if (markers.length > 0) {
-                    markers.forEach(marker => marker.destroy());
-                    return;
-                }
+    public changeBuffer(editor: Atom.TextEditor, event: any) {
+        var client = ClientManager.getClientForEditor(editor);
+        if (client) {
+            //if marker exists then buffer was changed from server changes
+            // don't send to server again.
+            var markers = editor.getBuffer().findMarkers({"omnisharp-buffer": false});
 
-                var request = <OmniSharp.Models.ChangeBufferRequest>{
-                        FileName: editor.getPath(),
-                        StartLine: 0,
-                        StartColumn: 0,
-                        EndLine: 0,
-                        EndColumn: 0,
-                        NewText: event.newText
-                    };
+            if (markers.length > 0) {
+                markers.forEach(marker => marker.destroy());
+                return;
+            }
 
-                request.StartLine = event.oldRange.start.row + 1;
-                request.StartColumn = event.oldRange.start.column + 1;
-                request.EndLine = event.oldRange.end.row + 1;
-                request.EndColumn = event.oldRange.end.column + 1;
+            var request = <OmniSharp.Models.ChangeBufferRequest>{
+                    FileName: editor.getPath(),
+                    StartLine: event.oldRange.start.row + 1,
+                    StartColumn: event.oldRange.start.column + 1,
+                    EndLine: event.oldRange.end.row + 1,
+                    EndColumn: event.oldRange.end.column + 1,
+                    NewText: event.newText
+                };
 
-                Omni.client.changebuffer(request);
-
-            });
-        });
-
-        atom.workspace.observeActivePaneItem((pane: Atom.Pane) => {
-            this.updateBuffer(atom.workspace.getActiveTextEditor());
-        });
+            client.changebuffer(request);
+        }
     }
 
     public updateBuffer(editor: Atom.TextEditor) {
-        if (Omni.vm.isNotReady || editor === undefined) return;
+        var client = ClientManager.getClientForEditor(editor)
+        if (client) {
+            var request = <OmniSharp.Models.FormatRangeRequest>Omni.makeRequest(editor);
 
-        var request = <OmniSharp.Models.FormatRangeRequest>Omni.makeRequest(editor);
+            //TODO: enable to create request with or without the buffer
+            request.Buffer = editor.getBuffer().getLines().join('\n');
 
-        //TODO: enable to create request with or without the buffer
-        request.Buffer = editor.getBuffer().getLines().join('\n');
-
-        Omni.client.updatebufferPromise(request);
+            client.updatebufferPromise(request);
+        }
     }
 
+    public dispose() {
+        this.disposables.dispose();
+        this.emitter.emit('on-destroy');
+    }
+
+    public onDidDestroy(callback: any): EventKit.Disposable {
+        return this.emitter.on('on-destroy', callback);
+    }
 }
 
-export = BufferUpdater;
+class BufferFeature {
+    private disposables: EventKit.CompositeDisposable;
+    private bufferUpdaters: Array<BufferUpdater>;
+
+    constructor() {
+        this.disposables = new EventKit.CompositeDisposable();
+        this.bufferUpdaters = new Array<BufferUpdater>();
+    }
+
+    public activate() {
+
+        this.disposables.add(OmniSharpAtom.onEditor((editor: Atom.TextEditor) => {
+            var updater = new BufferUpdater(editor);
+            this.bufferUpdaters.push(updater);
+            this.disposables.add(updater.onDidDestroy(() => {
+                var index = this.bufferUpdaters.indexOf(updater);
+                if (index > -1)
+                    this.bufferUpdaters.splice(index, 1);
+            }));
+
+        }));
+    }
+
+    public destroy() {
+        this.disposables.dispose();
+        this.bufferUpdaters.forEach(updater => updater.dispose());
+    }
+}
+
+export = BufferFeature;
