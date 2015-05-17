@@ -53,7 +53,7 @@ class LinterCSharp extends Linter.Linter {
             return;
         }
 
-        var client = ClientManager.getClientForPath(filePath);
+        var client = ClientManager.getClientForEditor(this.editor);
         if (client) {
             client.codecheckPromise(Omni.makeRequest(this.editor))
                 .then(data => {
