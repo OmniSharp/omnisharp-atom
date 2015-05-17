@@ -112,8 +112,8 @@ export var CompletionProvider = {
     selector: '.source.cs, .source.csx',
     disableForSelector: 'source.cs .comment',
 
-    inclusionPriority: 1,
-    excludeLowerPriority: true,
+    inclusionPriority: 3,
+    excludeLowerPriority: false,
 
     makeSuggestion(item: OmniSharp.Models.AutoCompleteResponse) {
         return {
