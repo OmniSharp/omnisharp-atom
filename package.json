@@ -53,6 +53,7 @@
     "atom-sharper.cson"
   ],
   "scripts": {
+    "postinstall": "./node_modules/.bin/gulp npm-postinstall",
     "prepublish": "./node_modules/.bin/gulp npm-prepublish"
   },
   "linter-package": true,
