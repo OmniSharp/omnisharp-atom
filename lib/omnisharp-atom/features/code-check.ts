@@ -22,7 +22,7 @@ class CodeCheck {
         ClientManager.registerConfiguration(client => {
             client.state.subscribe(state => {
                 if (state === omnisharp.DriverState.Connected)
-                    this.doCodeCheck(null);
+                    this.doCodeCheck(atom.workspace.getActiveTextEditor());
             });
         });
 

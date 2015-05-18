@@ -55,10 +55,17 @@ class CodeCheckOutputPaneView extends spacePenViews.View {
             client.observeCodecheck
                 .where(z => z.request.FileName === null)
                 .subscribe((data) => {
-                    this.vm.errors = _.sortBy(data.response.QuickFixes, (quickFix : OmniSharp.Models.DiagnosticLocation) => {
-                        return quickFix.LogLevel;
+                    this.vm.errors = _.sortBy(this.filterOnlyWarningsAndErrors(data.response.QuickFixes),
+                        (quickFix : OmniSharp.Models.DiagnosticLocation) => {
+                            return quickFix.LogLevel;
                     });
                 });
+        });
+    }
+
+    private filterOnlyWarningsAndErrors(quickFixes): OmniSharp.Models.DiagnosticLocation[] {
+        return _.filter(quickFixes, (quickFix: OmniSharp.Models.DiagnosticLocation) => {
+            return quickFix.LogLevel != "Hidden";
         });
     }
 }
