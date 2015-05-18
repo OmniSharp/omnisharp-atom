@@ -59,11 +59,7 @@ class BufferUpdater {
     public updateBuffer(editor: Atom.TextEditor) {
         var client = ClientManager.getClientForEditor(editor)
         if (client) {
-            var request = <OmniSharp.Models.FormatRangeRequest>Omni.makeRequest(editor);
-
-            //TODO: enable to create request with or without the buffer
-            request.Buffer = editor.getBuffer().getLines().join('\n');
-
+            var request = <OmniSharp.Models.Request>Omni.makeRequest(editor, editor.getBuffer());
             client.updatebufferPromise(request);
         }
     }

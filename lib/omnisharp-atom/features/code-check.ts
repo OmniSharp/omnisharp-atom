@@ -32,7 +32,7 @@ class CodeCheck {
         var client = ClientManager.getClientForEditor(editor) || ClientManager.getClientForActiveEditor();
         if (client && client.currentState === omnisharp.DriverState.Connected) {
             _.debounce(() => {
-                var request = <OmniSharp.Models.FormatRangeRequest>client.makeRequest(editor);
+                var request = <OmniSharp.Models.Request>client.makeRequest(editor);
                     request.FileName = null;
                     client.codecheck(request);
             }, 500)();
