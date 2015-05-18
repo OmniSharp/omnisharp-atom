@@ -121,7 +121,7 @@ class DockView extends spacePenViews.View {
         atom.commands.add('atom-workspace', "omnisharp-atom:show-find", () => this.selectPane("find"));
         atom.commands.add('atom-workspace', "omnisharp-atom:show-build", () => this.selectPane("build"));
         atom.commands.add('atom-workspace', "omnisharp-atom:show-omni", () => this.selectPane("omni"));
-        atom.commands.add('atom-workspace', 'omnisharp-atom:show-errors', () => this.selectPane("errors"));
+        atom.commands.add('atom-workspace', 'omnisharp-atom:toggle-errors', () => this.toggleErrors());
 
         atom.commands.add('atom-workspace', 'core:close', () => this.hideView());
         atom.commands.add('atom-workspace', 'core:cancel', () => this.hideView());
@@ -135,7 +135,7 @@ class DockView extends spacePenViews.View {
         });
     }
 
-    constructor(private omnisharpAtom : typeof OmniSharpAtom) {
+    constructor(private omnisharpAtom: typeof OmniSharpAtom) {
         super();
     }
 
@@ -193,6 +193,18 @@ class DockView extends spacePenViews.View {
             this.panel.hide();
         } else {
             this.panel.show();
+        }
+    }
+
+    private toggleErrors() {
+        if (this.panel.visible) {
+            if (this.vm.selected === 'errors') {
+                this.panel.hide();
+            } else {
+                this.selectPane("errors")
+            }
+        } else {
+            this.selectPane("errors")
         }
     }
 }
