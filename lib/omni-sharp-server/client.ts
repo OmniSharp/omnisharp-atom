@@ -66,7 +66,7 @@ class Client extends OmnisharpClient {
             Column: marker.column,
             FileName: editor.getURI(),
             Line: marker.row,
-            Buffer: null
+            Buffer: buffer
         };
     }
 
@@ -76,16 +76,18 @@ class Client extends OmnisharpClient {
         if (_.has(editor, 'alive') && !editor.alive) {
             return <OmniSharp.Models.Request>{ abort: true };
         }
-        buffer = buffer || editor.getBuffer();
 
-        var bufferText = buffer.getLines().join('\n');
+        var bufferText = null;
+
+        if (buffer)
+            bufferText = buffer.getLines().join('\n');
 
         var marker = editor.getCursorBufferPosition();
         return <OmniSharp.Models.Request>{
             Column: marker.column,
             FileName: editor.getURI(),
             Line: marker.row,
-            Buffer: null
+            Buffer: bufferText
         };
     }
 
