@@ -49,6 +49,7 @@
         "./lib/omnisharp-atom/features/find-symbols.ts",
         "./lib/omnisharp-atom/features/find-usages.ts",
         "./lib/omnisharp-atom/features/go-to-definition.ts",
+        "./lib/omnisharp-atom/features/highlight.ts",
         "./lib/omnisharp-atom/features/intellisense.ts",
         "./lib/omnisharp-atom/features/lib/apply-changes.ts",
         "./lib/omnisharp-atom/features/lib/completion-provider.ts",
