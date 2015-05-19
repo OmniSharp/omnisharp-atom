@@ -2,10 +2,13 @@ import SpacePen = require('atom-space-pen-views');
 
 
 class CodeActionsView extends SpacePen.SelectListView {
-    //private panel: Atom.Panel;
-    //private previouslyFocusedElement: Node;
-    //private eventElement: any;
-    //public message: JQuery;
+
+    //todo cleanup
+    //todo set placeholder text
+    //todo appropriately remove view (not hide)
+    //todo add TS types for all the things
+    //todo implement firing off applying code action
+
 
     constructor(items) {
         super();

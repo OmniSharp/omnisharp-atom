@@ -21,6 +21,7 @@ class CodeCheck {
                 //pop ui to user.
                 this.view = new CodeActionsView(data);
 
+                //todo - cleanup / dispose.
 
             })
         });
