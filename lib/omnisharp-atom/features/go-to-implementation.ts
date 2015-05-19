@@ -10,13 +10,7 @@ class GoToImplementation {
     }
 
     public goToImplementation() {
-        var editor = atom.workspace.getActiveTextEditor();
-        if (editor) {
-            var req: any = Omni.makeRequest();
-            req.word = <any>editor.getWordUnderCursor();
-
-            Omni.client.findimplementationsPromise(req);
-        }
+        Omni.client.findimplementationsPromise(Omni.makeRequest());
     }
 
     public activate() {
