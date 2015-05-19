@@ -5,17 +5,11 @@ class Navigate {
     private disposable: { dispose: () => void; };
 
     public navigateUp() {
-        var editor = atom.workspace.getActiveTextEditor();
-        if (editor) {
-            Omni.client.navigateupPromise(Omni.makeRequest());
-        }
+        Omni.client.navigateupPromise(Omni.makeRequest());
     }
 
     public navigateDown() {
-        var editor = atom.workspace.getActiveTextEditor();
-        if (editor) {
-            Omni.client.navigatedownPromise(Omni.makeRequest());
-        }
+        Omni.client.navigatedownPromise(Omni.makeRequest());
     }
 
     public activate() {
