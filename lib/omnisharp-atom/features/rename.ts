@@ -37,7 +37,7 @@ class Rename {
     public applyAllChanges(changes: any[]) {
         return _.each(changes, (change) => {
             atom.workspace.open(change.FileName, undefined)
-                .then((editor) => { Changes.applyChanges(editor, change.Changes); })
+                .then((editor) => { Changes.applyChanges(editor, change.Changes, true); })
         });
     }
 }
