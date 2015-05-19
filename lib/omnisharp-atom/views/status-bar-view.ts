@@ -71,7 +71,7 @@ class StatusBarView extends spacePenViews.View {
                 .subscribe((data) => {
                     var counts = _.countBy(data.response.QuickFixes, (quickFix: OmniSharp.Models.DiagnosticLocation) => quickFix.LogLevel);
                     this.vm.errorCount = counts['Error'] || 0;
-                    this.vm.warningCount = (counts['Warning'] || 0) + (counts['Hidden'] || 0);
+                    this.vm.warningCount = (counts['Warning'] || 0);
                 });
         });
     }
