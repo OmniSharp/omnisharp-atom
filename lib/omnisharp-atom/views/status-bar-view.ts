@@ -82,7 +82,7 @@ class StatusBarView extends spacePenViews.View {
     }
 
     public toggleErrorWarningPanel() {
-        atom.commands.dispatch(atom.views.getView(atom.workspace), 'omnisharp-atom:show-errors');
+        atom.commands.dispatch(atom.views.getView(atom.workspace), 'omnisharp-atom:toggle-errors');
     }
 
     public turnOffIcon() {
