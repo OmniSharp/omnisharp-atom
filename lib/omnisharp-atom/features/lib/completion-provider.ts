@@ -2,6 +2,7 @@ import Omni = require('../../../omni-sharp-server/omni')
 
 import _ = require('lodash')
 import rx = require('rx')
+import escape = require("escape-html");
 var filter = require('fuzzaldrin').filter;
 
 export interface RequestOptions {
@@ -112,8 +113,8 @@ export var CompletionProvider = {
     selector: '.source.cs, .source.csx',
     disableForSelector: 'source.cs .comment',
 
-    inclusionPriority: 1,
-    excludeLowerPriority: true,
+    inclusionPriority: 3,
+    excludeLowerPriority: false,
 
     makeSuggestion(item: OmniSharp.Models.AutoCompleteResponse) {
         return {
@@ -121,7 +122,7 @@ export var CompletionProvider = {
             snippet: item.Snippet,
             type: item.Kind,
             iconHTML: this.renderIcon(item),
-            displayText: item.MethodHeader,
+            displayText: escape(item.DisplayText),
             className: 'autocomplete-omnisharp-atom',
             description: this.renderReturnType(item.ReturnType)
         }

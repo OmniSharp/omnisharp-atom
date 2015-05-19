@@ -9,7 +9,7 @@ class FindUsages {
     }
 
     public activate() {
-        atom.commands.add('atom-workspace', "omnisharp-atom:find-usages", () => {
+        OmniSharpAtom.addCommand("omnisharp-atom:find-usages", () => {
             Omni.client.findusagesPromise(Omni.makeRequest())
             this.atomSharper.outputView.selectPane("find");
         });

@@ -1,19 +1,20 @@
 import Omni = require('../../omni-sharp-server/omni')
+import OmniSharpAtom = require('../omnisharp-atom');
 
 class Intellisense {
 
     public activate() {
-        atom.commands.add('atom-workspace', 'omnisharp-atom:intellisense-dot',
+        OmniSharpAtom.addCommand('omnisharp-atom:intellisense-dot',
             (event) => {
                 this.complete(event, '.');
                 setTimeout(() =>
                     atom.commands.dispatch(atom.views.getView(atom.workspace.getActiveTextEditor()), 'autocomplete-plus:activate'), 0);
             });
 
-        atom.commands.add('atom-workspace', 'omnisharp-atom:intellisense-space',
+        OmniSharpAtom.addCommand('omnisharp-atom:intellisense-space',
             (event) => this.complete(event, ' '));
 
-        atom.commands.add('atom-workspace', 'omnisharp-atom:intellisense-semicolon',
+        OmniSharpAtom.addCommand('omnisharp-atom:intellisense-semicolon',
             (event) => this.complete(event, ';'));
 
     }

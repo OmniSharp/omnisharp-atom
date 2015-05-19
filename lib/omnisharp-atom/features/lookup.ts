@@ -9,6 +9,7 @@ import rx = require('rx');
 import $ = require('jquery');
 import omnisharpAtom = require('../omnisharp-atom');
 import omnisharp = require("omnisharp-client");
+import escape = require("escape-html");
 
 class TypeLookup {
     public activate() {
@@ -60,7 +61,7 @@ class Tooltip implements rx.Disposable {
 
         editor.onDidDestroy(() => this.dispose());
 
-        atom.commands.add("atom-text-editor", "omnisharp-atom:type-lookup", () => {
+        omnisharpAtom.addCommand("omnisharp-atom:type-lookup", () => {
             this.showExpressionTypeOnCommand();
         })
 
@@ -141,9 +142,9 @@ class Tooltip implements rx.Disposable {
             if (response.Type === null) {
                 return;
             }
-            var message = `<b>${this.htmlEscape(response.Type) }</b>`;
+            var message = `<b>${escape(response.Type) }</b>`;
             if (response.Documentation) {
-                message = message + `<br/><i>${this.htmlEscape(response.Documentation) }</i>`;
+                message = message + `<br/><i>${escape(response.Documentation) }</i>`;
             }
             // Sorry about this "if". It's in the code I copied so I guess its there for a reason
             if (this.exprTypeTooltip) {
@@ -155,15 +156,6 @@ class Tooltip implements rx.Disposable {
     public dispose() {
         this.disposable.dispose();
         this.clearExprTypeTimeout();
-    }
-
-    private htmlEscape(str) {
-        return String(str)
-            .replace(/&/g, '&amp;')
-            .replace(/"/g, '&quot;')
-            .replace(/'/g, '&#39;')
-            .replace(/</g, '&lt;')
-            .replace(/>/g, '&gt;');
     }
 
     /** clears the timeout && the tooltip */

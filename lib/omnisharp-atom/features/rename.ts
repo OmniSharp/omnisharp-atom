@@ -2,18 +2,20 @@ import _ = require('lodash')
 import RenameView = require('../views/rename-view')
 import Omni = require('../../omni-sharp-server/omni')
 import Changes = require('./lib/apply-changes')
+import OmnisharpAtom = require('../omnisharp-atom');
 
 class Rename {
     private renameView: RenameView
 
     public activate() {
         this.renameView = new RenameView();
-        atom.commands.add('atom-text-editor', 'omnisharp-atom:rename', (e) => {
+        OmnisharpAtom.addCommand('omnisharp-atom:rename', (e) => {
             e.stopImmediatePropagation();
             e.stopPropagation();
             e.preventDefault();
             this.rename();
         });
+
         Omni.registerConfiguration(client => {
             client.observeRename.subscribe((data) => {
                 this.applyAllChanges(data.response.Changes);

@@ -46,6 +46,7 @@
         "./lib/omnisharp-atom/features/lib/completion-provider.ts",
         "./lib/omnisharp-atom/features/lookup.ts",
         "./lib/omnisharp-atom/features/navigate-up-down.ts",
+        "./lib/omnisharp-atom/features/notification-handler.ts",
         "./lib/omnisharp-atom/features/package-restore.ts",
         "./lib/omnisharp-atom/features/rename.ts",
         "./lib/omnisharp-atom/linter.ts",

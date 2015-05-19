@@ -13,6 +13,15 @@ import DockView = require('./views/dock-view')
 import path = require('path');
 //import autoCompleteProvider = require('./features/lib/completion-provider');
 
+// Configure Rx / Bluebird for long stacks
+(function() {
+    // TODO: Toggle this with devmode?
+    var Rx = require("rx");
+    var Promise = require('bluebird');
+    Promise.longStackTraces();
+    Rx.config.Promise = Promise;
+    Rx.config.longStackSupport = true;
+})();
 
 class Feature implements OmniSharp.IFeature {
     public name: string;
@@ -64,6 +73,20 @@ class OmniSharpAtom {
             _.map(dependencyChecker.errors() || [], missingDependency => console.error(missingDependency))
         }
     }
+
+    public addCommand(commandName: string, callback: (...args: any[]) => any) {
+        atom.commands.add("atom-text-editor", commandName, (event) => {
+            var editor = atom.workspace.getActiveTextEditor();
+            if (!editor) {
+                return;
+            };
+
+            var grammarName = editor.getGrammar().name;
+            if (grammarName === 'C#' || grammarName === 'C# Script File') {
+                callback(event);
+            }
+        });
+    };
 
     public onEditor(callback: (...args: any[]) => void) {
         return this.emitter.on('omnisharp-atom-editor', callback);

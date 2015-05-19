@@ -1,7 +1,7 @@
 {
   "name": "omnisharp-atom",
   "main": "./lib/omnisharp-atom/omnisharp-atom",
-  "version": "0.4.33",
+  "version": "0.5.3",
   "description": "Brings the wonderful OmniSharp server to powercharge Atom's C# development experience",
   "keywords": [
     "c#",
@@ -64,6 +64,7 @@
     "atom-space-pen-views": "^2.0.5",
     "bluebird": "~2.3.2",
     "del": "^1.1.1",
+    "escape-html": "^1.0.1",
     "event-kit": "0.7.2",
     "fs-plus": "^2.3.1",
     "fuzzaldrin": "^2.1.0",

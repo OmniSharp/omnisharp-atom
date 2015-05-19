@@ -24,9 +24,8 @@ class Omni {
         return Omni._vm;
     }
 
-    public static get turnedOnAndReady()
-    {
-      return Omni._vm.isReady;
+    public static get turnedOnAndReady() {
+        return Omni._vm.isReady;
     }
 
     public static toggle() {
@@ -42,7 +41,9 @@ class Omni {
     }
 
     public static makeRequest(editor?: Atom.TextEditor, buffer?: TextBuffer.TextBuffer) {
-        return manager.getClientForActiveEditor().makeRequest(editor, buffer);
+        var client = editor ? manager.getClientForEditor(editor)
+            : manager.getClientForActiveEditor();
+        return client.makeRequest(editor, buffer);
     }
 
     public static makeDataRequest<T>(data: T, editor?: Atom.TextEditor, buffer?: TextBuffer.TextBuffer) {

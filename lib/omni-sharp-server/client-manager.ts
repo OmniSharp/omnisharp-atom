@@ -77,6 +77,20 @@ class ClientManager {
     public getClientForEditor(editor: Atom.TextEditor) {
         if (!editor)
             return;
+
+        var grammarName = editor.getGrammar().name;
+        var valid = false;
+        if (grammarName === 'C#' || grammarName === 'C# Script File')
+            valid = true;
+
+        var filename = path.basename(editor.getPath());
+        if (filename === 'project.json') {
+           valid = true;
+        }
+
+        if (!valid)
+            return;
+
         // Not sure if we should just add properties onto editors...
         // but it works...
         if ((<any>editor).omniProject) {
@@ -103,6 +117,9 @@ class ClientManager {
         var mappedLocations = segments.map((loc, index) => {
             return _.take(segments, index + 1).join(path.sep);
         });
+
+        // Look for the closest match first.
+        mappedLocations.reverse();
 
         var intersect = _.intersection(mappedLocations, this._clientPaths);
         if (intersect.length) {
