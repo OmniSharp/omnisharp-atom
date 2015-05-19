@@ -1,13 +1,17 @@
 import ClientManager = require('../../omni-sharp-server/client-manager');
 import Client = require("../../omni-sharp-server/client");
 import OmniSharpAtom = require('../omnisharp-atom');
-import {each, indexOf} from "lodash";
+import {each, indexOf, extend, has} from "lodash";
+import _ = require('lodash');
+var AtomGrammar = require((<any> atom).config.resourcePath + "/node_modules/first-mate/lib/grammar.js");
 var Range: typeof TextBuffer.Range = <any>require('atom').Range;
 
 class Highlight {
     public activate() {
         OmniSharpAtom.onEditor((editor: Atom.TextEditor) => {
-            new Highlighter(editor);
+            editor['_setGrammar'] = editor.setGrammar;
+            editor.setGrammar = setGrammar;
+            editor.setGrammar(editor.getGrammar());
         });
     }
 }
@@ -38,17 +42,21 @@ function Grammar(editor: Atom.TextEditor, base: FirstMate.Grammar) {
     this.responses = [];
 }
 
+extend(Grammar.prototype, AtomGrammar.prototype);
+
+Grammar.prototype.omnisharp = true;
 Grammar.prototype.tokenizeLine = function(line: string, ruleStack: any[], firstLine = false) {
-    var editor : Atom.TextEditor = this.editor;
-    var responses : HighlightResponse[] = this.responses;
+    var editor: Atom.TextEditor = this.editor;
+    var responses: HighlightResponse[] = this.responses;
     if (responses.length) {
 
-    var index = indexOf(editor.getBuffer().getLines(), line) + 1;
+        var index = indexOf(editor.getBuffer().getLines(), line);
 
-    var highlights = _(responses)
-        .filter(response => findLine(response, index));
+        var highlights = _(responses)
+            .filter(response => findLine(response, index))
+            .value();
 
-
+        return this.base.tokenizeLine(line, ruleStack, firstLine);
     } else {
         return this.base.tokenizeLine(line, ruleStack, firstLine);
     }
@@ -66,40 +74,13 @@ function findLine(response: HighlightResponse, index: number) {
     return false;
 }
 
-function setGrammar(grammar: FirstMate.Grammar) : FirstMate.Grammar {
-    if (grammar.name === 'C#' || grammar.name === 'C# Script File') {
+function setGrammar(grammar: FirstMate.Grammar): FirstMate.Grammar {
+    if (!grammar['omnisharp'] && (grammar.name === 'C#' || grammar.name === 'C# Script File')) {
         var newGrammar = new Grammar(this, grammar);
-        this._setGrammar(newGrammar);
+        each(grammar, (x, i) => has(grammar, i) && (newGrammar[i] = x));
+        grammar = newGrammar;
     }
-    return undefined;
-}
-
-class Highlighter {
-    constructor(private editor: Atom.TextEditor) {
-        editor['_setGrammar'] = editor.setGrammar;
-        editor.setGrammar = setGrammar;
-
-    }
-
-    public highlight() {
-        var client = ClientManager.getClientForEditor(this.editor);
-        if (client) {
-            client.request<HighlightRequest, HighlightResponse[]>("highlight", {
-                FileName: this.editor.getPath(),
-                Lines: []
-            }).toPromise().then(response => {
-                each(response, item => {
-
-                    var range = new Range([item.Start.Line, item.Start.Character], [item.End.Line, item.End.Character]);
-                    var marker = this.editor.markBufferRange(range);
-                    this.editor.decorateMarker(marker, {
-                        type: "highlight",
-                        class: "omnisharp-" + item.Kind
-                    });
-                })
-            });
-        }
-    }
+    return this._setGrammar(grammar);
 }
 
 export = Highlight;
