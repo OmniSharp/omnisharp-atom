@@ -65,6 +65,20 @@ class OmniSharpAtom {
         }
     }
 
+    public addCommand(commandName: string, callback: (...args: any[]) => any) {
+        atom.commands.add("atom-text-editor", commandName, (event) => {
+            var editor = atom.workspace.getActiveTextEditor();
+            if (!editor) {
+                return;
+            };
+
+            var grammarName = editor.getGrammar().name;
+            if (grammarName === 'C#' || grammarName === 'C# Script File') {
+                callback(event);
+            }
+        });
+    };
+
     public onEditor(callback: (...args: any[]) => void) {
         return this.emitter.on('omnisharp-atom-editor', callback);
     }

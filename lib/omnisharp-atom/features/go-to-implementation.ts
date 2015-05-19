@@ -22,7 +22,7 @@ class GoToImplementation {
     public activate() {
         this.disposable = atom.workspace.observeTextEditors((editor) => { });
 
-        atom.commands.add("atom-text-editor", "omnisharp-atom:go-to-implementation", () => {
+        this.atomSharper.addCommand("omnisharp-atom:go-to-implementation", () => {
             return this.goToImplementation();
         });
 

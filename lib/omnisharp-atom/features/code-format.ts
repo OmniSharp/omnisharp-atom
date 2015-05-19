@@ -1,10 +1,11 @@
 import Omni = require('../../omni-sharp-server/omni')
 import Changes = require('./lib/apply-changes');
+import OmniSharpAtom = require('../omnisharp-atom')
 
 class CodeFormat {
 
     public activate() {
-        atom.commands.add('atom-workspace', 'omnisharp-atom:code-format',
+        OmniSharpAtom.addCommand('omnisharp-atom:code-format',
             () => {
                 var editor = atom.workspace.getActiveTextEditor();
                 if (editor) {
@@ -21,9 +22,9 @@ class CodeFormat {
                 }
             });
 
-        atom.commands.add('atom-workspace', 'omnisharp-atom:code-format-on-semicolon',
+        OmniSharpAtom.addCommand('omnisharp-atom:code-format-on-semicolon',
             (event) => this.formatOnKeystroke(event, ';'));
-        atom.commands.add('atom-workspace', 'omnisharp-atom:code-format-on-curly-brace',
+        OmniSharpAtom.addCommand('omnisharp-atom:code-format-on-curly-brace',
             (event) => this.formatOnKeystroke(event, '}'));
     }
 

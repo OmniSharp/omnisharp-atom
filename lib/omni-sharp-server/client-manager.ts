@@ -77,6 +77,11 @@ class ClientManager {
     public getClientForEditor(editor: Atom.TextEditor) {
         if (!editor)
             return;
+
+        var grammarName = editor.getGrammar().name;
+        if (!(grammarName === 'C#') && !(grammarName === 'C# Script File'))
+            return;
+
         // Not sure if we should just add properties onto editors...
         // but it works...
         if ((<any>editor).omniProject) {

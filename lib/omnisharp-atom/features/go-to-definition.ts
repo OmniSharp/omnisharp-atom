@@ -1,5 +1,6 @@
 import _ = require('lodash');
 import Omni = require('../../omni-sharp-server/omni');
+import OmniSharpAtom = require('../omnisharp-atom');
 import rx = require('rx');
 import $ = require('jquery');
 var Range = require('atom').Range;
@@ -27,7 +28,7 @@ class GoToDefinition {
     }
 
     public activate() {
-        this.disposable = atom.workspace.observeTextEditors((editor) => {
+        this.disposable = OmniSharpAtom.onEditor((editor: Atom.TextEditor) => {
             var view = $(atom.views.getView(editor));
             var scroll = this.getFromShadowDom(view, '.scroll-view');
             var mousemove = rx.Observable.fromEvent<MouseEvent>(scroll[0], 'mousemove');
@@ -64,14 +65,13 @@ class GoToDefinition {
                 return this.goToDefinition();
             }));
 
-            return atom.emitter.on("symbols-view:go-to-declaration", () => {
+            atom.emitter.on("symbols-view:go-to-declaration", () => {
                 return this.goToDefinition();
             });
 
-        });
-
-        atom.commands.add("atom-text-editor", "omnisharp-atom:go-to-definition", () => {
-            return this.goToDefinition();
+            OmniSharpAtom.addCommand("omnisharp-atom:go-to-definition", () => {
+                return this.goToDefinition();
+            });
         });
     }
 
@@ -111,7 +111,7 @@ class GoToDefinition {
         if (Omni.client === null) {
             return;
         }
-        
+
         Omni.client.gotodefinitionPromise({
             Line: bufferPt.row + 1,
             Column: bufferPt.column + 1,
