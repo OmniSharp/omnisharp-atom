@@ -24,6 +24,8 @@ class GoToImplementation {
             client.observeFindimplementations.subscribe((data) => {
                 if (data.response.QuickFixes.length == 1) {
                     Omni.navigateTo(data.response.QuickFixes[0]);
+                } else {
+                    this.atomSharper.outputView.selectPane("find");
                 }
             });
         });
