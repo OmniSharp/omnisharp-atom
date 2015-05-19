@@ -72,6 +72,13 @@ class Client extends  OmnisharpClient {
                     message: event.Body && event.Body.Message || event.Event || '',
                     logLevel: event.Body && event.Body.LogLevel || 'INFORMATION'
                 });
+
+                if (typeof(event.Event) !== "undefined" && event.Event !== "unknown") {
+                    atom.emitter.emit("omni-sharp-server:event", {
+                        Event: event.Event,
+                        Body: event.Body
+                    });
+                }
             }
         });
 
