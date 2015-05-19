@@ -79,9 +79,18 @@ class ClientManager {
             return;
 
         var grammarName = editor.getGrammar().name;
-        if (!(grammarName === 'C#') && !(grammarName === 'C# Script File'))
-            return;
+        var valid = false;
+        if (grammarName === 'C#' || grammarName === 'C# Script File')
+            valid = true;
 
+        var filename = path.basename(editor.getPath());
+        if (filename === 'project.json') {
+           valid = true;
+        }
+
+        if (!valid)
+            return;
+            
         // Not sure if we should just add properties onto editors...
         // but it works...
         if ((<any>editor).omniProject) {
