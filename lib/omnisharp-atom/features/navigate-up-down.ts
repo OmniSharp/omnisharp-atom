@@ -1,28 +1,23 @@
 import Omni = require('../../omni-sharp-server/omni')
+import OmniSharpAtom = require('../omnisharp-atom');
 
 class Navigate {
     private disposable: { dispose: () => void; };
 
     public navigateUp() {
-        var editor = atom.workspace.getActiveTextEditor();
-        if (editor) {
-            Omni.client.navigateupPromise(Omni.makeRequest());
-        }
+        Omni.client.navigateupPromise(Omni.makeRequest());
     }
 
     public navigateDown() {
-        var editor = atom.workspace.getActiveTextEditor();
-        if (editor) {
-            Omni.client.navigatedownPromise(Omni.makeRequest());
-        }
+        Omni.client.navigatedownPromise(Omni.makeRequest());
     }
 
     public activate() {
-        atom.commands.add("atom-text-editor", "omnisharp-atom:navigate-up", () => {
+        OmniSharpAtom.addCommand("omnisharp-atom:navigate-up", () => {
             return this.navigateUp();
         });
 
-        atom.commands.add("atom-text-editor", "omnisharp-atom:navigate-down", () => {
+        OmniSharpAtom.addCommand("omnisharp-atom:navigate-down", () => {
             return this.navigateDown();
         });
 
