@@ -2,7 +2,7 @@ import ClientManager = require('../../omni-sharp-server/client-manager');
 import Client = require("../../omni-sharp-server/client");
 import {DriverState} from "omnisharp-client";
 import OmniSharpAtom = require('../omnisharp-atom');
-import {each, indexOf, extend, has, map, flatten, contains, any} from "lodash";
+import {each, indexOf, extend, has, map, flatten, contains, any, range, remove, pull} from "lodash";
 import _ = require('lodash');
 import {Observable, Subject, Scheduler} from "rx";
 var AtomGrammar = require((<any> atom).config.resourcePath + "/node_modules/first-mate/lib/grammar.js");
@@ -15,6 +15,19 @@ class Highlight {
             editor['_setGrammar'] = editor.setGrammar;
             editor.setGrammar = setGrammar;
             editor.setGrammar(editor.getGrammar());
+            editor.displayBuffer.tokenizedBuffer['_buildTokenizedLineForRowWithText'] = editor.displayBuffer.tokenizedBuffer.buildTokenizedLineForRowWithText;
+            (<any>editor.displayBuffer.tokenizedBuffer).buildTokenizedLineForRowWithText = function(row) {
+                editor.getGrammar()['__row__'] = row;
+                return editor.displayBuffer.tokenizedBuffer['_buildTokenizedLineForRowWithText'].apply(this, arguments);
+            };
+            (<any>editor.displayBuffer.tokenizedBuffer).silentRetokenizeLines = function() {
+                var event, lastRow;
+                lastRow = this.buffer.getLastRow();
+                this.tokenizedLines = this.buildPlaceholderTokenizedLinesForRows(0, lastRow);
+                this.invalidRows = [];
+                this.invalidateRow(0);
+                this.fullyTokenized = false;
+            };
             editors.push(editor);
         });
 
@@ -59,13 +72,6 @@ function Grammar(editor: Atom.TextEditor, base: FirstMate.Grammar) {
         this.responses = responses;
     }
 
-    var tokenizationComplete = new Subject<any>();
-    var bufferpreemptDidChange = new Subject<any>();
-    var bufferDidChange = new Subject<any>();
-    editor.displayBuffer.tokenizedBuffer.onDidTokenize(() =>
-        tokenizationComplete.onNext(true));
-
-
     var client = ClientManager.getClientForEditor(this.editor);
     if (client) {
         client.request<HighlightRequest, HighlightResponse[]>("highlight", {
@@ -78,36 +84,40 @@ function Grammar(editor: Atom.TextEditor, base: FirstMate.Grammar) {
             });
     }
 
-    editor.buffer.onDidChange((e) => {
-        bufferDidChange.onNext(e);
-    })
-
     editor.buffer.preemptDidChange((e) => {
-        bufferpreemptDidChange.onNext(e);
+        var {oldRange, newRange} = e,
+            start = oldRange.start.row,
+            end = oldRange.end.row,
+            delta = newRange.end.row - oldRange.end.row;
         // Any new lines... we need to full highlight again.
-        let retokenize: Observable<any>;
+        let retokenize = false;
         if (any(e.newText, (z: string) => z.charCodeAt(0) === 10) || any(e.oldText, (z: string) => z.charCodeAt(0) === 10)) {
             //this.responses = [];
-            retokenize = bufferDidChange.take(1)
+            retokenize = true;
         }
         if (!this.responses || !this.responses.length) {
-            retokenize = Observable.just(undefined);
+            retokenize = true;
         }
 
         var client = ClientManager.getClientForEditor(this.editor);
         if (client) {
-            var request : HighlightRequest = <any>client.makeRequest(editor);
-            request.Lines = [];
+            var request: HighlightRequest = <any>client.makeRequest(editor);
             client.request<HighlightRequest, HighlightResponse[]>("highlight", request)
                 .subscribe(responses => {
                     this.responses = responses;
                     if (retokenize) {
-                        editor.displayBuffer.tokenizedBuffer.retokenizeLines();
+                        editor.displayBuffer.tokenizedBuffer['silentRetokenizeLines']();
                     }
                 });
         }
     });
     this.responses = [];
+}
+
+function getHighlightRows(responses: HighlightResponse[], row: number) {
+    return _(responses)
+        .filter(response => findLine(response, row))
+        .value();
 }
 
 extend(Grammar.prototype, AtomGrammar.prototype);
@@ -128,15 +138,13 @@ Grammar.prototype.tokenizeLine = function(line: string, ruleStack: any[], firstL
 
     if (this.responses && this.responses.length) {
         var editor: Atom.TextEditor = this.editor;
-        var index = indexOf(editor.getBuffer().getLines(), line);
+        var row = this['__row__']
 
-        var highlights = _(<HighlightResponse[]>this.responses)
-            .filter(response => findLine(response, index))
-            .value();
+        var highlights = getHighlightRows(this.responses, row);
 
         if (!highlights.length) return this.base.tokenizeLine(line, ruleStack, firstLine);
 
-        return this.convertCsTokensToAtomTokens(this.getCsTokensForLine(highlights, line, ruleStack, firstLine));
+        return this.convertCsTokensToAtomTokens(this.getCsTokensForLine(highlights, line, row, ruleStack, firstLine));
     } else {
         return this.base.tokenizeLine(line, ruleStack, firstLine);
     }
@@ -151,8 +159,7 @@ Grammar.prototype.convertCsTokensToAtomTokens = function(csTokensWithRuleStack) 
     return { tokens, ruleStack: csTokensWithRuleStack.ruleStack };
 }
 
-Grammar.prototype.getCsTokensForLine = function(highlights: HighlightResponse[], line: string, ruleStack: any[], firstLine): any {
-
+Grammar.prototype.getCsTokensForLine = function(highlights: HighlightResponse[], line: string, row: number, ruleStack: any[], firstLine): any {
     var ruleStack = [this.getInitialRule()/*output.finalLexState*/];
 
     // Start with trailing whitespace taken into account.
@@ -162,6 +169,10 @@ Grammar.prototype.getCsTokensForLine = function(highlights: HighlightResponse[],
         var results = [];
         var start = highlight.Start.Character + this.trailingWhiteSpaceLength;
         var end = highlight.End.Character + this.trailingWhiteSpaceLength;
+        if (highlight.End.Line > highlight.Start.Line && highlight.End.Line !== row) {
+            start = 0;
+            end = line.length;
+        }
 
         if (start > totalLength) {
             var whitespace = start - totalLength;
@@ -242,7 +253,7 @@ function getAtomStyleForToken(token: HighlightResponse, str: string): string {
         case "enum name":
         case "interface name":
             return 'support.class';
-            //return 'support.function';
+        //return 'support.function';
         case "preprocessor keyword":
             return 'constant.other.symbol';
         case "excluded code":
