@@ -32,9 +32,9 @@ When the flame icon in the bottom left corner turns green, the server has starte
 - `ctrl-k, ctrl-d` Format document
 - `ctrl-k ctrl-c` Comment selection
 - `f2` Rename
-- 'ctrl-alt-down' Navigate downwards through methods
-- 'ctrl-alt-up' Navigate upwards through methods
-- Completions appear as you type. To select an item, press the TAB key.
+- `ctrl-alt-down` Navigate downwards through methods
+- `ctrl-alt-up` Navigate upwards through methods
+- Completions appear as you type. To select an item, press Return or the TAB key.
 - Type lookup on mouse over or from cursor (`f1`).
 - Editor adornments (squigglies) appear for errors and code hints as you type.
 - Automatic Package restore in vNext when you save `project.json` files
