@@ -25,7 +25,7 @@ class CodeCheckOutputPaneView extends spacePenViews.View {
                 }, () => {
                     this.pre({"class": "text-highlight"}, "{{Text}}");
                     this.pre({"class": "inline-block"}, "{{FileName | filename}}({{Line}},{{Column}})");
-                    return this.pre({"class": "text-subtle inline-block"}, " {{FileName | dirname}}");
+                    return this.pre({"class": "text-subtle inline-block"}, " {{FileName | dirname}}  [{{Projects | projectTargetFramework}}]");
                 });
             });
         });
@@ -48,6 +48,9 @@ class CodeCheckOutputPaneView extends spacePenViews.View {
         });
         Vue.filter('dirname', (value: string) => {
             return path.dirname(value);
+        });
+        Vue.filter('projectTargetFramework', (projects: string[]) => {
+            return Omni.getFrameworks(projects);
         });
 
         this.vm = <any>viewModel;

@@ -70,7 +70,7 @@ class LinterCSharp extends Linter.Linter {
                     }
 
                     return {
-                        message: error.Text,
+                        message: `${error.Text} [${Omni.getFrameworks(error.Projects)}] `,
                         line: line + 1,
                         col: column,
                         level: level,
