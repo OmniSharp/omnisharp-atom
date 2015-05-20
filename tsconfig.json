@@ -34,6 +34,7 @@
         "./lib/omni-sharp-server/client.ts",
         "./lib/omni-sharp-server/omni.ts",
         "./lib/omnisharp-atom/dependency-checker.ts",
+        "./lib/omnisharp-atom/features/buffer-updater.ts",
         "./lib/omnisharp-atom/features/code-check.ts",
         "./lib/omnisharp-atom/features/code-format.ts",
         "./lib/omnisharp-atom/features/error-handler.ts",
