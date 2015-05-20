@@ -2,53 +2,42 @@ import ClientManager = require('../../omni-sharp-server/client-manager');
 import Client = require("../../omni-sharp-server/client");
 import {DriverState} from "omnisharp-client";
 import OmniSharpAtom = require('../omnisharp-atom');
-import {each, indexOf, extend, has, map, flatten, contains, any, range, remove, pull, find} from "lodash";
+import {each, indexOf, extend, has, map, flatten, contains, any, range, remove, pull, find, defer} from "lodash";
 import _ = require('lodash');
 import {Observable, Subject, Scheduler} from "rx";
 var AtomGrammar = require((<any> atom).config.resourcePath + "/node_modules/first-mate/lib/grammar.js");
 var Range: typeof TextBuffer.Range = <any>require('atom').Range;
 
 class Highlight {
+    private subscriptions = [];
+    private editors = [];
+    private enabled = atom.config.get<boolean>("omnisharp-atom.enhancedHighlighting")
     public activate() {
-        var editors = [];
-        OmniSharpAtom.onEditor((editor: Atom.TextEditor) => {
-            editor['_setGrammar'] = editor.setGrammar;
-            editor.setGrammar = setGrammar;
-            editor.setGrammar(editor.getGrammar());
-            editor.displayBuffer.tokenizedBuffer['_buildTokenizedLineForRowWithText'] = editor.displayBuffer.tokenizedBuffer.buildTokenizedLineForRowWithText;
-            (<any>editor.displayBuffer.tokenizedBuffer).buildTokenizedLineForRowWithText = function(row) {
-                editor.getGrammar()['__row__'] = row;
-                return editor.displayBuffer.tokenizedBuffer['_buildTokenizedLineForRowWithText'].apply(this, arguments);
-            };
-            (<any>editor.displayBuffer.tokenizedBuffer).silentRetokenizeLines = function() {
-                var event, lastRow;
-                lastRow = this.buffer.getLastRow();
-                this.tokenizedLines = this.buildPlaceholderTokenizedLinesForRows(0, lastRow);
-                this.invalidRows = [];
-                this.invalidateRow(0);
-                this.fullyTokenized = false;
-            };
-            editors.push(editor);
 
-            var client = ClientManager.getClientForEditor(editor);
-            if (client) {
-                client.request<HighlightRequest, HighlightResponse[]>("highlight", {
-                    FileName: editor.getPath(),
-                    Lines: []
-                })
-                    .subscribe(responses => {
-                        editor.getGrammar().responses = responses;
-                        editor.displayBuffer.tokenizedBuffer.retokenizeLines();
-                    });
+        atom.config.onDidChange("omnisharp-atom.enhancedHighlighting", a => {
+            this.enabled = atom.config.get<boolean>("omnisharp-atom.enhancedHighlighting");
+            if (this.enabled) {
+                this.start();
+            } else {
+                this.stop();
             }
         });
+        OmniSharpAtom.onEditor(editor => {
+            this.editors.push(editor);
+            if (this.enabled) {
+                this.setupEditor(editor);
+            }
+        });
+
+        if (this.enabled)
+            this.start();
 
         ClientManager.registerConfiguration(client => {
             var sub = client.state
                 .where(state => state === DriverState.Connected)
                 .subscribe(state => {
                     sub.dispose();
-                    each(editors, editor => {
+                    each(this.editors, editor => {
                         var client = ClientManager.getClientForEditor(editor);
                         if (client) {
                             client.request<HighlightRequest, HighlightResponse[]>("highlight", {
@@ -61,8 +50,9 @@ class Highlight {
 
 
             client.responses
+                .where(() => this.enabled)
                 .where(z => z.command === "highlight")
-                .map(z => ({ editor: find(editors, e => e.getPath() === z.request.FileName), responses: z.response }))
+                .map(z => ({ editor: find(this.editors, e => e.getPath() === z.request.FileName), responses: z.response }))
                 .where(z => !!z.editor)
                 .debounce(50)
                 .subscribe(function({editor, responses}) {
@@ -71,6 +61,64 @@ class Highlight {
                     editor.displayBuffer.tokenizedBuffer['silentRetokenizeLines']();
                     //}
                 });
+        })
+    }
+
+    private setupEditor(editor: Atom.TextEditor) {
+        if (!editor['_oldGrammar'])
+            editor['_oldGrammar'] = editor.getGrammar();
+        if (!editor['_setGrammar'])
+            editor['_setGrammar'] = editor.setGrammar;
+        if (!editor.displayBuffer.tokenizedBuffer['_buildTokenizedLineForRowWithText'])
+            editor.displayBuffer.tokenizedBuffer['_buildTokenizedLineForRowWithText'] = editor.displayBuffer.tokenizedBuffer.buildTokenizedLineForRowWithText;
+
+        editor.setGrammar = setGrammar;
+        editor.setGrammar(editor.getGrammar());
+
+        (<any>editor.displayBuffer.tokenizedBuffer).buildTokenizedLineForRowWithText = function(row) {
+            editor.getGrammar()['__row__'] = row;
+            return editor.displayBuffer.tokenizedBuffer['_buildTokenizedLineForRowWithText'].apply(this, arguments);
+        };
+        if (!(<any>editor.displayBuffer.tokenizedBuffer).silentRetokenizeLines) {
+            (<any>editor.displayBuffer.tokenizedBuffer).silentRetokenizeLines = function() {
+                var event, lastRow;
+                lastRow = this.buffer.getLastRow();
+                this.tokenizedLines = this.buildPlaceholderTokenizedLinesForRows(0, lastRow);
+                this.invalidRows = [];
+                this.invalidateRow(0);
+                this.fullyTokenized = false;
+            };
+        }
+    }
+
+    public start() {
+        each(this.editors, (editor) => this.setupEditor(editor));
+
+        this.subscriptions.push(atom.workspace.observeActivePaneItem(editor => {
+            if (editor.getPath) {
+                var client = ClientManager.getClientForEditor(editor);
+                if (client) {
+                    client.request<HighlightRequest, HighlightResponse[]>("highlight", {
+                        FileName: editor.getPath(),
+                        Lines: []
+                    })
+                } else {
+                    // this will be covered by the promised based api in the future...
+                }
+            }
+        }));
+    }
+
+    public stop() {
+        each(this.subscriptions, z => z.dispose());
+        this.subscriptions = [];
+
+        each(this.editors, editor => {
+            defer(() => {
+                editor.setGrammar = editor['_setGrammar'];
+                editor.displayBuffer.tokenizedBuffer.buildTokenizedLineForRowWithText = editor.displayBuffer.tokenizedBuffer['_buildTokenizedLineForRowWithText'];
+                editor.setGrammar(editor['_oldGrammar']);
+            });
         })
     }
 }

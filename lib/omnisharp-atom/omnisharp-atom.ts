@@ -298,6 +298,12 @@ class OmniSharpAtom {
             title: 'Show the notifications to add or remove external projects',
             type: 'boolean',
             default: true
+        },
+        enhancedHighlighting: {
+            title: 'Enhanced Highlighting',
+            description: "Enables server based highlighting, which includes support for string interpolation, class names and more.",
+            type: 'boolean',
+            default: true
         }
     }
 }
