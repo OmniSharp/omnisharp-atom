@@ -1,5 +1,6 @@
 import ClientManager = require('../../omni-sharp-server/client-manager');
 import Client = require("../../omni-sharp-server/client");
+import {DriverState} from "omnisharp-client";
 import OmniSharpAtom = require('../omnisharp-atom');
 import {each, indexOf, extend, has, map, flatten, contains, any} from "lodash";
 import _ = require('lodash');
@@ -9,11 +10,34 @@ var Range: typeof TextBuffer.Range = <any>require('atom').Range;
 
 class Highlight {
     public activate() {
+        var editors = [];
         OmniSharpAtom.onEditor((editor: Atom.TextEditor) => {
             editor['_setGrammar'] = editor.setGrammar;
             editor.setGrammar = setGrammar;
             editor.setGrammar(editor.getGrammar());
+            editors.push(editor);
         });
+
+        ClientManager.registerConfiguration(client => {
+            var sub = client.state
+                .where(state => state === DriverState.Connected)
+                .subscribe(state => {
+                    sub.dispose();
+                    each(editors, editor => {
+                        var client = ClientManager.getClientForEditor(editor);
+                        if (client) {
+                            client.request<HighlightRequest, HighlightResponse[]>("highlight", {
+                                FileName: editor.getPath(),
+                                Lines: []
+                            })
+                                .subscribe(responses => {
+                                    editor.getGrammar().responses = responses;
+                                    editor.displayBuffer.tokenizedBuffer.retokenizeLines();
+                                });
+                        }
+                    })
+                });
+        })
     }
 }
 
@@ -38,7 +62,8 @@ function Grammar(editor: Atom.TextEditor, base: FirstMate.Grammar) {
     var tokenizationComplete = new Subject<any>();
     var bufferpreemptDidChange = new Subject<any>();
     var bufferDidChange = new Subject<any>();
-    editor.displayBuffer.tokenizedBuffer.onDidTokenize(() => tokenizationComplete.onNext(true));
+    editor.displayBuffer.tokenizedBuffer.onDidTokenize(() =>
+        tokenizationComplete.onNext(true));
 
 
     var client = ClientManager.getClientForEditor(this.editor);
@@ -62,17 +87,18 @@ function Grammar(editor: Atom.TextEditor, base: FirstMate.Grammar) {
         // Any new lines... we need to full highlight again.
         let retokenize: Observable<any>;
         if (any(e.newText, (z: string) => z.charCodeAt(0) === 10) || any(e.oldText, (z: string) => z.charCodeAt(0) === 10)) {
-            this.responses = [];
+            //this.responses = [];
             retokenize = bufferDidChange.take(1)
+        }
+        if (!this.responses || !this.responses.length) {
+            retokenize = Observable.just(undefined);
         }
 
         var client = ClientManager.getClientForEditor(this.editor);
         if (client) {
             var request : HighlightRequest = <any>client.makeRequest(editor);
             request.Lines = [];
-            Observable.combineLatest(retokenize || Observable.empty(),
-            client.request<HighlightRequest, HighlightResponse[]>("highlight", request), (r, response) => response)
-                //.delay(100)
+            client.request<HighlightRequest, HighlightResponse[]>("highlight", request)
                 .subscribe(responses => {
                     this.responses = responses;
                     if (retokenize) {
@@ -101,7 +127,16 @@ Grammar.prototype.tokenizeLine = function(line: string, ruleStack: any[], firstL
     }
 
     if (this.responses && this.responses.length) {
-        return this.convertCsTokensToAtomTokens(this.getCsTokensForLine(this.responses, line));
+        var editor: Atom.TextEditor = this.editor;
+        var index = indexOf(editor.getBuffer().getLines(), line);
+
+        var highlights = _(<HighlightResponse[]>this.responses)
+            .filter(response => findLine(response, index))
+            .value();
+
+        if (!highlights.length) return this.base.tokenizeLine(line, ruleStack, firstLine);
+
+        return this.convertCsTokensToAtomTokens(this.getCsTokensForLine(highlights, line, ruleStack, firstLine));
     } else {
         return this.base.tokenizeLine(line, ruleStack, firstLine);
     }
@@ -116,17 +151,9 @@ Grammar.prototype.convertCsTokensToAtomTokens = function(csTokensWithRuleStack) 
     return { tokens, ruleStack: csTokensWithRuleStack.ruleStack };
 }
 
-Grammar.prototype.getCsTokensForLine = function(responses: HighlightResponse[], line: string): any {
-    var editor: Atom.TextEditor = this.editor;
-    var index = indexOf(editor.getBuffer().getLines(), line);
-
-    var highlights = _(responses)
-        .filter(response => findLine(response, index))
-        .value();
+Grammar.prototype.getCsTokensForLine = function(highlights: HighlightResponse[], line: string, ruleStack: any[], firstLine): any {
 
     var ruleStack = [this.getInitialRule()/*output.finalLexState*/];
-    // TypeScript classifier returns empty for "". But Atom wants to have some Token and it needs to be "whitespace" for autoindent to work
-    if (!highlights.length) return { tokens: [{ style: ['whitespace'], str: '' }], ruleStack: ruleStack };
 
     // Start with trailing whitespace taken into account.
     // This is needed because classification for that is already done by ATOM internally (somehow)
@@ -213,13 +240,13 @@ function getAtomStyleForToken(token: HighlightResponse, str: string): string {
             return 'identifier';
         case "class name":
         case "enum name":
-            return 'support.class';
         case "interface name":
-            return 'support.function';
+            return 'support.class';
+            //return 'support.function';
         case "preprocessor keyword":
             return 'constant.other.symbol';
         case "excluded code":
-            return "comment";
+            return "comment.block";
         default:
             console.log(`unhandled Kind ${token.Kind}`);
             return 'keyword'; // This should not happen
