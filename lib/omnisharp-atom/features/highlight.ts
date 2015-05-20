@@ -2,7 +2,7 @@ import ClientManager = require('../../omni-sharp-server/client-manager');
 import Client = require("../../omni-sharp-server/client");
 import {DriverState} from "omnisharp-client";
 import OmniSharpAtom = require('../omnisharp-atom');
-import {each, indexOf, extend, has, map, flatten, contains, any, range, remove, pull} from "lodash";
+import {each, indexOf, extend, has, map, flatten, contains, any, range, remove, pull, find} from "lodash";
 import _ = require('lodash');
 import {Observable, Subject, Scheduler} from "rx";
 var AtomGrammar = require((<any> atom).config.resourcePath + "/node_modules/first-mate/lib/grammar.js");
@@ -29,6 +29,18 @@ class Highlight {
                 this.fullyTokenized = false;
             };
             editors.push(editor);
+
+            var client = ClientManager.getClientForEditor(editor);
+            if (client) {
+                client.request<HighlightRequest, HighlightResponse[]>("highlight", {
+                    FileName: editor.getPath(),
+                    Lines: []
+                })
+                    .subscribe(responses => {
+                        editor.getGrammar().responses = responses;
+                        editor.displayBuffer.tokenizedBuffer.retokenizeLines();
+                    });
+            }
         });
 
         ClientManager.registerConfiguration(client => {
@@ -42,13 +54,22 @@ class Highlight {
                             client.request<HighlightRequest, HighlightResponse[]>("highlight", {
                                 FileName: editor.getPath(),
                                 Lines: []
-                            })
-                                .subscribe(responses => {
-                                    editor.getGrammar().responses = responses;
-                                    editor.displayBuffer.tokenizedBuffer.retokenizeLines();
-                                });
+                            });
                         }
                     })
+                });
+
+
+            client.responses
+                .where(z => z.command === "highlight")
+                .map(z => ({ editor: find(editors, e => e.getPath() === z.request.FileName), responses: z.response }))
+                .where(z => !!z.editor)
+                .debounce(50)
+                .subscribe(function({editor, responses}) {
+                    editor.getGrammar().responses = responses;
+                    //if (retokenize) {
+                    editor.displayBuffer.tokenizedBuffer['silentRetokenizeLines']();
+                    //}
                 });
         })
     }
@@ -77,11 +98,7 @@ function Grammar(editor: Atom.TextEditor, base: FirstMate.Grammar) {
         client.request<HighlightRequest, HighlightResponse[]>("highlight", {
             FileName: this.editor.getPath(),
             Lines: []
-        })
-            .subscribe(responses => {
-                this.responses = responses;
-                editor.displayBuffer.tokenizedBuffer.retokenizeLines();
-            });
+        });
     }
 
     editor.buffer.preemptDidChange((e) => {
@@ -102,13 +119,7 @@ function Grammar(editor: Atom.TextEditor, base: FirstMate.Grammar) {
         var client = ClientManager.getClientForEditor(this.editor);
         if (client) {
             var request: HighlightRequest = <any>client.makeRequest(editor);
-            client.request<HighlightRequest, HighlightResponse[]>("highlight", request)
-                .subscribe(responses => {
-                    this.responses = responses;
-                    if (retokenize) {
-                        editor.displayBuffer.tokenizedBuffer['silentRetokenizeLines']();
-                    }
-                });
+            client.request<HighlightRequest, HighlightResponse[]>("highlight", request);
         }
     });
     this.responses = [];
@@ -240,6 +251,7 @@ function getAtomStyleForToken(token: HighlightResponse, str: string): string {
                     return 'keyword';
             }
         case "number":
+        case "struct name":
             return 'constant.numeric';
         case "string":
             return "string";
