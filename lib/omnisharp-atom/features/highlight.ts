@@ -311,8 +311,9 @@ function getAtomStyleForToken(token: HighlightResponse, str: string): string {
             return 'identifier';
         case "class name":
         case "enum name":
+            return 'support.class.type';
         case "interface name":
-            return 'support.class';
+            return 'support.class.type.interface';
         //return 'support.function';
         case "preprocessor keyword":
             return 'constant.other.symbol';
