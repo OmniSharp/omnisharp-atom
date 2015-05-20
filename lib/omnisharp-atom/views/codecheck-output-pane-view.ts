@@ -49,11 +49,8 @@ class CodeCheckOutputPaneView extends spacePenViews.View {
         Vue.filter('dirname', (value: string) => {
             return path.dirname(value);
         });
-        Vue.filter('projectTargetFramework', (projects: any) => {
-            var frameworks = _.map(projects, (project: string) => {
-                return project.split('+')[1];
-            }).filter((fw: string) => fw.length > 0);
-            return frameworks.join(',');
+        Vue.filter('projectTargetFramework', (projects: string[]) => {
+            return Omni.getFrameworks(projects);
         });
 
         this.vm = <any>viewModel;

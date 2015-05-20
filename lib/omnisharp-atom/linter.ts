@@ -70,7 +70,7 @@ class LinterCSharp extends Linter.Linter {
                     }
 
                     return {
-                        message: `${error.Text} [${this.getFrameworks(error)}] `,
+                        message: `${error.Text} [${Omni.getFrameworks(error.Projects)}] `,
                         line: line + 1,
                         col: column,
                         level: level,
@@ -83,13 +83,6 @@ class LinterCSharp extends Linter.Linter {
 
             });
         }
-    }
-
-    private getFrameworks(error: OmniSharp.Models.DiagnosticLocation): string {
-        var frameworks = _.map(error.Projects, (project: string) => {
-            return project.split('+')[1];
-        }).filter((fw: string) => fw.length > 0);
-        return frameworks.join(',');
     }
 }
 

@@ -1,6 +1,7 @@
 import manager = require("./client-manager");
 import Client = require("./client");
 import {DriverState} from "omnisharp-client";
+import _ = require('lodash');
 
 manager.registerConfiguration(client => client.state.subscribe(z => Omni.updateState(z)));
 
@@ -72,6 +73,13 @@ class Omni {
         this.vm.isNotError = !this.vm.isError;
         this.vm.isLoadingOrReady = this.vm.isLoading || this.vm.isReady;
         this.vm.iconText = this.vm.isError ? "omni error occured" : "";
+    }
+
+    public static getFrameworks(projects: string[]): string {
+        var frameworks = _.map(projects, (project: string) => {
+            return project.split('+')[1];
+        }).filter((fw: string) => fw.length > 0);
+        return frameworks.join(',');
     }
 }
 
