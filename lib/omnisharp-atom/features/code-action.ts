@@ -5,13 +5,13 @@ import CodeActionsView = require('../views/code-actions-view');
 
 class CodeCheck {
 
-    view;
+    view : SpacePen.SelectListView;
 
     constructor(private atomSharper: typeof OmniSharpAtom) {
         this.atomSharper = atomSharper;
     }
     public activate() {
-        atom.commands.add('atom-workspace', "omnisharp-atom:get-code-actions", () => {
+        OmniSharpAtom.addCommand("omnisharp-atom:get-code-actions", () => {
             Omni.client.getcodeactionsPromise(Omni.makeRequest());
         });
 
