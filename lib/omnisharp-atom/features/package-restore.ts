@@ -1,4 +1,5 @@
 import path = require('path');
+import ClientManager = require('../../omni-sharp-server/client-manager');
 import Omni = require('../../omni-sharp-server/omni');
 import OmniSharpAtom = require('../omnisharp-atom');
 
@@ -19,9 +20,11 @@ class PackageRestore {
         var filename = path.basename(editor.getPath());
         if (filename === 'project.json') {
             return editor.getBuffer().onDidSave(() => {
-                Omni.client.filesChangedPromise([{
-                    FileName: editor.getPath()
-                }]);
+
+                ClientManager.getClientForEditor(editor)
+                    .subscribe(client => client.filesChanged([{
+                        FileName: editor.getPath()
+                    }]));
             });
         }
     }

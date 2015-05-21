@@ -3,6 +3,7 @@ var $ = spacePenViews.jQuery;
 var TextEditorView = <any>spacePenViews.TextEditorView;
 
 import Omni = require('../../omni-sharp-server/omni')
+import ClientManager = require('../../omni-sharp-server/client-manager');
 
 class RenameView extends spacePenViews.View {
     private wordToRename = null;
@@ -34,10 +35,11 @@ class RenameView extends spacePenViews.View {
     }
 
     public rename() {
-        Omni.client.renamePromise(Omni.makeDataRequest({
-            RenameTo: this.miniEditor.getText(),
-            WantsTextChanges: true
-        }));
+        ClientManager.getClientForActiveEditor()
+            .subscribe(client => client.rename(client.makeDataRequest({
+                RenameTo: this.miniEditor.getText(),
+                WantsTextChanges: true
+            })));
         return this.destroy();
     }
 

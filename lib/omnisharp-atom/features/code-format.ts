@@ -1,4 +1,5 @@
 import Omni = require('../../omni-sharp-server/omni')
+import ClientManager = require('../../omni-sharp-server/client-manager');
 import Changes = require('./lib/apply-changes');
 import OmniSharpAtom = require('../omnisharp-atom')
 
@@ -10,15 +11,17 @@ class CodeFormat {
                 var editor = atom.workspace.getActiveTextEditor();
                 if (editor) {
                     var buffer = editor.getBuffer();
-                    var request = <OmniSharp.Models.FormatRangeRequest>Omni.makeRequest();
+                    ClientManager.getClientForEditor(editor).subscribe(client => {
+                        var request = <OmniSharp.Models.FormatRangeRequest>client.makeRequest();
+                        request.Line = 1;
+                        request.Column = 1;
+                        request.EndLine = buffer.getLineCount();
+                        request.EndColumn = 1;
 
-                    request.Line = 1;
-                    request.Column = 1;
-                    request.EndLine = buffer.getLineCount();
-                    request.EndColumn = 1;
-                    Omni.client
-                        .formatRangePromise(request)
-                        .then((data) => Changes.applyChanges(editor, data.Changes));
+                        client
+                            .formatRangePromise(request)
+                            .then((data) => Changes.applyChanges(editor, data.Changes));
+                    })
                 }
             });
 
@@ -33,12 +36,13 @@ class CodeFormat {
         if (editor) {
             editor.insertText(char);
 
-            var request = <OmniSharp.Models.FormatAfterKeystrokeRequest>Omni.makeRequest();
-            request.Character = char;
+            ClientManager.getClientForEditor(editor).subscribe(client => {
+                var request = <OmniSharp.Models.FormatAfterKeystrokeRequest>client.makeRequest();
+                request.Character = char;
 
-            Omni.client.formatAfterKeystrokePromise(request)
-                .then((data) => Changes.applyChanges(editor, data.Changes));
-
+                client.formatAfterKeystrokePromise(request)
+                    .then((data) => Changes.applyChanges(editor, data.Changes));
+            });
         }
         event.preventDefault();
         event.stopImmediatePropagation();

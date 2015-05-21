@@ -19,7 +19,7 @@ class LinterCSharp extends Linter.Linter {
     static syntax: string = "source.cs";
     static regex: string = "";
 
-    constructor(public editor : Atom.TextEditor) {
+    constructor(public editor: Atom.TextEditor) {
         super(editor);
         this.editor = editor;
     }
@@ -53,11 +53,10 @@ class LinterCSharp extends Linter.Linter {
             return;
         }
 
-        var client = ClientManager.getClientForEditor(this.editor);
-        if (client) {
-            client.codecheckPromise(Omni.makeRequest(this.editor))
-                .then(data => {
-
+        ClientManager
+            .getClientForEditor(this.editor)
+            .flatMap(client => client.codecheck(client.makeRequest(this.editor)))
+            .subscribe(data => {
                 var errors = _.map(data.QuickFixes, (error: OmniSharp.Models.DiagnosticLocation): LinterError => {
                     var line = error.Line - 1;
                     var column = error.Column - 1;
@@ -70,7 +69,7 @@ class LinterCSharp extends Linter.Linter {
                     }
 
                     return {
-                        message: error.Text,
+                        message: `${error.Text} [${Omni.getFrameworks(error.Projects) }] `,
                         line: line + 1,
                         col: column,
                         level: level,
@@ -80,9 +79,7 @@ class LinterCSharp extends Linter.Linter {
                 });
 
                 return callback(errors)
-
             });
-        }
     }
 }
 

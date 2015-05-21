@@ -1,3 +1,4 @@
+import ClientManager = require('../../omni-sharp-server/client-manager');
 import Omni = require('../../omni-sharp-server/omni')
 import OmniSharpAtom = require('../omnisharp-atom')
 
@@ -10,7 +11,8 @@ class GoToImplementation {
     }
 
     public goToImplementation() {
-        Omni.client.findimplementationsPromise(Omni.makeRequest());
+        ClientManager.getClientForActiveEditor()
+            .subscribe(client => client.findimplementations(client.makeRequest()));
     }
 
     public activate() {
