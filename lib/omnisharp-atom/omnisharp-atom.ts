@@ -211,7 +211,7 @@ class OmniSharpAtom {
         this.statusBarView && this.statusBarView.destroy();
         this.outputView && this.outputView.destroy();
         this.autoCompleteProvider && this.autoCompleteProvider.destroy();
-        Omni.client.disconnect();
+        ClientManager.disconnect();
     }
 
     public consumeStatusBar(statusBar) {

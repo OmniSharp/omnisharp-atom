@@ -29,17 +29,18 @@ class CodeCheck {
     }
 
     public doCodeCheck(editor: Atom.TextEditor) {
-        var client = ClientManager.getClientForEditor(editor);
-        if (client && client.currentState === omnisharp.DriverState.Connected) {
-            _.debounce(() => {
-                var request = <OmniSharp.Models.FormatRangeRequest>client.makeRequest(editor);
-                client.updatebufferPromise(request)
-                    .then(() => {
-                    request.FileName = null;
-                    client.codecheck(request);
-                });
-            }, 500)();
-        }
+        ClientManager.getClientForEditor(editor).subscribe(client => {
+            if (client && client.currentState === omnisharp.DriverState.Connected) {
+                _.debounce(() => {
+                    var request = <OmniSharp.Models.FormatRangeRequest>client.makeRequest(editor);
+                    client.updatebufferPromise(request)
+                        .then(() => {
+                            request.FileName = null;
+                            client.codecheck(request);
+                        });
+                }, 500)();
+            }
+        });
     }
 }
 

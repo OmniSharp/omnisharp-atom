@@ -1,3 +1,4 @@
+import ClientManager = require('../../omni-sharp-server/client-manager');
 import Omni = require('../../omni-sharp-server/omni')
 import OmniSharpAtom = require('../omnisharp-atom');
 
@@ -5,11 +6,11 @@ class Navigate {
     private disposable: { dispose: () => void; };
 
     public navigateUp() {
-        Omni.client.navigateupPromise(Omni.makeRequest());
+        ClientManager.getClientForActiveEditor().subscribe(client => client.navigateup(client.makeRequest()));
     }
 
     public navigateDown() {
-        Omni.client.navigatedownPromise(Omni.makeRequest());
+        ClientManager.getClientForActiveEditor().subscribe(client => client.navigatedown(client.makeRequest()));
     }
 
     public activate() {
