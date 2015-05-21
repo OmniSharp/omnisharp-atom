@@ -12,7 +12,7 @@ class CodeActionsView extends SpacePen.SelectListView {
     //todo implement firing off applying code action
 
 
-    constructor(items) {
+    constructor(items, private invokeNext: (result: any) => void) {
         super({ placeholderText: "Code actions" }); //note: doesn't work?
 
         this.setItems(items.response.CodeActions); //todo: fix
@@ -30,6 +30,11 @@ class CodeActionsView extends SpacePen.SelectListView {
 
     public confirmed(item) {
         this.cancel(); //will close the view
+
+        if (this.invokeNext) {
+            this.invokeNext(item);
+        }
+
         return null;
     }
 
