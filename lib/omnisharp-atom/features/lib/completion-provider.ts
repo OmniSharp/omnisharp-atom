@@ -1,8 +1,9 @@
+import ClientManager = require('../../../omni-sharp-server/client-manager');
 import Omni = require('../../../omni-sharp-server/omni')
 
 import _ = require('lodash')
 import rx = require('rx')
-import escape = require("escape-html");
+var escape = require("escape-html");
 var filter = require('fuzzaldrin').filter;
 
 export interface RequestOptions {
@@ -35,19 +36,21 @@ var dataSource = (function() {
     var currentOptions: RequestOptions;
 
     function getResults(options: RequestOptions) {
-        return Omni.client.autocomplete(Omni.makeDataRequest<OmniSharp.Models.AutoCompleteRequest>({
-            WordToComplete: '',
-            WantDocumentationForEveryCompletionResult: false,
-            WantKind: true,
-            WantSnippet: true,
-            WantReturnType: true
-        }))
+        return ClientManager
+            .getClientForActiveEditor()
+            .flatMap(client=> client.autocomplete(client.makeDataRequest<OmniSharp.Models.AutoCompleteRequest>({
+                WordToComplete: '',
+                WantDocumentationForEveryCompletionResult: false,
+                WantKind: true,
+                WantSnippet: true,
+                WantReturnType: true
+            })))
             .map(completions => {
-            if (completions == null) {
-                completions = [];
-            }
-            return completions;
-        });
+                if (completions == null) {
+                    completions = [];
+                }
+                return completions;
+            });
     };
 
     function justResults(options: RequestOptions) {

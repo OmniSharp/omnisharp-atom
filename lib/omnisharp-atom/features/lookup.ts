@@ -1,6 +1,7 @@
 // Inspiration : https://atom.io/packages/ide-haskell
 // and https://atom.io/packages/ide-flow
 // https://atom.io/packages/atom-typescript
+import ClientManager = require('../../omni-sharp-server/client-manager');
 import Omni = require('../../omni-sharp-server/omni');
 import path = require('path');
 import fs = require('fs');
@@ -9,7 +10,7 @@ import rx = require('rx');
 import $ = require('jquery');
 import omnisharpAtom = require('../omnisharp-atom');
 import omnisharp = require("omnisharp-client");
-import escape = require("escape-html");
+var escape = require("escape-html");
 
 class TypeLookup {
     public activate() {
@@ -91,7 +92,7 @@ class Tooltip implements rx.Disposable {
     }
 
     private showExpressionTypeOnMouseOver(e: MouseEvent) {
-        if (Omni.client === null) {
+        if (!ClientManager.connected) {
             return;
         }
 
@@ -133,24 +134,25 @@ class Tooltip implements rx.Disposable {
         // characterIndexForPosition should return a number
         //var position = buffer.characterIndexForPosition(bufferPt);
         // Actually make the program manager query
-        Omni.client.typelookupPromise({
-            IncludeDocumentation: true,
-            Line: bufferPt.row + 1,
-            Column: bufferPt.column + 1,
-            FileName: this.editor.getURI()
-        }).then((response: OmniSharp.Models.TypeLookupResponse) => {
-            if (response.Type === null) {
-                return;
-            }
-            var message = `<b>${escape(response.Type) }</b>`;
-            if (response.Documentation) {
-                message = message + `<br/><i>${escape(response.Documentation) }</i>`;
-            }
-            // Sorry about this "if". It's in the code I copied so I guess its there for a reason
-            if (this.exprTypeTooltip) {
-                this.exprTypeTooltip.updateText(message);
-            }
-        });
+        ClientManager.getClientForActiveEditor()
+            .flatMap(client => client.typelookup({
+                IncludeDocumentation: true,
+                Line: bufferPt.row + 1,
+                Column: bufferPt.column + 1,
+                FileName: this.editor.getURI()
+            })).subscribe((response: OmniSharp.Models.TypeLookupResponse) => {
+                if (response.Type === null) {
+                    return;
+                }
+                var message = `<b>${escape(response.Type) }</b>`;
+                if (response.Documentation) {
+                    message = message + `<br/><i>${escape(response.Documentation) }</i>`;
+                }
+                // Sorry about this "if". It's in the code I copied so I guess its there for a reason
+                if (this.exprTypeTooltip) {
+                    this.exprTypeTooltip.updateText(message);
+                }
+            });
     }
 
     public dispose() {

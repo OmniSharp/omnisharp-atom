@@ -1,3 +1,4 @@
+import ClientManager = require('../../omni-sharp-server/client-manager');
 import _ = require('lodash');
 import Omni = require('../../omni-sharp-server/omni');
 import OmniSharpAtom = require('../omnisharp-atom');
@@ -13,17 +14,17 @@ class GoToDefinition {
     public goToDefinition() {
         var editor = atom.workspace.getActiveTextEditor();
         if (editor) {
-            var req: any = Omni.makeRequest();
             var word = <any>editor.getWordUnderCursor();
-
-            Omni.client.gotodefinitionPromise(req).then((data) => {
-                if (data.FileName != null) {
-                    Omni.navigateTo(data);
-                } else {
-                    atom.emitter.emit("omnisharp-atom:error",
-                        "Can't navigate to '" + word + "'");
-                }
-            });
+            ClientManager.getClientForEditor(editor)
+                .flatMap(client => client.gotodefinition(client.makeRequest()))
+                .subscribe((data) => {
+                    if (data.FileName != null) {
+                        Omni.navigateTo(data);
+                    } else {
+                        atom.emitter.emit("omnisharp-atom:error",
+                            "Can't navigate to '" + word + "'");
+                    }
+                });
         }
     }
 
@@ -108,21 +109,20 @@ class GoToDefinition {
         var wordRange = new Range([bufferPt.row, startColumn + 1], [bufferPt.row, endColumn]);
         if (this.marker !== null && this.marker.bufferMarker.range.compare(wordRange) === 0)
             return;
-        if (Omni.client === null) {
-            return;
-        }
 
-        Omni.client.gotodefinitionPromise({
-            Line: bufferPt.row + 1,
-            Column: bufferPt.column + 1,
-            FileName: editor.getURI()
-        }).then(data => {
-            if (data.FileName !== null) {
-                this.removeMarker();
-                this.marker = editor.markBufferRange(wordRange);
-                var decoration = editor.decorateMarker(this.marker, { type: 'highlight', class: 'gotodefinition-underline' })
-            }
-        });
+        ClientManager.getClientForEditor(editor)
+            .flatMap(client => client.gotodefinition({
+                Line: bufferPt.row + 1,
+                Column: bufferPt.column + 1,
+                FileName: editor.getURI()
+            }))
+            .subscribe(data => {
+                if (data.FileName !== null) {
+                    this.removeMarker();
+                    this.marker = editor.markBufferRange(wordRange);
+                    var decoration = editor.decorateMarker(this.marker, { type: 'highlight', class: 'gotodefinition-underline' })
+                }
+            });
     }
 
     private pixelPositionFromMouseEvent(editorView, event: MouseEvent) {

@@ -37,20 +37,6 @@ class Omni {
         }
     }
 
-    public static get client() {
-        return manager.getClientForActiveEditor();
-    }
-
-    public static makeRequest(editor?: Atom.TextEditor, buffer?: TextBuffer.TextBuffer) {
-        var client = editor ? manager.getClientForEditor(editor)
-            : manager.getClientForActiveEditor();
-        return client.makeRequest(editor, buffer);
-    }
-
-    public static makeDataRequest<T>(data: T, editor?: Atom.TextEditor, buffer?: TextBuffer.TextBuffer) {
-        return manager.getClientForActiveEditor().makeDataRequest(data, editor, buffer);
-    }
-
     public static navigateTo(response: { FileName: string; Line: number; Column: number; }) {
         atom.workspace.open(response.FileName, undefined)
             .then((editor) => {
@@ -69,8 +55,9 @@ class Omni {
         this.vm.isNotOff = !this.vm.isOff;
         this.vm.isOn = state === DriverState.Connecting || state === DriverState.Connected;
         this.vm.isReady = state === DriverState.Connected;
-        this.vm.isNotReady = !this.vm.isReady
+        this.vm.isNotReady = !this.vm.isReady;
         this.vm.isNotError = !this.vm.isError;
+        this.vm.isError = state === DriverState.Error;
         this.vm.isLoadingOrReady = this.vm.isLoading || this.vm.isReady;
         this.vm.iconText = this.vm.isError ? "omni error occured" : "";
     }
