@@ -128,7 +128,7 @@ class OmniNotification {
         domNotification.addClass('success');
         domNotification.addClass('icon-check');
         this.isBeingDismissed = true;
-        setTimeout(() => { this.dismiss(); }, 5000);
+        setTimeout(() => { this.dismiss(); }, 2000);
     }
 
     public isDismissed(): boolean {
