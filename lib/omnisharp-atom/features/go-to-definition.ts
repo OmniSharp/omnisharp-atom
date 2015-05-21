@@ -107,7 +107,9 @@ class GoToDefinition {
         }
 
         var wordRange = new Range([bufferPt.row, startColumn + 1], [bufferPt.row, endColumn]);
-        if (this.marker !== null && this.marker.bufferMarker.range.compare(wordRange) === 0)
+        if (this.marker &&
+            this.marker.bufferMarker.range &&
+            this.marker.bufferMarker.range.compare(wordRange) === 0)
             return;
 
         ClientManager.getClientForEditor(editor)
