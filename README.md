@@ -2,7 +2,7 @@
 
 ###(The hackable IDE)
 
-![omnisharp-atom](https://github.com/Omnisharp/omnisharp-atom/raw/master/omnisharp-atom.gif)
+![omnisharp-atom](https://cloud.githubusercontent.com/assets/667194/7758038/8ad7bdfa-fffe-11e4-98be-74e0c660aabd.gif)
 
 ## Installation
 
