@@ -1,4 +1,5 @@
 import Omni = require('../../omni-sharp-server/omni')
+import ClientManager = require('../../omni-sharp-server/client-manager');
 import OmniSharpAtom = require('../omnisharp-atom')
 import SpacePen = require('atom-space-pen-views');
 import CodeActionsView = require('../views/code-actions-view');
@@ -17,7 +18,11 @@ class CodeCheck {
         this.disposable = new EventKit.CompositeDisposable();
 
         OmniSharpAtom.addCommand("omnisharp-atom:get-code-actions", () => {
-            Omni.client.getcodeactionsPromise(Omni.makeRequest());
+            ClientManager.getClientForActiveEditor()
+                .subscribe(client => {
+                    client.getcodeactionsPromise(client.makeRequest());
+                });
+
         });
 
         Omni.registerConfiguration(client => {
@@ -26,7 +31,10 @@ class CodeCheck {
                 //pop ui to user.
                 this.view = new CodeActionsView(data, (result: any) => {
                     //callback when an item is selected
-                    Omni.client.runcodeactionPromise(Omni.makeRequest());
+                    ClientManager.getClientForActiveEditor()
+                        .subscribe(client => {
+                            client.runcodeactionPromise(client.makeRequest());
+                        });
                 });
 
             })
