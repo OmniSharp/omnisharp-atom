@@ -64,7 +64,7 @@ class Omni {
 
     public static getFrameworks(projects: string[]): string {
         var frameworks = _.map(projects, (project: string) => {
-            return project.split('+')[1];
+            return project.indexOf('+') === -1 ? '' : project.split('+')[1];
         }).filter((fw: string) => fw.length > 0);
         return frameworks.join(',');
     }
