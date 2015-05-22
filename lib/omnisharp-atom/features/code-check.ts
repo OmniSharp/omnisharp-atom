@@ -21,8 +21,12 @@ class CodeCheck {
 
         ClientManager.registerConfiguration(client => {
             client.state.subscribe(state => {
-                if (state === omnisharp.DriverState.Connected)
-                    this.doCodeCheck(atom.workspace.getActiveTextEditor());
+                if (state === omnisharp.DriverState.Connected) {
+                    var request = <OmniSharp.Models.Request>{
+                        FileName: null
+                    };
+                    client.codecheck(request);
+                }
             });
         });
 
