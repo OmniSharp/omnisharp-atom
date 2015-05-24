@@ -9,6 +9,7 @@ import Changes = require('./lib/apply-changes');
 class CodeCheck {
 
     private view : SpacePen.SelectListView;
+    private editor : Atom.TextEditor;
 
     constructor(private atomSharper: typeof OmniSharpAtom) {
         this.atomSharper = atomSharper;
@@ -16,6 +17,9 @@ class CodeCheck {
     public activate() {
 
         this.atomSharper.addCommand("omnisharp-atom:get-code-actions", () => {
+            //store the editor that this was triggered by.
+            this.editor = atom.workspace.getActiveTextEditor();
+            
             ClientManager.getClientForActiveEditor()
                 .subscribe(client => {
                     client.getcodeactionsPromise(client.makeRequest());
@@ -25,6 +29,10 @@ class CodeCheck {
 
         Omni.registerConfiguration(client => {
             client.observeGetcodeactions.subscribe((data) => {
+
+                for (var i = 0; i < data.response.CodeActions.length; i++) {
+                    data.response.CodeActions[i];
+                }
 
                 //pop ui to user.
                 this.view = new CodeActionsView(data.response.CodeActions, () => {
@@ -52,15 +60,13 @@ class CodeCheck {
     }
 
     public applyAllChanges(changes: OmniSharp.Models.LinePositionSpanTextChange[]) {
-        //bug: if they have swapped editors since firing this request,
-        //it might apply the changes to the wrong editor?
-        var editor = atom.workspace.getActiveTextEditor();
-        Changes.applyChanges(editor, changes)
+
+        Changes.applyChanges(this.editor, changes)
 
     }
 
     public deactivate() {
-        //todo figure out what needs to be added to disposable
+        //: todo figure out what needs to be disposed of?
     }
 
 }
