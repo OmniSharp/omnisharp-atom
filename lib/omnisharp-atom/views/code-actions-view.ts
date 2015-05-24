@@ -21,7 +21,7 @@ class CodeActionsView extends SpacePen.SelectListView {
         this.storeFocusedElement();
 
         this.panel = atom.workspace.addModalPanel({ item: this });
-        //this.focusFilterEditor();
+        this.focusFilterEditor();
     }
 
     public cancelled() {

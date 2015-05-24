@@ -1,9 +1,11 @@
+import _ = require('lodash');
 import Omni = require('../../omni-sharp-server/omni')
 import ClientManager = require('../../omni-sharp-server/client-manager');
 import OmniSharpAtom = require('../omnisharp-atom')
 import SpacePen = require('atom-space-pen-views');
 import CodeActionsView = require('../views/code-actions-view');
-
+import EventKit = require('event-kit');
+import Changes = require('./lib/apply-changes');
 
 class CodeCheck {
 
@@ -33,19 +35,31 @@ class CodeCheck {
                     //callback when an item is selected
                     ClientManager.getClientForActiveEditor()
                         .subscribe(client => {
-                            client.runcodeactionPromise(client.makeRequest());
+                            client.runcodeactionPromise(client.makeDataRequest<OmniSharp.Models.CodeActionRequest>(
+                                {
+                                    CodeAction : 0,
+                                    WantsTextChanges: true
+                                }
+                            ));
                         });
+
+                    })
                 });
 
-            })
-        });
-
+            });
         Omni.registerConfiguration(client => {
             client.observeRuncodeaction.subscribe((data) => {
-
+                this.applyAllChanges(data.response.Changes);
             })
         })
 
+    }
+
+    public applyAllChanges(changes: any[]) {
+
+        var editor = atom.workspace.getActiveTextEditor();
+        Changes.applyChanges(editor, changes)
+        
     }
 
     public deactivate() {
