@@ -29,7 +29,7 @@ class GoToDefinition {
     }
 
     public activate() {
-        this.disposable = OmniSharpAtom.onEditor((editor: Atom.TextEditor) => {
+        OmniSharpAtom.onEditor((editor: Atom.TextEditor) => {
             var view = $(atom.views.getView(editor));
             var scroll = this.getFromShadowDom(view, '.scroll-view');
             var mousemove = rx.Observable.fromEvent<MouseEvent>(scroll[0], 'mousemove');
@@ -63,17 +63,13 @@ class GoToDefinition {
                     return;
                 }
                 this.removeMarker();
-                return this.goToDefinition();
+                this.goToDefinition();
             }));
-
-            atom.emitter.on("symbols-view:go-to-declaration", () => {
-                return this.goToDefinition();
-            });
-
-            OmniSharpAtom.addCommand("omnisharp-atom:go-to-definition", () => {
-                return this.goToDefinition();
-            });
         });
+
+        atom.emitter.on("symbols-view:go-to-declaration", this.goToDefinition);
+
+        OmniSharpAtom.addCommand("omnisharp-atom:go-to-definition", this.goToDefinition);
     }
 
     public deactivate() {
