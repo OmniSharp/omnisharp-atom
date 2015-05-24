@@ -5,22 +5,17 @@ class CodeActionsView extends SpacePen.SelectListView {
 
     private panel: Atom.Panel;
 
-    //todo cleanup
-    //todo set placeholder text
-    //todo appropriately remove view (not hide)
-    //todo add TS types for all the things
-    //todo implement firing off applying code action
+    constructor(items : string[], private invokeNext: (result: any) => void) {
+        super({ placeholderText: "Code actions" }); //note: doesn't work.
 
-
-    constructor(items, private invokeNext: (result: any) => void) {
-        super({ placeholderText: "Code actions" }); //note: doesn't work?
-
-        this.setItems(items.response.CodeActions); //todo: fix
+        this.setItems(items);
 
         //stores the previously selected element.
         this.storeFocusedElement();
 
         this.panel = atom.workspace.addModalPanel({ item: this });
+
+        //sets focus
         this.focusFilterEditor();
     }
 
@@ -38,7 +33,7 @@ class CodeActionsView extends SpacePen.SelectListView {
         return null;
     }
 
-    public viewForItem(item) {
+    public viewForItem(item: string[]) {
         return SpacePen.$$(function() {
            return this.li({
                "class": 'event',
