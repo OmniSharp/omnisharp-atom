@@ -8,12 +8,8 @@ class SignatureHelp {
 
     private view;
 
-    constructor(private atomSharper: typeof OmniSharpAtom) {
-        this.atomSharper = atomSharper;
-    }
-
     public activate() {
-        this.atomSharper.addCommand("omnisharp-atom:signature-help", () => {
+        OmniSharpAtom.addCommand("omnisharp-atom:signature-help", () => {
 
             ClientManager.getClientForActiveEditor()
                 .subscribe(client => {
