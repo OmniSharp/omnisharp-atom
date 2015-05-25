@@ -56,7 +56,7 @@ class OmniSharpAtom {
     private menu: EventKit.Disposable;
 
     private _activeEditor = new BehaviorSubject<Atom.TextEditor>(null);
-    private _activeEditorObservable = this._activeEditor.shareReplay(1);
+    private _activeEditorObservable = this._activeEditor.replay(z => z, 1);
     public get activeEditor() : Observable<Atom.TextEditor> { return this._activeEditorObservable; }
 
     public activate(state) {
@@ -146,7 +146,7 @@ class OmniSharpAtom {
             this.detectAutoToggleGrammar(editor);
         });
 
-        this.activeEditorAtomDisposable = atom.workspace.observeActivePane((pane: any) => {
+        this.activeEditorAtomDisposable = atom.workspace.observeActivePaneItem((pane: any) => {
             if (pane && pane.getGrammar) {
                 var grammarName = pane.getGrammar().name;
                 if (grammarName === 'C#' || grammarName === 'C# Script File') {

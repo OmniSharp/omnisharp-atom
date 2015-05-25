@@ -76,6 +76,7 @@
     "lodash": "^3.6.0",
     "merge-stream": "^0.1.7",
     "omnisharp-client": "^1.4.2",
+    "react": "^0.13.3",
     "request-promise": "~0.1.2",
     "rx": "^2.5.2",
     "semver": "^4.2.0",

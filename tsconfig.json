@@ -32,6 +32,7 @@
     "files": [
         "./lib/omni-sharp-server/client-manager.ts",
         "./lib/omni-sharp-server/client.ts",
+        "./lib/omni-sharp-server/composite-client.ts",
         "./lib/omni-sharp-server/omni.ts",
         "./lib/omnisharp-atom/dependency-checker.ts",
         "./lib/omnisharp-atom/features/code-action.ts",

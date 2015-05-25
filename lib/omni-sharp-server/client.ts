@@ -3,7 +3,11 @@ import {Observable} from 'rx';
 import {OmnisharpClient, DriverState, OmnisharpClientOptions} from "omnisharp-client";
 
 class Client extends OmnisharpClient {
-    constructor(options: OmnisharpClientOptions) {
+    public uniqueId = _.uniqueId("client");
+    public output: OmniSharp.OutputMessage[] = [];
+    public logs: Observable<OmniSharp.OutputMessage>;
+
+    constructor(public path: string, options: OmnisharpClientOptions) {
         super(options);
         this.configureClient();
     }
@@ -14,10 +18,14 @@ class Client extends OmnisharpClient {
             this.connect({
                 projectPath: path
             });
-            atom.emitter.emit("omni-sharp-server:start", { pid: this.id, path: this.projectPath, exePath: this.serverPath});
+
+            this.log("Starting OmniSharp server (pid:" + this.id + ")");
+            this.log("OmniSharp Location: " + this.serverPath);
+            this.log("Change the location that OmniSharp is loaded from by setting the OMNISHARP environment variable");
+            this.log("OmniSharp Path: " + this.projectPath);
         } else {
             this.disconnect();
-            atom.emitter.emit("omni-sharp-server:stop");
+            this.log("Omnisharp server stopped.");
         }
     }
 
@@ -60,27 +68,19 @@ class Client extends OmnisharpClient {
     }
 
     private configureClient() {
-        this.events.subscribe(event => {
+        this.logs = this.events.map(event => ({
+            message: event.Body && event.Body.Message || event.Event || '',
+            logLevel: event.Body && event.Body.LogLevel || (event.Type === "error" && 'ERROR') || 'INFORMATION'
+        }));
 
-            if (event.Type === "error") {
-                atom.emitter.emit("omni-sharp-server:err", {
-                    message: event.Body && event.Body.Message || event.Event || '',
-                    logLevel: event.Body && event.Body.LogLevel || 'ERROR'
-                });
-            } else {
-                atom.emitter.emit("omni-sharp-server:out", {
-                    message: event.Body && event.Body.Message || event.Event || '',
-                    logLevel: event.Body && event.Body.LogLevel || 'INFORMATION'
-                });
-
-                if (typeof(event.Event) !== "undefined" && event.Event !== "unknown") {
-                    atom.emitter.emit("omni-sharp-server:event", {
-                        Event: event.Event,
-                        Body: event.Body
-                    });
-                }
-            }
-        });
+        this.logs.subscribe(event => {
+            this.output.push(event);
+            if (this.output.length > 1000)
+                this.output.shift();
+        })
+        //.windowWithCount(1000, 1)
+        //.shareReplay(1)
+        //.flatMapLatest(z => z);
 
         this.errors.subscribe(exception => {
             console.error(exception);

@@ -1,9 +1,10 @@
 import _ = require('lodash')
 import path = require('path');
-import {Observable, AsyncSubject, RefCountDisposable, Disposable} from "rx";
+import {Observable, AsyncSubject, RefCountDisposable, Disposable, ReplaySubject} from "rx";
 import Client = require('./client');
-import {findCandidates, DriverState, OmnisharpCompositeClient} from "omnisharp-client";
-import OmniSharpAtom = require('../omnisharp-atom');
+import CompositeClient = require('./composite-client');
+import {findCandidates, DriverState} from "omnisharp-client";
+import OmniSharpAtom = require('../omnisharp-atom/omnisharp-atom');
 
 class ClientManager {
     private _clients: { [path: string]: Client } = {};
@@ -13,31 +14,28 @@ class ClientManager {
     private _projectPaths: string[] = [];
     private _activated = false;
     private _temporaryClients: { [path: string]: RefCountDisposable } = {};
-    private _omnisharpAtom: OmniSharpAtom;
+    private _omnisharpAtom: typeof OmniSharpAtom;
 
-    private _aggregateClient = new OmnisharpCompositeClient();
-    public aggregateClient() { return this._aggregateClient; }
+    private _aggregateClient = new CompositeClient();
+    public get aggregateClient() { return this._aggregateClient; }
 
-    private _activeClient = new OmnisharpCompositeClient();
-    public activeClient() { return this._activeClient; }
+    private _activeClient = new ReplaySubject<Client>(1);
+    public get activeClient() : Observable<Client> { return this._activeClient; }
 
     constructor() {
 
     }
 
-    public activate(omnisharpAtom: OmniSharpAtom) {
+    public activate(omnisharpAtom: typeof OmniSharpAtom) {
         this._activated = true;
         this._omnisharpAtom = omnisharpAtom;
         this.updatePaths(atom.project.getPaths());
         atom.project.onDidChangePaths((paths) => this.updatePaths(paths));
 
-        this._omnisharpAtom.activeEditor.subscribe(editor => {
-            // null check, null means that the editor has changed to non-atom editor
-            this.activeClient.removeAll();
-            if (editor) {
-                this.activeClient.add(this.getClientForEditor(editor));
-            }
-        });
+        this._omnisharpAtom.activeEditor
+            .where(z => !!z)
+            .flatMap(z => this.getClientForEditor(z))
+            .subscribe(x => this._activeClient.onNext(x));
     }
 
     public connect() {
@@ -74,10 +72,13 @@ class ClientManager {
     }
 
     private addClient(candidate: string, localPaths: string[], delay = 1200, temporary?: boolean) {
+        if (this._clients[candidate])
+            return;
+            
         localPaths.push(candidate);
         this._clientPaths.push(candidate);
 
-        var client = new Client({
+        var client = new Client(candidate, {
             projectPath: candidate
         });
 

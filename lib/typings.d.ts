@@ -17,9 +17,9 @@ declare var WeakMap: WeakMapConstructor;
 
 declare module OmniSharp {
     interface IFeature {
-        name:string;
-        path:string;
-        invoke(method:string, ...args: any[]);
+        name: string;
+        path: string;
+        invoke(method: string, ...args: any[]);
     }
 
     interface vm {
@@ -45,6 +45,11 @@ declare module OmniSharp {
     }
 
     interface VueArray<T> extends Array<T> {
-        $remove(index:number);
+        $remove(index: number);
+    }
+
+    interface OutputMessage {
+        message: string;
+        logLevel?: string;
     }
 }
