@@ -22,6 +22,10 @@ class ClientManager {
     private _activeClient = new ReplaySubject<Client>(1);
     public get activeClient() : Observable<Client> { return this._activeClient; }
 
+    public get numberOfClients() {
+        return this._clientPaths.length;
+    }
+
     constructor() {
 
     }
@@ -74,7 +78,7 @@ class ClientManager {
     private addClient(candidate: string, localPaths: string[], delay = 1200, temporary?: boolean) {
         if (this._clients[candidate])
             return;
-            
+
         localPaths.push(candidate);
         this._clientPaths.push(candidate);
 

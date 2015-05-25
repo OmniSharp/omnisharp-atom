@@ -23,10 +23,10 @@ class StatusBarView extends spacePenViews.View {
                 outlet: 'omni-meter',
                 "class": 'omnisharp-atom-button'
             }, () => {
-                    this.span({
-                        "class": 'icon icon-flame',
-                        'v-class': 'text-subtle: isOff, text-success: isReady, text-error: isError, icon-flame-loading: isLoading'
-                    }, '{{iconText}}');
+                this.span({
+                    "class": 'icon icon-flame',
+                    'v-class': 'text-subtle: isOff, text-success: isReady, text-error: isError, icon-flame-loading: isLoading'
+                }, '{{iconText}}');
             });
             return this.a({
                 href: '#',

@@ -95,11 +95,6 @@ class DockView extends spacePenViews.View {
             return "omnisharp-atom-output " + expectedValue + "-output " + selected;
         });
 
-        this.findOutput.append(new FindPaneView());
-        this.buildOutput.append(new BuildOutputPaneView());
-        this.omniOutput.append(new OmniOutputPaneView());
-        this.errorsOutput.append(new CodeCheckOutputPaneView());
-
         var viewModel = new Vue({
             el: this[0],
             data: {
@@ -135,8 +130,18 @@ class DockView extends spacePenViews.View {
         });
     }
 
-    constructor(private omnisharpAtom: typeof OmniSharpAtom) {
+    private omnisharpAtom: typeof OmniSharpAtom;
+    constructor(omnisharpAtom: typeof OmniSharpAtom) {
         super();
+        this.omnisharpAtom = omnisharpAtom;
+        this.setupViews();
+    }
+
+    private setupViews() {
+        this.findOutput.append(new FindPaneView());
+        this.buildOutput.append(new BuildOutputPaneView());
+        this.omniOutput.append(new OmniOutputPaneView());
+        this.errorsOutput.append(new CodeCheckOutputPaneView());
     }
 
     public selectPane = (pane) => {
