@@ -56,6 +56,7 @@
         "./lib/omnisharp-atom/features/notification-handler.ts",
         "./lib/omnisharp-atom/features/package-restore.ts",
         "./lib/omnisharp-atom/features/rename.ts",
+        "./lib/omnisharp-atom/features/signature-help.ts",
         "./lib/omnisharp-atom/features/server-information.ts",
         "./lib/omnisharp-atom/features/solution-information.ts",
         "./lib/omnisharp-atom/linter.ts",
