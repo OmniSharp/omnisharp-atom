@@ -1,4 +1,6 @@
 import _ = require('lodash')
+import {Observable, BehaviorSubject} from "rx";
+import path = require('path');
 import fs = require('fs')
 import a = require("atom")
 var Emitter = (<any>a).Emitter
@@ -10,7 +12,6 @@ import CompletionProvider = require("./features/lib/completion-provider")
 import dependencyChecker = require('./dependency-checker')
 import StatusBarView = require('./views/status-bar-view')
 import DockView = require('./views/dock-view')
-import path = require('path');
 //import autoCompleteProvider = require('./features/lib/completion-provider');
 
 // Configure Rx / Bluebird for long stacks
@@ -45,6 +46,7 @@ class Feature implements OmniSharp.IFeature {
 class OmniSharpAtom {
     private features: OmniSharp.IFeature[];
     private observeEditors: { dispose: Function };
+    private activeEditorAtomDisposable: { dispose: Function };
     private emitter: EventKit.Emitter;
     public statusBarView;
     public outputView;
@@ -53,8 +55,11 @@ class OmniSharpAtom {
     private generator: { run(generator: string, path?: string): void; start(prefix: string, path?: string): void; };
     private menu: EventKit.Disposable;
 
+    private _activeEditor = new BehaviorSubject<Atom.TextEditor>(null);
+    private _activeEditorObservable = this._activeEditor.shareReplay(1);
+    public get activeEditor() : Observable<Atom.TextEditor> { return this._activeEditorObservable; }
+
     public activate(state) {
-        ClientManager.activate();
         atom.commands.add('atom-workspace', 'omnisharp-atom:toggle', () => this.toggle());
         atom.commands.add('atom-workspace', 'omnisharp-atom:new-application', () => this.generator.run("aspnet:app"));
         atom.commands.add('atom-workspace', 'omnisharp-atom:new-class', () => this.generator.run("aspnet:Class"));
@@ -64,6 +69,7 @@ class OmniSharpAtom {
         this.outputView = new DockView(this);
 
         if (dependencyChecker.findAllDeps(this.getPackageDir())) {
+            ClientManager.activate(this);
             this.emitter = new Emitter;
             this.features = this.loadFeatures();
 
@@ -138,6 +144,19 @@ class OmniSharpAtom {
             }
 
             this.detectAutoToggleGrammar(editor);
+        });
+
+        this.activeEditorAtomDisposable = atom.workspace.observeActivePane((pane: any) => {
+            if (pane && pane.getGrammar) {
+                var grammarName = pane.getGrammar().name;
+                if (grammarName === 'C#' || grammarName === 'C# Script File') {
+                    this._activeEditor.onNext(pane);
+                    return;
+                }
+            }
+
+            // This will tell us when the editor is no longer an appropriate editor
+            this._activeEditor.onNext(null);
         });
     }
 

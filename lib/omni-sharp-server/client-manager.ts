@@ -1,8 +1,9 @@
 import _ = require('lodash')
 import path = require('path');
-import Client = require('./client');
-import {findCandidates, DriverState} from "omnisharp-client";
 import {Observable, AsyncSubject, RefCountDisposable, Disposable} from "rx";
+import Client = require('./client');
+import {findCandidates, DriverState, OmnisharpCompositeClient} from "omnisharp-client";
+import OmniSharpAtom = require('../omnisharp-atom');
 
 class ClientManager {
     private _clients: { [path: string]: Client } = {};
@@ -12,11 +13,31 @@ class ClientManager {
     private _projectPaths: string[] = [];
     private _activated = false;
     private _temporaryClients: { [path: string]: RefCountDisposable } = {};
+    private _omnisharpAtom: OmniSharpAtom;
 
-    public activate() {
+    private _aggregateClient = new OmnisharpCompositeClient();
+    public aggregateClient() { return this._aggregateClient; }
+
+    private _activeClient = new OmnisharpCompositeClient();
+    public activeClient() { return this._activeClient; }
+
+    constructor() {
+
+    }
+
+    public activate(omnisharpAtom: OmniSharpAtom) {
         this._activated = true;
+        this._omnisharpAtom = omnisharpAtom;
         this.updatePaths(atom.project.getPaths());
         atom.project.onDidChangePaths((paths) => this.updatePaths(paths));
+
+        this._omnisharpAtom.activeEditor.subscribe(editor => {
+            // null check, null means that the editor has changed to non-atom editor
+            this.activeClient.removeAll();
+            if (editor) {
+                this.activeClient.add(this.getClientForEditor(editor));
+            }
+        });
     }
 
     public connect() {
@@ -64,9 +85,13 @@ class ClientManager {
         this._clients[candidate] = client;
 
         if (temporary) {
-            var tempD = Disposable.create(() => {});
+            var tempD = Disposable.create(() => { });
             tempD.dispose();
             this._temporaryClients[candidate] = new RefCountDisposable(tempD);
+        }
+
+        if (!temporary) {
+            this._aggregateClient.add(client);
         }
 
         // Auto start, with a little delay
@@ -92,6 +117,7 @@ class ClientManager {
         delete this._clients[candidate];
         client.disconnect();
         _.pull(this._clientPaths, candidate);
+        this._aggregateClient.remove(client);
     }
 
     public getClientForActiveEditor() {

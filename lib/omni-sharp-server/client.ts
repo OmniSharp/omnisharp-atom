@@ -2,7 +2,7 @@ import _ = require('lodash');
 import {Observable} from 'rx';
 import {OmnisharpClient, DriverState, OmnisharpClientOptions} from "omnisharp-client";
 
-class Client extends  OmnisharpClient {
+class Client extends OmnisharpClient {
     constructor(options: OmnisharpClientOptions) {
         super(options);
         this.configureClient();
