@@ -31,6 +31,9 @@
   'f1': 'omnisharp-atom:type-lookup'
   'ctrl-alt-up': 'omnisharp-atom:navigate-up'
   'ctrl-alt-down': 'omnisharp-atom:navigate-down'
+  'ctrl-.': 'omnisharp-atom:get-code-actions'
+  'alt-enter': 'omnisharp-atom:get-code-actions'
+
 
 '.platform-darwin atom-text-editor:not([mini])[data-grammar~="cs"], atom-text-editor:not([mini])[data-grammar~="csx"]':
   'cmd-d': 'omnisharp-atom:go-to-definition'

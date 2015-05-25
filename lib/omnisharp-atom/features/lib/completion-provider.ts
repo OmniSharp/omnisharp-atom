@@ -140,7 +140,6 @@ export var CompletionProvider = {
 
         var buffer = options.editor.getBuffer();
         var end = options.bufferPosition.column;
-
         var data = buffer.getLines()[options.bufferPosition.row].substring(0, end + 1);
 
         var lastCharacterTyped = data[end - 1];
