@@ -59,6 +59,7 @@
         "./lib/omnisharp-atom/views/find-pane-view.ts",
         "./lib/omnisharp-atom/views/omni-output-pane-view.ts",
         "./lib/omnisharp-atom/views/rename-view.ts",
+        "./lib/omnisharp-atom/views/signature-help-view.ts",
         "./lib/omnisharp-atom/views/status-bar-view.ts",
         "./lib/omnisharp-atom/views/tooltip-view.ts",
         "./lib/typings.d.ts",

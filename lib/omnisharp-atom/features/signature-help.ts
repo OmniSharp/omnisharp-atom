@@ -1,8 +1,12 @@
 import ClientManager = require('../../omni-sharp-server/client-manager');
 import OmniSharpAtom = require('../omnisharp-atom');
 import Omni = require('../../omni-sharp-server/omni')
+import SignatureHelpView = require('../views/signature-help-view');
+
 
 class SignatureHelp {
+
+    private view;
 
     constructor(private atomSharper: typeof OmniSharpAtom) {
         this.atomSharper = atomSharper;
@@ -21,6 +25,9 @@ class SignatureHelp {
         Omni.registerConfiguration(client => {
             client.observeSignatureHelp.subscribe((data) => {
                 console.log(data);
+
+                this.view = new SignatureHelpView(data.response.Signatures);
+
             });
         });
 
