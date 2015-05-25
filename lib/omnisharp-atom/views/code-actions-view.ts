@@ -5,7 +5,7 @@ class CodeActionsView extends SpacePen.SelectListView {
 
     private panel: Atom.Panel;
 
-    constructor(items : string[], private invokeNext: (result: any) => void) {
+    constructor(items : any[], private invokeNext: (result: any) => void) {
         super({ placeholderText: "Code actions" }); //note: doesn't work.
 
         this.setItems(items);
@@ -33,14 +33,15 @@ class CodeActionsView extends SpacePen.SelectListView {
         return null;
     }
 
-    public viewForItem(item: string[]) {
+    public viewForItem(item) {
+
         return SpacePen.$$(function() {
            return this.li({
                "class": 'event',
-               'data-event-name': item
+               'data-event-name': item.Name
            }, () => {
-                   return this.span(item, {
-                       title: item
+                   return this.span(item.Name, {
+                       title: item.Name
                    });
                });
        });
