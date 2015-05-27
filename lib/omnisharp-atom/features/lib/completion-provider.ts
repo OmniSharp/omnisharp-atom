@@ -100,6 +100,7 @@ var dataSource = (function() {
     }
 
     return {
+        ready: (cb: <T>() => rx.IPromise<T>) => ClientManager.getClientForActiveEditor().toPromise().then(cb),
         onNext(options: RequestOptions) {
             currentOptions = options;
             requestSubject.onNext(options);
@@ -132,31 +133,29 @@ export var CompletionProvider = {
     },
 
     getSuggestions(options: RequestOptions): rx.IPromise<Suggestion[]> {
-        if (!Omni.vm.isReady) {
-            return;
-        }
+        return dataSource.ready(() => {
+            dataSource.onNext(options);
 
-        dataSource.onNext(options);
+            var buffer = options.editor.getBuffer();
+            var end = options.bufferPosition.column;
 
-        var buffer = options.editor.getBuffer();
-        var end = options.bufferPosition.column;
-        var data = buffer.getLines()[options.bufferPosition.row].substring(0, end + 1);
+            var data = buffer.getLines()[options.bufferPosition.row].substring(0, end + 1);
+            var lastCharacterTyped = data[end - 1];
 
-        var lastCharacterTyped = data[end - 1];
+            if (!/[A-Z_0-9.]+/i.test(lastCharacterTyped)) {
+                return;
+            }
 
-        if (!/[A-Z_0-9.]+/i.test(lastCharacterTyped)) {
-            return;
-        }
+            var search = options.prefix;
+            if (search === ".")
+                search = "";
 
-        var search = options.prefix;
-        if (search === ".")
-            search = "";
+            var p = dataSource.promise();
+            if (search)
+                p = p.then(s => filter(s, search, { key: 'CompletionText' }));
 
-        var p = dataSource.promise();
-        if (search)
-            p = p.then(s => filter(s, search, { key: 'CompletionText' }));
-
-        return p.then(response => response.map(s => this.makeSuggestion(s)))
+            return p.then(response => response.map(s => this.makeSuggestion(s)))
+        });
     },
 
     onDidInsertSuggestion(editor: Atom.TextEditor, triggerPosition: TextBuffer.Point, suggestion: any) {

@@ -1,142 +1,88 @@
-import spacePenViews = require('atom-space-pen-views')
-var $ = spacePenViews.jQuery;
-var Convert = require('ansi-to-html')
-import Vue = require('vue')
 import _ = require('lodash')
 import Omni = require('../../omni-sharp-server/omni')
-import OmniSharpAtom = require('../omnisharp-atom')
+import React = require('react');
+import path = require('path');
+import {ReactClientComponent} from "./react-client-component";
 
-// Internal: A tool-panel view for find usages/implementations
-class FindPaneView extends spacePenViews.View {
-    private vm: { usages: any[] };
-    public list: any;
-    private atomSharper: typeof OmniSharpAtom;
+class FindPaneWindow extends ReactClientComponent<{}, { usages?: OmniSharp.Models.QuickFix[] }> {
+    public displayName = 'FindPaneWindow';
 
-    constructor(atomSharper: typeof OmniSharpAtom) {
-        super();
-        this.atomSharper = atomSharper;
+    constructor(props?: {}, context?: any) {
+        super({ trackClientChanges: true }, props, context);
+        this.state = { usages: [] };
     }
 
-    public static content() {
-        return this.div({
-            "class": 'error-output-pane',
-            'v-on': 'keydown: keydownPane',
-            'tabindex': '-1',
-            outlet: 'findPane'
-        }, () => {
-            return this.ol({
-                style: "cursor: pointer",
-                outlet: "list"
-            }, () => {
-                return this.li({
-                    'class': 'find-usages usage-{{$index}}',
-                    "v-repeat": "usages",
-                    "v-on": "click: gotoUsage",
-                    'v-class': 'selected: isSelected'
-                }, () => {
-                    this.pre({"class": "text-highlight"}, "{{Text}}");
-                    this.pre({"class": "inline-block"}, "{{FileName | filename}}({{Line}},{{Column}})");
-                    return this.pre({"class": "text-subtle inline-block"}, " {{FileName | dirname}}");
-                });
-            });
-        });
-    }
-
-    public initialize() {
-
-        var viewModel = new Vue({
-            el: this[0],
-            data: _.extend(Omni.vm, {
-                usages: []
-            }),
-            methods: {
-                gotoUsage: (arg) => {
-                    var targetVM;
-                    targetVM = arg.targetVM;
-                    Omni.navigateTo(targetVM.$data);
-                },
-                keydownPane: (arg) => {
-                    if (arg.keyIdentifier == 'Down') {
-                        this.selectNextItem();
-                    }
-                    else if (arg.keyIdentifier == 'Up') {
-                        this.selectPreviousItem();
-                    }
-                    else if (arg.keyIdentifier == 'Enter') {
-                        this.nagivateToSelectedItem();
-                    }
-                }
-            }
-        });
-        this.vm = <any>viewModel;
+    public componentDidMount() {
+        super.componentDidMount();
 
         Omni.registerConfiguration(client => {
-            client.observeFindusages.subscribe((data) => {
-                this.vm.usages = data.response.QuickFixes;
-                if (this.vm.usages.length > 0) {
-                    this.vm.usages[0].isSelected = true;
-                    this.scrollToItemView(0);
-                    this.list.parent().focus();
-                }
-            });
+            this.disposable.add(client.observeFindusages.subscribe((data) => {
+                this.updateModel();
+                this.setState({
+                    usages: data.response.QuickFixes
+                });
+            }));
 
-            client.observeFindimplementations.subscribe((data) => {
+            this.disposable.add(client.observeFindimplementations.subscribe((data) => {
                 if (data.response.QuickFixes.length > 1) {
-                    this.vm.usages = data.response.QuickFixes;
+                    this.updateModel();
+                    this.setState({
+                        usages: data.response.QuickFixes
+                    });
                 }
-            });
-
+            }));
         });
+    }
 
-        //tried this.atomSharper.addCommand -- but atomSharper is undefined?
-        //i guess views get loaded before OmniSharper
-        atom.commands.add('atom-workspace', 'omnisharp-atom:show-find', () => {
-            this.list.parent().focus();
-        });
+    private updateModel() {
+        if (this.state.usages.length > 0) {
+            this.state.usages[0]['isSelected'] = true;
+            this.scrollToItemView(0);
 
+            React.findDOMNode(this);//.focus();
+            //this.list.parent().focus();
+        }
     }
 
     private selectNextItem() {
-        if (!this.vm.usages) return;
+        if (!this.state.usages) return;
         var index = this.deselectCurrentItem();
         this.setCurrentItem(index + 1);
     }
 
     private selectPreviousItem() {
-        if (!this.vm.usages) return;
+        if (!this.state.usages) return;
         var index = this.deselectCurrentItem();
         this.setCurrentItem(index - 1);
     }
 
     private deselectCurrentItem(): number {
-        var index = _.findIndex(this.vm.usages, usage => usage.isSelected);
-        this.vm.usages[index].isSelected = false;
+        var index = _.findIndex(this.state.usages, usage => usage['isSelected']);
+        this.state.usages[index]['isSelected'] = false;
         return index;
     }
 
     private setCurrentItem(index) {
         if (index < 0)
             index = 0;
-        if (index >= this.vm.usages.length)
-            index = this.vm.usages.length - 1;
-        this.vm.usages[index].isSelected = true;
+        if (index >= this.state.usages.length)
+            index = this.state.usages.length - 1;
+        this.state.usages[index]['isSelected']['isSelected'] = true;
         this.scrollToItemView(index);
     }
 
     private nagivateToSelectedItem() {
-        if (!this.vm.usages) return;
-        var usage = _.find(this.vm.usages, usage => usage.isSelected);
+        if (!this.state.usages) return;
+        var usage = _.find(this.state.usages, usage => usage['isSelected']);
         if (usage) Omni.navigateTo(usage);
     }
 
-    public destroy() {
-        this.detach();
-    }
-
     private scrollToItemView(index) {
+        //React.findDOMNode(this);//.focus();
         var item = this.list.find(`li.usage-${index}`);
         if (!item || !item.position()) return;
 
+        //React.findDOMNode(this);//.focus();
         var pane = this.list.parent().parent();
         var scrollTop = pane.scrollTop();
         var desiredTop = item.position().top + scrollTop;
@@ -147,6 +93,52 @@ class FindPaneView extends spacePenViews.View {
         else if (desiredBottom > pane.scrollBottom())
             pane.scrollBottom(desiredBottom);
     }
+
+    private keydownPane(e: any) {
+        if (e.keyIdentifier == 'Down') {
+            this.selectNextItem();
+        }
+        else if (e.keyIdentifier == 'Up') {
+            this.selectPreviousItem();
+        }
+        else if (e.keyIdentifier == 'Enter') {
+            this.nagivateToSelectedItem();
+        }
+    }
+
+    private gotoUsage(quickfix: OmniSharp.Models.QuickFix) {
+        Omni.navigateTo(quickfix);
+    }
+
+    public render() {
+        return React.DOM.div({
+            className: 'error-output-pane',
+            'tabindex': '-1',
+            onKeyDown: (e) => this.keydownPane(e)
+        }, React.DOM.ol({
+            style: { cursor: "pointer" }
+        }, ..._.map(this.state.usages, (usage: OmniSharp.Models.QuickFix, index) =>
+            React.DOM.li({
+                className: 'find-usages usage-' + index + (usage['isSelected'] ? ' selected' : ''),
+                onClick: (e) => this.gotoUsage(usage)
+            },
+                React.DOM.pre({
+                    className: "text-highlight"
+                }, usage.Text),
+                React.DOM.pre({
+                    className: "inline-block"
+                }, `${path.basename(usage.FileName) }(${usage.Line},${usage.Column})`),
+                React.DOM.pre({
+                    className: "text-subtle inline-block"
+                }, `${path.dirname(usage.FileName) }`)
+                ))
+            ));
+    }
 }
 
-export = FindPaneView;
+export = function() {
+    var element = document.createElement('div');
+    element.className = 'error-output-pane';
+    React.render(React.createElement(FindPaneWindow, null), element);
+    return element;
+}

@@ -49,10 +49,6 @@ class LinterCSharp extends Linter.Linter {
     }
 
     public lintFile(filePath: string, callback): any {
-        if (!Omni.turnedOnAndReady) {
-            return;
-        }
-
         ClientManager
             .getClientForEditor(this.editor)
             .flatMap(client => client.codecheck(client.makeRequest(this.editor)))

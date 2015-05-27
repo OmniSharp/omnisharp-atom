@@ -22,21 +22,6 @@ declare module OmniSharp {
         invoke(method: string, ...args: any[]);
     }
 
-    interface vm {
-        isNotLoading: boolean;
-        isLoading: boolean;
-        isOff: boolean;
-        isNotOff: boolean;
-        isOn: boolean;
-        isNotReady: boolean;
-        isReady: boolean;
-        isNotError: boolean;
-        isError: boolean;
-        isLoadingOrReady: boolean;
-        iconText: string;
-        isOpen: boolean;
-    }
-
     interface ICompletionResult {
         word: string;
         prefix: string;

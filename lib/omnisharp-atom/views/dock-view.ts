@@ -138,10 +138,10 @@ class DockView extends spacePenViews.View {
     }
 
     private setupViews() {
-        this.findOutput.append(new FindPaneView());
+        this.findOutput.append(FindPaneView());
         this.buildOutput.append(new BuildOutputPaneView());
-        this.omniOutput.append(new OmniOutputPaneView());
-        this.errorsOutput.append(new CodeCheckOutputPaneView());
+        this.omniOutput.append(OmniOutputPaneView());
+        this.errorsOutput.append(CodeCheckOutputPaneView());
     }
 
     public selectPane = (pane) => {

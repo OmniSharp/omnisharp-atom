@@ -12,6 +12,12 @@ class Client extends OmnisharpClient {
         this.configureClient();
     }
 
+    public get isOff() { return this.currentState === DriverState.Disconnected; }
+    public get isConnecting() { return this.currentState === DriverState.Connecting; }
+    public get isOn() { return this.currentState === DriverState.Connecting || this.currentState === DriverState.Connected; }
+    public get isReady() { return this.currentState === DriverState.Connected; }
+    public get isError() { return this.currentState === DriverState.Error; }
+
     public toggle() {
         if (this.currentState === DriverState.Disconnected) {
             var path = atom && atom.project && atom.project.getPaths()[0];
@@ -77,10 +83,7 @@ class Client extends OmnisharpClient {
             this.output.push(event);
             if (this.output.length > 1000)
                 this.output.shift();
-        })
-        //.windowWithCount(1000, 1)
-        //.shareReplay(1)
-        //.flatMapLatest(z => z);
+        });
 
         this.errors.subscribe(exception => {
             console.error(exception);

@@ -10,8 +10,10 @@ import ClientManager = require('../omni-sharp-server/client-manager')
 
 import CompletionProvider = require("./features/lib/completion-provider")
 import dependencyChecker = require('./dependency-checker')
-import StatusBarView = require('./views/status-bar-view')
+import StatusBarComponent = require('./views/status-bar-view')
 import DockView = require('./views/dock-view')
+import React = require('react');
+
 //import autoCompleteProvider = require('./features/lib/completion-provider');
 
 // Configure Rx / Bluebird for long stacks
@@ -75,6 +77,9 @@ class OmniSharpAtom {
 
             _.each(this.features, x => x.invoke('activate', state));
             this.subscribeToEvents();
+            if (this.statusBar) {
+                this.consumeStatusBar(this.statusBar);
+            }
         } else {
             _.map(dependencyChecker.errors() || [], missingDependency => console.error(missingDependency))
         }
@@ -173,17 +178,17 @@ class OmniSharpAtom {
             return; //short out, if setting to not auto start is enabled
         }
         if (grammar.name === 'C#') {
-            if (Omni.vm.isOff) {
+            if (ClientManager.isOff) {
                 this.toggle();
             }
         } else if (grammar.name === "JSON") {
             if (path.basename(editor.getPath()) === "project.json") {
-                if (Omni.vm.isOff) {
+                if (ClientManager.isOff) {
                     this.toggle();
                 }
             }
         } else if (grammar.name === "C# Script File") {
-            if (Omni.vm.isOff) {
+            if (ClientManager.isOff) {
                 this.toggle()
             }
         }
@@ -191,8 +196,6 @@ class OmniSharpAtom {
     }
 
     public buildStatusBarAndDock() {
-        this.statusBar = new StatusBarView;
-
         if (!this.outputView) {
             this.outputView = new DockView(this);
         }
@@ -204,20 +207,19 @@ class OmniSharpAtom {
 
         var dependencyErrors = dependencyChecker.errors();
         if (dependencyErrors.length === 0) {
-            if (Omni.vm.isOff) {
+            if (ClientManager.isOff) {
                 this.menu = atom.menu.add(menuJson.menu);
-            } else if (this.menu) {
-                this.turnOffIcon();
-                this.menu.dispose();
-                this.menu = null;
+            } else if (ClientManager.isOn) {
+                //this.turnOffIcon();
+                ClientManager.disconnect();
+                if (this.menu) {
+                    this.menu.dispose();
+                    this.menu = null;
+                }
             }
         } else {
             _.map(dependencyErrors, missingDependency => alert(missingDependency));
         }
-    }
-
-    private turnOffIcon() {
-        this.statusBarView.turnOffIcon();
     }
 
     public deactivate() {
@@ -227,14 +229,21 @@ class OmniSharpAtom {
         // This was not defined in .coffee
         //observePackagesActivated.dispose();
         this.features = null;
-        this.statusBarView && this.statusBarView.destroy();
+        this.statusBarView && React.unmountComponentAtNode(this.statusBarView.destroy());
         this.outputView && this.outputView.destroy();
         this.autoCompleteProvider && this.autoCompleteProvider.destroy();
         ClientManager.disconnect();
     }
 
     public consumeStatusBar(statusBar) {
-        this.statusBarView = new StatusBarView(statusBar);
+        this.statusBar = statusBar;
+        this.statusBarView = document.createElement("span")
+        React.render(React.createElement(StatusBarComponent, {}), this.statusBarView);
+        statusBar.addLeftTile({
+            item: this.statusBarView,
+            priority: -1000
+        });
+
         if (!this.outputView) {
             this.outputView = new DockView(this);
         }

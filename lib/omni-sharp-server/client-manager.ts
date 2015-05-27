@@ -1,10 +1,14 @@
 import _ = require('lodash')
 import path = require('path');
-import {Observable, AsyncSubject, RefCountDisposable, Disposable, ReplaySubject} from "rx";
+import {Observable, AsyncSubject, RefCountDisposable, Disposable, ReplaySubject, Scheduler} from "rx";
 import Client = require('./client');
 import CompositeClient = require('./composite-client');
 import {findCandidates, DriverState} from "omnisharp-client";
 import OmniSharpAtom = require('../omnisharp-atom/omnisharp-atom');
+
+function getLatestObservable(client: Client) {
+
+}
 
 class ClientManager {
     private _clients: { [path: string]: Client } = {};
@@ -15,19 +19,31 @@ class ClientManager {
     private _activated = false;
     private _temporaryClients: { [path: string]: RefCountDisposable } = {};
     private _omnisharpAtom: typeof OmniSharpAtom;
+    private _activeClients: Client[] = [];
 
-    private _aggregateClient = new CompositeClient();
-    public get aggregateClient() { return this._aggregateClient; }
+    //private _aggregateClient = new CompositeClient();
+    //public get aggregateClient() { return this._aggregateClient; }
+
+    public _clientsSubject = new ReplaySubject<Client[]>(1);
+    private _clientStateObservable = this._clientsSubject
+        .flatMap(x => Observable.combineLatest(x.map(z => z.state), function(...values) { return values; }));
+
+    private _isOff = true;
+    public get isOff() { return this._isOff; }
+    public get isOn() { return !this.isOff; }
+
+    public get state() { return this._clientStateObservable; }
 
     private _activeClient = new ReplaySubject<Client>(1);
-    public get activeClient() : Observable<Client> { return this._activeClient; }
+    public get activeClient(): Observable<Client> { return this._activeClient; }
 
     public get numberOfClients() {
         return this._clientPaths.length;
     }
 
     constructor() {
-
+        this._clientsSubject.onNext(this._activeClients);
+        this._clientStateObservable.subscribe(z => this._isOff = _.all(z, x => x === DriverState.Disconnected || x === DriverState.Error));
     }
 
     public activate(omnisharpAtom: typeof OmniSharpAtom) {
@@ -96,14 +112,17 @@ class ClientManager {
         }
 
         if (!temporary) {
-            this._aggregateClient.add(client);
+            //this._aggregateClient.add(client);
         }
+
 
         // Auto start, with a little delay
         if (atom.config.get('omnisharp-atom.autoStartOnCompatibleFile')) {
             _.delay(() => client.connect(), delay);
         }
 
+        this._activeClients.push(client);
+        this._clientsSubject.onNext(this._activeClients);
         return client;
     }
 
@@ -122,7 +141,9 @@ class ClientManager {
         delete this._clients[candidate];
         client.disconnect();
         _.pull(this._clientPaths, candidate);
-        this._aggregateClient.remove(client);
+        _.pull(this._activeClients, client);
+        //this._aggregateClient.remove(client);
+        this._clientsSubject.onNext(this._activeClients);
     }
 
     public getClientForActiveEditor() {
