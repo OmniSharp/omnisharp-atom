@@ -8,13 +8,30 @@ import Omni = require('../../omni-sharp-server/omni')
 // Internal: A tool-panel view for find usages/implementations
 class FindPaneView extends spacePenViews.View {
     private vm: { usages: any[] };
+    public list: any;
 
     public static content() {
         return this.div({
             "class": 'error-output-pane',
             outlet: 'atomSharpFindPane'
         }, () => {
-                this.ul({
+            this.input();
+            return this.ol({
+                style: "cursor: pointer",
+                outlet: "list"
+            }, () => {
+                return this.li({
+                    'class': 'find-usages',
+                    "v-repeat": "usages",
+                    "v-on": "click: gotoUsage",
+                }, () => {
+                    this.pre({"class": "text-highlight"}, "{{Text}}");
+                    this.pre({"class": "inline-block"}, "{{FileName | filename}}({{Line}},{{Column}})");
+                    return this.pre({"class": "text-subtle inline-block"}, " {{FileName | dirname}}");
+                });
+            });
+
+                /*this.ul({
                     "class": 'background-message centered',
                     'v-class': 'hide: isLoadingOrReady'
                 }, () => {
@@ -57,7 +74,7 @@ class FindPaneView extends spacePenViews.View {
                                     return this.td('{{FileName}}');
                                 });
                         });
-                    });
+                    });*/
             });
     }
 
@@ -81,6 +98,7 @@ class FindPaneView extends spacePenViews.View {
         Omni.registerConfiguration(client => {
             client.observeFindusages.subscribe((data) => {
                 this.vm.usages = data.response.QuickFixes;
+                this.selectItemView(this.list.find('li:first'));
             });
 
             client.observeFindimplementations.subscribe((data) => {
@@ -89,10 +107,55 @@ class FindPaneView extends spacePenViews.View {
                 }
             });
         });
+
+        atom.commands.add(this.element, {
+            'core:move-down' : (event: Event) => {
+                this.selectNextItemView();
+                event.stopPropagation();
+            },
+            'core:move-up': (event: Event) => {
+                this.selectPreviousItemView();
+                event.stopPropagation();
+            }
+        });
     }
 
     public destroy() {
         this.detach();
+    }
+
+    private selectItemView(view) {
+        if (!view.length) return;
+        this.list.find('.selected').removeClass('selected');
+        view.addClass('selected');
+        this.scrollToItemView(view);
+    }
+
+    private selectNextItemView() {
+        var view = this.getSelectedItemView().next();
+        if (!view.length) view = this.list.find('li:first');
+        this.selectItemView(view);
+    }
+
+    private selectPreviousItemView() {
+        var view = this.getSelectedItemView().prev();
+        if (!view.length) view = this.list.find('li:last');
+        this.selectItemView(view);
+    }
+
+    private getSelectedItemView() {
+        return this.list.find('li.selected');
+    }
+
+    private scrollToItemView(view) {
+          var scrollTop = this.list.scrollTop();
+          var desiredTop = view.position().top + scrollTop;
+          var desiredBottom = desiredTop + view.outerHeight();
+
+        if (desiredTop < scrollTop)
+            this.list.scrollTop(desiredTop);
+        else if (desiredBottom > this.list.scrollBottom())
+            this.list.scrollBottom(desiredBottom);
     }
 }
 export = FindPaneView;
