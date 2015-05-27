@@ -1,4 +1,3 @@
-import ClientManager = require('../../omni-sharp-server/client-manager');
 import Omni = require('../../omni-sharp-server/omni')
 import OmniSharpAtom = require('../omnisharp-atom')
 
@@ -11,8 +10,7 @@ class GoToImplementation {
     }
 
     public goToImplementation() {
-        ClientManager.getClientForActiveEditor()
-            .subscribe(client => client.findimplementations(client.makeRequest()));
+        Omni.request(client => client.findimplementations(client.makeRequest()));
     }
 
     public activate() {
@@ -22,14 +20,12 @@ class GoToImplementation {
             return this.goToImplementation();
         });
 
-        ClientManager.registerConfiguration(client => {
-            client.observeFindimplementations.subscribe((data) => {
-                if (data.response.QuickFixes.length == 1) {
-                    Omni.navigateTo(data.response.QuickFixes[0]);
-                } else {
-                    this.atomSharper.outputView.selectPane("find");
-                }
-            });
+        Omni.listen.observeFindimplementations.subscribe((data) => {
+            if (data.response.QuickFixes.length == 1) {
+                Omni.navigateTo(data.response.QuickFixes[0]);
+            } else {
+                this.atomSharper.outputView.selectPane("find");
+            }
         });
     }
 

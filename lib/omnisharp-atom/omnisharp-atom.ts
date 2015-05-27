@@ -6,8 +6,7 @@ import a = require("atom")
 var Emitter = (<any>a).Emitter
 
 import Omni = require('../omni-sharp-server/omni')
-import ClientManager = require('../omni-sharp-server/client-manager')
-
+import ClientManager = require('../omni-sharp-server/client-manager');
 import CompletionProvider = require("./features/lib/completion-provider")
 import dependencyChecker = require('./dependency-checker')
 import StatusBarComponent = require('./views/status-bar-view')

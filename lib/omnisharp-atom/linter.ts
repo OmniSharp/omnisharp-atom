@@ -1,7 +1,6 @@
 var linterPath = atom.packages.resolvePackagePath("linter");
 var Linter = { Linter: <typeof Linter.Linter>require(`${linterPath}/lib/linter`) };
 import Omni = require('../omni-sharp-server/omni');
-import ClientManager = require('../omni-sharp-server/client-manager');
 import _ = require('lodash');
 var Range = require('atom').Range;
 
@@ -49,9 +48,7 @@ class LinterCSharp extends Linter.Linter {
     }
 
     public lintFile(filePath: string, callback): any {
-        ClientManager
-            .getClientForEditor(this.editor)
-            .flatMap(client => client.codecheck(client.makeRequest(this.editor)))
+        Omni.request(this.editor, client => client.codecheck(client.makeRequest(this.editor)))
             .subscribe(data => {
                 var errors = _.map(data.QuickFixes, (error: OmniSharp.Models.DiagnosticLocation): LinterError => {
                     var line = error.Line - 1;

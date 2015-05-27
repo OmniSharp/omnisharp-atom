@@ -18,7 +18,6 @@ class ClientManager {
     private _projectPaths: string[] = [];
     private _activated = false;
     private _temporaryClients: { [path: string]: RefCountDisposable } = {};
-    private _omnisharpAtom: typeof OmniSharpAtom;
     private _activeClients: Client[] = [];
 
     private _aggregateClient = new CompositeClient();
@@ -37,10 +36,6 @@ class ClientManager {
     private _activeClient = new ReplaySubject<Client>(1);
     public get activeClient(): Observable<Client> { return this._activeClient; }
 
-    public get numberOfClients() {
-        return this._clientPaths.length;
-    }
-
     constructor() {
         this._clientsSubject.onNext(this._activeClients);
         this._clientStateObservable.subscribe(z => this._isOff = _.all(z, x => x === DriverState.Disconnected || x === DriverState.Error));
@@ -48,11 +43,10 @@ class ClientManager {
 
     public activate(omnisharpAtom: typeof OmniSharpAtom) {
         this._activated = true;
-        this._omnisharpAtom = omnisharpAtom;
         this.updatePaths(atom.project.getPaths());
         atom.project.onDidChangePaths((paths) => this.updatePaths(paths));
 
-        this._omnisharpAtom.activeEditor
+        omnisharpAtom.activeEditor
             .where(z => !!z)
             .flatMap(z => this.getClientForEditor(z))
             .subscribe(x => this._activeClient.onNext(x));
@@ -111,17 +105,13 @@ class ClientManager {
             this._temporaryClients[candidate] = new RefCountDisposable(tempD);
         }
 
-        if (!temporary) {
-            this._aggregateClient.add(client);
-        }
-
-
         // Auto start, with a little delay
         if (atom.config.get('omnisharp-atom.autoStartOnCompatibleFile')) {
             _.delay(() => client.connect(), delay);
         }
 
         this._activeClients.push(client);
+        this._aggregateClient.add(client);
         this._clientsSubject.onNext(this._activeClients);
         return client;
     }
@@ -146,7 +136,7 @@ class ClientManager {
         this._clientsSubject.onNext(this._activeClients);
     }
 
-    public getClientForActiveEditor() {
+    private getClientForActiveEditor() {
         var editor = atom.workspace.getActiveTextEditor();
         var client: Observable<Client>;
         if (editor)

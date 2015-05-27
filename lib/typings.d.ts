@@ -37,4 +37,9 @@ declare module OmniSharp {
         message: string;
         logLevel?: string;
     }
+
+    interface ExtendApi extends OmniSharp.Api {
+        makeRequest(editor?: Atom.TextEditor, buffer?: TextBuffer.TextBuffer): OmniSharp.Models.Request;
+        makeDataRequest<T>(data: T, editor?: Atom.TextEditor, buffer?: TextBuffer.TextBuffer): T;
+    }
 }

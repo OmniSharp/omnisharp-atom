@@ -36,15 +36,13 @@ var dataSource = (function() {
     var currentOptions: RequestOptions;
 
     function getResults(options: RequestOptions) {
-        return ClientManager
-            .getClientForActiveEditor()
-            .flatMap(client=> client.autocomplete(client.makeDataRequest<OmniSharp.Models.AutoCompleteRequest>({
-                WordToComplete: '',
-                WantDocumentationForEveryCompletionResult: false,
-                WantKind: true,
-                WantSnippet: true,
-                WantReturnType: true
-            })))
+        return Omni.request(client=> client.autocomplete(client.makeDataRequest<OmniSharp.Models.AutoCompleteRequest>({
+            WordToComplete: '',
+            WantDocumentationForEveryCompletionResult: false,
+            WantKind: true,
+            WantSnippet: true,
+            WantReturnType: true
+        })))
             .map(completions => {
                 if (completions == null) {
                     completions = [];
@@ -100,7 +98,7 @@ var dataSource = (function() {
     }
 
     return {
-        ready: (cb: <T>() => rx.IPromise<T>) => ClientManager.getClientForActiveEditor().toPromise().then(cb),
+        ready: (cb: <T>() => rx.IPromise<T>) => Omni.activeClient.toPromise().then(cb),
         onNext(options: RequestOptions) {
             currentOptions = options;
             requestSubject.onNext(options);

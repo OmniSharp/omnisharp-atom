@@ -1,6 +1,6 @@
 import {CompositeDisposable, Disposable, Scheduler} from "rx";
 import _ = require('lodash')
-import ClientManager = require('../../omni-sharp-server/client-manager');
+import Omni = require('../../omni-sharp-server/omni');
 import Client = require('../../omni-sharp-server/client');
 import React = require('react');
 
@@ -18,7 +18,7 @@ export class ReactClientComponent<P, S> extends React.Component<P, S> {
     public componentDidMount() {
         this.disposable = new CompositeDisposable();
 
-        this.disposable.add(ClientManager.activeClient.subscribe(client => {
+        this.disposable.add(Omni.activeClient.subscribe(client => {
             if (client && client !== this.client) {
                 this.changeActiveClient(client);
             }

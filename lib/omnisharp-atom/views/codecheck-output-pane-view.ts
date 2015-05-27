@@ -3,7 +3,6 @@ import _ = require('lodash')
 import path = require('path')
 
 import Omni = require('../../omni-sharp-server/omni')
-import ClientManager = require("../../omni-sharp-server/client-manager");
 import React = require('react');
 import {ReactClientComponent} from "./react-client-component";
 
@@ -19,18 +18,16 @@ class CodeCheckOutputPaneWindow extends ReactClientComponent<{}, { errors?: Omni
     public componentDidMount() {
         super.componentDidMount();
 
-        ClientManager.registerConfiguration(client => {
-            this.disposable.add(client.observeCodecheck
-                .where(z => z.request.FileName === null)
-                .subscribe((data) => {
-                    this.setState({
-                        errors: _.sortBy(this.filterOnlyWarningsAndErrors(data.response.QuickFixes),
-                            (quickFix: OmniSharp.Models.DiagnosticLocation) => {
-                                return quickFix.LogLevel;
-                            })
-                    });
-                }));
-        });
+        this.disposable.add(Omni.listen.observeCodecheck
+            .where(z => z.request.FileName === null)
+            .subscribe((data) => {
+                this.setState({
+                    errors: _.sortBy(this.filterOnlyWarningsAndErrors(data.response.QuickFixes),
+                        (quickFix: OmniSharp.Models.DiagnosticLocation) => {
+                            return quickFix.LogLevel;
+                        })
+                });
+            }));
     }
 
     private goToLine(location: OmniSharp.Models.DiagnosticLocation) {
@@ -58,7 +55,7 @@ class CodeCheckOutputPaneWindow extends ReactClientComponent<{}, { errors?: Omni
                 React.DOM.pre({ className: "text-highlight" }, error.Text),
                 React.DOM.pre({ className: "inline-block" }, `${filename}(${error.Line},${error.Column})`),
                 React.DOM.pre({ className: "text-subtle inline-block" }, ` ${dirname}  [${projectTargetFramework}]`)
-            )
+                )
         }));
     }
 }

@@ -1,7 +1,6 @@
 // Inspiration : https://atom.io/packages/ide-haskell
 // and https://atom.io/packages/ide-flow
 // https://atom.io/packages/atom-typescript
-import ClientManager = require('../../omni-sharp-server/client-manager');
 import Omni = require('../../omni-sharp-server/omni');
 import path = require('path');
 import fs = require('fs');
@@ -92,7 +91,7 @@ class Tooltip implements rx.Disposable {
     }
 
     private showExpressionTypeOnMouseOver(e: MouseEvent) {
-        if (!ClientManager.connected) {
+        if (!Omni.isOn) {
             return;
         }
 
@@ -134,8 +133,8 @@ class Tooltip implements rx.Disposable {
         // characterIndexForPosition should return a number
         //var position = buffer.characterIndexForPosition(bufferPt);
         // Actually make the program manager query
-        ClientManager.getClientForActiveEditor()
-            .flatMap(client => client.typelookup({
+
+        Omni.request(client => client.typelookup({
                 IncludeDocumentation: true,
                 Line: bufferPt.row + 1,
                 Column: bufferPt.column + 1,
