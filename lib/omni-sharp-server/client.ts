@@ -24,15 +24,23 @@ class Client extends OmnisharpClient {
             this.connect({
                 projectPath: path
             });
-
-            this.log("Starting OmniSharp server (pid:" + this.id + ")");
-            this.log("OmniSharp Location: " + this.serverPath);
-            this.log("Change the location that OmniSharp is loaded from by setting the OMNISHARP environment variable");
-            this.log("OmniSharp Path: " + this.projectPath);
         } else {
             this.disconnect();
-            this.log("Omnisharp server stopped.");
         }
+    }
+
+    public connect(options?) {
+        super.connect(options);
+
+        this.log("Starting OmniSharp server (pid:" + this.id + ")");
+        this.log("OmniSharp Location: " + this.serverPath);
+        this.log("Change the location that OmniSharp is loaded from by setting the OMNISHARP environment variable");
+        this.log("OmniSharp Path: " + this.projectPath);
+    }
+
+    public disconnect() {
+        super.disconnect();
+        this.log("Omnisharp server stopped.");
     }
 
     public getEditorContext(editor: Atom.TextEditor): OmniSharp.Models.Request {

@@ -177,6 +177,11 @@ class OmniSharpAtom {
         if (!atom.config.get('omnisharp-atom.autoStartOnCompatibleFile')) {
             return; //short out, if setting to not auto start is enabled
         }
+
+
+        if (ClientManager.isOn && !this.menu)
+            this.toggleMenu();
+
         if (grammar.name === 'C#') {
             if (ClientManager.isOff) {
                 this.toggle();
@@ -201,17 +206,22 @@ class OmniSharpAtom {
         }
     }
 
-    public toggle() {
+    private toggleMenu() {
         var menuJsonFile = this.getPackageDir() + "/omnisharp-atom/menus/omnisharp-menu.json";
         var menuJson = JSON.parse(fs.readFileSync(menuJsonFile, 'utf8'));
+        this.menu = atom.menu.add(menuJson.menu);
+    }
 
+    public toggle() {
         var dependencyErrors = dependencyChecker.errors();
         if (dependencyErrors.length === 0) {
             if (ClientManager.isOff) {
-                this.menu = atom.menu.add(menuJson.menu);
+                ClientManager.connect();
+                this.toggleMenu();
             } else if (ClientManager.isOn) {
                 //this.turnOffIcon();
                 ClientManager.disconnect();
+
                 if (this.menu) {
                     this.menu.dispose();
                     this.menu = null;
