@@ -21,8 +21,8 @@ class ClientManager {
     private _omnisharpAtom: typeof OmniSharpAtom;
     private _activeClients: Client[] = [];
 
-    //private _aggregateClient = new CompositeClient();
-    //public get aggregateClient() { return this._aggregateClient; }
+    private _aggregateClient = new CompositeClient();
+    public get aggregateClient() { return this._aggregateClient; }
 
     public _clientsSubject = new ReplaySubject<Client[]>(1);
     private _clientStateObservable = this._clientsSubject
@@ -112,7 +112,7 @@ class ClientManager {
         }
 
         if (!temporary) {
-            //this._aggregateClient.add(client);
+            this._aggregateClient.add(client);
         }
 
 
@@ -142,7 +142,7 @@ class ClientManager {
         client.disconnect();
         _.pull(this._clientPaths, candidate);
         _.pull(this._activeClients, client);
-        //this._aggregateClient.remove(client);
+        this._aggregateClient.remove(client);
         this._clientsSubject.onNext(this._activeClients);
     }
 
