@@ -2,7 +2,7 @@ import {Disposable} from "rx";
 var Convert = require('ansi-to-html');
 import _ = require('lodash')
 import Omni = require('../../omni-sharp-server/omni')
-import Client = require('../../omni-sharp-server/client');
+import ClientVM = require('../../omni-sharp-server/view-model');
 import React = require('react');
 import {ReactClientComponent} from "./react-client-component";
 
@@ -13,7 +13,7 @@ class OutputWindow extends ReactClientComponent<{}, { output?: OmniSharp.OutputM
     private _currentSubscription: Disposable;
 
     constructor(props?: {}, context?: any) {
-        super({ trackClientChanges: false }, props, context);
+        super(props, context);
         this._convert = new Convert();
         this.state = { output: [] };
     }
@@ -23,18 +23,18 @@ class OutputWindow extends ReactClientComponent<{}, { output?: OmniSharp.OutputM
         if (item) item.scrollIntoViewIfNeeded();
     }
 
-    public changeActiveClient(client: Client) {
-        super.changeActiveClient(client);
+    public changeActiveClient(model: ClientVM) {
+        super.changeActiveClient(model);
         this._currentSubscription && this._currentSubscription.dispose();
 
-        this._currentSubscription = client.events
+        this._currentSubscription = model.client.events
             .throttle(100)
             .subscribe(z => {
                 this.setState({}, () => this.scrollToBottom());
             });
 
         this.setState({
-            output: client.output
+            output: model.output
         }, () => this.scrollToBottom());
     }
 

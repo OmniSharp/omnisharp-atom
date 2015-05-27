@@ -16,6 +16,8 @@ class Omni {
     public static get isOff() { return manager.isOff; }
     public static get isOn() { return manager.isOn; }
 
+/**
+*/
     public static navigateTo(response: { FileName: string; Line: number; Column: number; }) {
         atom.workspace.open(response.FileName, undefined)
             .then((editor) => {
@@ -35,6 +37,7 @@ class Omni {
     }
 
     private static _client: Client;
+
     public static request<T>(editor: Atom.TextEditor, callback: (client: OmniSharp.ExtendApi) => Rx.Observable<T> | Rx.IPromise<T>);
     public static request<T>(callback: (client: OmniSharp.ExtendApi) => Rx.Observable<T> | Rx.IPromise<T>);
     public static request<T>(editor: Atom.TextEditor | ((client: OmniSharp.ExtendApi) => Rx.Observable<T> | Rx.IPromise<T>), callback?: (client: OmniSharp.ExtendApi) => Rx.Observable<T> | Rx.IPromise<T>) {
@@ -63,12 +66,12 @@ class Omni {
         // Ensure that the underying promise is connected
         //   (if we don't subscribe to the reuslt of the request, which is not a requirement).
         var sub = result.subscribe(() => sub.dispose());
-        
+
         return result;
     }
 
-    public static get activeClient() {
-        return manager.activeClient;
+    public static get activeModel() {
+        return manager.activeClient.map(z => z.model);
     }
 
     public static get state() {

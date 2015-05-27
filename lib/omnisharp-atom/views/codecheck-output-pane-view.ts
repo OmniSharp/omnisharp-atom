@@ -11,7 +11,7 @@ class CodeCheckOutputPaneWindow extends ReactClientComponent<{}, { errors?: Omni
     public displayName = 'FindPaneWindow';
 
     constructor(props?: {}, context?: any) {
-        super({ trackClientChanges: false }, props, context);
+        super(props, context);
         this.state = { errors: [] };
     }
 

@@ -98,7 +98,7 @@ var dataSource = (function() {
     }
 
     return {
-        ready: (cb: <T>() => rx.IPromise<T>) => Omni.activeClient.toPromise().then(cb),
+        ready: (cb: <T>() => rx.IPromise<T>) => Omni.activeModel.toPromise().then(cb),
         onNext(options: RequestOptions) {
             currentOptions = options;
             requestSubject.onNext(options);

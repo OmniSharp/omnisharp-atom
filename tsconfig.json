@@ -1,12 +1,11 @@
 {
-    "version": "1.4.1",
+    "version": "1.5.0-beta",
     "compilerOptions": {
         "target": "es5",
         "module": "commonjs",
         "declaration": false,
         "noImplicitAny": false,
-        "removeComments": true,
-        "noLib": false
+        "removeComments": false
     },
     "formatCodeOptions": {
         "indentSize": 4,
@@ -34,6 +33,7 @@
         "./lib/omni-sharp-server/client.ts",
         "./lib/omni-sharp-server/composite-client.ts",
         "./lib/omni-sharp-server/omni.ts",
+        "./lib/omni-sharp-server/view-model.ts",
         "./lib/omnisharp-atom/dependency-checker.ts",
         "./lib/omnisharp-atom/features/code-action.ts",
         "./lib/omnisharp-atom/features/code-check.ts",

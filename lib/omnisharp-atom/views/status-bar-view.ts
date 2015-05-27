@@ -9,22 +9,21 @@ import {ReactClientComponent} from "./react-client-component";
 class StatusBarComponent extends ReactClientComponent<{}, { errorCount?: number; warningCount?: number }> {
 
     constructor(props?: {}, context?: any) {
-        super({ trackClientChanges: true }, props, context);
+        super(props, context);
         this.state = { errorCount: 0, warningCount: 0 };
     }
 
     private getIconClassName() {
-
         var cls = ["icon", "icon-flame"];
-        if (!this.client || this.client.isOff)
+        if (!this.model || this.model.isOff)
             cls.push('text-subtle');
 
-        if (this.client) {
-            if (this.client.isReady)
+        if (this.model) {
+            if (this.model.isReady)
                 cls.push('text-success')
-            if (this.client.isError)
+            if (this.model.isError)
                 cls.push('text-error')
-            if (this.client.isConnecting)
+            if (this.model.isConnecting)
                 cls.push('icon-flame-loading')
         }
         return cls.join(' ');
@@ -55,7 +54,8 @@ class StatusBarComponent extends ReactClientComponent<{}, { errorCount?: number;
     }
 
     public render() {
-        var hasClientAndIsReady = this.client && this.client.isReady;
+        var hasClientAndIsReady = this.model && this.model.isReady;
+
         return React.DOM.div({
             className: "inline-block"
         }, React.DOM.a({
@@ -67,7 +67,7 @@ class StatusBarComponent extends ReactClientComponent<{}, { errorCount?: number;
         })),
             React.DOM.a({
                 href: '#',
-                className: 'inline-block error-warning-summary' + (!hasClientAndIsReady && ' hide' || ''),
+                className: 'inline-block error-warning-summary' + (!hasClientAndIsReady ? ' hide'  : ''),
                 onClick: (e) => this.toggleErrorWarningPanel()
             },
                 React.DOM.span({

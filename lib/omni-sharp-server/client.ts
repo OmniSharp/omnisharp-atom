@@ -1,22 +1,18 @@
 import _ = require('lodash');
 import {Observable} from 'rx';
 import {OmnisharpClient, DriverState, OmnisharpClientOptions} from "omnisharp-client";
+import ViewModel = require("./view-model");
 
 class Client extends OmnisharpClient {
+    public model: ViewModel;
     public uniqueId = _.uniqueId("client");
-    public output: OmniSharp.OutputMessage[] = [];
     public logs: Observable<OmniSharp.OutputMessage>;
 
     constructor(public path: string, options: OmnisharpClientOptions) {
         super(options);
         this.configureClient();
+        this.model = new ViewModel(this);
     }
-
-    public get isOff() { return this.currentState === DriverState.Disconnected; }
-    public get isConnecting() { return this.currentState === DriverState.Connecting; }
-    public get isOn() { return this.currentState === DriverState.Connecting || this.currentState === DriverState.Connected; }
-    public get isReady() { return this.currentState === DriverState.Connected; }
-    public get isError() { return this.currentState === DriverState.Error; }
 
     public toggle() {
         if (this.currentState === DriverState.Disconnected) {
@@ -88,9 +84,9 @@ class Client extends OmnisharpClient {
         }));
 
         this.logs.subscribe(event => {
-            this.output.push(event);
-            if (this.output.length > 1000)
-                this.output.shift();
+            this.model.output.push(event);
+            if (this.model.output.length > 1000)
+                this.model.output.shift();
         });
 
         this.errors.subscribe(exception => {
@@ -114,3 +110,9 @@ class Client extends OmnisharpClient {
 }
 
 export = Client;
+
+// Hack to workaround issue with ts.transpile not working correctly
+(function(Client: any) {
+    Client.connect = Client.prototype.connect;
+    Client.disconnect = Client.prototype.disconnect;
+})(OmnisharpClient);

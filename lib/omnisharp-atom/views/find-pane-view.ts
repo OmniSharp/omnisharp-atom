@@ -8,8 +8,9 @@ class FindPaneWindow extends ReactClientComponent<{}, { usages?: OmniSharp.Model
     public displayName = 'FindPaneWindow';
 
     constructor(props?: {}, context?: any) {
-        super({ trackClientChanges: true }, props, context);
+        super(props, context);
         this.state = { usages: [] };
+        this.trackClientChanges = true;
     }
 
     public componentDidMount() {
@@ -71,6 +72,7 @@ class FindPaneWindow extends ReactClientComponent<{}, { usages?: OmniSharp.Model
         this.scrollToItemView(index);
     }
 
+<<<<<<< HEAD
     private nagivateToSelectedItem() {
         if (!this.state.usages) return;
         var usage = _.find(this.state.usages, usage => usage['isSelected']);
@@ -100,6 +102,14 @@ class FindPaneWindow extends ReactClientComponent<{}, { usages?: OmniSharp.Model
         }
         else if (e.keyIdentifier == 'Up') {
             this.selectPreviousItem();
+=======
+        if (this.model && this.model.isConnecting) {
+            return React.DOM.ul({
+                className: 'background-message centered'
+            }, React.DOM.li({}, React.DOM.progress({
+                className: 'inline-block'
+            })));
+>>>>>>> Added model property to client, for use as a view model
         }
         else if (e.keyIdentifier == 'Enter') {
             this.nagivateToSelectedItem();
