@@ -33,7 +33,7 @@ class StatusBarComponent extends ReactClientComponent<{}, { errorCount?: number;
     public componentDidMount() {
         super.componentDidMount();
 
-        Omni.registerConfiguration(client => {
+        ClientManager.registerConfiguration(client => {
             this.disposable.add(client.observeCodecheck
                 .where(z => z.request.FileName === null)
                 .subscribe((data) => {

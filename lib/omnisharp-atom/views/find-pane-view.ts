@@ -1,5 +1,6 @@
 import _ = require('lodash')
 import Omni = require('../../omni-sharp-server/omni')
+import ClientManager = require('../../omni-sharp-server/client-manager');
 import React = require('react');
 import path = require('path');
 import {ReactClientComponent} from "./react-client-component";
@@ -15,7 +16,7 @@ class FindPaneWindow extends ReactClientComponent<{}, { usages?: OmniSharp.Model
     public componentDidMount() {
         super.componentDidMount();
 
-        Omni.registerConfiguration(client => {
+        ClientManager.registerConfiguration(client => {
             this.disposable.add(client.observeFindusages.subscribe((data) => {
                 this.updateModel();
                 this.setState({

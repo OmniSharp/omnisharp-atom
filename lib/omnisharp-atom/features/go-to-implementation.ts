@@ -22,7 +22,7 @@ class GoToImplementation {
             return this.goToImplementation();
         });
 
-        Omni.registerConfiguration(client => {
+        ClientManager.registerConfiguration(client => {
             client.observeFindimplementations.subscribe((data) => {
                 if (data.response.QuickFixes.length == 1) {
                     Omni.navigateTo(data.response.QuickFixes[0]);

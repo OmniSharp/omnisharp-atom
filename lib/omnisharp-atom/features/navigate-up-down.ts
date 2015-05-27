@@ -22,7 +22,7 @@ class Navigate {
             return this.navigateDown();
         });
 
-        Omni.registerConfiguration(client => {
+        ClientManager.registerConfiguration(client => {
             client.observeNavigateup.subscribe((data) => this.navigateTo(data.response));
             client.observeNavigatedown.subscribe((data) => this.navigateTo(data.response));
         });

@@ -19,10 +19,6 @@ class Omni {
         });
     }
 
-    public static registerConfiguration(callback: (client: Client) => void) {
-        manager.registerConfiguration(callback);
-    }
-
     public static getFrameworks(projects: string[]): string {
         var frameworks = _.map(projects, (project: string) => {
             return project.indexOf('+') === -1 ? '' : project.split('+')[1];

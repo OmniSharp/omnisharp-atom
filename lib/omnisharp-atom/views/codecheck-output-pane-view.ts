@@ -3,6 +3,7 @@ import _ = require('lodash')
 import path = require('path')
 
 import Omni = require('../../omni-sharp-server/omni')
+import ClientManager = require("../../omni-sharp-server/client-manager");
 import React = require('react');
 import {ReactClientComponent} from "./react-client-component";
 
@@ -18,7 +19,7 @@ class CodeCheckOutputPaneWindow extends ReactClientComponent<{}, { errors?: Omni
     public componentDidMount() {
         super.componentDidMount();
 
-        Omni.registerConfiguration(client => {
+        ClientManager.registerConfiguration(client => {
             this.disposable.add(client.observeCodecheck
                 .where(z => z.request.FileName === null)
                 .subscribe((data) => {
