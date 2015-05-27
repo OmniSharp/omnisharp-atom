@@ -1,7 +1,6 @@
 import OmniSelectListView = require('../features/lib/omni-select-list-view');
 import ClientManager = require('../../omni-sharp-server/client-manager');
 import Omni = require('../../omni-sharp-server/omni');
-import $ = require('jquery');
 
 class FindSymbolsView extends OmniSelectListView {
 
@@ -11,6 +10,7 @@ class FindSymbolsView extends OmniSelectListView {
             this.storeFocusedElement();
             this.panel = atom.workspace.addModalPanel({ item: this });
             this.focusFilterEditor();
+            this.setMaxItems(50);
         }
 
     public viewForItem(item) {

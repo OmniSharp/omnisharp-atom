@@ -27,6 +27,7 @@ When the flame icon in the bottom left corner turns green, the server has starte
 # Features
 
 - `F12` or `cmd-d` Go to definition - can also ctrl-click or cmd-click
+  `shift-alt-t` or `ctrl-,` Find type
 - `ctrl-F12` Go to implementation
 - `shift-F12` Find usages
 - `ctrl-k, ctrl-d` Format document

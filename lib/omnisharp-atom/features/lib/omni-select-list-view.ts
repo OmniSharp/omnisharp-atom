@@ -1,6 +1,4 @@
 import SpacePen = require('atom-space-pen-views');
-import ClientManager = require('../../../omni-sharp-server/client-manager');
-import Omni = require('../../../omni-sharp-server/omni');
 import $ = require('jquery');
 
 class OmniSelectListView extends SpacePen.SelectListView {
@@ -56,7 +54,7 @@ class OmniSelectListView extends SpacePen.SelectListView {
     public getMinQueryLength() : number {
         return 0;
     }
-    
+
     public cancelled() {
         this.panel.destroy();
     }
