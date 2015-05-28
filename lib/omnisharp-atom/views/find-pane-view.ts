@@ -4,78 +4,42 @@ var Convert = require('ansi-to-html')
 import Vue = require('vue')
 import _ = require('lodash')
 import Omni = require('../../omni-sharp-server/omni')
+import OmniSharpAtom = require('../omnisharp-atom')
 
 // Internal: A tool-panel view for find usages/implementations
 class FindPaneView extends spacePenViews.View {
     private vm: { usages: any[] };
     public list: any;
+    private atomSharper: typeof OmniSharpAtom;
+
+    constructor(atomSharper: typeof OmniSharpAtom) {
+        super();
+        this.atomSharper = atomSharper;
+    }
 
     public static content() {
         return this.div({
             "class": 'error-output-pane',
-            outlet: 'atomSharpFindPane'
+            'v-on': 'keydown: keydownPane',
+            'tabindex': '-1',
+            outlet: 'findPane'
         }, () => {
-            this.input();
             return this.ol({
                 style: "cursor: pointer",
                 outlet: "list"
             }, () => {
                 return this.li({
-                    'class': 'find-usages',
+                    'class': 'find-usages usage-{{$index}}',
                     "v-repeat": "usages",
                     "v-on": "click: gotoUsage",
+                    'v-class': 'selected: isSelected'
                 }, () => {
                     this.pre({"class": "text-highlight"}, "{{Text}}");
                     this.pre({"class": "inline-block"}, "{{FileName | filename}}({{Line}},{{Column}})");
                     return this.pre({"class": "text-subtle inline-block"}, " {{FileName | dirname}}");
                 });
             });
-
-                /*this.ul({
-                    "class": 'background-message centered',
-                    'v-class': 'hide: isLoadingOrReady'
-                }, () => {
-                        return this.li(() => {
-                            this.span('Omnisharp server is turned off');
-                            return this.kbd({
-                                "class": 'key-binding text-highlight'
-                            }, '⌃⌥O');
-                        });
-                    });
-                this.ul({
-                    "class": 'background-message centered',
-                    'v-class': 'hide: isNotLoading'
-                }, () => {
-                        return this.li(() => {
-                            return this.progress({
-                                "class": 'inline-block'
-                            });
-                        });
-                    });
-                return this.table({
-                    "class": 'error-table',
-                    'v-class': 'hide: isNotReady'
-                }, () => {
-                        this.thead(() => {
-                            this.th('line');
-                            this.th('column');
-                            this.th('message');
-                            return this.th('filename');
-                        });
-                        return this.tbody(() => {
-                            var data;
-                            return this.tr({
-                                'v-repeat': 'usages',
-                                'v-on': 'click: gotoUsage'
-                            }, data = '{{$index}}', () => {
-                                    this.td('{{Line}}');
-                                    this.td('{{Column}}');
-                                    this.td('{{Text}}');
-                                    return this.td('{{FileName}}');
-                                });
-                        });
-                    });*/
-            });
+        });
     }
 
     public initialize() {
@@ -90,6 +54,17 @@ class FindPaneView extends spacePenViews.View {
                     var targetVM;
                     targetVM = arg.targetVM;
                     Omni.navigateTo(targetVM.$data);
+                },
+                keydownPane: (arg) => {
+                    if (arg.keyIdentifier == 'Down') {
+                        this.selectNextItem();
+                    }
+                    else if (arg.keyIdentifier == 'Up') {
+                        this.selectPreviousItem();
+                    }
+                    else if (arg.keyIdentifier == 'Enter') {
+                        this.nagivateToSelectedItem();
+                    }
                 }
             }
         });
@@ -98,7 +73,11 @@ class FindPaneView extends spacePenViews.View {
         Omni.registerConfiguration(client => {
             client.observeFindusages.subscribe((data) => {
                 this.vm.usages = data.response.QuickFixes;
-                this.selectItemView(this.list.find('li:first'));
+                if (this.vm.usages.length > 0) {
+                    this.vm.usages[0].isSelected = true;
+                    this.scrollToItemView(0);
+                    this.list.parent().focus();
+                }
             });
 
             client.observeFindimplementations.subscribe((data) => {
@@ -106,56 +85,68 @@ class FindPaneView extends spacePenViews.View {
                     this.vm.usages = data.response.QuickFixes;
                 }
             });
+
         });
 
-        atom.commands.add(this.element, {
-            'core:move-down' : (event: Event) => {
-                this.selectNextItemView();
-                event.stopPropagation();
-            },
-            'core:move-up': (event: Event) => {
-                this.selectPreviousItemView();
-                event.stopPropagation();
-            }
+        //tried this.atomSharper.addCommand -- but atomSharper is undefined?
+        //i guess views get loaded before OmniSharper
+        atom.commands.add('atom-workspace', 'omnisharp-atom:show-find', () => {
+            this.list.parent().focus();
         });
+
+    }
+
+    private selectNextItem() {
+        if (!this.vm.usages) return;
+        var index = this.deselectCurrentItem();
+        this.setCurrentItem(index + 1);
+    }
+
+    private selectPreviousItem() {
+        if (!this.vm.usages) return;
+        var index = this.deselectCurrentItem();
+        this.setCurrentItem(index - 1);
+    }
+
+    private deselectCurrentItem(): number {
+        var index = _.findIndex(this.vm.usages, usage => usage.isSelected);
+        this.vm.usages[index].isSelected = false;
+        return index;
+    }
+
+    private setCurrentItem(index) {
+        if (index < 0)
+            index = 0;
+        if (index >= this.vm.usages.length)
+            index = this.vm.usages.length - 1;
+        this.vm.usages[index].isSelected = true;
+        this.scrollToItemView(index);
+    }
+
+    private nagivateToSelectedItem() {
+        if (!this.vm.usages) return;
+        var usage = _.find(this.vm.usages, usage => usage.isSelected);
+        if (usage) Omni.navigateTo(usage);
     }
 
     public destroy() {
         this.detach();
     }
 
-    private selectItemView(view) {
-        if (!view.length) return;
-        this.list.find('.selected').removeClass('selected');
-        view.addClass('selected');
-        this.scrollToItemView(view);
-    }
+    private scrollToItemView(index) {
+        var item = this.list.find(`li.usage-${index}`);
+        if (!item || !item.position()) return;
 
-    private selectNextItemView() {
-        var view = this.getSelectedItemView().next();
-        if (!view.length) view = this.list.find('li:first');
-        this.selectItemView(view);
-    }
-
-    private selectPreviousItemView() {
-        var view = this.getSelectedItemView().prev();
-        if (!view.length) view = this.list.find('li:last');
-        this.selectItemView(view);
-    }
-
-    private getSelectedItemView() {
-        return this.list.find('li.selected');
-    }
-
-    private scrollToItemView(view) {
-          var scrollTop = this.list.scrollTop();
-          var desiredTop = view.position().top + scrollTop;
-          var desiredBottom = desiredTop + view.outerHeight();
+        var pane = this.list.parent().parent();
+        var scrollTop = pane.scrollTop();
+        var desiredTop = item.position().top + scrollTop;
+        var desiredBottom = desiredTop + item.outerHeight();
 
         if (desiredTop < scrollTop)
-            this.list.scrollTop(desiredTop);
-        else if (desiredBottom > this.list.scrollBottom())
-            this.list.scrollBottom(desiredBottom);
+            pane.scrollTop(desiredTop);
+        else if (desiredBottom > pane.scrollBottom())
+            pane.scrollBottom(desiredBottom);
     }
 }
+
 export = FindPaneView;
