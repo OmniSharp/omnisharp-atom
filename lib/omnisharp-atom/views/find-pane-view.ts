@@ -17,14 +17,14 @@ class FindPaneWindow extends ReactClientComponent<{}, { usages?: OmniSharp.Model
         super.componentDidMount();
 
         ClientManager.registerConfiguration(client => {
-            this.disposable.add(Omni.listen.observeFindusages.subscribe((data) => {
+            this.disposable.add(Omni.listener.observeFindusages.subscribe((data) => {
                 this.updateModel();
                 this.setState({
                     usages: data.response.QuickFixes
                 });
             }));
 
-            this.disposable.add(Omni.listen.observeFindimplementations.subscribe((data) => {
+            this.disposable.add(Omni.listener.observeFindimplementations.subscribe((data) => {
                 if (data.response.QuickFixes.length > 1) {
                     this.updateModel();
                     this.setState({

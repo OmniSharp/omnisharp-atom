@@ -16,8 +16,6 @@ class Omni {
     public static get isOff() { return manager.isOff; }
     public static get isOn() { return manager.isOn; }
 
-/**
-*/
     public static navigateTo(response: { FileName: string; Line: number; Column: number; }) {
         atom.workspace.open(response.FileName, undefined)
             .then((editor) => {
@@ -32,12 +30,30 @@ class Omni {
         return frameworks.join(',');
     }
 
-    public static get listen() {
-        return manager.aggregateClient;
+    /**
+    * This property can be used to listen to any event that might come across on any clients.
+    * This is a mostly functional replacement for `registerConfiguration`, though there has been
+    *     one place where `registerConfiguration` could not be replaced.
+    */
+    public static get listener() {
+        return manager.observationClient;
     }
 
-    private static _client: Client;
+    /**
+    * This property can be used to observe to the aggregate or combined responses to any event.
+    * A good example of this is, for code check errors, to aggregate all errors across all open solutions.
+    */
+    public static get combination() {
+        return manager.combinationClient;
+    }
 
+    /**
+    * This method allows us to forget about the entire client model.
+    * Call this method with a specific editor, or just with a callback to capture the current editor
+    *
+    * The callback will then issue the request
+    * NOTE: This API only exposes the operation Api and doesn't expose the event api, as we are requesting something to happen
+    */
     public static request<T>(editor: Atom.TextEditor, callback: (client: OmniSharp.ExtendApi) => Rx.Observable<T> | Rx.IPromise<T>);
     public static request<T>(callback: (client: OmniSharp.ExtendApi) => Rx.Observable<T> | Rx.IPromise<T>);
     public static request<T>(editor: Atom.TextEditor | ((client: OmniSharp.ExtendApi) => Rx.Observable<T> | Rx.IPromise<T>), callback?: (client: OmniSharp.ExtendApi) => Rx.Observable<T> | Rx.IPromise<T>) {
@@ -70,12 +86,11 @@ class Omni {
         return result;
     }
 
+    /**
+    * Allows for views to observe the active model as it changes between editors
+    */
     public static get activeModel() {
         return manager.activeClient.map(z => z.model);
-    }
-
-    public static get state() {
-        return manager.state;
     }
 
     public static registerConfiguration(callback: (client: Client) => void) {

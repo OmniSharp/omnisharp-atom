@@ -11,6 +11,7 @@ class StatusBarComponent extends ReactClientComponent<{}, { errorCount?: number;
     constructor(props?: {}, context?: any) {
         super(props, context);
         this.state = { errorCount: 0, warningCount: 0 };
+        this.trackClientChanges = true;
     }
 
     private getIconClassName() {
@@ -32,17 +33,20 @@ class StatusBarComponent extends ReactClientComponent<{}, { errorCount?: number;
     public componentDidMount() {
         super.componentDidMount();
 
-        ClientManager.registerConfiguration(client => {
-            this.disposable.add(client.observeCodecheck
-                .where(z => z.request.FileName === null)
-                .subscribe((data) => {
-                    var counts = _.countBy(data.response.QuickFixes, (quickFix: OmniSharp.Models.DiagnosticLocation) => quickFix.LogLevel);
-                    this.setState({
-                        errorCount: counts['Error'] || 0,
-                        warningCount: counts['Warning'] || 0
-                    })
-                }));
-        });
+        this.disposable.add(Omni.combination.observe(z => z.observeCodecheck
+            .where(z => z.request.FileName === null)
+            .map(z => z.response.QuickFixes))
+            // TODO: Allow filtering by client, project
+            .map(z => z.map(z => z.value || [])) // value can be null!
+            //.debounce(200)
+            .subscribe((data) => {
+                var fixes = _.flatten<OmniSharp.Models.QuickFix>(data);
+                var counts = _.countBy(fixes, (quickFix: OmniSharp.Models.DiagnosticLocation) => quickFix.LogLevel);
+                this.setState({
+                    errorCount: counts['Error'] || 0,
+                    warningCount: counts['Warning'] || 0
+                });
+            }));
     }
 
     public toggle() {
@@ -54,7 +58,7 @@ class StatusBarComponent extends ReactClientComponent<{}, { errorCount?: number;
     }
 
     public render() {
-        var hasClientAndIsReady = this.model && this.model.isReady;
+        var hasClientAndIsOn = this.model && this.model.isOn;
 
         return React.DOM.div({
             className: "inline-block"
@@ -67,7 +71,7 @@ class StatusBarComponent extends ReactClientComponent<{}, { errorCount?: number;
         })),
             React.DOM.a({
                 href: '#',
-                className: 'inline-block error-warning-summary' + (!hasClientAndIsReady ? ' hide'  : ''),
+                className: 'inline-block error-warning-summary' + (!hasClientAndIsOn ? ' hide'  : ''),
                 onClick: (e) => this.toggleErrorWarningPanel()
             },
                 React.DOM.span({

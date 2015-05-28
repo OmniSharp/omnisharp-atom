@@ -21,8 +21,8 @@ class Navigate {
             return this.navigateDown();
         });
 
-        Omni.listen.observeNavigateup.subscribe((data) => this.navigateTo(data.response));
-        Omni.listen.observeNavigatedown.subscribe((data) => this.navigateTo(data.response));
+        Omni.listener.observeNavigateup.subscribe((data) => this.navigateTo(data.response));
+        Omni.listener.observeNavigatedown.subscribe((data) => this.navigateTo(data.response));
     }
 
     private navigateTo(data: OmniSharp.Models.NavigateResponse) {

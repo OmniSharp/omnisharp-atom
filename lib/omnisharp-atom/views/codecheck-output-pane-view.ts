@@ -18,11 +18,16 @@ class CodeCheckOutputPaneWindow extends ReactClientComponent<{}, { errors?: Omni
     public componentDidMount() {
         super.componentDidMount();
 
-        this.disposable.add(Omni.listen.observeCodecheck
+        this.disposable.add(Omni.combination.observe(z => z.observeCodecheck
             .where(z => z.request.FileName === null)
+            .map(z => z.response.QuickFixes))
+            // TODO: Allow filtering by client, project
+            .map(z => z.map(z => z.value || [])) // value can be null!
+            .debounce(200)
             .subscribe((data) => {
+                var fixes = _.flatten<OmniSharp.Models.QuickFix>(data);
                 this.setState({
-                    errors: _.sortBy(this.filterOnlyWarningsAndErrors(data.response.QuickFixes),
+                    errors: _.sortBy(this.filterOnlyWarningsAndErrors(fixes),
                         (quickFix: OmniSharp.Models.DiagnosticLocation) => {
                             return quickFix.LogLevel;
                         })

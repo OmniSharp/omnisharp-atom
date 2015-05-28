@@ -20,7 +20,7 @@ class GoToImplementation {
             return this.goToImplementation();
         });
 
-        Omni.listen.observeFindimplementations.subscribe((data) => {
+        Omni.listener.observeFindimplementations.subscribe((data) => {
             if (data.response.QuickFixes.length == 1) {
                 Omni.navigateTo(data.response.QuickFixes[0]);
             } else {

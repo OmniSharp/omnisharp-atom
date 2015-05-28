@@ -1,7 +1,7 @@
 import _ = require('lodash');
 import {Observable} from 'rx';
-import {OmnisharpCompositeClient, ICompositeObservable} from "omnisharp-client";
+import {OmnisharpObservationClient, OmnisharpCombinationClient} from "omnisharp-client";
 import Client = require("./client");
 
-class CompositeClient extends OmnisharpCompositeClient<Client> { }
-export = CompositeClient;
+export class ObservationClient extends OmnisharpObservationClient<Client> { }
+export class CombinationClient extends OmnisharpCombinationClient<Client> { }

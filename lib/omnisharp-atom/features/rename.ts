@@ -16,7 +16,7 @@ class Rename {
             this.rename();
         });
 
-        Omni.listen.observeRename.subscribe((data) => {
+        Omni.listener.observeRename.subscribe((data) => {
             this.applyAllChanges(data.response.Changes);
         });
     }

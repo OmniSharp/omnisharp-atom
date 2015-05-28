@@ -17,7 +17,7 @@ export class ReactClientComponent<P, S> extends React.Component<P, S> {
     public componentDidMount() {
         this.disposable = new CompositeDisposable();
 
-        this.disposable.add(Omni.activeModel.subscribe(client => {
+        this.disposable.add(Omni.activeModel.debounce(10).subscribe(client => {
             if (client && client !== this.model) {
                 this.changeActiveClient(client);
             }
@@ -29,7 +29,7 @@ export class ReactClientComponent<P, S> extends React.Component<P, S> {
         if (this.trackClientChanges) {
             this.setState(<any>{});
             if (this._clientChangeSubscription) this._clientChangeSubscription.dispose();
-            this._clientChangeSubscription = model.client.state.delaySubscription(0, Scheduler.timeout).subscribe(z => this.setState(<any>{}));
+            this._clientChangeSubscription = model.client.state.debounce(10).subscribe(z => this.setState(<any>{}));
         }
     }
 

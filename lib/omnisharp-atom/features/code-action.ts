@@ -27,7 +27,7 @@ class CodeAction {
             Omni.request(client => client.getcodeactionsPromise(client.makeRequest()));
         });
 
-        Omni.listen.observeGetcodeactions.subscribe((data) => {
+        Omni.listener.observeGetcodeactions.subscribe((data) => {
             //hack: this is a temporary workaround until the server
             //can give us code actions based on an Id.
             var wrappedCodeActions = this.WrapCodeActionWithFakeIdGeneration(data.response)
@@ -44,7 +44,7 @@ class CodeAction {
             });
         });
 
-        Omni.listen.observeRuncodeaction.subscribe((data) => {
+        Omni.listener.observeRuncodeaction.subscribe((data) => {
             this.applyAllChanges(data.response.Changes);
         });
     }
