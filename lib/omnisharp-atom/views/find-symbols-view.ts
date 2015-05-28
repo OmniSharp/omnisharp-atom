@@ -6,10 +6,7 @@ class FindSymbolsView extends OmniSelectListView {
 
      constructor() {
             super("Find Symbols");
-            this.setItems([]);
-            this.storeFocusedElement();
-            this.panel = atom.workspace.addModalPanel({ item: this });
-            this.focusFilterEditor();
+            
             this.setMaxItems(50);
         }
 
