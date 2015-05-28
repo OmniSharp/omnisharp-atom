@@ -6,10 +6,6 @@ import {ObservationClient, CombinationClient} from './composite-client';
 import {findCandidates, DriverState} from "omnisharp-client";
 import OmniSharpAtom = require('../omnisharp-atom/omnisharp-atom');
 
-function getLatestObservable(client: Client) {
-
-}
-
 class ClientManager {
     private _clients: { [path: string]: Client } = {};
     private _configurations: ((client: Client) => void)[] = [];
