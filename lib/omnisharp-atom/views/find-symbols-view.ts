@@ -1,5 +1,4 @@
 import OmniSelectListView = require('../features/lib/omni-select-list-view');
-import ClientManager = require('../../omni-sharp-server/client-manager');
 import Omni = require('../../omni-sharp-server/omni');
 
 class FindSymbolsView extends OmniSelectListView {
@@ -34,10 +33,10 @@ class FindSymbolsView extends OmniSelectListView {
     }
 
     public onFilter(filter : string) : void {
-        ClientManager.getClientForActiveEditor().subscribe(client => {
+        Omni.request(client => {
             var request = <OmniSharp.Models.FindSymbolsRequest>client.makeRequest();
             request.Filter = filter;
-            client.findsymbolsPromise(request);
+            return client.findsymbolsPromise(request);
         });
     }
 

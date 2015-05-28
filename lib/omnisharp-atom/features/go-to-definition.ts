@@ -1,4 +1,3 @@
-import ClientManager = require('../../omni-sharp-server/client-manager');
 import _ = require('lodash');
 import Omni = require('../../omni-sharp-server/omni');
 import OmniSharpAtom = require('../omnisharp-atom');
@@ -15,8 +14,7 @@ class GoToDefinition {
         var editor = atom.workspace.getActiveTextEditor();
         if (editor) {
             var word = <any>editor.getWordUnderCursor();
-            ClientManager.getClientForEditor(editor)
-                .flatMap(client => client.gotodefinition(client.makeRequest()))
+            Omni.request(editor, client => client.gotodefinition(client.makeRequest()))
                 .subscribe((data) => {
                     if (data.FileName != null) {
                         Omni.navigateTo(data);
@@ -108,12 +106,11 @@ class GoToDefinition {
             this.marker.bufferMarker.range.compare(wordRange) === 0)
             return;
 
-        ClientManager.getClientForEditor(editor)
-            .flatMap(client => client.gotodefinition({
-                Line: bufferPt.row + 1,
-                Column: bufferPt.column + 1,
-                FileName: editor.getURI()
-            }))
+        Omni.request(editor, client => client.gotodefinition({
+            Line: bufferPt.row + 1,
+            Column: bufferPt.column + 1,
+            FileName: editor.getURI()
+        }))
             .subscribe(data => {
                 if (data.FileName !== null) {
                     this.removeMarker();

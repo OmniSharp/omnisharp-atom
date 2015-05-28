@@ -17,24 +17,9 @@ declare var WeakMap: WeakMapConstructor;
 
 declare module OmniSharp {
     interface IFeature {
-        name:string;
-        path:string;
-        invoke(method:string, ...args: any[]);
-    }
-
-    interface vm {
-        isNotLoading: boolean;
-        isLoading: boolean;
-        isOff: boolean;
-        isNotOff: boolean;
-        isOn: boolean;
-        isNotReady: boolean;
-        isReady: boolean;
-        isNotError: boolean;
-        isError: boolean;
-        isLoadingOrReady: boolean;
-        iconText: string;
-        isOpen: boolean;
+        name: string;
+        path: string;
+        invoke(method: string, ...args: any[]);
     }
 
     interface ICompletionResult {
@@ -45,6 +30,16 @@ declare module OmniSharp {
     }
 
     interface VueArray<T> extends Array<T> {
-        $remove(index:number);
+        $remove(index: number);
+    }
+
+    interface OutputMessage {
+        message: string;
+        logLevel?: string;
+    }
+
+    interface ExtendApi extends OmniSharp.Api {
+        makeRequest(editor?: Atom.TextEditor, buffer?: TextBuffer.TextBuffer): OmniSharp.Models.Request;
+        makeDataRequest<T>(data: T, editor?: Atom.TextEditor, buffer?: TextBuffer.TextBuffer): T;
     }
 }

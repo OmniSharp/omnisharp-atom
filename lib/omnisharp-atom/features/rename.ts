@@ -1,6 +1,6 @@
 import _ = require('lodash')
 import RenameView = require('../views/rename-view')
-import Omni = require('../../omni-sharp-server/omni')
+import Omni = require('../../omni-sharp-server/omni');
 import Changes = require('./lib/apply-changes')
 import OmnisharpAtom = require('../omnisharp-atom');
 
@@ -16,10 +16,8 @@ class Rename {
             this.rename();
         });
 
-        Omni.registerConfiguration(client => {
-            client.observeRename.subscribe((data) => {
-                this.applyAllChanges(data.response.Changes);
-            })
+        Omni.listener.observeRename.subscribe((data) => {
+            this.applyAllChanges(data.response.Changes);
         });
     }
 

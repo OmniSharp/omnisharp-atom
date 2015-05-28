@@ -1,16 +1,18 @@
 import _ = require('lodash')
+import {Observable, BehaviorSubject} from "rx";
+import path = require('path');
 import fs = require('fs')
 import a = require("atom")
 var Emitter = (<any>a).Emitter
 
 import Omni = require('../omni-sharp-server/omni')
-import ClientManager = require('../omni-sharp-server/client-manager')
-
+import ClientManager = require('../omni-sharp-server/client-manager');
 import CompletionProvider = require("./features/lib/completion-provider")
 import dependencyChecker = require('./dependency-checker')
-import StatusBarView = require('./views/status-bar-view')
+import StatusBarComponent = require('./views/status-bar-view')
 import DockView = require('./views/dock-view')
-import path = require('path');
+import React = require('react');
+
 //import autoCompleteProvider = require('./features/lib/completion-provider');
 
 // Configure Rx / Bluebird for long stacks
@@ -45,6 +47,7 @@ class Feature implements OmniSharp.IFeature {
 class OmniSharpAtom {
     private features: OmniSharp.IFeature[];
     private observeEditors: { dispose: Function };
+    private activeEditorAtomDisposable: { dispose: Function };
     private emitter: EventKit.Emitter;
     public statusBarView;
     public outputView;
@@ -53,8 +56,11 @@ class OmniSharpAtom {
     private generator: { run(generator: string, path?: string): void; start(prefix: string, path?: string): void; };
     private menu: EventKit.Disposable;
 
+    private _activeEditor = new BehaviorSubject<Atom.TextEditor>(null);
+    private _activeEditorObservable = this._activeEditor.replay(z => z, 1);
+    public get activeEditor() : Observable<Atom.TextEditor> { return this._activeEditorObservable; }
+
     public activate(state) {
-        ClientManager.activate();
         atom.commands.add('atom-workspace', 'omnisharp-atom:toggle', () => this.toggle());
         atom.commands.add('atom-workspace', 'omnisharp-atom:new-application', () => this.generator.run("aspnet:app"));
         atom.commands.add('atom-workspace', 'omnisharp-atom:new-class', () => this.generator.run("aspnet:Class"));
@@ -64,11 +70,15 @@ class OmniSharpAtom {
         this.outputView = new DockView(this);
 
         if (dependencyChecker.findAllDeps(this.getPackageDir())) {
+            ClientManager.activate(this);
             this.emitter = new Emitter;
             this.features = this.loadFeatures();
 
             _.each(this.features, x => x.invoke('activate', state));
             this.subscribeToEvents();
+            if (this.statusBar) {
+                this.consumeStatusBar(this.statusBar);
+            }
         } else {
             _.map(dependencyChecker.errors() || [], missingDependency => console.error(missingDependency))
         }
@@ -139,6 +149,19 @@ class OmniSharpAtom {
 
             this.detectAutoToggleGrammar(editor);
         });
+
+        this.activeEditorAtomDisposable = atom.workspace.observeActivePaneItem((pane: any) => {
+            if (pane && pane.getGrammar) {
+                var grammarName = pane.getGrammar().name;
+                if (grammarName === 'C#' || grammarName === 'C# Script File') {
+                    this._activeEditor.onNext(pane);
+                    return;
+                }
+            }
+
+            // This will tell us when the editor is no longer an appropriate editor
+            this._activeEditor.onNext(null);
+        });
     }
 
     private detectAutoToggleGrammar(editor: Atom.TextEditor) {
@@ -153,18 +176,23 @@ class OmniSharpAtom {
         if (!atom.config.get('omnisharp-atom.autoStartOnCompatibleFile')) {
             return; //short out, if setting to not auto start is enabled
         }
+
+
+        if (ClientManager.isOn && !this.menu)
+            this.toggleMenu();
+
         if (grammar.name === 'C#') {
-            if (Omni.vm.isOff) {
+            if (ClientManager.isOff) {
                 this.toggle();
             }
         } else if (grammar.name === "JSON") {
             if (path.basename(editor.getPath()) === "project.json") {
-                if (Omni.vm.isOff) {
+                if (ClientManager.isOff) {
                     this.toggle();
                 }
             }
         } else if (grammar.name === "C# Script File") {
-            if (Omni.vm.isOff) {
+            if (ClientManager.isOff) {
                 this.toggle()
             }
         }
@@ -172,33 +200,35 @@ class OmniSharpAtom {
     }
 
     public buildStatusBarAndDock() {
-        this.statusBar = new StatusBarView;
-
         if (!this.outputView) {
             this.outputView = new DockView(this);
         }
     }
 
-    public toggle() {
+    private toggleMenu() {
         var menuJsonFile = this.getPackageDir() + "/omnisharp-atom/menus/omnisharp-menu.json";
         var menuJson = JSON.parse(fs.readFileSync(menuJsonFile, 'utf8'));
+        this.menu = atom.menu.add(menuJson.menu);
+    }
 
+    public toggle() {
         var dependencyErrors = dependencyChecker.errors();
         if (dependencyErrors.length === 0) {
-            if (Omni.vm.isOff) {
-                this.menu = atom.menu.add(menuJson.menu);
-            } else if (this.menu) {
-                this.turnOffIcon();
-                this.menu.dispose();
-                this.menu = null;
+            if (ClientManager.isOff) {
+                ClientManager.connect();
+                this.toggleMenu();
+            } else if (ClientManager.isOn) {
+                //this.turnOffIcon();
+                ClientManager.disconnect();
+
+                if (this.menu) {
+                    this.menu.dispose();
+                    this.menu = null;
+                }
             }
         } else {
             _.map(dependencyErrors, missingDependency => alert(missingDependency));
         }
-    }
-
-    private turnOffIcon() {
-        this.statusBarView.turnOffIcon();
     }
 
     public deactivate() {
@@ -208,14 +238,21 @@ class OmniSharpAtom {
         // This was not defined in .coffee
         //observePackagesActivated.dispose();
         this.features = null;
-        this.statusBarView && this.statusBarView.destroy();
+        this.statusBarView && React.unmountComponentAtNode(this.statusBarView.destroy());
         this.outputView && this.outputView.destroy();
         this.autoCompleteProvider && this.autoCompleteProvider.destroy();
         ClientManager.disconnect();
     }
 
     public consumeStatusBar(statusBar) {
-        this.statusBarView = new StatusBarView(statusBar);
+        this.statusBar = statusBar;
+        this.statusBarView = document.createElement("span")
+        React.render(React.createElement(StatusBarComponent, {}), this.statusBarView);
+        statusBar.addLeftTile({
+            item: this.statusBarView,
+            priority: -1000
+        });
+
         if (!this.outputView) {
             this.outputView = new DockView(this);
         }
@@ -244,6 +281,12 @@ class OmniSharpAtom {
         developerMode: {
             title: 'Developer Mode',
             description: 'Outputs detailed server calls in console.log',
+            type: 'boolean',
+            default: false
+        },
+        showDiagnosticsForAllSolutions: {
+            title: 'Show Diagnostics for all Solutions',
+            description: 'Advanced: This will show diagnostics for all open solutions.  NOTE: May take a restart or change to each server to take effect when turned on.',
             type: 'boolean',
             default: false
         }

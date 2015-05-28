@@ -36,15 +36,13 @@ var dataSource = (function() {
     var currentOptions: RequestOptions;
 
     function getResults(options: RequestOptions) {
-        return ClientManager
-            .getClientForActiveEditor()
-            .flatMap(client=> client.autocomplete(client.makeDataRequest<OmniSharp.Models.AutoCompleteRequest>({
-                WordToComplete: '',
-                WantDocumentationForEveryCompletionResult: false,
-                WantKind: true,
-                WantSnippet: true,
-                WantReturnType: true
-            })))
+        return Omni.request(client=> client.autocomplete(client.makeDataRequest<OmniSharp.Models.AutoCompleteRequest>({
+            WordToComplete: '',
+            WantDocumentationForEveryCompletionResult: false,
+            WantKind: true,
+            WantSnippet: true,
+            WantReturnType: true
+        })))
             .map(completions => {
                 if (completions == null) {
                     completions = [];
@@ -132,16 +130,12 @@ export var CompletionProvider = {
     },
 
     getSuggestions(options: RequestOptions): rx.IPromise<Suggestion[]> {
-        if (!Omni.vm.isReady) {
-            return;
-        }
-
         dataSource.onNext(options);
 
         var buffer = options.editor.getBuffer();
         var end = options.bufferPosition.column;
-        var data = buffer.getLines()[options.bufferPosition.row].substring(0, end + 1);
 
+        var data = buffer.getLines()[options.bufferPosition.row].substring(0, end + 1);
         var lastCharacterTyped = data[end - 1];
 
         if (!/[A-Z_0-9.]+/i.test(lastCharacterTyped)) {

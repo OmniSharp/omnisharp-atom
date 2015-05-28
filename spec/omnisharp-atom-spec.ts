@@ -41,14 +41,4 @@ describe('OmniSharp Atom', () => {
             });
         });
     });
-    return describe('toggling atomsharper', () => {
-        return describe('when you toggle atomsharper on', () => {
-            beforeEach(() => {
-                atom.commands.dispatch(atom.views.getView(atom.workspace), 'omnisharp-atom:toggle')
-            });
-            return it('should start the omnisharp server', () => {
-                return expect(Omni.vm.isNotOff).toBeTruthy();
-            });
-        });
-    });
 });

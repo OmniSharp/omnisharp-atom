@@ -1,11 +1,16 @@
 import _ = require('lodash');
 import {Observable} from 'rx';
 import {OmnisharpClient, DriverState, OmnisharpClientOptions} from "omnisharp-client";
+import ViewModel = require("./view-model");
 
-class Client extends  OmnisharpClient {
-    constructor(options: OmnisharpClientOptions) {
+class Client extends OmnisharpClient {
+    public model: ViewModel;
+    public logs: Observable<OmniSharp.OutputMessage>;
+
+    constructor(public path: string, options: OmnisharpClientOptions) {
         super(options);
         this.configureClient();
+        this.model = new ViewModel(this);
     }
 
     public toggle() {
@@ -14,11 +19,23 @@ class Client extends  OmnisharpClient {
             this.connect({
                 projectPath: path
             });
-            atom.emitter.emit("omni-sharp-server:start", { pid: this.id, path: this.projectPath, exePath: this.serverPath});
         } else {
             this.disconnect();
-            atom.emitter.emit("omni-sharp-server:stop");
         }
+    }
+
+    public connect(options?) {
+        super.connect(options);
+
+        this.log("Starting OmniSharp server (pid:" + this.id + ")");
+        this.log("OmniSharp Location: " + this.serverPath);
+        this.log("Change the location that OmniSharp is loaded from by setting the OMNISHARP environment variable");
+        this.log("OmniSharp Path: " + this.projectPath);
+    }
+
+    public disconnect() {
+        super.disconnect();
+        this.log("Omnisharp server stopped.");
     }
 
     public getEditorContext(editor: Atom.TextEditor): OmniSharp.Models.Request {
@@ -60,26 +77,16 @@ class Client extends  OmnisharpClient {
     }
 
     private configureClient() {
-        this.events.subscribe(event => {
+        this.logs = this.events.map(event => ({
+            message: event.Body && event.Body.Message || event.Event || '',
+            logLevel: event.Body && event.Body.LogLevel || (event.Type === "error" && 'ERROR') || 'INFORMATION'
+        }));
 
-            if (event.Type === "error") {
-                atom.emitter.emit("omni-sharp-server:err", {
-                    message: event.Body && event.Body.Message || event.Event || '',
-                    logLevel: event.Body && event.Body.LogLevel || 'ERROR'
-                });
-            } else {
-                atom.emitter.emit("omni-sharp-server:out", {
-                    message: event.Body && event.Body.Message || event.Event || '',
-                    logLevel: event.Body && event.Body.LogLevel || 'INFORMATION'
-                });
-
-                if (typeof(event.Event) !== "undefined" && event.Event !== "unknown") {
-                    atom.emitter.emit("omni-sharp-server:event", {
-                        Event: event.Event,
-                        Body: event.Body
-                    });
-                }
-            }
+        // Manage our build log for display
+        this.logs.subscribe(event => {
+            this.model.output.push(event);
+            if (this.model.output.length > 1000)
+                this.model.output.shift();
         });
 
         this.errors.subscribe(exception => {
@@ -103,3 +110,9 @@ class Client extends  OmnisharpClient {
 }
 
 export = Client;
+
+// Hack to workaround issue with ts.transpile not working correctly
+(function(Client: any) {
+    Client.connect = Client.prototype.connect;
+    Client.disconnect = Client.prototype.disconnect;
+})(OmnisharpClient);

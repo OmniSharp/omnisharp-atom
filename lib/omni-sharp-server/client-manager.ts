@@ -1,8 +1,10 @@
 import _ = require('lodash')
 import path = require('path');
+import {Observable, AsyncSubject, RefCountDisposable, Disposable, ReplaySubject, Scheduler} from "rx";
 import Client = require('./client');
+import {ObservationClient, CombinationClient} from './composite-client';
 import {findCandidates, DriverState} from "omnisharp-client";
-import {Observable, AsyncSubject, RefCountDisposable, Disposable} from "rx";
+import OmniSharpAtom = require('../omnisharp-atom/omnisharp-atom');
 
 class ClientManager {
     private _clients: { [path: string]: Client } = {};
@@ -13,10 +15,43 @@ class ClientManager {
     private _activated = false;
     private _temporaryClients: { [path: string]: RefCountDisposable } = {};
 
-    public activate() {
+    public get activeClients() { return this._activeClients.slice() }
+    private _activeClients: Client[] = [];
+
+    // this client can be used to observe behavior across all clients.
+    private _observationClient = new ObservationClient();
+    public get observationClient() { return this._observationClient; }
+
+    // this client can be used to aggregate behavior across all clients
+    private _combinationClient = new CombinationClient();
+    public get combinationClient() { return this._combinationClient; }
+
+    private _isOff = true;
+    public get isOff() { return this._isOff; }
+    public get isOn() { return !this.isOff; }
+
+    private _activeClient = new ReplaySubject<Client>(1);
+    private _activeClientObserable = this._activeClient.distinctUntilChanged();
+    public get activeClient(): Observable<Client> { return this._activeClientObserable; }
+
+    constructor() {
+        // we are only off if all our clients are disconncted or erroed.
+        this._combinationClient.state.subscribe(z => this._isOff = _.all(z, x => x.value === DriverState.Disconnected || x.value === DriverState.Error));
+    }
+
+    public activate(omnisharpAtom: typeof OmniSharpAtom) {
         this._activated = true;
+
+        // monitor atom project paths
         this.updatePaths(atom.project.getPaths());
         atom.project.onDidChangePaths((paths) => this.updatePaths(paths));
+
+        // We use the active editor on omnisharpAtom to
+        // create another observable that chnages when we get a new client.
+        omnisharpAtom.activeEditor
+            .where(z => !!z)
+            .flatMap(z => this.getClientForEditor(z))
+            .subscribe(x => this._activeClient.onNext(x));
     }
 
     public connect() {
@@ -53,10 +88,13 @@ class ClientManager {
     }
 
     private addClient(candidate: string, localPaths: string[], delay = 1200, temporary?: boolean) {
+        if (this._clients[candidate])
+            return;
+
         localPaths.push(candidate);
         this._clientPaths.push(candidate);
 
-        var client = new Client({
+        var client = new Client(candidate, {
             projectPath: candidate
         });
 
@@ -64,7 +102,7 @@ class ClientManager {
         this._clients[candidate] = client;
 
         if (temporary) {
-            var tempD = Disposable.create(() => {});
+            var tempD = Disposable.create(() => { });
             tempD.dispose();
             this._temporaryClients[candidate] = new RefCountDisposable(tempD);
         }
@@ -74,6 +112,10 @@ class ClientManager {
             _.delay(() => client.connect(), delay);
         }
 
+        // keep track of the active clients
+        this._activeClients.push(client);
+        this._observationClient.add(client);
+        this._combinationClient.add(client);
         return client;
     }
 
@@ -88,13 +130,17 @@ class ClientManager {
             delete this._temporaryClients[candidate];
         }
 
+        // keep track of the removed clients
         var client = this._clients[candidate];
         delete this._clients[candidate];
         client.disconnect();
         _.pull(this._clientPaths, candidate);
+        _.pull(this._activeClients, client);
+        this._observationClient.remove(client);
+        this._combinationClient.remove(client);
     }
 
-    public getClientForActiveEditor() {
+    private getClientForActiveEditor() {
         var editor = atom.workspace.getActiveTextEditor();
         var client: Observable<Client>;
         if (editor)

@@ -4,8 +4,8 @@ import FindSymbolsView = require('../views/find-symbols-view');
 
 class FindSymbols {
 
-    private view : FindSymbolsView;
-    private editor : Atom.TextEditor;
+    private view: FindSymbolsView;
+    private editor: Atom.TextEditor;
 
     public activate() {
         OmniSharpAtom.addCommand('omnisharp-atom:find-symbols', () => {
@@ -13,10 +13,8 @@ class FindSymbols {
 
         });
 
-        Omni.registerConfiguration(client => {
-            client.observeFindsymbols.subscribe((data) => {
-                this.view.addToList(data.response.QuickFixes);
-            });
+        Omni.listener.observeFindsymbols.subscribe((data) => {
+            this.view.addToList(data.response.QuickFixes);
         });
     }
 }

@@ -1,12 +1,11 @@
 {
-    "version": "1.4.1",
+    "version": "1.5.0-beta",
     "compilerOptions": {
         "target": "es5",
         "module": "commonjs",
         "declaration": false,
         "noImplicitAny": false,
-        "removeComments": true,
-        "noLib": false
+        "removeComments": false
     },
     "formatCodeOptions": {
         "indentSize": 4,
@@ -32,7 +31,9 @@
     "files": [
         "./lib/omni-sharp-server/client-manager.ts",
         "./lib/omni-sharp-server/client.ts",
+        "./lib/omni-sharp-server/composite-client.ts",
         "./lib/omni-sharp-server/omni.ts",
+        "./lib/omni-sharp-server/view-model.ts",
         "./lib/omnisharp-atom/dependency-checker.ts",
         "./lib/omnisharp-atom/features/code-action.ts",
         "./lib/omnisharp-atom/features/code-check.ts",
@@ -60,6 +61,7 @@
         "./lib/omnisharp-atom/views/find-pane-view.ts",
         "./lib/omnisharp-atom/views/find-symbols-view.ts",
         "./lib/omnisharp-atom/views/omni-output-pane-view.ts",
+        "./lib/omnisharp-atom/views/react-client-component.ts",
         "./lib/omnisharp-atom/views/rename-view.ts",
         "./lib/omnisharp-atom/views/status-bar-view.ts",
         "./lib/omnisharp-atom/views/tooltip-view.ts",
