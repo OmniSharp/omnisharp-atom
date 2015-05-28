@@ -145,6 +145,27 @@
     }
 }
 
+.find-output {
+    background-color: @base-background-color;
+    ol, li {
+        margin: 0px;
+        padding: 0px;
+    }
+    .find-usages {
+        background-color: @background-color-highlight;
+        border: 1px solid @base-border-color;
+        padding: 2px 5px;
+        margin: 0px;
+        &:hover, &.selected {
+            background-color: @background-color-selected;
+        }
+        pre {
+            background-color: transparent;
+            padding: 2px 1px;
+        }
+    }
+}
+
 @red-color: @syntax-color-removed;
 @green-color: @syntax-color-added;
 @blue-color: @syntax-color-renamed;
