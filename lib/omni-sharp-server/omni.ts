@@ -1,10 +1,28 @@
-import {helpers, Observable} from 'rx';
+import {helpers, Observable, ReplaySubject} from 'rx';
 import manager = require("./client-manager");
 import Client = require("./client");
 //import {DriverState} from "omnisharp-client";
 import _ = require('lodash');
 
+/**
+* monitor config
+*/
+var showDiagnosticsForAllSolutions = (function() {
+    let subject = new ReplaySubject<boolean>(1);
+    subject.onNext(atom.config.get<boolean>("omnisharp-atom.showDiagnosticsForAllSolutions"));
+
+    atom.config.onDidChange("omnisharp-atom.showDiagnosticsForAllSolutions", function() {
+        let enabled = atom.config.get<boolean>("omnisharp-atom.showDiagnosticsForAllSolutions");
+        subject.onNext(enabled);
+    });
+
+    return <Observable<boolean>>subject;
+})();
+
 class Omni {
+    // TODO: Remove this later when we do proper static VM
+    public static showDiagnosticsForAllSolutions = showDiagnosticsForAllSolutions;
+
     public static toggle() {
         if (manager.connected) {
             manager.disconnect();
@@ -74,9 +92,9 @@ class Omni {
         var result: Observable<T>;
 
         if (editor) {
-            result = manager.getClientForEditor(<Atom.TextEditor> editor).flatMap(clientCallback)
+            result = manager.getClientForEditor(<Atom.TextEditor> editor).flatMap(clientCallback).share();
         } else {
-            result = manager.activeClient.first().flatMap(clientCallback);
+            result = manager.activeClient.first().flatMap(clientCallback).share();
         }
 
         // Ensure that the underying promise is connected

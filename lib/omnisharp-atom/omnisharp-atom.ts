@@ -283,6 +283,12 @@ class OmniSharpAtom {
             description: 'Outputs detailed server calls in console.log',
             type: 'boolean',
             default: false
+        },
+        showDiagnosticsForAllSolutions: {
+            title: 'Show Diagnostics for all Solutions',
+            description: 'Advanced: This will show diagnostics for all open solutions.  NOTE: May take a restart or change to each server to take effect when turned on.',
+            type: 'boolean',
+            default: false
         }
     }
 
