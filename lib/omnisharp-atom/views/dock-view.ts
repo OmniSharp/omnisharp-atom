@@ -190,6 +190,8 @@ class DockView extends spacePenViews.View {
 
     public hideView() {
         this.panel.hide();
+        atom.workspace.getActivePane().activate();
+        atom.workspace.getActivePane().activateItem();
         return this;
     }
 
