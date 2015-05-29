@@ -1,19 +1,17 @@
-import _ = require('lodash')
+import _ = require('lodash');
 import {Observable, BehaviorSubject} from "rx";
 import path = require('path');
-import fs = require('fs')
-import a = require("atom")
+import fs = require('fs');
+import a = require("atom");
 var Emitter = (<any>a).Emitter
 
-import Omni = require('../omni-sharp-server/omni')
+// TODO: Remove these at some point to stream line startup.
+import Omni = require('../omni-sharp-server/omni');
 import ClientManager = require('../omni-sharp-server/client-manager');
-import CompletionProvider = require("./features/lib/completion-provider")
-import dependencyChecker = require('./dependency-checker')
-import StatusBarComponent = require('./views/status-bar-view')
-import DockView = require('./views/dock-view')
+import dependencyChecker = require('./dependency-checker');
+import StatusBarComponent = require('./views/status-bar-view');
+import DockView = require('./views/dock-view');
 import React = require('react');
-
-//import autoCompleteProvider = require('./features/lib/completion-provider');
 
 // Configure Rx / Bluebird for long stacks
 (function() {
@@ -58,7 +56,7 @@ class OmniSharpAtom {
 
     private _activeEditor = new BehaviorSubject<Atom.TextEditor>(null);
     private _activeEditorObservable = this._activeEditor.replay(z => z, 1);
-    public get activeEditor() : Observable<Atom.TextEditor> { return this._activeEditorObservable; }
+    public get activeEditor(): Observable<Atom.TextEditor> { return this._activeEditorObservable; }
 
     public activate(state) {
         atom.commands.add('atom-workspace', 'omnisharp-atom:toggle', () => this.toggle());
@@ -70,15 +68,11 @@ class OmniSharpAtom {
         this.outputView = new DockView(this);
 
         if (dependencyChecker.findAllDeps(this.getPackageDir())) {
-            ClientManager.activate(this);
             this.emitter = new Emitter;
-            this.features = this.loadFeatures();
-
-            _.each(this.features, x => x.invoke('activate', state));
-            this.subscribeToEvents();
-            if (this.statusBar) {
-                this.consumeStatusBar(this.statusBar);
-            }
+            this.loadFeatures(state).toPromise().then(() => {
+                ClientManager.activate(this);
+                this.subscribeToEvents();
+            });
         } else {
             _.map(dependencyChecker.errors() || [], missingDependency => console.error(missingDependency))
         }
@@ -122,16 +116,23 @@ class OmniSharpAtom {
         });
     }
 
-    public loadFeatures() {
+    public loadFeatures(state) {
         var packageDir = this.getPackageDir();
         var featureDir = packageDir + "/omnisharp-atom/lib/omnisharp-atom/features";
-        var featureFiles = _.filter(
-            fs.readdirSync(featureDir),
-            (file: string) => !fs.statSync(featureDir + "/" + file).isDirectory() && /\.js$/.test(file)
-            );
 
-        var features = _.map(featureFiles, (feature: string) => new Feature(this, feature));
-        return features;
+        var features = Observable.fromNodeCallback(fs.readdir)(featureDir)
+            .flatMap(files => Observable.from(files))
+            .where(file => /\.js$/.test(file))
+            .flatMap(file => Observable.fromNodeCallback(fs.stat)(featureDir + "/" + file).map(stat => ({ file, stat })))
+            .where(z => !z.stat.isDirectory())
+            .map(z => z.file)
+            .map(file => new Feature(this, file));
+
+        features.subscribe(feature => feature.invoke('activate', state));
+        var result = features.toArray();
+        result.subscribe(features => this.features = features);
+
+        return result;
     }
 
     public subscribeToEvents() {
@@ -196,13 +197,6 @@ class OmniSharpAtom {
                 this.toggle()
             }
         }
-
-    }
-
-    public buildStatusBarAndDock() {
-        if (!this.outputView) {
-            this.outputView = new DockView(this);
-        }
     }
 
     private toggleMenu() {
@@ -259,15 +253,12 @@ class OmniSharpAtom {
     }
 
     public consumeYeomanEnvironment(generatorService: { run(generator: string, path: string): void; start(prefix: string, path: string): void; }) {
-
-        console.log('generatorService')
         this.generator = generatorService;
     }
 
     public provideAutocomplete() {
-
-        this.autoCompleteProvider = CompletionProvider.CompletionProvider;
-
+        var {CompletionProvider} = require("./features/lib/completion-provider");
+        this.autoCompleteProvider = CompletionProvider;
         return this.autoCompleteProvider;
     }
 
