@@ -1,9 +1,40 @@
 import Omni = require('../../omni-sharp-server/omni');
 import OmniSharpAtom = require('../omnisharp-atom');
-import OmniSharpClient = require('omnisharp-client');
 import _ = require('lodash');
 import EventKit = require('event-kit');
-import ClientManager = require('../../omni-sharp-server/client-manager');
+
+function updateBuffer(editor: Atom.TextEditor) {
+    if (!editor) return;
+
+    Omni.enqueue(editor, client => {
+        var request = client.makeRequest();
+        request.Buffer = editor.getText();
+        return client.updatebufferPromise(request);
+    });
+}
+
+function changeBuffer(editor: Atom.TextEditor, event: any) {
+    if (!editor) return;
+    //if marker exists then buffer was changed from server changes
+    // don't send to server again.
+    var markers = editor.getBuffer().findMarkers({ "omnisharp-buffer": false });
+
+    if (markers.length > 0) {
+        markers.forEach(marker => marker.destroy());
+        return;
+    }
+
+    var request = <OmniSharp.Models.ChangeBufferRequest>{
+        FileName: editor.getPath(),
+        StartLine: event.oldRange.start.row + 1,
+        StartColumn: event.oldRange.start.column + 1,
+        EndLine: event.oldRange.end.row + 1,
+        EndColumn: event.oldRange.end.column + 1,
+        NewText: event.newText
+    };
+
+    Omni.enqueue(editor, client => client.changebufferPromise(request));
+}
 
 class BufferUpdater {
     private disposables: EventKit.CompositeDisposable;
@@ -17,51 +48,10 @@ class BufferUpdater {
 
         var buffer = editor.getBuffer();
 
-        this.disposables.add(buffer.onDidSave(() => this.updateBuffer(editor)));
-        this.disposables.add(buffer.onDidReload(() => this.updateBuffer(editor)));
+        this.disposables.add(buffer.onDidSave(() => updateBuffer(editor)));
+        this.disposables.add(buffer.onDidReload(() => updateBuffer(editor)));
         this.disposables.add(buffer.onDidDestroy(() => this.dispose()));
-
-        this.disposables.add(buffer.onDidChange(event =>  this.changeBuffer(editor, event)));
-
-        this.disposables.add(atom.workspace.observeActivePaneItem((pane: Atom.Pane) => {
-            var activeEditor = atom.workspace.getActiveTextEditor();
-            if (activeEditor != null && this.editor.id == activeEditor.id)
-                this.updateBuffer(this.editor);
-        }));
-
-    }
-
-    public changeBuffer(editor: Atom.TextEditor, event: any) {
-        var client = ClientManager.getClientForEditor(editor);
-        if (client) {
-            //if marker exists then buffer was changed from server changes
-            // don't send to server again.
-            var markers = editor.getBuffer().findMarkers({"omnisharp-buffer": false});
-
-            if (markers.length > 0) {
-                markers.forEach(marker => marker.destroy());
-                return;
-            }
-
-            var request = <OmniSharp.Models.ChangeBufferRequest>{
-                    FileName: editor.getPath(),
-                    StartLine: event.oldRange.start.row + 1,
-                    StartColumn: event.oldRange.start.column + 1,
-                    EndLine: event.oldRange.end.row + 1,
-                    EndColumn: event.oldRange.end.column + 1,
-                    NewText: event.newText
-                };
-
-            client.changebuffer(request);
-        }
-    }
-
-    public updateBuffer(editor: Atom.TextEditor) {
-        var client = ClientManager.getClientForEditor(editor)
-        if (client) {
-            var request = <OmniSharp.Models.Request>Omni.makeRequest(editor, editor.getBuffer());
-            client.updatebufferPromise(request);
-        }
+        this.disposables.add(buffer.onDidChange(event => changeBuffer(editor, event)));
     }
 
     public dispose() {
@@ -95,6 +85,8 @@ class BufferFeature {
             }));
 
         }));
+
+        OmniSharpAtom.activeEditor.subscribe(updateBuffer);
     }
 
     public destroy() {

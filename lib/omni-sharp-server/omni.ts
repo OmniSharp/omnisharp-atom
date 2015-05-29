@@ -302,6 +302,16 @@ class Omni {
     public registerConfiguration(callback: (client: Client) => void) {
         manager.registerConfiguration(callback);
     }
+
+    /**
+    * This is used to push updates to a client using the cached client... this is a potentially dangerous operation if the client hasn't been setup!
+    */
+    public static enqueue<T>(editor: Atom.TextEditor, callback: (client: OmniSharp.ExtendApi) => Rx.Observable<T> | Rx.IPromise<T>) {
+        if (!editor['__omniClient__'])
+            return Omni.request(editor, callback);
+
+        return callback(editor['__omniClient__']);
+    }
 }
 
 var instance = new Omni;

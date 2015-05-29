@@ -70,14 +70,21 @@ class Client extends OmnisharpClient {
         };
     }
 
-    public makeRequest(editor?: Atom.TextEditor, buffer?: TextBuffer.TextBuffer) {
+    public makeRequest(editor?: Atom.TextEditor) {
         editor = editor || atom.workspace.getActiveTextEditor();
         // TODO: update and add to typings.
         if (_.has(editor, 'alive') && !editor.alive) {
             return <OmniSharp.Models.Request>{ abort: true };
         }
 
-        var bufferText = null;
+        if (editor) {
+            var marker = editor.getCursorBufferPosition();
+            return <OmniSharp.Models.Request>{
+                Column: marker.column + 1,
+                FileName: editor.getURI(),
+                Line: marker.row + 1
+            };
+        }
 
         if (buffer)
             bufferText = buffer.getLines().join('\n');
@@ -91,8 +98,8 @@ class Client extends OmnisharpClient {
         };
     }
 
-    public makeDataRequest<T>(data: T, editor?: Atom.TextEditor, buffer?: TextBuffer.TextBuffer) {
-        return <T>_.extend(data, this.makeRequest(editor, buffer));
+    public makeDataRequest<T>(data: T, editor?: Atom.TextEditor) {
+        return <T>_.extend(data, this.makeRequest(editor));
     }
 
     private configureClient() {
