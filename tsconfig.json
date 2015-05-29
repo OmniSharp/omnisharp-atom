@@ -66,6 +66,8 @@
         "./lib/omnisharp-atom/views/rename-view.ts",
         "./lib/omnisharp-atom/views/status-bar-view.ts",
         "./lib/omnisharp-atom/views/tooltip-view.ts",
+        "./lib/omnisharp-atom/world.ts",
+        "./lib/omnisharp-atom/world/diagnostics.ts",
         "./lib/typings.d.ts",
         "./spec/omnisharp-atom-spec.ts",
         "./spec/tsd.d.ts",

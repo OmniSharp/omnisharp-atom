@@ -10,9 +10,8 @@ class FindPaneWindow extends ReactClientComponent<{}, { usages?: OmniSharp.Model
     private selectedIndex = 0;
 
     constructor(props?: {}, context?: any) {
-        super(props, context);
+        super({ trackWorldChanges: true }, props, context);
         this.state = { usages: [] };
-        this.trackClientChanges = true;
     }
 
     public componentDidMount() {

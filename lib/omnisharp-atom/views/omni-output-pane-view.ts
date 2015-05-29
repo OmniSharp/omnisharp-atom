@@ -2,7 +2,6 @@ import {Disposable} from "rx";
 var Convert = require('ansi-to-html');
 import _ = require('lodash')
 import Omni = require('../../omni-sharp-server/omni')
-import ClientVM = require('../../omni-sharp-server/view-model');
 import React = require('react');
 import {ReactClientComponent} from "./react-client-component";
 
@@ -24,7 +23,6 @@ class OutputWindow extends ReactClientComponent<{}, { output?: OmniSharp.OutputM
     }
 
     public changeActiveClient(model: ClientVM) {
-        super.changeActiveClient(model);
         this._currentSubscription && this._currentSubscription.dispose();
 
         this._currentSubscription = model.client.events
