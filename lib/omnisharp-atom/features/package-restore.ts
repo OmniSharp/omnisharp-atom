@@ -19,7 +19,6 @@ class PackageRestore {
         var filename = path.basename(editor.getPath());
         if (filename === 'project.json') {
             return editor.getBuffer().onDidSave(() => {
-
                 Omni.request(client => client.filesChanged([{
                     FileName: editor.getPath()
                 }]));

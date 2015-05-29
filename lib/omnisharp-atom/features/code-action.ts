@@ -10,7 +10,6 @@ interface TemporaryCodeAction {
     Id: number;
 }
 
-
 class CodeAction {
 
     private view: SpacePen.SelectListView;

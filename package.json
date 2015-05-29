@@ -83,9 +83,7 @@
     "through2": "^0.6.5",
     "tsd": "~0.6.0-beta.5",
     "typescript": "^1.5.0-beta",
-    "vue": "~0.10.6",
-    "yeoman-environment": "^1.2.5",
-    "yo": "^1.4.6"
+    "vue": "~0.10.6"
   },
   "consumedServices": {
     "status-bar": {
@@ -107,14 +105,9 @@
       }
     }
   },
-  "devDependencies": {
-    "coffeelint": "^1.6.0",
-    "grunt-coffeelint": "0.0.13",
-    "grunt-contrib-watch": "^0.6.1"
-  },
   "package-dependencies": {
     "language-csharp": ">=0.3.0",
     "linter": ">=0.12.0",
-    "atom-yeoman": ">=0.1.5"
+    "atom-yeoman": ">=0.3.0"
   }
 }

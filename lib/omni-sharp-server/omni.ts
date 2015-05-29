@@ -92,14 +92,18 @@ class Omni {
         var result: Observable<T>;
 
         if (editor) {
-            result = manager.getClientForEditor(<Atom.TextEditor> editor).flatMap(clientCallback).share();
+            result = manager.getClientForEditor(<Atom.TextEditor> editor)
+                .where(z => !!z)
+                .flatMap(clientCallback).share();
         } else {
-            result = manager.activeClient.first().flatMap(clientCallback).share();
+            result = manager.activeClient.first()
+                .where(z => !!z)
+                .flatMap(clientCallback).share();
         }
 
         // Ensure that the underying promise is connected
         //   (if we don't subscribe to the reuslt of the request, which is not a requirement).
-        var sub = result.subscribe(() => sub.dispose());
+        result.subscribeOnCompleted(() => {});
 
         return result;
     }
