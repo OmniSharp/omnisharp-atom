@@ -45,7 +45,7 @@ class StatusBarComponent extends ReactClientComponent<{}, StatusBarState> {
             });
         }));
 
-        this.disposable.add(world.updated.bufferWithTime(50)
+        this.disposable.add(world.observe.updates.bufferWithTime(50)
             .subscribe(items => {
             var updates = _(items)
                 .filter(item => _.contains(['isOff', 'isConnecting', 'isOn', 'isReady', 'isError'], item.name))
@@ -63,19 +63,6 @@ class StatusBarComponent extends ReactClientComponent<{}, StatusBarState> {
         this.disposable.add(world.observe.status.subscribe(status => {
             this.setState({ status });
         }));
-    }
-
-    public shouldComponentUpdate(nextProps: {}, nextState: StatusBarState) {
-        return !(
-            this.state.errorCount === nextState.errorCount &&
-            this.state.warningCount === nextState.warningCount &&
-            this.state.isOff === nextState.isOff &&
-            this.state.isConnecting === nextState.isConnecting &&
-            this.state.isOn === nextState.isOn &&
-            this.state.isReady === nextState.isReady &&
-            this.state.isError === nextState.isError &&
-            this.state.status === nextState.status
-            );
     }
 
     private getIconClassName() {

@@ -33,7 +33,7 @@ class ClientManager {
     private _activeClient = new ReplaySubject<Client>(1);
     private _activeClientObserable = this._activeClient.distinctUntilChanged();
     public get activeClient(): Observable<Client> { return this._activeClientObserable; }
-    
+
     constructor() {
         // we are only off if all our clients are disconncted or erroed.
         this._combinationClient.state.subscribe(z => this._isOff = _.all(z, x => x.value === DriverState.Disconnected || x.value === DriverState.Error));
@@ -112,8 +112,9 @@ class ClientManager {
             _.delay(() => client.connect(), delay);
         }
 
-        // keep track of the active clients
-        this._activeClients.push(client);
+        if (this._activeClients.length === 0)
+            this._activeClient.onNext(client);
+        // keep track of the active clients this._activeClients.push(client);
         this._observationClient.add(client);
         this._combinationClient.add(client);
         return client;

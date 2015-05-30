@@ -8,8 +8,6 @@ import {OmnisharpClientStatus} from "omnisharp-client";
 
 
 class World {
-    //public updated: Observable<Rx.ObjectObserveChange<World>>;
-    // TODO: Not convinced we need these....
     //public diagnostics: OmniSharp.Models.DiagnosticLocation[] = [];
     //public output: OmniSharp.OutputMessage[] = [];
     //public findUsages: OmniSharp.Models.QuickFix[] = <any>{};
@@ -22,7 +20,6 @@ class World {
     public isError: boolean;
 
     constructor() {
-        // TODO: Not convinced we need these....
         //diagnostics.subscribe(items => this.diagnostics = items);
         //output.subscribe(o => this.output = o);
         //findUsages.subscribe(s => this.findUsages = s);

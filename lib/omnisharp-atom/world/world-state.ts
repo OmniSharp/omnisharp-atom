@@ -2,6 +2,8 @@ import {Observable} from "rx";
 import Omni = require("../../omni-sharp-server/omni");
 import * as _ from 'lodash';
 
+var statefulProperties = ['isOff', 'isConnecting', 'isOn', 'isReady', 'isError'];
+
 export function updateState(model: {
     isOff: boolean;
     isConnecting: boolean;
@@ -9,23 +11,24 @@ export function updateState(model: {
     isReady: boolean;
     isError: boolean;
 }) {
-
-    return Omni.activeModel
+    Omni.activeModel
         .subscribe(newModel => {
-            newModel.updated        // Track changes to the model
-                .bufferWithTime(50) // Group the changes so that we capture all the differences at once.
-                .subscribe(items => {
-                var updates = _(items)
-                    // gather the updates
-                    .filter(item => _.contains(['isOff', 'isConnecting', 'isOn', 'isReady', 'isError'], item.name))
-                    .value();
+            // Update on change
+            _.each(statefulProperties, property => { model[property] = newModel[property] });
+        });
 
-                if (updates.length) {
-                    // Apply the updates if found
-                    _.each(updates, item => {
-                        model[item.name] = newModel[item.name];
-                    })
-                }
-            });
+    Omni.activeModel
+        .flatMapLatest(newModel =>
+            newModel.observe.updates// Track changes to the model
+                .bufferWithTime(50) // Group the changes so that we capture all the differences at once.
+                .map(items => _.filter(items, item => _.contains(statefulProperties, item.name)))
+                .where(z => z.length > 0)
+                .map(items => ({ items, newModel })))
+        .subscribe(ctx => {
+            var {items, newModel} = ctx;
+            // Apply the updates if found
+            _.each(items, item => {
+                model[item.name] = newModel[item.name];
+            })
         });
 }

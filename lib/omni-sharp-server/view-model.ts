@@ -4,8 +4,6 @@ import {DriverState, OmnisharpClientStatus} from "omnisharp-client";
 import {Observable} from "rx";
 
 class ViewModel {
-    public updated: Observable<Rx.ObjectObserveChange<ViewModel>>;
-
     public isOff: boolean;
     public isConnecting: boolean;
     public isOn: boolean;
@@ -22,6 +20,7 @@ class ViewModel {
         codecheck: Rx.Observable<OmniSharp.Models.DiagnosticLocation[]>;
         output: Rx.Observable<OmniSharp.OutputMessage[]>;
         status: Rx.Observable<OmnisharpClientStatus>;
+        updates: Observable<Rx.ObjectObserveChange<ViewModel>>;
     };
 
     constructor(private _client: Client) {
@@ -48,19 +47,20 @@ class ViewModel {
         var status = _client.status
             .startWith(<any>{})
             .share();
+            
         _client.status.subscribe(z => this.status = z);
 
         var output = this.output;
+        var updates = Observable.ofObjectChanges(this);
 
         this.observe = {
             get codecheck() { return codecheck; },
             get output() { return _client.logs.map(() => output); },
-            get status() { return status; }
+            get status() { return status; },
+            get updates() { return updates; }
         };
 
         _client.state.subscribe(_.bind(this._updateState, this));
-
-        this.updated = Observable.ofObjectChanges(this);
 
         (window['clients'] || (window['clients'] = [])).push(this);  //TEMP
     }
