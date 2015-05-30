@@ -1,3 +1,4 @@
+require('./configure-rx');
 import _ = require('lodash');
 import {Observable, BehaviorSubject} from "rx";
 import path = require('path');
@@ -10,18 +11,8 @@ import Omni = require('../omni-sharp-server/omni');
 import ClientManager = require('../omni-sharp-server/client-manager');
 import dependencyChecker = require('./dependency-checker');
 import StatusBarComponent = require('./views/status-bar-view');
-import DockView = require('./views/dock-view');
+import DockWindow = require('./views/dock-view');
 import React = require('react');
-
-// Configure Rx / Bluebird for long stacks
-(function() {
-    // TODO: Toggle this with devmode?
-    var Rx = require("rx");
-    var Promise = require('bluebird');
-    Promise.longStackTraces();
-    Rx.config.Promise = Promise;
-    Rx.config.longStackSupport = true;
-})();
 
 class Feature implements OmniSharp.IFeature {
     public name: string;
@@ -47,8 +38,8 @@ class OmniSharpAtom {
     private observeEditors: { dispose: Function };
     private activeEditorAtomDisposable: { dispose: Function };
     private emitter: EventKit.Emitter;
-    public statusBarView;
-    public outputView;
+    private statusBarView;
+    private outputView;
     private autoCompleteProvider;
     private statusBar;
     private generator: { run(generator: string, path?: string): void; start(prefix: string, path?: string): void; };
@@ -65,7 +56,13 @@ class OmniSharpAtom {
 
         // This needs to be set earlier so that the auto-start can also connect
         // to the output
-        this.outputView = new DockView(this);
+        var p = atom.workspace.addBottomPanel({
+            item: document.createElement('span'),
+            visible: false
+        });
+        this.outputView = p.item.parentElement;
+        this.outputView.classList.add('omnisharp-atom-pane')
+        React.render(React.createElement(DockWindow, { panel: p }), this.outputView);
 
         if (dependencyChecker.findAllDeps(this.getPackageDir())) {
             this.emitter = new Emitter;
@@ -246,10 +243,6 @@ class OmniSharpAtom {
             item: this.statusBarView,
             priority: -1000
         });
-
-        if (!this.outputView) {
-            this.outputView = new DockView(this);
-        }
     }
 
     public consumeYeomanEnvironment(generatorService: { run(generator: string, path: string): void; start(prefix: string, path: string): void; }) {

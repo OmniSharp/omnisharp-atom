@@ -112,8 +112,9 @@ class ClientManager {
             _.delay(() => client.connect(), delay);
         }
 
-        // keep track of the active clients
-        this._activeClients.push(client);
+        if (this._activeClients.length === 0)
+            this._activeClient.onNext(client);
+        // keep track of the active clients this._activeClients.push(client);
         this._observationClient.add(client);
         this._combinationClient.add(client);
         return client;

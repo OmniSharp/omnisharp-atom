@@ -9,27 +9,19 @@ class CodeCheck {
     }
 
     public activate() {
-
         this.atomSharper.onEditor((editor: Atom.TextEditor) => {
-
             editor.getBuffer().onDidStopChanging(() => this.doCodeCheck(editor));
             editor.getBuffer().onDidSave(() => this.doCodeCheck(editor));
             editor.getBuffer().onDidDelete(() => this.doCodeCheck(editor));
             editor.getBuffer().onDidReload(() => this.doCodeCheck(editor));
-
         });
 
-        Omni.registerConfiguration(client => {
-            client.state
-                .where(z => z === omnisharp.DriverState.Connected)
-                .subscribe(state => {
-                    var request = <OmniSharp.Models.Request>{
-                        FileName: null
-                    };
-                    client.codecheck(request);
-                });
+        OmniSharpAtom.activeEditor.subscribe(editor => {
+            if (editor) {
+                this.doCodeCheck(editor);
+            }
         });
-
+        Omni.registerConfiguration(client => client.codecheck({}));
     }
 
     public doCodeCheck(editor: Atom.TextEditor) {

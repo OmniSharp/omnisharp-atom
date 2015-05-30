@@ -11,7 +11,6 @@ class FindUsages {
     public activate() {
         OmniSharpAtom.addCommand("omnisharp-atom:find-usages", () => {
             Omni.request(client => client.findusages(client.makeRequest()));
-            this.atomSharper.outputView.selectPane("find");
         });
     }
 }

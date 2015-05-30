@@ -1,62 +1,52 @@
-import spacePenViews = require('atom-space-pen-views')
-var $ = spacePenViews.jQuery;
 var Convert = require('ansi-to-html')
-import Vue = require('vue')
 import _ = require('lodash')
-import Omni = require("../../omni-sharp-server/omni");
+import Omni = require('../../omni-sharp-server/omni');
+import React = require('react');
+import {ReactClientComponent} from "./react-client-component";
+import {world} from '../world';
 
-// Internal: A tool- panel view for the build result output.
-class BuildOutputPaneView extends spacePenViews.View {
-    public vm: { output: OmniSharp.VueArray<any> };
-    public convert : typeof Convert;
+interface IBuildOutputWindowState {
+    output: OmniSharp.OutputMessage[];
+}
 
-    public static content() {
-        return this.div({
-            "class": 'build-output-pane-view native-key-bindings',
-            "tabindex": '-1'
-        }, () => this.div({
-                "class": 'messages-container'
-            }, () => this.pre({
-                    'v-class': 'text-error: l.isError, navigate-link: l.isLink',
-                    'v-repeat': 'l :output',
-                    'v-on': 'click: navigate',
-                    'v-attr': 'data-nav: l.nav'
-                }, '{{ l.message | build-output-ansi-to-html }}')
-                )
-            );
-    }
+export class BuildOutputWindow<T> extends ReactClientComponent<T, IBuildOutputWindowState> {
+    public displayName = "BuildOutputWindow";
 
-    public initialize() {
-        var scrollToBottom = _.throttle(() => {
-            var item : any = this.find(".messages-container")[0].lastElementChild;
-            if (item != null)
-                return item.scrollIntoViewIfNeeded();
-        }, 100);
+    private _convert;
 
-        Vue.filter('build-output-ansi-to-html', value => {
-            scrollToBottom();
-            if (this.convert == null) {
-                this.convert = new Convert();
+    constructor(props?: T, context?: any) {
+        super(props, context);
+        this._convert = new Convert();
+        this.state = { output: [] };
+
+        /*
+        Old events... may be useful when we reimplement
+
+
+        public processMessage(data) {
+            var linkPattern = /(.*)\((\d*),(\d*)\)/g;
+            var navMatches = linkPattern.exec(data);
+            var isLink = false;
+            var nav : any = false;
+            if ((navMatches != null ? navMatches.length : void 0) === 4) {
+                isLink = true;
+                nav = {
+                    FileName: navMatches[1],
+                    Line: navMatches[2],
+                    Column: navMatches[3]
+                };
             }
-
-            return this.convert.toHtml(value).trim();
-        });
-
-        var viewModel = new Vue({
-            el: this[0],
-            data: {
-                output: []
-            },
-            methods: {
-                navigate: function(e) {
-                    var nav = JSON.parse(e.srcElement.attributes['data-nav'].value);
-                    if (nav) {
-                        Omni.navigateTo(nav);
-                    }
-                }
+            var logMessage = {
+                message: data,
+                isLink: isLink,
+                nav: JSON.stringify(nav),
+                isError: isLink
+            };
+            if (this.vm.output.length >= 1000) {
+                this.vm.output.$remove(0);
             }
-        });
-        this.vm = <any>viewModel;
+            this.vm.output.push(logMessage);
+        }
 
         atom.emitter.on("omnisharp-atom:build-message", data => {
             var buildMessages = data.split('\n');
@@ -95,35 +85,39 @@ class BuildOutputPaneView extends spacePenViews.View {
                 });
             }
         });
+        */
     }
 
-    public processMessage(data) {
-        var linkPattern = /(.*)\((\d*),(\d*)\)/g;
-        var navMatches = linkPattern.exec(data);
-        var isLink = false;
-        var nav : any = false;
-        if ((navMatches != null ? navMatches.length : void 0) === 4) {
-            isLink = true;
-            nav = {
-                FileName: navMatches[1],
-                Line: navMatches[2],
-                Column: navMatches[3]
-            };
-        }
-        var logMessage = {
-            message: data,
-            isLink: isLink,
-            nav: JSON.stringify(nav),
-            isError: isLink
-        };
-        if (this.vm.output.length >= 1000) {
-            this.vm.output.$remove(0);
-        }
-        this.vm.output.push(logMessage);
+    public componentDidMount() {
+        super.componentDidMount();
+        this.disposable.add(world.observe.output
+            .subscribe(z => this.setState({ output: z }, () => this.scrollToBottom())));
+        this.scrollToBottom();
     }
 
-    public destroy() {
-        this.detach();
+    private scrollToBottom() {
+        var item = <any> React.findDOMNode(this).lastElementChild.lastElementChild;
+        if (item) item.scrollIntoViewIfNeeded();
+    }
+
+    private createItem(item: OmniSharp.OutputMessage) {
+        return React.DOM.pre({
+            className: item.logLevel,
+            //onClick: (e) => this.navigate(item.nav)
+        }, this._convert.toHtml(item.message).trim());
+    }
+
+    /*private navigate(item: OmniSharp.OutputMessage) {
+        Omni.navigateTo(nav);
+    }*/
+
+    public render() {
+        return React.DOM.div({
+            className: 'build-output-pane-view native-key-bindings ' + (this.props['className'] || ''),
+            tabIndex: -1
+        },
+            React.DOM.div({
+                className: 'messages-container'
+            }, _.map(this.state.output, item => this.createItem(item))));
     }
 }
-export = BuildOutputPaneView

@@ -4,49 +4,38 @@ import React = require('react');
 import path = require('path');
 import $ = require('jquery');
 import {ReactClientComponent} from "./react-client-component";
+import {world} from '../world';
 
-class FindPaneWindow extends ReactClientComponent<{}, { usages?: OmniSharp.Models.QuickFix[] }> {
+export class FindWindow<T> extends ReactClientComponent<T, { usages?: OmniSharp.Models.QuickFix[] }> {
     public displayName = 'FindPaneWindow';
     private selectedIndex = 0;
 
-    constructor(props?: {}, context?: any) {
+    constructor(props?: T, context?: any) {
         super(props, context);
-        this.state = { usages: [] };
-        this.trackClientChanges = true;
+        this.state = { usages: world.findUsages };
     }
 
     public componentDidMount() {
         super.componentDidMount();
 
-        this.disposable.add(Omni.listener.observeFindusages.subscribe((data) => {
+        this.disposable.add(world.observe.usages.find.subscribe(usages => {
             this.selectedIndex = 0;
-            this.setState({
-                usages: data.response.QuickFixes
-            });
-            this.updateModel();
+            this.setState({ usages });
         }));
 
-        this.disposable.add(Omni.listener.observeFindimplementations.subscribe((data) => {
-            if (data.response.QuickFixes.length > 1) {
-                this.selectedIndex = 0;
-                this.setState({
-                    usages: data.response.QuickFixes
-                });
-                this.updateModel();
-            }
-        }));
+        this.disposable.add(world.observe.usages.reset.subscribe(() => this.setState({ usages: [] })));
+
+        (<any>React.findDOMNode(this)).onkeydown = (e) => this.keydownPane(e);
+    }
+
+    public componentWillUnmount() {
+        super.componentWillUnmount();
+
+        (<any>React.findDOMNode(this)).onkeydown = undefined;
     }
 
     private updateStateAndScroll() {
         this.setState({}, () => this.scrollToItemView());
-    }
-
-    private updateModel() {
-        if (this.state.usages.length > 0) {
-            _.defer(() => {
-                $(React.findDOMNode(this)).parent().focus();
-            })
-        }
     }
 
     private selectNextItem() {
@@ -75,7 +64,7 @@ class FindPaneWindow extends ReactClientComponent<{}, { usages?: OmniSharp.Model
     }
 
     private scrollToItemView() {
-        var self = $(React.findDOMNode(this)).parent().parent();
+        var self = $(React.findDOMNode(this));
         var item = self.find(`li.usage-${this.selectedIndex}`);
         if (!item || !item.position()) return;
 
@@ -107,32 +96,27 @@ class FindPaneWindow extends ReactClientComponent<{}, { usages?: OmniSharp.Model
     }
 
     public render() {
-        return React.DOM.ol({
-            style: { cursor: "pointer" }
-        }, ..._.map(this.state.usages, (usage: OmniSharp.Models.QuickFix, index) =>
-            React.DOM.li({
-                className: 'find-usages usage-' + index + (index === this.selectedIndex ? ' selected' : ''),
-                onClick: (e) => this.gotoUsage(usage)
-            },
-                React.DOM.pre({
-                    className: "text-highlight"
-                }, usage.Text),
-                React.DOM.pre({
-                    className: "inline-block"
-                }, `${path.basename(usage.FileName) }(${usage.Line},${usage.Column})`),
-                React.DOM.pre({
-                    className: "text-subtle inline-block"
-                }, `${path.dirname(usage.FileName) }`)
-                ))
-            );
+        return React.DOM.div({
+            className: 'error-output-pane ' + (this.props['className'] || ''),
+            tabIndex: -1,
+        },
+            React.DOM.ol({
+                style: { cursor: "pointer" },
+            }, ..._.map(this.state.usages, (usage: OmniSharp.Models.QuickFix, index) =>
+                React.DOM.li({
+                    className: 'find-usages usage-' + index + (index === this.selectedIndex ? ' selected' : ''),
+                    onClick: (e) => this.gotoUsage(usage)
+                },
+                    React.DOM.pre({
+                        className: "text-highlight"
+                    }, usage.Text),
+                    React.DOM.pre({
+                        className: "inline-block"
+                    }, `${path.basename(usage.FileName) }(${usage.Line},${usage.Column})`),
+                    React.DOM.pre({
+                        className: "text-subtle inline-block"
+                    }, `${path.dirname(usage.FileName) }`)
+                    ))
+                ));
     }
-}
-
-export = function() {
-    var element = document.createElement('div');
-    element.className = 'error-output-pane';
-    element.tabIndex = -1;
-    var reactItem : FindPaneWindow = <any>React.render(React.createElement(FindPaneWindow, null), element);
-    element.onkeydown = (e) => reactItem.keydownPane(e);
-    return element;
 }

@@ -82,13 +82,6 @@ class Client extends OmnisharpClient {
             logLevel: event.Body && event.Body.LogLevel || (event.Type === "error" && 'ERROR') || 'INFORMATION'
         }));
 
-        // Manage our build log for display
-        this.logs.subscribe(event => {
-            this.model.output.push(event);
-            if (this.model.output.length > 1000)
-                this.model.output.shift();
-        });
-
         this.errors.subscribe(exception => {
             console.error(exception);
         });

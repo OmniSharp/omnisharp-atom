@@ -43,3 +43,27 @@ declare module OmniSharp {
         makeDataRequest<T>(data: T, editor?: Atom.TextEditor, buffer?: TextBuffer.TextBuffer): T;
     }
 }
+
+declare module Rx {
+    interface ObjectObserveChange<T> {
+        type: string;
+        object: T;
+        name: string;
+        oldValue?: any;
+    }
+
+    interface ArrayObserveChange<T> {
+        type: string;
+        object: T[];
+        name?: string;
+        oldValue?: T;
+        index?: number;
+        removed?: T[];
+        added?: number;
+    }
+
+    interface ObservableStatic {
+        ofObjectChanges<T>(obj: T): Observable<ObjectObserveChange<T>>;
+        ofArrayChanges<T>(obj: T): Observable<ArrayObserveChange<T>>;
+    }
+}

@@ -1,18 +1,77 @@
 import * as _ from "lodash";
 import Client = require('./client');
-import {DriverState} from "omnisharp-client";
+import {DriverState, OmnisharpClientStatus} from "omnisharp-client";
+import {Observable} from "rx";
 
 class ViewModel {
-    public get isOff() { return this.client.currentState === DriverState.Disconnected; }
-    public get isConnecting() { return this.client.currentState === DriverState.Connecting; }
-    public get isOn() { return this.client.currentState === DriverState.Connecting || this.client.currentState === DriverState.Connected; }
-    public get isReady() { return this.client.currentState === DriverState.Connected; }
-    public get isError() { return this.client.currentState === DriverState.Error; }
+    public isOff: boolean;
+    public isConnecting: boolean;
+    public isOn: boolean;
+    public isReady: boolean;
+    public isError: boolean;
 
-    public get uniqueId() { return this.client.uniqueId; }
+    private _uniqueId;
+    public get uniqueId() { return this._client.uniqueId; }
     public output: OmniSharp.OutputMessage[] = [];
+    public diagnostics: OmniSharp.Models.DiagnosticLocation[] = [];
+    public status: OmnisharpClientStatus;
 
-    constructor(public client: Client) { }
+    public observe: {
+        codecheck: Rx.Observable<OmniSharp.Models.DiagnosticLocation[]>;
+        output: Rx.Observable<OmniSharp.OutputMessage[]>;
+        status: Rx.Observable<OmnisharpClientStatus>;
+        updates: Observable<Rx.ObjectObserveChange<ViewModel>>;
+    };
+
+    constructor(private _client: Client) {
+        this._uniqueId = _client.uniqueId;
+        this._updateState(_client.currentState);
+
+        // Manage our build log for display
+        _client.logs.subscribe(event => {
+            this.output.push(event);
+            if (this.output.length > 1000)
+                this.output.shift();
+        });
+
+        var codecheck = _client.observeCodecheck
+            .where(z => !z.request.FileName)
+            .map(z => z.response)
+            .map(z => <OmniSharp.Models.DiagnosticLocation[]>z.QuickFixes)
+            .map(data => _.sortBy(data, quickFix => quickFix.LogLevel))
+            .startWith([])
+            .shareReplay(1);
+
+        codecheck.subscribe((data) => this.diagnostics = data);
+
+        var status = _client.status
+            .startWith(<any>{})
+            .share();
+            
+        _client.status.subscribe(z => this.status = z);
+
+        var output = this.output;
+        var updates = Observable.ofObjectChanges(this);
+
+        this.observe = {
+            get codecheck() { return codecheck; },
+            get output() { return _client.logs.map(() => output); },
+            get status() { return status; },
+            get updates() { return updates; }
+        };
+
+        _client.state.subscribe(_.bind(this._updateState, this));
+
+        (window['clients'] || (window['clients'] = [])).push(this);  //TEMP
+    }
+
+    private _updateState(state) {
+        this.isOn = state === DriverState.Connecting || state === DriverState.Connected;
+        this.isOff = state === DriverState.Disconnected;
+        this.isConnecting = state === DriverState.Connecting;
+        this.isReady = state === DriverState.Connected;
+        this.isError = state === DriverState.Error;
+    }
 }
 
 export = ViewModel;

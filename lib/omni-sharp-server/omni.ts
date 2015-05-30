@@ -4,25 +4,7 @@ import Client = require("./client");
 //import {DriverState} from "omnisharp-client";
 import _ = require('lodash');
 
-/**
-* monitor config
-*/
-var showDiagnosticsForAllSolutions = (function() {
-    let subject = new ReplaySubject<boolean>(1);
-    subject.onNext(atom.config.get<boolean>("omnisharp-atom.showDiagnosticsForAllSolutions"));
-
-    atom.config.onDidChange("omnisharp-atom.showDiagnosticsForAllSolutions", function() {
-        let enabled = atom.config.get<boolean>("omnisharp-atom.showDiagnosticsForAllSolutions");
-        subject.onNext(enabled);
-    });
-
-    return <Observable<boolean>>subject;
-})();
-
 class Omni {
-    // TODO: Remove this later when we do proper static VM
-    public static showDiagnosticsForAllSolutions = showDiagnosticsForAllSolutions;
-
     public static toggle() {
         if (manager.connected) {
             manager.disconnect();
