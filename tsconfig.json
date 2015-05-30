@@ -29,7 +29,6 @@
         "!./node_modules/**/*.ts"
     ],
     "files": [
-        "./lib/bootstrapper.ts",
         "./lib/omni-sharp-server/client-manager.ts",
         "./lib/omni-sharp-server/client.ts",
         "./lib/omni-sharp-server/composite-client.ts",

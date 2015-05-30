@@ -10,16 +10,17 @@ import $ = require('jquery');
 import omnisharpAtom = require('../omnisharp-atom');
 import omnisharp = require("omnisharp-client");
 var escape = require("escape-html");
+import _ = require('lodash');
 
 class TypeLookup {
     public activate() {
-        omnisharpAtom.onEditor((editor: Atom.TextEditor) => {
+        omnisharpAtom.onEditor((editor: Atom.TextEditor) => _.defer(() => {
 
             // subscribe for tooltips
             // inspiration : https://github.com/chaika2013/ide-haskell
             var editorView = $(atom.views.getView(editor));
             new Tooltip(editorView, editor);
-        });
+        }));
     }
 }
 
@@ -135,23 +136,23 @@ class Tooltip implements rx.Disposable {
         // Actually make the program manager query
 
         Omni.request(client => client.typelookup({
-                IncludeDocumentation: true,
-                Line: bufferPt.row + 1,
-                Column: bufferPt.column + 1,
-                FileName: this.editor.getURI()
-            })).subscribe((response: OmniSharp.Models.TypeLookupResponse) => {
-                if (response.Type === null) {
-                    return;
-                }
-                var message = `<b>${escape(response.Type) }</b>`;
-                if (response.Documentation) {
-                    message = message + `<br/><i>${escape(response.Documentation) }</i>`;
-                }
-                // Sorry about this "if". It's in the code I copied so I guess its there for a reason
-                if (this.exprTypeTooltip) {
-                    this.exprTypeTooltip.updateText(message);
-                }
-            });
+            IncludeDocumentation: true,
+            Line: bufferPt.row + 1,
+            Column: bufferPt.column + 1,
+            FileName: this.editor.getURI()
+        })).subscribe((response: OmniSharp.Models.TypeLookupResponse) => {
+            if (response.Type === null) {
+                return;
+            }
+            var message = `<b>${escape(response.Type) }</b>`;
+            if (response.Documentation) {
+                message = message + `<br/><i>${escape(response.Documentation) }</i>`;
+            }
+            // Sorry about this "if". It's in the code I copied so I guess its there for a reason
+            if (this.exprTypeTooltip) {
+                this.exprTypeTooltip.updateText(message);
+            }
+        });
     }
 
     public dispose() {
