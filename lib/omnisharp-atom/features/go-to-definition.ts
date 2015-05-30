@@ -27,7 +27,7 @@ class GoToDefinition {
     }
 
     public activate() {
-        OmniSharpAtom.onEditor((editor: Atom.TextEditor) => {
+        OmniSharpAtom.onEditor((editor: Atom.TextEditor) => _.defer(() => {
             var view = $(atom.views.getView(editor));
             var scroll = this.getFromShadowDom(view, '.scroll-view');
             var mousemove = rx.Observable.fromEvent<MouseEvent>(scroll[0], 'mousemove');
@@ -63,7 +63,7 @@ class GoToDefinition {
                 this.removeMarker();
                 this.goToDefinition();
             }));
-        });
+        }));
 
         atom.emitter.on("symbols-view:go-to-declaration", this.goToDefinition);
 
