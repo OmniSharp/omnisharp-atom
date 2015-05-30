@@ -4,12 +4,12 @@ import _ = require('lodash')
 import Omni = require('../../omni-sharp-server/omni')
 import React = require('react');
 import {ReactClientComponent} from "./react-client-component";
+import {world} from '../world';
 
-class OutputWindow extends ReactClientComponent<{}, { output?: OmniSharp.OutputMessage[] }> {
+class OutputWindow extends ReactClientComponent<{}, { output: OmniSharp.OutputMessage[] }> {
     public displayName = "OutputWindow";
 
     private _convert;
-    private _currentSubscription: Disposable;
 
     constructor(props?: {}, context?: any) {
         super(props, context);
@@ -17,23 +17,16 @@ class OutputWindow extends ReactClientComponent<{}, { output?: OmniSharp.OutputM
         this.state = { output: [] };
     }
 
+    public componentDidMount() {
+        super.componentDidMount();
+
+        this.disposable.add(world.observe.output
+            .subscribe(z => this.setState({ output: z }, () => this.scrollToBottom())));
+    }
+
     private scrollToBottom() {
         var item = <any> React.findDOMNode(this).lastElementChild;
         if (item) item.scrollIntoViewIfNeeded();
-    }
-
-    public changeActiveClient(model: ClientVM) {
-        this._currentSubscription && this._currentSubscription.dispose();
-
-        this._currentSubscription = model.client.events
-            .throttle(100)
-            .subscribe(z => {
-                this.setState({}, () => this.scrollToBottom());
-            });
-
-        this.setState({
-            output: model.output
-        }, () => this.scrollToBottom());
     }
 
     private createItem(item: OmniSharp.OutputMessage) {

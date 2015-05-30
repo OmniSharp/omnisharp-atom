@@ -1,3 +1,4 @@
+require('./configure-rx');
 import _ = require('lodash');
 import {Observable, BehaviorSubject} from "rx";
 import path = require('path');
@@ -12,16 +13,6 @@ import dependencyChecker = require('./dependency-checker');
 import StatusBarComponent = require('./views/status-bar-view');
 import DockView = require('./views/dock-view');
 import React = require('react');
-
-// Configure Rx / Bluebird for long stacks
-(function() {
-    // TODO: Toggle this with devmode?
-    var Rx = require("rx");
-    var Promise = require('bluebird');
-    Promise.longStackTraces();
-    Rx.config.Promise = Promise;
-    Rx.config.longStackSupport = true;
-})();
 
 class Feature implements OmniSharp.IFeature {
     public name: string;

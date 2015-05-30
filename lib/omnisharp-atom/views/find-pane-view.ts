@@ -4,35 +4,24 @@ import React = require('react');
 import path = require('path');
 import $ = require('jquery');
 import {ReactClientComponent} from "./react-client-component";
+import {world} from '../world';
 
 class FindPaneWindow extends ReactClientComponent<{}, { usages?: OmniSharp.Models.QuickFix[] }> {
     public displayName = 'FindPaneWindow';
     private selectedIndex = 0;
 
     constructor(props?: {}, context?: any) {
-        super({ trackWorldChanges: true }, props, context);
+        super(props, context);
         this.state = { usages: [] };
     }
 
     public componentDidMount() {
         super.componentDidMount();
 
-        this.disposable.add(Omni.listener.observeFindusages.subscribe((data) => {
+        this.disposable.add(world.observe.findUsages.subscribe(usages => {
             this.selectedIndex = 0;
-            this.setState({
-                usages: data.response.QuickFixes
-            });
+            this.setState({ usages });
             this.updateModel();
-        }));
-
-        this.disposable.add(Omni.listener.observeFindimplementations.subscribe((data) => {
-            if (data.response.QuickFixes.length > 1) {
-                this.selectedIndex = 0;
-                this.setState({
-                    usages: data.response.QuickFixes
-                });
-                this.updateModel();
-            }
         }));
     }
 
@@ -131,7 +120,7 @@ export = function() {
     var element = document.createElement('div');
     element.className = 'error-output-pane';
     element.tabIndex = -1;
-    var reactItem : FindPaneWindow = <any>React.render(React.createElement(FindPaneWindow, null), element);
+    var reactItem: FindPaneWindow = <any>React.render(React.createElement(FindPaneWindow, null), element);
     element.onkeydown = (e) => reactItem.keydownPane(e);
     return element;
 }

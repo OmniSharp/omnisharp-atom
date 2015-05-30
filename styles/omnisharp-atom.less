@@ -52,13 +52,42 @@
     color: rgba(156, 164, 180, 0.6);
     -webkit-animation: loading 1s linear infinite alternate;
   }
+  .icon-flame-processing {
+    color: @text-color-success;
+    -webkit-animation: processing 1s linear infinite alternate;
+  }
+
+  span {
+      transition: opacity;
+      transition-duration: 0.3s;
+      transition-timing-function: ease-in-out;
+
+      opacity: 1;
+      &.fade {
+          opacity: 0;
+      }
+  }
+  .icon-flame {
+    float: left;
+  }
+  .outgoing-requests {
+      float: left;
+  }
 }
 @-webkit-keyframes loading {
     from {
-      color: rgba(156, 164, 180, 0.3);
+      color: rgba(156, 164, 180, 1);
     }
     to {
-      color: rgba(156, 164, 180, 1);
+      color: rgba(156, 164, 180, 0.3);
+    }
+}
+@-webkit-keyframes processing {
+    from {
+      color: rgba(red(@text-color-success), green(@text-color-success), blue(@text-color-success), 1);
+    }
+    to {
+      color: rgba(red(@text-color-success), green(@text-color-success), blue(@text-color-success), 0.3);
     }
 }
 .btn-fix {
@@ -227,7 +256,8 @@ li.autocomplete-omnisharp-atom {
         text-decoration: none;
     }
     span {
-        padding-left: 5px;
+        padding-left: 3px;
+        padding-right: 3px;
     }
     .icon-issue-opened {
         color: @text-color-error;
@@ -235,6 +265,8 @@ li.autocomplete-omnisharp-atom {
     .icon-alert {
         color: @text-color-warning;
     }
+
+
 }
 
 span.filename {

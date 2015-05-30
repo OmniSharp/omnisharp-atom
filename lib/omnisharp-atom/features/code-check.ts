@@ -15,6 +15,13 @@ class CodeCheck {
             editor.getBuffer().onDidDelete(() => this.doCodeCheck(editor));
             editor.getBuffer().onDidReload(() => this.doCodeCheck(editor));
         });
+
+        OmniSharpAtom.activeEditor.subscribe(editor => {
+            if (editor) {
+                this.doCodeCheck(editor);
+            }
+        });
+        Omni.registerConfiguration(client => client.codecheck({}));
     }
 
     public doCodeCheck(editor: Atom.TextEditor) {

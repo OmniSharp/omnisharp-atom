@@ -12,12 +12,20 @@ class CodeCheckOutputPaneWindow extends ReactClientComponent<{}, { diagnostics?:
     constructor(props?: {}, context?: any) {
         super(props, context);
 
-        this.state = { diagnostics: world.diagnostics };
-        this.world.observe.diagnostics.subscribe(diagnostics => this.setState({ diagnostics: this.filterOnlyWarningsAndErrors(diagnostics) }));
+        this.state = { diagnostics: [] };
+    }
+
+    public componentDidMount() {
+        super.componentDidMount();
+
+        this.disposable.add(
+                world.observe.diagnostics
+                    .subscribe(diagnostics =>
+                        this.setState({ diagnostics: this.filterOnlyWarningsAndErrors(diagnostics) })));
     }
 
     public shouldComponentUpdate(nextProps: {}, nextState: { diagnostics?: OmniSharp.Models.DiagnosticLocation[] }) {
-        return super.shouldComponentUpdate(nextProps, nextState) && !(this.state.diagnostics === nextState.diagnostics);
+        return !(this.state.diagnostics === nextState.diagnostics);
     }
 
     private filterOnlyWarningsAndErrors(quickFixes): OmniSharp.Models.DiagnosticLocation[] {

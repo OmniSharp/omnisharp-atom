@@ -1,37 +1,76 @@
 import * as _ from "lodash";
 import Client = require('./client');
-import {DriverState} from "omnisharp-client";
+import {DriverState, OmnisharpClientStatus} from "omnisharp-client";
+import {Observable} from "rx";
 
 class ViewModel {
-    public get isOff() { return this.client.currentState === DriverState.Disconnected; }
-    public get isConnecting() { return this.client.currentState === DriverState.Connecting; }
-    public get isOn() { return this.client.currentState === DriverState.Connecting || this.client.currentState === DriverState.Connected; }
-    public get isReady() { return this.client.currentState === DriverState.Connected; }
-    public get isError() { return this.client.currentState === DriverState.Error; }
+    public updated: Observable<Rx.ObjectObserveChange<ViewModel>>;
 
-    public get uniqueId() { return this.client.uniqueId; }
+    public isOff: boolean;
+    public isConnecting: boolean;
+    public isOn: boolean;
+    public isReady: boolean;
+    public isError: boolean;
+
+    private _uniqueId;
+    public get uniqueId() { return this._client.uniqueId; }
     public output: OmniSharp.OutputMessage[] = [];
     public diagnostics: OmniSharp.Models.DiagnosticLocation[] = [];
+    public status: OmnisharpClientStatus;
 
-    private _codeCheck: Rx.Observable<OmniSharp.Models.DiagnosticLocation[]>;
-    public get codecheck() { return this._codeCheck; }
+    public observe: {
+        codecheck: Rx.Observable<OmniSharp.Models.DiagnosticLocation[]>;
+        output: Rx.Observable<OmniSharp.OutputMessage[]>;
+        status: Rx.Observable<OmnisharpClientStatus>;
+    };
 
-    constructor(public client: Client) {
+    constructor(private _client: Client) {
+        this._uniqueId = _client.uniqueId;
+        this._updateState(_client.currentState);
+
         // Manage our build log for display
-        client.logs.subscribe(event => {
+        _client.logs.subscribe(event => {
             this.output.push(event);
             if (this.output.length > 1000)
                 this.output.shift();
         });
 
-        this.codecheck = client.observeCodecheck
-            .where(z => z.request.FileName === null)
+        var codecheck = _client.observeCodecheck
+            .where(z => !z.request.FileName)
             .map(z => z.response)
-            .merge(client.codecheck({})) // This kicks off the first code check
             .map(z => <OmniSharp.Models.DiagnosticLocation[]>z.QuickFixes)
-            .startWith([]); // Populates our data
-            
-        this.codecheck.subscribe((data) => this.diagnostics = _.sortBy(data, quickFix => quickFix.LogLevel));
+            .map(data => _.sortBy(data, quickFix => quickFix.LogLevel))
+            .startWith([])
+            .shareReplay(1);
+
+        codecheck.subscribe((data) => this.diagnostics = data);
+
+        var status = _client.status
+            .startWith(<any>{})
+            .share();
+        _client.status.subscribe(z => this.status = z);
+
+        var output = this.output;
+
+        this.observe = {
+            get codecheck() { return codecheck; },
+            get output() { return _client.logs.map(() => output); },
+            get status() { return status; }
+        };
+
+        _client.state.subscribe(_.bind(this._updateState, this));
+
+        this.updated = Observable.ofObjectChanges(this);
+
+        (window['clients'] || (window['clients'] = [])).push(this);  //TEMP
+    }
+
+    private _updateState(state) {
+        this.isOn = state === DriverState.Connecting || state === DriverState.Connected;
+        this.isOff = state === DriverState.Disconnected;
+        this.isConnecting = state === DriverState.Connecting;
+        this.isReady = state === DriverState.Connected;
+        this.isError = state === DriverState.Error;
     }
 }
 
