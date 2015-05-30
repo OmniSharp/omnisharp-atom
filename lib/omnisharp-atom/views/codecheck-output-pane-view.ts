@@ -5,19 +5,23 @@ import {world} from '../world';
 import React = require('react');
 import {ReactClientComponent} from "./react-client-component";
 
-interface ICodeCheckOutputWindow {
+interface ICodeCheckOutputWindowState {
     diagnostics?: OmniSharp.Models.DiagnosticLocation[];
 }
+export interface ICodeCheckOutputWindowProps {
+    scrollTop: number;
+    setScrollTop: (scrollTop: number) => void;
+}
 
-class CodeCheckOutputPaneWindow extends ReactClientComponent<{}, ICodeCheckOutputWindow> {
+export class CodeCheckOutputWindow<T extends ICodeCheckOutputWindowProps> extends ReactClientComponent<T, ICodeCheckOutputWindowState> {
     public displayName = 'FindPaneWindow';
 
-    constructor(props?: {}, context?: any) {
+    constructor(props?: T, context?: any) {
         super(props, context);
 
-        this.state = { diagnostics: [] };
+        this.state = { diagnostics: world.diagnostics };
     }
-
+    
     public componentDidMount() {
         super.componentDidMount();
 
@@ -25,9 +29,10 @@ class CodeCheckOutputPaneWindow extends ReactClientComponent<{}, ICodeCheckOutpu
             world.observe.diagnostics
                 .subscribe(diagnostics =>
                     this.setState({ diagnostics: this.filterOnlyWarningsAndErrors(diagnostics) })));
+        React.findDOMNode(this).scrollTop = this.props.scrollTop;
     }
 
-    public shouldComponentUpdate(nextProps: {}, nextState: ICodeCheckOutputWindow) {
+    public shouldComponentUpdate(nextProps: T, nextState: ICodeCheckOutputWindowState) {
         return !(this.state.diagnostics === nextState.diagnostics);
     }
 
@@ -43,27 +48,28 @@ class CodeCheckOutputPaneWindow extends ReactClientComponent<{}, ICodeCheckOutpu
 
     public render() {
         return React.DOM.div({
-            style: { "cursor": "pointer" }
-        }, ..._.map(this.state.diagnostics, error => {
-            var filename = path.basename(error.FileName);
-            var dirname = path.dirname(error.FileName);
-            var projectTargetFramework = Omni.getFrameworks(error.Projects);
+            className: 'codecheck-output-pane ' + (this.props['className'] || ''),
+            style: { "cursor": "pointer" },
+            onScroll: (e) => {
+                this.props.setScrollTop((<any>e.currentTarget).scrollTop);
+            }
+        },
+            React.DOM.div({
+                scrollTop: this.props.scrollTop
+            }, ..._.map(this.state.diagnostics, (error, index) => {
+                var filename = path.basename(error.FileName);
+                var dirname = path.dirname(error.FileName);
+                var projectTargetFramework = Omni.getFrameworks(error.Projects);
 
-            return React.DOM.div({
-                className: `codecheck ${error.LogLevel}`,
-                onClick: (e) => this.goToLine(error)
-            },
-                React.DOM.pre({ className: "text-highlight" }, error.Text),
-                React.DOM.pre({ className: "inline-block" }, `${filename}(${error.Line},${error.Column})`),
-                React.DOM.pre({ className: "text-subtle inline-block" }, ` ${dirname}  [${projectTargetFramework}]`)
-                )
-        }));
+                return React.DOM.div({
+                    key: index,
+                    className: `codecheck ${error.LogLevel}`,
+                    onClick: (e) => this.goToLine(error)
+                },
+                    React.DOM.pre({ className: "text-highlight" }, error.Text),
+                    React.DOM.pre({ className: "inline-block" }, `${filename}(${error.Line},${error.Column})`),
+                    React.DOM.pre({ className: "text-subtle inline-block" }, ` ${dirname}  [${projectTargetFramework}]`)
+                    )
+            })));
     }
-}
-
-export = function() {
-    var element = document.createElement('div');
-    element.className = 'codecheck-output-pane';
-    React.render(React.createElement(CodeCheckOutputPaneWindow, null), element);
-    return element;
 }

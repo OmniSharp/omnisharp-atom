@@ -10,7 +10,11 @@ var observable = Observable.merge(
         .where(z => z.response.QuickFixes.length > 1)
     )
     // For the UI we only need the qucik fixes.
-    .map(z => z.response.QuickFixes)
+    .map(z => z.response.QuickFixes || [])
     .share()
 
 export var findUsages = observable;
+// NOTE: We cannot do the same for find implementations because find implementation
+//      just goes to the item if only one comes back.
+export var openUsages = Omni.listener.requests.where(z => z.command === "findusages");
+export var resetUsages = Omni.listener.requests.where(z => z.command === "findimplementations" || z.command === "findusages");

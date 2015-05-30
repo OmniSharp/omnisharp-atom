@@ -10,15 +10,15 @@ interface IOutputWindowState {
     output: OmniSharp.OutputMessage[];
 }
 
-class OutputWindow extends ReactClientComponent<{}, IOutputWindowState>  {
+export class OutputWindow<T> extends ReactClientComponent<T, IOutputWindowState>  {
     public displayName = "OutputWindow";
 
     private _convert;
 
-    constructor(props?: {}, context?: any) {
+    constructor(props?: T, context?: any) {
         super(props, context);
         this._convert = new Convert();
-        this.state = { output: [] };
+        this.state = { output: world.output };
     }
 
     public componentDidMount() {
@@ -26,30 +26,28 @@ class OutputWindow extends ReactClientComponent<{}, IOutputWindowState>  {
 
         this.disposable.add(world.observe.output
             .subscribe(z => this.setState({ output: z }, () => this.scrollToBottom())));
+        this.scrollToBottom();
     }
 
     private scrollToBottom() {
-        var item = <any> React.findDOMNode(this).lastElementChild;
+        var item = <any> React.findDOMNode(this).lastElementChild.lastElementChild;
         if (item) item.scrollIntoViewIfNeeded();
     }
 
-    private createItem(item: OmniSharp.OutputMessage) {
+    private createItem(item: OmniSharp.OutputMessage, index: number) {
         return React.DOM.pre({
+            key: index,
             className: item.logLevel
         }, this._convert.toHtml(item.message).trim());
     }
 
     public render() {
         return React.DOM.div({
-            className: 'messages-container'
-        }, _.map(this.state.output, item => this.createItem(item)));
+            className: 'omni-output-pane-view native-key-bindings ' + (this.props['className'] || ''),
+            tabIndex: -1
+        },
+            React.DOM.div({
+                className: 'messages-container'
+            }, _.map(this.state.output, (item, index) => this.createItem(item, index))));
     }
-}
-
-export = function() {
-    var element = document.createElement('div');
-    element.className = 'omni-output-pane-view native-key-bindings';
-    element.tabIndex = -1;
-    React.render(React.createElement(OutputWindow, null), element);
-    return element;
 }

@@ -34,8 +34,8 @@ class StatusBarComponent extends ReactClientComponent<{}, StatusBarState> {
         };
     }
 
-    public componentDidMount() {
-        super.componentDidMount();
+    public componentWillMount() {
+        super.componentWillMount();
 
         this.disposable.add(world.observe.diagnostics.subscribe(diagnostics => {
             var counts = _.countBy(diagnostics, quickFix => quickFix.LogLevel);

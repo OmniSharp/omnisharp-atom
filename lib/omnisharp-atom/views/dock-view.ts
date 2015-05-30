@@ -1,159 +1,154 @@
-import spacePenViews = require('atom-space-pen-views')
-var $ = spacePenViews.jQuery;
-var Convert = require('ansi-to-html')
-import Vue = require('vue')
-
-import Omni = require('../../omni-sharp-server/omni')
+//var Convert = require('ansi-to-html')
+import _ = require('lodash')
+import {Observable} from "rx";
+import Omni = require('../../omni-sharp-server/omni');
+import React = require('react');
 import OmniSharpAtom = require("../omnisharp-atom");
-import FindPaneView = require('./find-pane-view')
-import BuildOutputPaneView = require('./build-output-pane-view')
-import OmniOutputPaneView = require('./omni-output-pane-view')
-import CodeCheckOutputPaneView = require('./codecheck-output-pane-view');
+import {FindWindow} from './find-pane-view'
+import {BuildOutputWindow} from './build-output-pane-view'
+import {OutputWindow} from './omni-output-pane-view'
+import {CodeCheckOutputWindow, ICodeCheckOutputWindowProps} from './codecheck-output-pane-view';
+import {ReactClientComponent} from "./react-client-component";
+import {world} from '../world';
 
-class DockView extends spacePenViews.View {
+interface IDockWindowState {
+    errorScrollTop: number;
+}
 
-    private findOutput;
-    private buildOutput;
-    private omniOutput;
-    private errorsOutput;
-    private vm: { selected: string; };
-    private panel: any;
-    private fixedTop: number;
-    private fixedHeight: number;
-    private fixedButtonBarHeight: number;
-    private statusBarHeight: number;
-    private resizeHandle: JQuery;
+interface IDockWindowProps {
+    panel: Atom.Panel;
+}
 
-    // Internal: Initialize test-status output view DOM contents.
-    public static content() {
-        var btn = (view, text) => {
-            this.button({
-                'v-attr': "class: selected | btn-selected #{view}",
-                'v-on': "click: selectPane",
-                'pane': view
-            }, text);
-        };
+interface IDockWindowButtonsState {
+}
 
-        return this.div({
-            "class": 'tool-panel panel-bottom omnisharp-atom-pane',
-            outlet: 'pane'
-        }, () => {
-                this.div({
-                    "class": 'omnisharp-atom-output-resizer',
-                    outlet: 'resizeHandle'
-                });
-                return this.div({
-                    "class": "inset-panel"
-                }, () => {
-                        this.div({
-                            "class": "panel-heading clearfix"
-                        }, () => {
-                                return this.div({
-                                    "class": 'btn-toolbar pull-left'
-                                }, () => {
-                                        return this.div({
-                                            "class": 'btn-group btn-toggle'
-                                        }, () => {
-                                                btn("errors", "Errors & Warnings")
-                                                btn("find", "Find");
-                                                btn("build", "Build output");
-                                                return btn("omni", "Omnisharp output");
-                                            });
-                                    });
-                            });
-                        this.div({
-                            'v-attr': 'class: selected | content-selected omni',
-                            outlet: 'omniOutput'
-                        });
-                        this.div({
-                            'v-attr': 'class: selected | content-selected errors',
-                            outlet: 'errorsOutput'
-                        });
-                        this.div({
-                            'v-attr': 'class: selected | content-selected find',
-                            outlet: 'findOutput'
-                        });
-                        return this.div({
-                            'v-attr': 'class: selected | content-selected build',
-                            outlet: 'buildOutput'
-                        });
-                    });
-            });
+interface IDockWindowButtonsProps {
+    selected: string;
+    setSelected: (selected: string) => void;
+    children: any[];
+}
+
+class DockWindows<T extends IDockWindowButtonsProps> extends ReactClientComponent<T, IDockWindowButtonsState> {
+
+    constructor(props?: T, context?: any) {
+        super(props, context);
+        this.state = {};
     }
 
-    // Internal: Initialize the test-status output view and event handlers.
-    public initialize() {
-        Vue.filter('btn-selected', (value, expectedValue) => {
-            var selected;
-            selected = value === expectedValue ? "selected" : "";
-            return "btn btn-default btn-fix " + selected;
-        });
-
-        Vue.filter('content-selected', (value, expectedValue) => {
-            var selected;
-            selected = value === expectedValue ? "" : "hide";
-            return "omnisharp-atom-output " + expectedValue + "-output " + selected;
-        });
-
-        var viewModel = new Vue({
-            el: this[0],
-            data: {
-                selected: "omni"
-            },
-            methods: {
-                selectPane: arg => {
-                    var target;
-                    target = arg.target;
-                    return this.selectPane($(target).attr("pane"));
-                }
+    private button(id, title) {
+        return React.DOM.button({
+            className: `btn btn-default btn-fix ${this.props.selected === id ? 'selected' : ''}`,
+            key: id,
+            onClick: () => {
+                this.props.setSelected(id);
+                this.setState({});
             }
-        });
-
-        this.vm = <any>viewModel;
-
-        atom.commands.add('atom-workspace', "omnisharp-atom:toggle-output", () => this.toggleView());
-        atom.commands.add('atom-workspace', "omnisharp-atom:hide", () => this.hideView());
-        atom.commands.add('atom-workspace', "omnisharp-atom:show-find", () => this.selectPane("find"));
-        atom.commands.add('atom-workspace', "omnisharp-atom:show-build", () => this.selectPane("build"));
-        atom.commands.add('atom-workspace', "omnisharp-atom:show-omni", () => this.selectPane("omni"));
-        atom.commands.add('atom-workspace', 'omnisharp-atom:toggle-errors', () => this.toggleErrors());
-
-        atom.commands.add('atom-workspace', 'core:close', () => this.hideView());
-        atom.commands.add('atom-workspace', 'core:cancel', () => this.hideView());
-
-        this.on('mousedown', '.omnisharp-atom-output-resizer', e => this.resizeStarted(e));
-
-        //init the panel, but hide it
-        this.panel = atom.workspace.addBottomPanel({
-            item: this,
-            visible: false
-        });
+        }, title);
     }
 
-    private omnisharpAtom: typeof OmniSharpAtom;
-    constructor(omnisharpAtom: typeof OmniSharpAtom) {
-        super();
-        this.omnisharpAtom = omnisharpAtom;
-        this.setupViews();
+    private getButtons() {
+        var buttons = [];
+        buttons.push(this.button("errors", "Errors & Warnings"));
+        buttons.push(this.button("find", "Find"));
+        if (world.supportsBuild)
+            buttons.push(this.button("build", "Build output"));
+        buttons.push(this.button("omni", "Omnisharp output"));
+
+        return buttons;
     }
 
-    private setupViews() {
-        this.findOutput.append(FindPaneView());
-        this.buildOutput.append(BuildOutputPaneView());
-        this.omniOutput.append(OmniOutputPaneView());
-        this.errorsOutput.append(CodeCheckOutputPaneView());
+    public render() {
+        return React.DOM.div({
+            className: "inset-panel"
+        }, React.DOM.div({
+            className: "panel-heading clearfix"
+        }, React.DOM.div({ className: 'btn-toolbar pull-left' },
+            React.DOM.div({ className: 'btn-group btn-toggle' }, this.getButtons()))), this.props.children);
+    }
+}
+
+
+class DockWindow<T extends IDockWindowProps> extends ReactClientComponent<T, IDockWindowState> {
+    public displayName = "DockWindow";
+
+    private selected = 'omni';
+    private visible = false;
+
+    private _convert;
+
+    constructor(props?: T, context?: any) {
+        super(props, context);
+        this.state = { errorScrollTop: 0 };
     }
 
-    public selectPane = (pane) => {
-        this.vm.selected = pane;
-        this.show();
-        if (!this.panel.visible) {
-            this.panel.show();
+    public componentWillMount() {
+        super.componentWillMount();
+
+        this.disposable.add(atom.commands.add('atom-workspace', "omnisharp-atom:toggle-output", () => {
+            this.toggleView();
+            this.updateState();
+        }));
+        this.disposable.add(atom.commands.add('atom-workspace', "omnisharp-atom:hide", () => {
+            this.hideView();
+            this.updateState();
+        }));
+        this.disposable.add(atom.commands.add('atom-workspace', "omnisharp-atom:show-find", () => {
+            this.selectPane("find");
+        }));
+
+        this.disposable.add(Observable.merge(world.observe.usages.find.map(z => true), world.observe.usages.open.map(z => true)).subscribe(() => {
+            this.selectPane("find");
+        }));
+
+        this.disposable.add(atom.commands.add('atom-workspace', "omnisharp-atom:show-build", () => {
+            this.selectPane("build");
+        }));
+        this.disposable.add(atom.commands.add('atom-workspace', "omnisharp-atom:show-omni", () => {
+            this.selectPane("omni");
+        }));
+        this.disposable.add(atom.commands.add('atom-workspace', 'omnisharp-atom:toggle-errors', () => {
+            this.toggleErrors();
+        }));
+        this.disposable.add(atom.commands.add('atom-workspace', 'core:close', () => {
+            this.hideView();
+            this.updateState();
+        }));
+        this.disposable.add(atom.commands.add('atom-workspace', 'core:cancel', () => {
+            this.hideView();
+            this.updateState();
+        }));
+
+        //this.on('mousedown', '.omnisharp-atom-output-resizer', e => this.resizeStarted(e));
+    }
+
+    private updateState(cb?: () => void) {
+        this.setState(<any>{}, () => this.updateAtom(cb));
+    }
+
+    private updateAtom(cb: () => void) {
+        if (this.props.panel.visible !== this.visible) {
+            if (this.visible)
+                this.props.panel.show();
+            else
+                this.props.panel.hide();
         }
-        this.find("button.selected").focus();
+        if (cb) cb();
     }
 
-    public resizeStarted = (event: JQueryEventObject) => {
+
+    private selectPane(selected: string) {
+        if (!this.visible)
+            this.showView();
+        this.selected = selected;
+
+        // Focus the panel!
+        this.updateState(() => {
+            var panel: any = React.findDOMNode(this).querySelector('.omnisharp-atom-output.selected');
+            panel.focus();
+        });
+    }
+
+    /*public resizeStarted = (event: JQueryEventObject) => {
         this.fixedTop = this.resizeHandle.offset().top;
         this.fixedHeight = $(".omnisharp-atom-pane").height();
         this.fixedButtonBarHeight = this.find(".btn-group").height();
@@ -181,39 +176,93 @@ class DockView extends spacePenViews.View {
         $(".omnisharp-atom-pane").height(h);
         this.find(".omnisharp-atom-output").height(h - this.fixedButtonBarHeight - this.statusBarHeight);
         this.find(".messages-container").height(h - this.fixedButtonBarHeight - this.statusBarHeight);
-    }
+    }*/
 
-
-    public destroy() {
-        this.detach();
+    public showView() {
+        this.visible = true;
     }
 
     public hideView() {
-        this.panel.hide();
+        this.visible = false;
         atom.workspace.getActivePane().activate();
         atom.workspace.getActivePane().activateItem();
         return this;
     }
 
     public toggleView() {
-        if (this.panel.visible) {
-            this.panel.hide();
+        if (this.visible) {
+            this.hideView();
         } else {
-            this.panel.show();
+            this.showView();
         }
     }
 
     private toggleErrors() {
-        if (this.panel.visible) {
-            if (this.vm.selected === 'errors') {
-                this.panel.hide();
-            } else {
-                this.selectPane("errors")
-            }
-        } else {
-            this.selectPane("errors")
+        if (this.visible && this.selected === 'errors') {
+            this.hideView();
+            this.updateState();
+            return;
         }
+
+        if (!this.visible) {
+            this.showView();
+        }
+        this.selectPane('errors');
+    }
+
+    private isSelected(key: string) {
+        if (this.selected) {
+            return `omnisharp-atom-output ${key}-output selected`;
+        }
+        return '';
+    }
+
+    private getWindows() {
+        var windows: any[] = [];
+        if (this.selected === 'errors')
+            windows.push(React.createElement<ICodeCheckOutputWindowProps>(CodeCheckOutputWindow, {
+                scrollTop: this.state.errorScrollTop,
+                setScrollTop: (scrollTop) => this.state.errorScrollTop = scrollTop,
+                className: this.isSelected('errors'),
+                key: 'errors'
+            }));
+
+        if (this.selected === 'find')
+            windows.push(React.createElement(FindWindow, {
+                className: this.isSelected('find'),
+                key: 'find'
+            }));
+
+        if (world.supportsBuild && this.selected === 'build') {
+            windows.push(React.createElement(BuildOutputWindow, {
+                className: this.isSelected('build'),
+                key: 'build'
+            }));
+        }
+
+        if (this.selected === 'omni')
+            windows.push(React.createElement(OutputWindow, {
+                className: this.isSelected('omni'),
+                key: 'omni'
+            }));
+
+        return windows;
+    }
+
+    public render() {
+        if (!this.visible)
+            return React.DOM.span({
+                style: {
+                    display: 'none'
+                }
+            });
+
+        return React.createElement(DockWindows, { selected: this.selected, setSelected: this.selectPane.bind(this) }, this.getWindows());
+        /*React.DOM.div({
+            className: 'omnisharp-atom-output-resizer'
+        }),*/
+
     }
 }
 
-export = DockView;
+export = DockWindow;

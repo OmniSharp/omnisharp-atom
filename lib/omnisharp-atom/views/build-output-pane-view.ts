@@ -9,12 +9,12 @@ interface IBuildOutputWindowState {
     output: OmniSharp.OutputMessage[];
 }
 
-class OutputWindow extends ReactClientComponent<{}, IBuildOutputWindowState> {
-    public displayName = "OutputWindow";
+export class BuildOutputWindow<T> extends ReactClientComponent<T, IBuildOutputWindowState> {
+    public displayName = "BuildOutputWindow";
 
     private _convert;
 
-    constructor(props?: {}, context?: any) {
+    constructor(props?: T, context?: any) {
         super(props, context);
         this._convert = new Convert();
         this.state = { output: [] };
@@ -90,13 +90,13 @@ class OutputWindow extends ReactClientComponent<{}, IBuildOutputWindowState> {
 
     public componentDidMount() {
         super.componentDidMount();
-
         this.disposable.add(world.observe.output
             .subscribe(z => this.setState({ output: z }, () => this.scrollToBottom())));
+        this.scrollToBottom();
     }
 
     private scrollToBottom() {
-        var item = <any> React.findDOMNode(this).lastElementChild;
+        var item = <any> React.findDOMNode(this).lastElementChild.lastElementChild;
         if (item) item.scrollIntoViewIfNeeded();
     }
 
@@ -113,15 +113,11 @@ class OutputWindow extends ReactClientComponent<{}, IBuildOutputWindowState> {
 
     public render() {
         return React.DOM.div({
-            className: 'messages-container'
-        }, _.map(this.state.output, item => this.createItem(item)));
+            className: 'build-output-pane-view native-key-bindings ' + (this.props['className'] || ''),
+            tabIndex: -1
+        },
+            React.DOM.div({
+                className: 'messages-container'
+            }, _.map(this.state.output, item => this.createItem(item))));
     }
-}
-
-export = function() {
-    var element = document.createElement('div');
-    element.className = 'build-output-pane-view native-key-bindings';
-    element.tabIndex = -1;
-    React.render(React.createElement(OutputWindow, null), element);
-    return element;
 }

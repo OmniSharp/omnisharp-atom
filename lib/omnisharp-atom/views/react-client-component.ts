@@ -11,6 +11,10 @@ export class ReactClientComponent<P, S> extends React.Component<P, S> {
         super(props, context);
     }
 
+    public componentWillMount() {
+        this.disposable = new CompositeDisposable();
+    }
+
     public componentDidMount() {
         this.disposable = new CompositeDisposable();
     }
@@ -22,7 +26,7 @@ export class ReactClientComponent<P, S> extends React.Component<P, S> {
 
 // Hack to workaround issue with ts.transpile not working correctly
 (function(ReactClientComponent: any) {
+    ReactClientComponent.componentWillMount = ReactClientComponent.prototype.componentWillMount;
     ReactClientComponent.componentDidMount = ReactClientComponent.prototype.componentDidMount;
-    ReactClientComponent.changeActiveClient = ReactClientComponent.prototype.changeActiveClient;
     ReactClientComponent.componentWillUnmount = ReactClientComponent.prototype.componentWillUnmount;
 })(ReactClientComponent);
