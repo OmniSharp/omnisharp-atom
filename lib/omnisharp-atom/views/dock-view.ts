@@ -67,7 +67,6 @@ class DockWindows<T extends IDockWindowButtonsProps> extends ReactClientComponen
     }
 }
 
-
 class DockWindow<T extends IDockWindowProps> extends ReactClientComponent<T, IDockWindowState> {
     public displayName = "DockWindow";
 
@@ -117,8 +116,6 @@ class DockWindow<T extends IDockWindowProps> extends ReactClientComponent<T, IDo
             this.hideView();
             this.updateState();
         }));
-
-        //this.on('mousedown', '.omnisharp-atom-output-resizer', e => this.resizeStarted(e));
     }
 
     private updateState(cb?: () => void) {
@@ -147,36 +144,6 @@ class DockWindow<T extends IDockWindowProps> extends ReactClientComponent<T, IDo
             panel.focus();
         });
     }
-
-    /*public resizeStarted = (event: JQueryEventObject) => {
-        this.fixedTop = this.resizeHandle.offset().top;
-        this.fixedHeight = $(".omnisharp-atom-pane").height();
-        this.fixedButtonBarHeight = this.find(".btn-group").height();
-        this.statusBarHeight = this.omnisharpAtom.statusBarView.height();
-        $(document).on('mousemove', this.resizePane);
-        $(document).on('mouseup', this.resizeStopped);
-    }
-
-    public resizeStopped = () => {
-        $(document).off('mousemove', this.resizePane);
-        $(document).off('mouseup', this.resizeStopped);
-    }
-
-    // TODO: Update to TS 1.5 when destructuring is done
-    //public resizePane = ({pageY, which}) => {
-    public resizePane = (arg) => {
-        var pageY, which;
-        pageY = arg.pageY, which = arg.which;
-
-        if (which !== 1) {
-            return this.resizeStopped();
-        }
-
-        var h = this.fixedHeight + (this.fixedTop - pageY);
-        $(".omnisharp-atom-pane").height(h);
-        this.find(".omnisharp-atom-output").height(h - this.fixedButtonBarHeight - this.statusBarHeight);
-        this.find(".messages-container").height(h - this.fixedButtonBarHeight - this.statusBarHeight);
-    }*/
 
     public showView() {
         this.visible = true;
@@ -258,10 +225,6 @@ class DockWindow<T extends IDockWindowProps> extends ReactClientComponent<T, IDo
             });
 
         return React.createElement(DockWindows, { selected: this.selected, setSelected: this.selectPane.bind(this) }, this.getWindows());
-        /*React.DOM.div({
-            className: 'omnisharp-atom-output-resizer'
-        }),*/
-
     }
 }
 
