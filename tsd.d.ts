@@ -3,7 +3,6 @@
 /// <reference path="typings/jquery/jquery.d.ts" />
 /// <reference path="typings/lodash/lodash.d.ts" />
 /// <reference path="typings/node/node.d.ts" />
-/// <reference path="typings/vue/vue.d.ts" />
 /// <reference path="typings/semver/semver.d.ts" />
 /// <reference path="typingsTemp/atom/atom.d.ts" />
 /// <reference path="typingsTemp/atom-keymap/atom-keymap.d.ts" />

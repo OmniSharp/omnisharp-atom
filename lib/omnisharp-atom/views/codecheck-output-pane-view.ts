@@ -5,8 +5,11 @@ import {world} from '../world';
 import React = require('react');
 import {ReactClientComponent} from "./react-client-component";
 
+interface ICodeCheckOutputWindow {
+    diagnostics?: OmniSharp.Models.DiagnosticLocation[];
+}
 
-class CodeCheckOutputPaneWindow extends ReactClientComponent<{}, { diagnostics?: OmniSharp.Models.DiagnosticLocation[] }> {
+class CodeCheckOutputPaneWindow extends ReactClientComponent<{}, ICodeCheckOutputWindow> {
     public displayName = 'FindPaneWindow';
 
     constructor(props?: {}, context?: any) {
@@ -19,12 +22,12 @@ class CodeCheckOutputPaneWindow extends ReactClientComponent<{}, { diagnostics?:
         super.componentDidMount();
 
         this.disposable.add(
-                world.observe.diagnostics
-                    .subscribe(diagnostics =>
-                        this.setState({ diagnostics: this.filterOnlyWarningsAndErrors(diagnostics) })));
+            world.observe.diagnostics
+                .subscribe(diagnostics =>
+                    this.setState({ diagnostics: this.filterOnlyWarningsAndErrors(diagnostics) })));
     }
 
-    public shouldComponentUpdate(nextProps: {}, nextState: { diagnostics?: OmniSharp.Models.DiagnosticLocation[] }) {
+    public shouldComponentUpdate(nextProps: {}, nextState: ICodeCheckOutputWindow) {
         return !(this.state.diagnostics === nextState.diagnostics);
     }
 

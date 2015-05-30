@@ -5,7 +5,7 @@ class FindSymbolsView extends OmniSelectListView {
 
      constructor() {
             super("Find Symbols");
-            
+
             this.setMaxItems(50);
         }
 

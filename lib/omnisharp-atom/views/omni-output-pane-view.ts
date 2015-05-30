@@ -6,7 +6,11 @@ import React = require('react');
 import {ReactClientComponent} from "./react-client-component";
 import {world} from '../world';
 
-class OutputWindow extends ReactClientComponent<{}, { output: OmniSharp.OutputMessage[] }> {
+interface IOutputWindowState {
+    output: OmniSharp.OutputMessage[];
+}
+
+class OutputWindow extends ReactClientComponent<{}, IOutputWindowState>  {
     public displayName = "OutputWindow";
 
     private _convert;

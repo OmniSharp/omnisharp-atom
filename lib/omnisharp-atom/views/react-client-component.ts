@@ -2,7 +2,6 @@ import {CompositeDisposable, Disposable, Scheduler} from "rx";
 import _ = require('lodash')
 import Omni = require('../../omni-sharp-server/omni');
 import React = require('react');
-import ClientVM = require('../../omni-sharp-server/view-model');
 import {world} from '../world';
 
 export class ReactClientComponent<P, S> extends React.Component<P, S> {
