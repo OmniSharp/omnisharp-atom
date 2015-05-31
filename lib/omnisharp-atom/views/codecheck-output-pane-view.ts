@@ -60,7 +60,7 @@ export class CodeCheckOutputWindow<T extends ICodeCheckOutputWindowProps> extend
 
     private goToLine(location: OmniSharp.Models.DiagnosticLocation, index: number) {
         Omni.navigateTo(location);
-        this.state.selectedIndex = index;
+        this.model.selectedIndex = index;
     }
 
     private keydownPane(e: any) {
