@@ -46,8 +46,8 @@ class OmniSharpAtom {
 
             Omni.activate(this);
 
-            this.loadFeatures(state).toPromise()
-                .then(() => this.loadAtomFeatures(state).toPromise())
+            this.loadAtomFeatures(state).toPromise()
+                .then(() => this.loadFeatures(state).toPromise())
                 .then(() => {
                     world.activate();
                     _.each(this.features, f => {
@@ -70,6 +70,12 @@ class OmniSharpAtom {
 
                         this.detectAutoToggleGrammar(editor);
                     }));
+
+                    _.each(this.features, f => {
+                        if (_.isFunction(f['attach'])) {
+                            f['attach']()
+                        }
+                    });
                 });
         } else {
             _.map(dependencyChecker.errors() || [], missingDependency => console.error(missingDependency))

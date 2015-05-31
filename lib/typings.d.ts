@@ -19,7 +19,10 @@ declare module OmniSharp {
     interface IFeature {
         activate(): void;
         dispose(): void;
-        //disposable: Rx.CompositeDisposable;
+    }
+    
+    interface IAtomFeature extends IFeature {
+        attach(): void;
     }
 
     interface ICompletionResult {

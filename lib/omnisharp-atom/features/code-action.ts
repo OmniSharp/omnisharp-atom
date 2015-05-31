@@ -19,7 +19,7 @@ class CodeAction implements OmniSharp.IFeature {
     public activate() {
         this.disposable = new CompositeDisposable();
 
-        this.disposable.add(Omni.addCommand("omnisharp-atom:get-code-actions", () => {
+        this.disposable.add(Omni.addCommand("atom-text-editor", "omnisharp-atom:get-code-actions", () => {
             //store the editor that this was triggered by.
             this.editor = atom.workspace.getActiveTextEditor();
             Omni.request(client => client.getcodeactionsPromise(client.makeRequest()));

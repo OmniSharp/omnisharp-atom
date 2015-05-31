@@ -7,11 +7,11 @@ class Navigate implements OmniSharp.IFeature {
     public activate() {
         this.disposable = new CompositeDisposable();
 
-        this.disposable.add(Omni.addCommand("omnisharp-atom:navigate-up", () => {
+        this.disposable.add(Omni.addCommand("atom-text-editor", "omnisharp-atom:navigate-up", () => {
             return this.navigateUp();
         }));
 
-        this.disposable.add(Omni.addCommand("omnisharp-atom:navigate-down", () => {
+        this.disposable.add(Omni.addCommand("atom-text-editor", "omnisharp-atom:navigate-down", () => {
             return this.navigateDown();
         }));
 

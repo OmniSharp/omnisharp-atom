@@ -86,7 +86,7 @@ class StatusBarComponent extends ReactClientComponent<{}, StatusBarState> {
     }
 
     public toggle() {
-        atom.commands.dispatch(atom.views.getView(atom.workspace), 'omnisharp-atom:toggle-output');
+        atom.commands.dispatch(atom.views.getView(atom.workspace), 'omnisharp-atom:toggle-dock');
     }
 
     public toggleErrorWarningPanel() {

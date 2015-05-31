@@ -9,7 +9,7 @@ interface ICodeCheckOutputWindowState {
     diagnostics?: OmniSharp.Models.DiagnosticLocation[];
 }
 export interface ICodeCheckOutputWindowProps {
-    scrollTop: number;
+    scrollTop: () => number;
     setScrollTop: (scrollTop: number) => void;
 }
 
@@ -29,7 +29,7 @@ export class CodeCheckOutputWindow<T extends ICodeCheckOutputWindowProps> extend
             world.observe.diagnostics
                 .subscribe(diagnostics =>
                     this.setState({ diagnostics: this.filterOnlyWarningsAndErrors(diagnostics) })));
-        React.findDOMNode(this).scrollTop = this.props.scrollTop;
+        React.findDOMNode(this).scrollTop = this.props.scrollTop();
     }
 
     public shouldComponentUpdate(nextProps: T, nextState: ICodeCheckOutputWindowState) {
@@ -55,7 +55,7 @@ export class CodeCheckOutputWindow<T extends ICodeCheckOutputWindowProps> extend
             }
         },
             React.DOM.div({
-                scrollTop: this.props.scrollTop
+                scrollTop: this.props.scrollTop()
             }, ..._.map(this.state.diagnostics, (error, index) => {
                 var filename = path.basename(error.FileName);
                 var dirname = path.dirname(error.FileName);

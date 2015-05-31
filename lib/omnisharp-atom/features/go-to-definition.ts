@@ -51,7 +51,7 @@ class GoToDefinition implements OmniSharp.IFeature {
         })));
 
         this.disposable.add(atom.emitter.on("symbols-view:go-to-declaration", this.goToDefinition));
-        this.disposable.add(Omni.addCommand("omnisharp-atom:go-to-definition", this.goToDefinition));
+        this.disposable.add(Omni.addCommand("atom-text-editor", "omnisharp-atom:go-to-definition", this.goToDefinition));
     }
 
     public dispose() {

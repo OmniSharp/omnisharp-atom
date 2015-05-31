@@ -6,16 +6,32 @@
 @import "octicon-mixins";
 
 .omnisharp-atom-pane {
-  position:relative;
-  padding:0px !important;
-  margin:0px;
+    position:relative;
+    padding:0px !important;
+    margin:0px;
 
-  .background-message {
-    color:  @text-color-subtle;
-    kbd {
-      font-size:inherit;
+    .background-message {
+        color:  @text-color-subtle;
+        kbd {
+            font-size:inherit;
+        }
     }
-  }
+
+    .btn.closeable {
+        .text{
+            padding-right: 12px;
+        }
+        .close-pane {
+            position: absolute;
+            top: 4px;
+            right: 4px;
+            color: @text-color-selected;
+
+            &:hover {
+                opacity: 0.2;
+            }
+        }
+    }
 }
 
 .error-output-pane {

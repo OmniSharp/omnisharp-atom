@@ -2,6 +2,8 @@ import _ = require('lodash');
 import {CompositeDisposable, Observable, ReplaySubject} from "rx";
 import Omni = require('../../omni-sharp-server/omni');
 var currentlyEnabled = false;
+import {dock} from "../atom/dock";
+import {CodeCheckOutputWindow, ICodeCheckOutputWindowProps} from '../views/codecheck-output-pane-view';
 
 class CodeCheck implements OmniSharp.IFeature {
     private disposable: Rx.CompositeDisposable;
@@ -10,14 +12,16 @@ class CodeCheck implements OmniSharp.IFeature {
     }
 
     public diagnostics: OmniSharp.Models.DiagnosticLocation[] = [];
+    private scrollTop: number = 0;
 
     public activate() {
         this.disposable = new CompositeDisposable();
-        this.disposable.add(Omni.addCommand('omnisharp-atom:next-diagnostic', () => {
+        this.setup();
+        this.disposable.add(Omni.addCommand("atom-workspace", 'omnisharp-atom:next-diagnostic', () => {
 
         }));
 
-        this.disposable.add(Omni.addCommand('omnisharp-atom:previous-diagnostic', () => {
+        this.disposable.add(Omni.addCommand("atom-workspace", 'omnisharp-atom:previous-diagnostic', () => {
 
         }));
 
@@ -40,8 +44,14 @@ class CodeCheck implements OmniSharp.IFeature {
             }
         }));
 
+        this.disposable.add(dock.addWindow('errors', 'Errors & Warnings', CodeCheckOutputWindow, {
+            scrollTop: () => this.scrollTop,
+            setScrollTop: (scrollTop) => this.scrollTop = scrollTop
+        }));
+
+        this.disposable.add(this.observe.diagnostics.subscribe(diagnostics => this.scrollTop = 0));
+
         Omni.registerConfiguration(client => client.codecheck({}));
-        this.setup();
     }
 
     private setup() {
@@ -94,7 +104,7 @@ class CodeCheck implements OmniSharp.IFeature {
 
         this.observe = { diagnostics };
 
-        this.disposable.add( diagnostics.subscribe(items => this.diagnostics = items));
+        this.disposable.add(diagnostics.subscribe(items => this.diagnostics = items));
     }
 
     public dispose() {

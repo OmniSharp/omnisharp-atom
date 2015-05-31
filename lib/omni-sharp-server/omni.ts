@@ -35,8 +35,8 @@ class Omni {
         return frameworks.join(',');
     }
 
-    public addCommand(commandName: string, callback: (...args: any[]) => any) {
-        return atom.commands.add("atom-text-editor", commandName, (event) => {
+    public addCommand(target: string, commandName: string, callback: (...args: any[]) => any) {
+        return atom.commands.add(target, commandName, (event) => {
             var editor = atom.workspace.getActiveTextEditor();
             if (!editor) {
                 return;
@@ -44,6 +44,8 @@ class Omni {
 
             var grammarName = editor.getGrammar().name;
             if (grammarName === 'C#' || grammarName === 'C# Script File') {
+                event.stopPropagation();
+                event.stopImmediatePropagation();
                 callback(event);
             }
         });

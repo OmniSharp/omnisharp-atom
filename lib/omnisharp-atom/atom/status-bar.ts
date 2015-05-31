@@ -3,7 +3,7 @@ import Omni = require('../../omni-sharp-server/omni')
 import StatusBarComponent = require('../views/status-bar-view');
 import React = require('react');
 
-class StatusBar implements OmniSharp.IFeature {
+class StatusBar implements OmniSharp.IAtomFeature {
     private disposable: Rx.CompositeDisposable;
     private view: Element;
     private tile: any;
@@ -11,10 +11,7 @@ class StatusBar implements OmniSharp.IFeature {
     private _active = false;
 
     public activate() {
-        this.view = document.createElement("span");
-        if (this.statusBar) { this._attach(); }
-
-        this._active = true;
+        this.disposable = new CompositeDisposable();
     }
 
     public setup(statusBar) {
@@ -23,6 +20,12 @@ class StatusBar implements OmniSharp.IFeature {
         if (this._active) {
             this._attach();
         }
+    }
+
+    public attach() {
+        this.view = document.createElement("span");
+        if (this.statusBar) { this._attach(); }
+        this._active = true;
     }
 
     private _attach() {

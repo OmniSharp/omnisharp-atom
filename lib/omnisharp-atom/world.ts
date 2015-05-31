@@ -3,7 +3,6 @@ import Omni = require('../omni-sharp-server/omni');
 import {Observable} from "rx";
 import {findUsages} from "./features/find-usages";
 import {codeCheck} from "./features/code-check";
-import {log} from "./features/log";
 import {server} from "./features/server-information";
 
 var statefulProperties = ['isOff', 'isConnecting', 'isOn', 'isReady', 'isError'];
@@ -13,7 +12,6 @@ class WorldModel {
 
     public findUsages = findUsages;
     public codeCheck = codeCheck;
-    public log = log;
     public server = server;
 
     public isOff: boolean;
@@ -32,7 +30,7 @@ class WorldModel {
         this.setupState();
         this.observe = {
             get diagnostics() { return codeCheck.observe.diagnostics },
-            get output() { return log.observe.output },
+            get output() { return server.observe.output },
             get status() { return server.observe.status },
             updates: Observable.ofObjectChanges(this)
         };
@@ -64,7 +62,7 @@ class WorldModel {
     public observe: {
         // TODO: Do these make sense, or should we just do `world.log.observe.output`?
         diagnostics: typeof codeCheck.observe.diagnostics;
-        output: typeof log.observe.output;
+        output: typeof server.observe.output;
         status: typeof server.observe.status;
         updates: Observable<Rx.ObjectObserveChange<WorldModel>>;
     }
@@ -73,4 +71,4 @@ class WorldModel {
 var world = new WorldModel();
 window['world'] = world; //TEMP
 
-export {world, findUsages, codeCheck, log, server};
+export {world, findUsages, codeCheck, server};

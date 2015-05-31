@@ -18,7 +18,7 @@ export class OutputWindow<T> extends ReactClientComponent<T, IOutputWindowState>
     constructor(props?: T, context?: any) {
         super(props, context);
         this._convert = new Convert();
-        this.state = { output: world.log.output };
+        this.state = { output: world.server.output };
     }
 
     public componentDidMount() {
