@@ -121,11 +121,12 @@ export var CompletionProvider = {
         return {
             _search: item.CompletionText,
             snippet: item.Snippet,
-            type: item.Kind,
+            type: item.Kind.toLowercase(),
             iconHTML: this.renderIcon(item),
             displayText: escape(item.DisplayText),
             className: 'autocomplete-omnisharp-atom',
-            description: this.renderReturnType(item.ReturnType)
+            description: item.RequiredNamespaceImport,
+            leftLabel: item.ReturnType,
         }
     },
 
@@ -158,13 +159,6 @@ export var CompletionProvider = {
     },
 
     dispose() {
-    },
-
-    renderReturnType(returnType: string) {
-        if (returnType === null) {
-            return;
-        }
-        return `Returns: ${returnType}`;
     },
 
     renderIcon(item) {
