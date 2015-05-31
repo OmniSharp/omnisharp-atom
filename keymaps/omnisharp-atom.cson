@@ -35,6 +35,8 @@
   'alt-enter': 'omnisharp-atom:get-code-actions'
   'alt-shift-t': 'omnisharp-atom:find-symbols'
   'ctrl-,': 'omnisharp-atom:find-symbols'
+  'f8': 'omnisharp-atom:go-to-next-usage'
+  'shift-f8,': 'omnisharp-atom:go-to-previous-usage'
 
 
 '.platform-darwin atom-text-editor:not([mini])[data-grammar~="cs"], atom-text-editor:not([mini])[data-grammar~="csx"]':

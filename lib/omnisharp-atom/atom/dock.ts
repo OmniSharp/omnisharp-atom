@@ -9,7 +9,6 @@ class Dock implements OmniSharp.IAtomFeature {
     private view: Element;
     private panel: Atom.Panel;
     private dock: DockWindow<IDockWindowProps>;
-    private selected: string
     private _panes: DockPane<any, any>[] = [];
 
     public activate() {
@@ -62,39 +61,36 @@ class Dock implements OmniSharp.IAtomFeature {
         this.dock.selectWindow(selected);
     }
 
-    public addWindow<P, S>(id: string, title: string, view: typeof React.Component, props: P, options: DocPaneOptions = { priority: 1000 }) {
+    public addWindow<P, S>(id: string, title: string, view: typeof React.Component, props: P, options: DocPaneOptions = { priority: 1000 }, parentDisposable?: Rx.Disposable) {
         var disposable = new SingleAssignmentDisposable();
         var cd = new CompositeDisposable();
+        this.disposable.add(disposable);
         disposable.setDisposable(cd);
+
+        if (parentDisposable)
+            cd.add(parentDisposable);
 
         this._panes.push({ id, title, view, props, options, disposable });
 
         cd.add(atom.commands.add('atom-workspace', "omnisharp-atom:show-" + id, () => this.selectWindow(id)));
         cd.add(atom.commands.add('atom-workspace', "omnisharp-atom:toggle-" + id, () => this.toggleWindow(id)));
 
+
         if (options.closeable) {
             cd.add(atom.commands.add('atom-workspace', "omnisharp-atom:close-" + id, () => {
-                this.disposable.remove(cd);
-                if (this.selected === id) {
+                debugger;
+                this.disposable.remove(disposable);
+                if (this.dock.selected === id) {
+                    this.dock.state.selected = 'output';
                     this.hide();
                 }
-                cd.dispose();
+                disposable.dispose();
             }));
         }
 
         cd.add(Disposable.create(() => {
-            var selectedIndex = _.findIndex(this._panes, { id });
             _.remove(this._panes, { id });
-            if (this.selected === id) {
-                if (this._panes[selectedIndex - 1]) {
-                    this.selectWindow(this._panes[selectedIndex - 1].id);
-                } else if (this._panes[selectedIndex - 1]) {
-                    this.selectWindow(this._panes[selectedIndex].id);
-                } else {
-                    this.selected = null;
-                }
-            }
-            debugger;
+            this.dock.state.selected = 'output';
             this.dock.forceUpdate();
         }));
 

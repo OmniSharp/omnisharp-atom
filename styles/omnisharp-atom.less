@@ -107,7 +107,7 @@
     }
 }
 .btn-fix {
-  top: -2px !important;
+  top: 0px !important;
 }
 .messages-container {
   height:150px;
@@ -171,32 +171,13 @@
   }
 }
 
-.codecheck {
-    padding-left: 20px;
-    background-color: @base-background-color;
-
-    &.Hidden, &.Warning {
-      background-image: url('atom://omnisharp-atom/styles/icons/codecheck-warning.png');
-      background-repeat: no-repeat;
-      background-position: 0px 0px;
-    }
-    &.Error {
-      background-image: url('atom://omnisharp-atom/styles/icons/codecheck-error.png');
-      background-repeat: no-repeat;
-      background-position: 0px 0px;
-    }
-    pre {
-      padding: 2px 0px;
-    }
-}
-
-.find-output {
+.find-output, .errors-output {
     background-color: @base-background-color;
     ol, li {
         margin: 0px;
         padding: 0px;
     }
-    .find-usages {
+    .find-usages, .codecheck {
         background-color: @background-color-highlight;
         border: 1px solid @base-border-color;
         padding: 2px 5px;
@@ -208,6 +189,25 @@
             background-color: transparent;
             padding: 2px 1px;
         }
+    }
+}
+
+.codecheck {
+    padding-left: 20px !important;
+    background-color: @base-background-color;
+
+    &.Hidden, &.Warning {
+      background-image: url('atom://omnisharp-atom/styles/icons/codecheck-warning.png');
+      background-repeat: no-repeat;
+      background-position: 2px 14px;
+    }
+    &.Error {
+      background-image: url('atom://omnisharp-atom/styles/icons/codecheck-error.png');
+      background-repeat: no-repeat;
+      background-position: 2px 14px;
+    }
+    pre {
+      padding: 2px 0px;
     }
 }
 

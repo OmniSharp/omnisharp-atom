@@ -8,6 +8,7 @@ import {findUsages} from "../features/find-usages";
 import {world} from "../world";
 
 interface IDockWindowState {
+    selected: string;
 }
 
 export interface IDockWindowProps {
@@ -62,8 +63,9 @@ class DockWindows<T extends IDockWindowButtonsProps> extends ReactClientComponen
             children.push(React.DOM.span({
                 className: 'fa fa-times-circle close-pane',
                 key: 'close',
-                onClick: () => {
-                    debugger;
+                onClick: (e) => {
+                    e.stopPropagation();
+                    e.preventDefault();
                     disposable.dispose();
                 }
             }));
@@ -72,7 +74,9 @@ class DockWindows<T extends IDockWindowButtonsProps> extends ReactClientComponen
         return React.DOM.button({
             className: `btn btn-default btn-fix ${this.props.selected === id ? 'selected' : ''} ${options.closeable ? 'closeable' : ''}`,
             key: id,
-            onClick: () => {
+            onClick: (e) => {
+                e.stopPropagation();
+                e.preventDefault();
                 this.props.setSelected(id);
                 this.setState({});
             }
@@ -81,14 +85,6 @@ class DockWindows<T extends IDockWindowButtonsProps> extends ReactClientComponen
 
     private getButtons() {
         return _.map(this.props.panes, this.button.bind(this));
-        //var buttons = [];
-        //buttons.push(this.button("errors", "Errors & Warnings"));
-        //buttons.push(this.button("find", "Find"));
-        //if (world.supportsBuild)
-        //buttons.push(this.button("build", "Build output"));
-        //buttons.push(this.button("omni", "Omnisharp output"));
-
-        //return buttons;
     }
 
     public render() {
@@ -104,14 +100,14 @@ class DockWindows<T extends IDockWindowButtonsProps> extends ReactClientComponen
 export class DockWindow<T extends IDockWindowProps> extends ReactClientComponent<T, IDockWindowState> {
     public displayName = "DockWindow";
 
-    private selected = 'omni';
+    public get selected() { return this.state.selected; }
     private visible = false;
 
     private _convert;
 
     constructor(props?: T, context?: any) {
         super(props, context);
-        this.state = {};
+        this.state = { selected: null };
     }
 
     public componentWillMount() {
@@ -162,7 +158,7 @@ export class DockWindow<T extends IDockWindowProps> extends ReactClientComponent
     }
 
     public toggleWindow(selected: string) {
-        if (this.visible && this.selected === selected) {
+        if (this.visible && this.state.selected === selected) {
             this.hideView();
             return;
         }
@@ -171,7 +167,7 @@ export class DockWindow<T extends IDockWindowProps> extends ReactClientComponent
     }
 
     private isSelected(key: string) {
-        if (this.selected) {
+        if (this.state.selected) {
             return `omnisharp-atom-output ${key}-output selected`;
         }
         return '';
@@ -180,24 +176,27 @@ export class DockWindow<T extends IDockWindowProps> extends ReactClientComponent
     public selectWindow(selected: string) {
         if (!this.visible)
             this.doShowView();
-        this.selected = selected;
+
+        this.state.selected = selected;
 
         // Focus the panel!
         this.updateState(() => {
             var panel: any = React.findDOMNode(this).querySelector('.omnisharp-atom-output.selected');
-            panel.focus();
+            if (panel) panel.focus();
         });
     }
 
     private getWindows() {
-        var window = _.find(this.props.panes, { id: this.selected });
+        var window = _.find(this.props.panes, { id: this.state.selected });
+        if (!this.state.selected || !window)
+            return React.DOM.span({});
+
         if (window) {
             var props = _.clone(window.props);
             props.className = (this.isSelected((window.id)) + ' ' + (props.className || ''))
             props.key = window.id;
             return React.createElement(window.view, props);
         }
-        return React.DOM.span({});
     }
 
     public render() {
@@ -208,6 +207,6 @@ export class DockWindow<T extends IDockWindowProps> extends ReactClientComponent
                 }
             });
 
-        return React.createElement(DockWindows, { selected: this.selected, setSelected: this.selectWindow.bind(this), panes: this.props.panes }, this.getWindows());
+        return React.createElement(DockWindows, { selected: this.state.selected, setSelected: this.selectWindow.bind(this), panes: this.props.panes }, this.getWindows());
     }
 }

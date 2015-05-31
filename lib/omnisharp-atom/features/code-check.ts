@@ -9,20 +9,39 @@ class CodeCheck implements OmniSharp.IFeature {
     private disposable: Rx.CompositeDisposable;
     public observe: {
         diagnostics: Observable<OmniSharp.Models.DiagnosticLocation[]>;
+        updated: Observable<Rx.ObjectObserveChange<CodeCheck>>;
     }
 
-    public diagnostics: OmniSharp.Models.DiagnosticLocation[] = [];
+    private diagnostics: OmniSharp.Models.DiagnosticLocation[] = [];
+    public displayDiagnostics: OmniSharp.Models.DiagnosticLocation[] = [];
+    public selectedIndex: number = 0;
     private scrollTop: number = 0;
 
     public activate() {
         this.disposable = new CompositeDisposable();
         this.setup();
-        this.disposable.add(Omni.addCommand("atom-workspace", 'omnisharp-atom:next-diagnostic', () => {
 
+        this.disposable.add(Omni.addCommand("atom-workspace", 'omnisharp-atom:next-diagnostic', () => {
+            this.updateSelectedItem(this.selectedIndex + 1);
+        }));
+
+        this.disposable.add(Omni.addCommand("atom-workspace", 'omnisharp-atom:go-to-diagnostic', () => {
+            if (this.displayDiagnostics[this.selectedIndex])
+                Omni.navigateTo(this.displayDiagnostics[this.selectedIndex]);
         }));
 
         this.disposable.add(Omni.addCommand("atom-workspace", 'omnisharp-atom:previous-diagnostic', () => {
+            this.updateSelectedItem(this.selectedIndex - 1);
+        }));
 
+        this.disposable.add(Omni.addCommand("atom-workspace", 'omnisharp-atom:go-to-next-diagnostic', () => {
+            this.updateSelectedItem(this.selectedIndex + 1);
+            Omni.navigateTo(this.displayDiagnostics[this.selectedIndex]);
+        }));
+
+        this.disposable.add(Omni.addCommand("atom-workspace", 'omnisharp-atom:go-to-previous-diagnostic', () => {
+            this.updateSelectedItem(this.selectedIndex - 1);
+            Omni.navigateTo(this.displayDiagnostics[this.selectedIndex]);
         }));
 
         this.disposable.add(Omni.editors.subscribe((editor: Atom.TextEditor) => {
@@ -44,14 +63,39 @@ class CodeCheck implements OmniSharp.IFeature {
             }
         }));
 
+        this.disposable.add(this.observe.diagnostics
+            .subscribe(diagnostics => {
+                this.diagnostics = diagnostics;
+                this.displayDiagnostics = this.filterOnlyWarningsAndErrors(diagnostics);
+            }));
+
+        this.disposable.add(this.observe.diagnostics.subscribe(s => {
+                this.scrollTop = 0;
+                this.selectedIndex = 0;
+            }));
+
         this.disposable.add(dock.addWindow('errors', 'Errors & Warnings', CodeCheckOutputWindow, {
             scrollTop: () => this.scrollTop,
-            setScrollTop: (scrollTop) => this.scrollTop = scrollTop
+            setScrollTop: (scrollTop) => this.scrollTop = scrollTop,
+            codeCheck: this
         }));
 
-        this.disposable.add(this.observe.diagnostics.subscribe(diagnostics => this.scrollTop = 0));
-
         Omni.registerConfiguration(client => client.codecheck({}));
+    }
+
+    private filterOnlyWarningsAndErrors(quickFixes): OmniSharp.Models.DiagnosticLocation[] {
+        return _.filter(quickFixes, (quickFix: OmniSharp.Models.DiagnosticLocation) => {
+            return quickFix.LogLevel != "Hidden";
+        });
+    }
+
+    private updateSelectedItem(index: number) {
+        if (index < 0)
+            index = 0;
+        if (index >= this.displayDiagnostics.length)
+            index = this.displayDiagnostics.length - 1;
+        if (this.selectedIndex !== index)
+            this.selectedIndex = index;
     }
 
     private setup() {
@@ -102,7 +146,9 @@ class CodeCheck implements OmniSharp.IFeature {
             .startWith([])
             .share();
 
-        this.observe = { diagnostics };
+
+        var updated = Observable.ofObjectChanges(this);
+        this.observe = { diagnostics, updated };
 
         this.disposable.add(diagnostics.subscribe(items => this.diagnostics = items));
     }

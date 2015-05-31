@@ -23,7 +23,7 @@ class ServerInformation implements OmniSharp.IFeature {
         var output = this.setupOutput();
         this.observe = { status, output };
 
-        this.disposable.add(dock.addWindow('omni', 'Omnisharp output', OutputWindow, {}));
+        this.disposable.add(dock.addWindow('output', 'Omnisharp output', OutputWindow, {}));
     }
 
     private setupStatus() {
