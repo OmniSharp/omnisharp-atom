@@ -249,6 +249,18 @@ class OmniSharpAtom {
             description: 'Advanced: This will show diagnostics for all open solutions.  NOTE: May take a restart or change to each server to take effect when turned on.',
             type: 'boolean',
             default: false
+        },
+        useLeftLabelColumnForSuggestions: {
+            title: 'Use Left-Label column in Suggestions',
+            description: 'Shows return types in a right-aligned column to the left of the completion suggestion text.',
+            type: 'boolean',
+            default: false
+        },
+        useIcons: {
+            title: 'Use unique icons for kind indicators in Suggestions',
+            description: 'Shows kinds with unique icons rather than autocomplete default styles.',
+            type: 'boolean',
+            default: true
         }
     }
 
