@@ -118,15 +118,32 @@ export var CompletionProvider = {
     excludeLowerPriority: false,
 
     makeSuggestion(item: OmniSharp.Models.AutoCompleteResponse) {
+        var description, leftLabel, iconHTML, type;
+        if atom.config.get('omnisharp-atom.useLeftLabelColumnForSuggestions') == true {
+            description = item.RequiredNamespaceImport;
+            leftLabel = item.ReturnType;
+        } else {
+            description = this.renderReturnType(item.ReturnType);
+            leftLabel = '';
+        }
+
+        if atom.config.get('omnisharp-atom.useIcons') == true {
+            iconHTML = this.renderIcon(item);
+            type = item.Kind;
+        } else {
+            iconHTML = null;
+            type = item.Kind.toLowerCase();
+        }
+
         return {
             _search: item.CompletionText,
             snippet: item.Snippet,
-            type: item.Kind.toLowercase(),
-            iconHTML: this.renderIcon(item),
+            type: type,
+            iconHTML: iconHTML,
             displayText: escape(item.DisplayText),
             className: 'autocomplete-omnisharp-atom',
-            description: item.RequiredNamespaceImport,
-            leftLabel: item.ReturnType,
+            description: description,
+            leftLabel: leftLabel,
         }
     },
 
@@ -159,6 +176,13 @@ export var CompletionProvider = {
     },
 
     dispose() {
+    },
+
+    renderReturnType(returnType: string) {
+        if (returnType === null) {
+            return;
+        }
+        return `Returns: ${returnType}`;
     },
 
     renderIcon(item) {
