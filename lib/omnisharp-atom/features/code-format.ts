@@ -1,11 +1,13 @@
+import {CompositeDisposable} from "rx";
 import Omni = require('../../omni-sharp-server/omni')
 import Changes = require('./lib/apply-changes');
-import OmniSharpAtom = require('../omnisharp-atom')
 
-class CodeFormat {
+class CodeFormat implements OmniSharp.IFeature {
+    private disposable: Rx.CompositeDisposable;
 
     public activate() {
-        OmniSharpAtom.addCommand('omnisharp-atom:code-format',
+        this.disposable = new CompositeDisposable();
+        this.disposable.add(Omni.addCommand('omnisharp-atom:code-format',
             () => {
                 var editor = atom.workspace.getActiveTextEditor();
                 if (editor) {
@@ -22,12 +24,16 @@ class CodeFormat {
                             .then((data) => Changes.applyChanges(editor, data.Changes));
                     });
                 }
-            });
+            }));
 
-        OmniSharpAtom.addCommand('omnisharp-atom:code-format-on-semicolon',
-            (event) => this.formatOnKeystroke(event, ';'));
-        OmniSharpAtom.addCommand('omnisharp-atom:code-format-on-curly-brace',
-            (event) => this.formatOnKeystroke(event, '}'));
+        this.disposable.add(Omni.addCommand('omnisharp-atom:code-format-on-semicolon',
+            (event) => this.formatOnKeystroke(event, ';')));
+        this.disposable.add(Omni.addCommand('omnisharp-atom:code-format-on-curly-brace',
+            (event) => this.formatOnKeystroke(event, '}')));
+    }
+
+    public dispose() {
+        this.disposable.dispose();
     }
 
     private formatOnKeystroke(event: Event, char: string): any {
@@ -49,4 +55,4 @@ class CodeFormat {
         return false;
     }
 }
-export = CodeFormat
+export var codeFormat = new CodeFormat

@@ -1,8 +1,27 @@
+import {CompositeDisposable} from "rx";
 import Omni = require('../../omni-sharp-server/omni')
-import OmniSharpAtom = require('../omnisharp-atom');
 
-class Navigate {
-    private disposable: { dispose: () => void; };
+class Navigate implements OmniSharp.IFeature {
+    private disposable: Rx.CompositeDisposable;
+
+    public activate() {
+        this.disposable = new CompositeDisposable();
+
+        this.disposable.add(Omni.addCommand("omnisharp-atom:navigate-up", () => {
+            return this.navigateUp();
+        }));
+
+        this.disposable.add(Omni.addCommand("omnisharp-atom:navigate-down", () => {
+            return this.navigateDown();
+        }));
+
+        this.disposable.add(Omni.listener.observeNavigateup.subscribe((data) => this.navigateTo(data.response)));
+        this.disposable.add(Omni.listener.observeNavigatedown.subscribe((data) => this.navigateTo(data.response)));
+    }
+
+    public dispose() {
+        this.disposable.dispose();
+    }
 
     public navigateUp() {
         Omni.request(client => client.navigateup(client.makeRequest()));
@@ -12,26 +31,9 @@ class Navigate {
         Omni.request(client => client.navigatedown(client.makeRequest()));
     }
 
-    public activate() {
-        OmniSharpAtom.addCommand("omnisharp-atom:navigate-up", () => {
-            return this.navigateUp();
-        });
-
-        OmniSharpAtom.addCommand("omnisharp-atom:navigate-down", () => {
-            return this.navigateDown();
-        });
-
-        Omni.listener.observeNavigateup.subscribe((data) => this.navigateTo(data.response));
-        Omni.listener.observeNavigatedown.subscribe((data) => this.navigateTo(data.response));
-    }
-
     private navigateTo(data: OmniSharp.Models.NavigateResponse) {
         var editor = atom.workspace.getActiveTextEditor();
         Omni.navigateTo({ FileName: editor.getURI(), Line: data.Line, Column: data.Column });
     }
-
-    public deactivate() {
-        this.disposable.dispose()
-    }
 }
-export = Navigate;
+export var navigate = new Navigate;

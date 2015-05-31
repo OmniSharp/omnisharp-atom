@@ -1,18 +1,26 @@
-import path = require('path');
+import {CompositeDisposable} from "rx";
 import Omni = require('../../omni-sharp-server/omni');
-import OmniSharpAtom = require('../omnisharp-atom');
+import path = require('path');
 
-class PackageRestore {
-    private editorDestroyedSubscription: EventKit.Disposable;
-    constructor(private atomSharper: typeof OmniSharpAtom) {
-        this.registerEventHandlerOnEditor = this.registerEventHandlerOnEditor;
-        this.activate = this.activate;
-        this.atomSharper = atomSharper;
+class PackageRestore implements OmniSharp.IFeature {
+    private disposable: Rx.CompositeDisposable;
+
+    public activate() {
+        this.disposable = new CompositeDisposable();
+        this.disposable.add(Omni.configEditors.subscribe((editor: Atom.TextEditor) => {
+            var disposer = this.registerEventHandlerOnEditor(editor);
+            if (disposer)
+                this.disposable.add(disposer);
+
+            editor.onDidDestroy(() => {
+                this.disposable.remove(disposer);
+                disposer.dispose();
+            });
+        }));
     }
 
-    public activate = () => {
-        this.atomSharper.onConfigEditor((editor: Atom.TextEditor) => this.registerEventHandlerOnEditor(editor));
-        this.editorDestroyedSubscription = this.atomSharper.onConfigEditorDestroyed((filePath) => { });
+    public dispose() {
+        this.disposable.dispose();
     }
 
     public registerEventHandlerOnEditor = (editor: Atom.TextEditor) => {
@@ -25,10 +33,6 @@ class PackageRestore {
             });
         }
     }
-
-    public deactivate = function() {
-        this.editorSubscription.destroy();
-    }
 }
 
-export = PackageRestore;
+export var packageRestore = new PackageRestore;

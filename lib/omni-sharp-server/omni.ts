@@ -3,6 +3,7 @@ import manager = require("./client-manager");
 import Client = require("./client");
 //import {DriverState} from "omnisharp-client";
 import _ = require('lodash');
+import OmnisharpAtom = require("../omnisharp-atom/omnisharp-atom");
 
 class Omni {
     public static toggle() {
@@ -28,6 +29,20 @@ class Omni {
             return project.indexOf('+') === -1 ? '' : project.split('+')[1];
         }).filter((fw: string) => fw.length > 0);
         return frameworks.join(',');
+    }
+
+    public static addCommand(commandName: string, callback: (...args: any[]) => any) {
+        return atom.commands.add("atom-text-editor", commandName, (event) => {
+            var editor = atom.workspace.getActiveTextEditor();
+            if (!editor) {
+                return;
+            };
+
+            var grammarName = editor.getGrammar().name;
+            if (grammarName === 'C#' || grammarName === 'C# Script File') {
+                callback(event);
+            }
+        });
     }
 
     /**
@@ -95,6 +110,18 @@ class Omni {
     */
     public static get activeModel() {
         return manager.activeClient.map(z => z.model);
+    }
+
+    public static get activeEditor() {
+        return OmnisharpAtom.activeEditor;
+    }
+
+    public static get editors() {
+        return OmnisharpAtom.editors;
+    }
+
+    public static get configEditors() {
+        return OmnisharpAtom.configEditors;
     }
 
     public static registerConfiguration(callback: (client: Client) => void) {

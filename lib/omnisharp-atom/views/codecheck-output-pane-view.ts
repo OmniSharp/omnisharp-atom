@@ -21,7 +21,7 @@ export class CodeCheckOutputWindow<T extends ICodeCheckOutputWindowProps> extend
 
         this.state = { diagnostics: world.diagnostics };
     }
-    
+
     public componentDidMount() {
         super.componentDidMount();
 

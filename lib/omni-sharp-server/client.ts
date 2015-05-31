@@ -6,11 +6,13 @@ import ViewModel = require("./view-model");
 class Client extends OmnisharpClient {
     public model: ViewModel;
     public logs: Observable<OmniSharp.OutputMessage>;
+    public path: string;
 
-    constructor(public path: string, options: OmnisharpClientOptions) {
+    constructor(options: OmnisharpClientOptions) {
         super(options);
         this.configureClient();
         this.model = new ViewModel(this);
+        this.path = options.projectPath;
     }
 
     public toggle() {

@@ -3,13 +3,13 @@ import _ = require('lodash')
 import {Observable} from "rx";
 import Omni = require('../../omni-sharp-server/omni');
 import React = require('react');
-import OmniSharpAtom = require("../omnisharp-atom");
 import {FindWindow} from './find-pane-view'
 import {BuildOutputWindow} from './build-output-pane-view'
 import {OutputWindow} from './omni-output-pane-view'
 import {CodeCheckOutputWindow, ICodeCheckOutputWindowProps} from './codecheck-output-pane-view';
 import {ReactClientComponent} from "./react-client-component";
-import {world} from '../world';
+import {findUsages} from "../features/find-usages";
+import {world} from "../world";
 
 interface IDockWindowState {
     errorScrollTop: number;
@@ -95,7 +95,7 @@ class DockWindow<T extends IDockWindowProps> extends ReactClientComponent<T, IDo
             this.selectPane("find");
         }));
 
-        this.disposable.add(Observable.merge(world.observe.usages.find.map(z => true), world.observe.usages.open.map(z => true)).subscribe(() => {
+        this.disposable.add(Observable.merge(findUsages.observe.find.map(z => true), findUsages.observe.open.map(z => true)).subscribe(() => {
             this.selectPane("find");
         }));
 

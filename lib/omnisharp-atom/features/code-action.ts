@@ -1,6 +1,6 @@
 import _ = require('lodash');
+import {CompositeDisposable} from "rx";
 import Omni = require('../../omni-sharp-server/omni')
-import OmniSharpAtom = require('../omnisharp-atom')
 import SpacePen = require('atom-space-pen-views');
 import CodeActionsView = require('../views/code-actions-view');
 import Changes = require('./lib/apply-changes');
@@ -10,23 +10,22 @@ interface TemporaryCodeAction {
     Id: number;
 }
 
-class CodeAction {
+class CodeAction implements OmniSharp.IFeature {
+    private disposable: Rx.CompositeDisposable;
 
     private view: SpacePen.SelectListView;
     private editor: Atom.TextEditor;
 
-    constructor(private atomSharper: typeof OmniSharpAtom) {
-        this.atomSharper = atomSharper;
-    }
     public activate() {
+        this.disposable = new CompositeDisposable();
 
-        this.atomSharper.addCommand("omnisharp-atom:get-code-actions", () => {
+        this.disposable.add(Omni.addCommand("omnisharp-atom:get-code-actions", () => {
             //store the editor that this was triggered by.
             this.editor = atom.workspace.getActiveTextEditor();
             Omni.request(client => client.getcodeactionsPromise(client.makeRequest()));
-        });
+        }));
 
-        Omni.listener.observeGetcodeactions.subscribe((data) => {
+        this.disposable.add(Omni.listener.observeGetcodeactions.subscribe((data) => {
             //hack: this is a temporary workaround until the server
             //can give us code actions based on an Id.
             var wrappedCodeActions = this.WrapCodeActionWithFakeIdGeneration(data.response)
@@ -34,18 +33,20 @@ class CodeAction {
             //pop ui to user.
             this.view = new CodeActionsView(wrappedCodeActions, (selectedItem) => {
                 //callback when an item is selected
-                Omni.request(client => client.runcodeactionPromise(client.makeDataRequest<OmniSharp.Models.CodeActionRequest>(
-                    {
-                        CodeAction: selectedItem.Id,
-                        WantsTextChanges: true
-                    }
-                    )));
+                Omni.request(client => client.runcodeactionPromise(client.makeDataRequest<OmniSharp.Models.CodeActionRequest>({
+                    CodeAction: selectedItem.Id,
+                    WantsTextChanges: true
+                })));
             });
-        });
+        }));
 
-        Omni.listener.observeRuncodeaction.subscribe((data) => {
+        this.disposable.add(Omni.listener.observeRuncodeaction.subscribe((data) => {
             this.applyAllChanges(data.response.Changes);
-        });
+        }));
+    }
+
+    public dispose() {
+        this.disposable.dispose();
     }
 
     private WrapCodeActionWithFakeIdGeneration(data: OmniSharp.Models.GetCodeActionsResponse): TemporaryCodeAction[] {
@@ -60,9 +61,6 @@ class CodeAction {
         Changes.applyChanges(this.editor, changes)
     }
 
-    public deactivate() {
-        //: todo figure out what needs to be disposed of?
-    }
-
 }
-export = CodeAction;
+
+export var codeAction = new CodeAction;

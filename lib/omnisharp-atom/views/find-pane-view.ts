@@ -4,33 +4,29 @@ import React = require('react');
 import path = require('path');
 import $ = require('jquery');
 import {ReactClientComponent} from "./react-client-component";
-import {world} from '../world';
+import {findUsages as model} from '../world';
 
 export class FindWindow<T> extends ReactClientComponent<T, { usages?: OmniSharp.Models.QuickFix[] }> {
     public displayName = 'FindPaneWindow';
-    private selectedIndex = 0;
 
     constructor(props?: T, context?: any) {
         super(props, context);
-        this.state = { usages: world.findUsages };
+        this.state = { usages: model.usages };
     }
 
     public componentDidMount() {
         super.componentDidMount();
 
-        this.disposable.add(world.observe.usages.find.subscribe(usages => {
-            this.selectedIndex = 0;
+        this.disposable.add(model.observe.find.subscribe(usages => {
             this.setState({ usages });
         }));
 
-        this.disposable.add(world.observe.usages.reset.subscribe(() => this.setState({ usages: [] })));
-
+        this.disposable.add(model.observe.find.subscribe(() => this.setState({ usages: [] })));
         (<any>React.findDOMNode(this)).onkeydown = (e) => this.keydownPane(e);
     }
 
     public componentWillUnmount() {
         super.componentWillUnmount();
-
         (<any>React.findDOMNode(this)).onkeydown = undefined;
     }
 
@@ -40,12 +36,12 @@ export class FindWindow<T> extends ReactClientComponent<T, { usages?: OmniSharp.
 
     private selectNextItem() {
         if (!this.state.usages) return;
-        this.setCurrentItem(this.selectedIndex + 1);
+        this.setCurrentItem(model.selectedIndex + 1);
     }
 
     private selectPreviousItem() {
         if (!this.state.usages) return;
-        this.setCurrentItem(this.selectedIndex - 1);
+        this.setCurrentItem(model.selectedIndex - 1);
     }
 
     private setCurrentItem(index) {
@@ -54,18 +50,18 @@ export class FindWindow<T> extends ReactClientComponent<T, { usages?: OmniSharp.
         if (index >= this.state.usages.length)
             index = this.state.usages.length - 1;
 
-        this.selectedIndex = index;
+            model.selectedIndex = index;
         this.updateStateAndScroll();
     }
 
     private nagivateToSelectedItem() {
         if (!this.state.usages) return;
-        Omni.navigateTo(this.state.usages[this.selectedIndex]);
+        Omni.navigateTo(this.state.usages[model.selectedIndex]);
     }
 
     private scrollToItemView() {
         var self = $(React.findDOMNode(this));
-        var item = self.find(`li.usage-${this.selectedIndex}`);
+        var item = self.find(`li.usage-${model.selectedIndex}`);
         if (!item || !item.position()) return;
 
         var pane = self;
@@ -104,7 +100,7 @@ export class FindWindow<T> extends ReactClientComponent<T, { usages?: OmniSharp.
                 style: { cursor: "pointer" },
             }, ..._.map(this.state.usages, (usage: OmniSharp.Models.QuickFix, index) =>
                 React.DOM.li({
-                    className: 'find-usages usage-' + index + (index === this.selectedIndex ? ' selected' : ''),
+                    className: 'find-usages usage-' + index + (index === model.selectedIndex ? ' selected' : ''),
                     onClick: (e) => this.gotoUsage(usage)
                 },
                     React.DOM.pre({

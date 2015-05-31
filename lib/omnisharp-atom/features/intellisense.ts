@@ -1,22 +1,28 @@
+import {CompositeDisposable} from "rx";
 import Omni = require('../../omni-sharp-server/omni')
-import OmniSharpAtom = require('../omnisharp-atom');
 
-class Intellisense {
+class Intellisense implements OmniSharp.IFeature {
+    private disposable: Rx.CompositeDisposable;
 
     public activate() {
-        OmniSharpAtom.addCommand('omnisharp-atom:intellisense-dot',
+        this.disposable = new CompositeDisposable();
+        this.disposable.add(Omni.addCommand('omnisharp-atom:intellisense-dot',
             (event) => {
                 this.complete(event, '.');
                 setTimeout(() =>
                     atom.commands.dispatch(atom.views.getView(atom.workspace.getActiveTextEditor()), 'autocomplete-plus:activate'), 0);
-            });
+            }));
 
-        OmniSharpAtom.addCommand('omnisharp-atom:intellisense-space',
-            (event) => this.complete(event, ' '));
+        this.disposable.add(Omni.addCommand('omnisharp-atom:intellisense-space',
+            (event) => this.complete(event, ' ')));
 
-        OmniSharpAtom.addCommand('omnisharp-atom:intellisense-semicolon',
-            (event) => this.complete(event, ';'));
+        this.disposable.add(Omni.addCommand('omnisharp-atom:intellisense-semicolon',
+            (event) => this.complete(event, ';')));
 
+    }
+
+    public dispose() {
+        this.disposable.dispose();
     }
 
     private complete(event: Event, char: string) {
@@ -33,4 +39,4 @@ class Intellisense {
         }
     }
 }
-export = Intellisense
+export var intellisense = new Intellisense

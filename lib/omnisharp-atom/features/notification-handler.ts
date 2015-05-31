@@ -1,19 +1,25 @@
-import $ = require('jquery');
-import path = require('path');
 var _ = require('lodash');
+import {CompositeDisposable} from "rx";
+import path = require('path');
 
-class NotificationHandler {
+class NotificationHandler implements OmniSharp.IFeature {
+    private disposable: Rx.CompositeDisposable;
+    private packageRestoreNotification : PackageRestoreNotification;
+
     public activate() {
+        this.disposable = new CompositeDisposable();
+
         this.packageRestoreNotification = new PackageRestoreNotification();
-        atom.emitter.on('omni-sharp-server:event', (event) => this.handleEvent(event));
+        this.disposable.add(atom.emitter.on('omni-sharp-server:event', (event) => this.handleEvent(event)));
     }
 
-    private packageRestoreNotification : PackageRestoreNotification;
+    public dispose() {
+        this.disposable.dispose();
+    }
 
     private handleEvent(event) {
         this.packageRestoreNotification.handleEvent(event);
     }
-
 }
 
 class PackageRestoreNotification {
@@ -151,4 +157,4 @@ class OmniNotification {
     }
 }
 
-export =  NotificationHandler
+export var notificationHandler = new  NotificationHandler

@@ -1,27 +1,44 @@
 import _ = require('lodash');
+import {CompositeDisposable} from "rx";
 import Omni = require('../../omni-sharp-server/omni');
-import omnisharp = require("omnisharp-client");
-import OmniSharpAtom = require('../omnisharp-atom');
 
-class CodeCheck {
-    constructor(private atomSharper: typeof OmniSharpAtom) {
-        this.atomSharper = atomSharper;
-    }
+class CodeCheck implements OmniSharp.IFeature {
+    private disposable: Rx.CompositeDisposable;
 
     public activate() {
-        this.atomSharper.onEditor((editor: Atom.TextEditor) => {
-            editor.getBuffer().onDidStopChanging(() => this.doCodeCheck(editor));
-            editor.getBuffer().onDidSave(() => this.doCodeCheck(editor));
-            editor.getBuffer().onDidDelete(() => this.doCodeCheck(editor));
-            editor.getBuffer().onDidReload(() => this.doCodeCheck(editor));
-        });
+        this.disposable = new CompositeDisposable();
+        this.disposable.add(Omni.addCommand('omnisharp-atom:next-diagnostic', () => {
 
-        OmniSharpAtom.activeEditor.subscribe(editor => {
+        }));
+
+        this.disposable.add(Omni.addCommand('omnisharp-atom:previous-diagnostic', () => {
+
+        }));
+
+        this.disposable.add(Omni.editors.subscribe((editor: Atom.TextEditor) => {
+            var disposer = new CompositeDisposable();
+
+            disposer.add(editor.getBuffer().onDidStopChanging(() => this.doCodeCheck(editor)));
+            disposer.add(editor.getBuffer().onDidSave(() => this.doCodeCheck(editor)));
+            disposer.add(editor.getBuffer().onDidDelete(() => this.doCodeCheck(editor)));
+            disposer.add(editor.getBuffer().onDidReload(() => this.doCodeCheck(editor)));
+            disposer.add(editor.getBuffer().onDidDestroy(() => {
+                this.disposable.remove(disposer);
+                disposer.dispose();
+            }));
+        }));
+
+        this.disposable.add(Omni.activeEditor.subscribe(editor => {
             if (editor) {
                 this.doCodeCheck(editor);
             }
-        });
+        }));
+
         Omni.registerConfiguration(client => client.codecheck({}));
+    }
+
+    public dispose() {
+        this.disposable.dispose();
     }
 
     public doCodeCheck(editor: Atom.TextEditor) {
@@ -38,4 +55,4 @@ class CodeCheck {
     }
 }
 
-export = CodeCheck;
+export var codeCheck = new CodeCheck;
