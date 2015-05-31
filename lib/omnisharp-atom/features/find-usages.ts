@@ -21,22 +21,19 @@ class FindUsages implements OmniSharp.IFeature {
             Omni.listener.observeFindimplementations
                 .where(z => z.response.QuickFixes.length > 1)
             )
-            // For the UI we only need the qucik fixes.
+        // For the UI we only need the qucik fixes.
             .map(z => z.response.QuickFixes || [])
             .share();
 
-            this.observe = {
-                find: observable,
-                open: Omni.listener.requests.where(z => z.command === "findusages").map(() => true),
-                reset: Omni.listener.requests.where(z => z.command === "findimplementations" || z.command === "findusages").map(() => true)
-            }
-        var find = observable;
-        // NOTE: We cannot do the same for find implementations because find implementation
-        //      just goes to the item if only one comes back.
-        var open = Omni.listener.requests.where(z => z.command === "findusages").map(() => true);
-        var reset = Omni.listener.requests.where(z => z.command === "findimplementations" || z.command === "findusages").map(() => true);
+        this.observe = {
+            find: observable,
+            // NOTE: We cannot do the same for find implementations because find implementation
+            //      just goes to the item if only one comes back.
+            open: Omni.listener.requests.where(z => z.command === "findusages").map(() => true),
+            reset: Omni.listener.requests.where(z => z.command === "findimplementations" || z.command === "findusages").map(() => true)
+        }
 
-        this.disposable.add(find.subscribe(s => {
+        this.disposable.add(this.observe.find.subscribe(s => {
             this.selectedIndex = 0;
             this.usages = s;
         }));

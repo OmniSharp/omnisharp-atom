@@ -1,16 +1,20 @@
+import * as _ from 'lodash';
+import Omni = require('../omni-sharp-server/omni');
 import {Observable} from "rx";
-import {diagnostics} from './world/world-diagnostics';
-import {output} from './world/world-output';
-import {updateState} from './world/world-state';
-import {status} from './world/world-status';
-import {OmnisharpClientStatus} from "omnisharp-client";
 import {findUsages} from "./features/find-usages";
+import {codeCheck} from "./features/code-check";
+import {log} from "./features/log";
+import {server} from "./features/server-information";
+
+var statefulProperties = ['isOff', 'isConnecting', 'isOn', 'isReady', 'isError'];
 
 class WorldModel {
-    public diagnostics: OmniSharp.Models.DiagnosticLocation[] = [];
-    public output: OmniSharp.OutputMessage[] = [];
-    public status: OmnisharpClientStatus = <any>{};
+    public status = <any>{};
+
     public findUsages = findUsages;
+    public codeCheck = codeCheck;
+    public log = log;
+    public server = server;
 
     public isOff: boolean;
     public isConnecting: boolean;
@@ -22,23 +26,51 @@ class WorldModel {
     public supportsBuild = false;
 
     constructor() {
-        diagnostics.subscribe(items => this.diagnostics = items);
-        output.subscribe(o => this.output = o);
-        status.subscribe(s => this.status = s);
-
-        updateState(this);
-        this.observe.updates = Observable.ofObjectChanges(this);
     }
 
-    public observe = {
-        diagnostics,
-        output,
-        status,
-        updates: <Observable<Rx.ObjectObserveChange<WorldModel>>> null
+    public activate() {
+        this.setupState();
+        this.observe = {
+            get diagnostics() { return codeCheck.observe.diagnostics },
+            get output() { return log.observe.output },
+            get status() { return server.observe.status },
+            updates: Observable.ofObjectChanges(this)
+        };
+    }
+
+    private setupState() {
+        Omni.activeModel
+            .subscribe(newModel => {
+                // Update on change
+                _.each(statefulProperties, property => { this[property] = newModel[property] });
+            });
+
+        Omni.activeModel
+            .flatMapLatest(newModel =>
+                newModel.observe.updates// Track changes to the model
+                    .bufferWithTime(50) // Group the changes so that we capture all the differences at once.
+                    .map(items => _.filter(items, item => _.contains(statefulProperties, item.name)))
+                    .where(z => z.length > 0)
+                    .map(items => ({ items, newModel })))
+            .subscribe(ctx => {
+                var {items, newModel} = ctx;
+                // Apply the updates if found
+                _.each(items, item => {
+                    this[item.name] = newModel[item.name];
+                })
+            });
+    }
+
+    public observe: {
+        // TODO: Do these make sense, or should we just do `world.log.observe.output`?
+        diagnostics: typeof codeCheck.observe.diagnostics;
+        output: typeof log.observe.output;
+        status: typeof server.observe.status;
+        updates: Observable<Rx.ObjectObserveChange<WorldModel>>;
     }
 }
 
-export var world = new WorldModel();
+var world = new WorldModel();
 window['world'] = world; //TEMP
 
-export {findUsages};
+export {world, findUsages, codeCheck, log, server};

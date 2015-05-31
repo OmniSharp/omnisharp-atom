@@ -19,7 +19,7 @@ export class CodeCheckOutputWindow<T extends ICodeCheckOutputWindowProps> extend
     constructor(props?: T, context?: any) {
         super(props, context);
 
-        this.state = { diagnostics: world.diagnostics };
+        this.state = { diagnostics: world.codeCheck.diagnostics };
     }
 
     public componentDidMount() {

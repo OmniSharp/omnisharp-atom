@@ -1,12 +1,16 @@
 import {helpers, Observable, ReplaySubject} from 'rx';
 import manager = require("./client-manager");
 import Client = require("./client");
-//import {DriverState} from "omnisharp-client";
 import _ = require('lodash');
 import OmnisharpAtom = require("../omnisharp-atom/omnisharp-atom");
 
 class Omni {
-    public static toggle() {
+    private _atom: typeof OmnisharpAtom;
+    public activate(atom: typeof OmnisharpAtom) {
+        this._atom = atom;
+    }
+
+    public toggle() {
         if (manager.connected) {
             manager.disconnect();
         } else {
@@ -14,24 +18,24 @@ class Omni {
         }
     }
 
-    public static get isOff() { return manager.isOff; }
-    public static get isOn() { return manager.isOn; }
+    public get isOff() { return manager.isOff; }
+    public get isOn() { return manager.isOn; }
 
-    public static navigateTo(response: { FileName: string; Line: number; Column: number; }) {
+    public navigateTo(response: { FileName: string; Line: number; Column: number; }) {
         atom.workspace.open(response.FileName, undefined)
             .then((editor) => {
                 editor.setCursorBufferPosition([response.Line && response.Line - 1, response.Column && response.Column - 1])
             });
     }
 
-    public static getFrameworks(projects: string[]): string {
+    public getFrameworks(projects: string[]): string {
         var frameworks = _.map(projects, (project: string) => {
             return project.indexOf('+') === -1 ? '' : project.split('+')[1];
         }).filter((fw: string) => fw.length > 0);
         return frameworks.join(',');
     }
 
-    public static addCommand(commandName: string, callback: (...args: any[]) => any) {
+    public addCommand(commandName: string, callback: (...args: any[]) => any) {
         return atom.commands.add("atom-text-editor", commandName, (event) => {
             var editor = atom.workspace.getActiveTextEditor();
             if (!editor) {
@@ -50,7 +54,7 @@ class Omni {
     * This is a mostly functional replacement for `registerConfiguration`, though there has been
     *     one place where `registerConfiguration` could not be replaced.
     */
-    public static get listener() {
+    public get listener() {
         return manager.observationClient;
     }
 
@@ -58,7 +62,7 @@ class Omni {
     * This property can be used to observe to the aggregate or combined responses to any event.
     * A good example of this is, for code check errors, to aggregate all errors across all open solutions.
     */
-    public static get combination() {
+    public get combination() {
         return manager.combinationClient;
     }
 
@@ -69,9 +73,9 @@ class Omni {
     * The callback will then issue the request
     * NOTE: This API only exposes the operation Api and doesn't expose the event api, as we are requesting something to happen
     */
-    public static request<T>(editor: Atom.TextEditor, callback: (client: OmniSharp.ExtendApi) => Rx.Observable<T> | Rx.IPromise<T>);
-    public static request<T>(callback: (client: OmniSharp.ExtendApi) => Rx.Observable<T> | Rx.IPromise<T>);
-    public static request<T>(editor: Atom.TextEditor | ((client: OmniSharp.ExtendApi) => Rx.Observable<T> | Rx.IPromise<T>), callback?: (client: OmniSharp.ExtendApi) => Rx.Observable<T> | Rx.IPromise<T>) {
+    public request<T>(editor: Atom.TextEditor, callback: (client: OmniSharp.ExtendApi) => Rx.Observable<T> | Rx.IPromise<T>);
+    public request<T>(callback: (client: OmniSharp.ExtendApi) => Rx.Observable<T> | Rx.IPromise<T>);
+    public request<T>(editor: Atom.TextEditor | ((client: OmniSharp.ExtendApi) => Rx.Observable<T> | Rx.IPromise<T>), callback?: (client: OmniSharp.ExtendApi) => Rx.Observable<T> | Rx.IPromise<T>) {
         if (_.isFunction(editor)) {
             callback = <any>editor;
             editor = null;
@@ -108,25 +112,25 @@ class Omni {
     /**
     * Allows for views to observe the active model as it changes between editors
     */
-    public static get activeModel() {
+    public get activeModel() {
         return manager.activeClient.map(z => z.model);
     }
 
-    public static get activeEditor() {
-        return OmnisharpAtom.activeEditor;
+    public get activeEditor() {
+        return this._atom.activeEditor;
     }
 
-    public static get editors() {
-        return OmnisharpAtom.editors;
+    public get editors() {
+        return this._atom.editors;
     }
 
-    public static get configEditors() {
-        return OmnisharpAtom.configEditors;
+    public get configEditors() {
+        return this._atom.configEditors;
     }
 
-    public static registerConfiguration(callback: (client: Client) => void) {
+    public registerConfiguration(callback: (client: Client) => void) {
         manager.registerConfiguration(callback);
     }
 }
 
-export = Omni
+export = new Omni

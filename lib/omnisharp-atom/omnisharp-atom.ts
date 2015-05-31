@@ -1,87 +1,79 @@
 require('./configure-rx');
 import _ = require('lodash');
-import {Observable, BehaviorSubject, Subject} from "rx";
+import {Observable, BehaviorSubject, Subject, CompositeDisposable} from "rx";
 import path = require('path');
 import fs = require('fs');
 import a = require("atom");
 var Emitter = (<any>a).Emitter
 
 // TODO: Remove these at some point to stream line startup.
-//import Omni = require('../omni-sharp-server/omni');
+import Omni = require('../omni-sharp-server/omni');
 import ClientManager = require('../omni-sharp-server/client-manager');
 import dependencyChecker = require('./dependency-checker');
-import StatusBarComponent = require('./views/status-bar-view');
-import DockWindow = require('./views/dock-view');
-import React = require('react');
-
-class Feature {
-    public name: string;
-    public path: string;
-    public instance: OmniSharp.IFeature;
-
-    constructor(atom: OmniSharpAtom, feature: string) {
-        this.name = feature.replace('.ts', '');
-        this.path = "./features/" + feature;
-        this.instance = require(this.path);
-    }
-}
+import {world} from './world';
 
 class OmniSharpAtom {
-    private features: Feature[];
+    private features: OmniSharp.IFeature[] = [];
     private emitter: EventKit.Emitter;
     private disposable: Rx.CompositeDisposable;
-    private statusBarView;
-    private outputView;
     private autoCompleteProvider;
-    private statusBar;
     private generator: { run(generator: string, path?: string): void; start(prefix: string, path?: string): void; };
     private menu: EventKit.Disposable;
 
-    private _editor = new Subject<Atom.TextEditor>();
-    public get editors(): Observable<Atom.TextEditor> { return this._editor; }
-
-    private _configEditor = new Subject<Atom.TextEditor>();
-    public get configEditors(): Observable<Atom.TextEditor> { return this._configEditor; }
+    public editors: Observable<Atom.TextEditor>;
+    public configEditors: Observable<Atom.TextEditor>;
 
     private _activeEditor = new BehaviorSubject<Atom.TextEditor>(null);
     private _activeEditorObservable = this._activeEditor.shareReplay(1);
     public get activeEditor(): Observable<Atom.TextEditor> { return this._activeEditorObservable; }
 
     public activate(state) {
-
-        // This needs to be set earlier so that the auto-start can also connect
-        // to the output
-        var p = atom.workspace.addBottomPanel({
-            item: document.createElement('span'),
-            visible: false
-        });
-        this.outputView = p.item.parentElement;
-        this.outputView.classList.add('omnisharp-atom-pane')
-        React.render(React.createElement(DockWindow, { panel: p }), this.outputView);
+        this.disposable = new CompositeDisposable;
 
         if (dependencyChecker.findAllDeps(this.getPackageDir())) {
             this.emitter = new Emitter;
+
+            var editors = new Subject<Atom.TextEditor>();
+            this.editors = editors;
+
+            var configEditors = new Subject<Atom.TextEditor>();
+            this.configEditors = configEditors;
 
             this.disposable.add(atom.commands.add('atom-workspace', 'omnisharp-atom:toggle', () => this.toggle()));
             this.disposable.add(atom.commands.add('atom-workspace', 'omnisharp-atom:new-application', () => this.generator.run("aspnet:app")));
             this.disposable.add(atom.commands.add('atom-workspace', 'omnisharp-atom:new-class', () => this.generator.run("aspnet:Class")));
             this.disposable.add(this.emitter);
 
-            this.loadFeatures(state).toPromise().then(() => {
-                ClientManager.activate(this);
-                this.subscribeToEvents();
-            });
+            Omni.activate(this);
+
+            this.loadFeatures(state).toPromise()
+                .then(() => this.loadAtomFeatures(state).toPromise())
+                .then(() => {
+                    world.activate();
+                    _.each(this.features, f => {
+                        f.activate();
+                        this.disposable.add(f);
+                    });
+
+                    ClientManager.activate(this);
+                    this.subscribeToEvents();
+
+                    this.disposable.add(atom.workspace.observeTextEditors((editor: Atom.TextEditor) => {
+                        var editorFilePath;
+                        var grammarName = editor.getGrammar().name;
+                        if (grammarName === 'C#' || grammarName === 'C# Script File') {
+                            editors.onNext(editor);
+                            editorFilePath = editor.buffer.file.path;
+                        } else if (grammarName === "JSON") {
+                            configEditors.onNext(editor);
+                        }
+
+                        this.detectAutoToggleGrammar(editor);
+                    }));
+                });
         } else {
             _.map(dependencyChecker.errors() || [], missingDependency => console.error(missingDependency))
         }
-    }
-
-    public onEditor(callback: (...args: any[]) => void) {
-        return this.emitter.on('omnisharp-atom-editor', callback);
-    }
-
-    public onConfigEditor(callback: (...args: any[]) => void) {
-        return this.emitter.on('omnisharp-atom-config-editor', callback);
     }
 
     public getPackageDir() {
@@ -100,36 +92,45 @@ class OmniSharpAtom {
             .flatMap(file => Observable.fromNodeCallback(fs.stat)(featureDir + "/" + file).map(stat => ({ file, stat })))
             .where(z => !z.stat.isDirectory())
             .map(z => z.file)
-            .map(file => new Feature(this, file));
-
-        var result = features.toArray();
-        result.subscribe(features => {
-            this.features = features;
-            _.each(this.features, f => {
-                f.instance.activate();
-                this.disposable.add(f.instance);
+            .map(feature => {
+                var path = "./features/" + feature;
+                return <OmniSharp.IFeature[]>_.values(require(path))
             });
 
+        var result = features.toArray()
+            .map(features => _.flatten<OmniSharp.IFeature>(features));
+        result.subscribe(features => {
+            this.features = this.features.concat(features);
+        });
 
-        })
+        return result;
+    }
+
+    public loadAtomFeatures(state) {
+        var packageDir = this.getPackageDir();
+        var atomFeatureDir = packageDir + "/omnisharp-atom/lib/omnisharp-atom/atom";
+
+        var atomFeatures = Observable.fromNodeCallback(fs.readdir)(atomFeatureDir)
+            .flatMap(files => Observable.from(files))
+            .where(file => /\.js$/.test(file))
+            .flatMap(file => Observable.fromNodeCallback(fs.stat)(atomFeatureDir + "/" + file).map(stat => ({ file, stat })))
+            .where(z => !z.stat.isDirectory())
+            .map(z => z.file)
+            .map(feature => {
+                var path = "./atom/" + feature;
+                return <OmniSharp.IFeature[]>_.values(require(path))
+            });
+
+        var result = atomFeatures.toArray()
+            .map(features => _.flatten<OmniSharp.IFeature>(features));
+        result.subscribe(features => {
+            this.features = this.features.concat(features);
+        });
 
         return result;
     }
 
     public subscribeToEvents() {
-        this.disposable.add(atom.workspace.observeTextEditors((editor: Atom.TextEditor) => {
-            var editorFilePath;
-            var grammarName = editor.getGrammar().name;
-            if (grammarName === 'C#' || grammarName === 'C# Script File') {
-                this._editor.onNext(editor);
-                editorFilePath = editor.buffer.file.path;
-            } else if (grammarName === "JSON") {
-                this._configEditor.onNext(editor);
-            }
-
-            this.detectAutoToggleGrammar(editor);
-        }));
-
         this.disposable.add(atom.workspace.observeActivePaneItem((pane: any) => {
             if (pane && pane.getGrammar) {
                 var grammarName = pane.getGrammar().name;
@@ -205,20 +206,13 @@ class OmniSharpAtom {
 
     public deactivate() {
         this.features = null;
-        this.statusBarView && React.unmountComponentAtNode(this.statusBarView.destroy());
-        this.outputView && this.outputView.destroy();
         this.autoCompleteProvider && this.autoCompleteProvider.destroy();
         ClientManager.disconnect();
     }
 
     public consumeStatusBar(statusBar) {
-        this.statusBar = statusBar;
-        this.statusBarView = document.createElement("span")
-        React.render(React.createElement(StatusBarComponent, {}), this.statusBarView);
-        statusBar.addLeftTile({
-            item: this.statusBarView,
-            priority: -1000
-        });
+        var feature = require('./atom/status-bar');
+        feature.statusBar.setup(statusBar);
     }
 
     public consumeYeomanEnvironment(generatorService: { run(generator: string, path: string): void; start(prefix: string, path: string): void; }) {

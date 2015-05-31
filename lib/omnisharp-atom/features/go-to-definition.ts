@@ -1,5 +1,5 @@
 import _ = require('lodash');
-import {CompositeDisposable} from "rx";
+import {CompositeDisposable, Observable} from "rx";
 import Omni = require('../../omni-sharp-server/omni');
 import $ = require('jquery');
 var Range = require('atom').Range;
@@ -14,8 +14,8 @@ class GoToDefinition implements OmniSharp.IFeature {
         this.disposable.add(Omni.editors.subscribe((editor: Atom.TextEditor) => _.defer(() => {
             var view = $(atom.views.getView(editor));
             var scroll = this.getFromShadowDom(view, '.scroll-view');
-            var mousemove = Rx.Observable.fromEvent<MouseEvent>(scroll[0], 'mousemove');
-            var click = Rx.Observable.fromEvent<MouseEvent>(scroll[0], 'click');
+            var mousemove = Observable.fromEvent<MouseEvent>(scroll[0], 'mousemove');
+            var click = Observable.fromEvent<MouseEvent>(scroll[0], 'click');
 
             // to debounce mousemove event's firing for some reason on some machines
             var lastExprTypeBufferPt: any;
