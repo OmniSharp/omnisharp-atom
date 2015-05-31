@@ -107,7 +107,7 @@ export class DockWindow<T extends IDockWindowProps> extends ReactClientComponent
 
     constructor(props?: T, context?: any) {
         super(props, context);
-        this.state = { selected: null };
+        this.state = { selected: 'output' };
     }
 
     public componentWillMount() {
