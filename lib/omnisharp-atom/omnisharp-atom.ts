@@ -49,6 +49,9 @@ class OmniSharpAtom {
     private _activeEditorObservable = this._activeEditor.replay(z => z, 1);
     public get activeEditor(): Observable<Atom.TextEditor> { return this._activeEditorObservable; }
 
+    public cfgUseIcons: boolean;
+    public cfgUseLeftLabelColumnForSuggestions: boolean;
+
     public activate(state) {
         atom.commands.add('atom-workspace', 'omnisharp-atom:toggle', () => this.toggle());
         atom.commands.add('atom-workspace', 'omnisharp-atom:new-application', () => this.generator.run("aspnet:app"));
@@ -160,6 +163,13 @@ class OmniSharpAtom {
             // This will tell us when the editor is no longer an appropriate editor
             this._activeEditor.onNext(null);
         });
+
+        atom.config.observe('omnisharp-atom.useIcons', (value) => {
+            this.cfgUseIcons = value;
+        })
+        atom.config.observe('omnisharp-atom.useLeftLabelColumnForSuggestions', (value) => {
+            this.cfgUseLeftLabelColumnForSuggestions = value;
+        })
     }
 
     private detectAutoToggleGrammar(editor: Atom.TextEditor) {
