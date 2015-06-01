@@ -14,8 +14,9 @@ class ClientManager {
     private _projectPaths: string[] = [];
     private _activated = false;
     private _temporaryClients: { [path: string]: RefCountDisposable } = {};
+    private _nextIndex = 0;
 
-    public get activeClients() { return this._activeClients.slice() }
+    public get activeClients() { return this._activeClients }
     private _activeClients: Client[] = [];
 
     // this client can be used to observe behavior across all clients.
@@ -95,7 +96,8 @@ class ClientManager {
         this._clientPaths.push(candidate);
 
         var client = new Client({
-            projectPath: candidate
+            projectPath: candidate,
+            index: ++this._nextIndex
         });
 
         _.each(this._configurations, config => config(client));
@@ -112,9 +114,10 @@ class ClientManager {
             _.delay(() => client.connect(), delay);
         }
 
-        if (this._activeClients.length === 0)
+        this._activeClients.push(client);
+        if (this._activeClients.length === 1)
             this._activeClient.onNext(client);
-        // keep track of the active clients this._activeClients.push(client);
+        // keep track of the active clients
         this._observationClient.add(client);
         this._combinationClient.add(client);
         return client;

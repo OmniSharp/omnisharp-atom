@@ -259,21 +259,51 @@ li.autocomplete-omnisharp-atom {
     line-height:1.5em !important;
 }
 
-.error-warning-summary {
-    padding-left: 10px;
-    color: @text-color;
+.error-warning-summary, .project-summary, .solution-summary {
     cursor:pointer;
     &:focus {
-        text-decoration: none;
         color: @text-color;
     }
     &:hover {
-        color: @text-color;
         text-decoration: none;
     }
     span {
         padding-left: 3px;
         padding-right: 3px;
+    }
+}
+
+.project-summary, .solution-summary {
+    color: @text-color-info;
+    &:focus {
+        color: @text-color-info;
+    }
+    &:hover {
+        color: @text-color-info;
+    }
+
+    sub {
+        position: absolute;
+        left: 0.1em;
+        bottom: 0.20em;
+        font-weight: bold;
+    }
+
+    .icon-pulse {
+        position: relative;
+        padding-right: 0;
+        padding-left: 4px;
+    }
+}
+
+.error-warning-summary {
+    color: @text-color;
+    padding-left: 10px;
+    &:focus {
+        color: @text-color;
+    }
+    &:hover {
+        color: @text-color;
     }
     .icon-issue-opened {
         color: @text-color-error;
@@ -281,8 +311,6 @@ li.autocomplete-omnisharp-atom {
     .icon-alert {
         color: @text-color-warning;
     }
-
-
 }
 
 span.filename {

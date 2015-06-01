@@ -5,11 +5,12 @@ import ClientManager = require('../../omni-sharp-server/client-manager');
 import Client = require('../../omni-sharp-server/client');
 import React = require('react');
 import {ReactClientComponent} from "./react-client-component";
-import {world, server} from '../world';
+import {world, server, solutionInformation} from '../world';
 
 interface StatusBarState {
     errorCount?: number;
     warningCount?: number;
+    projects?: typeof server.projects;
     isOff?: boolean;
     isConnecting?: boolean;
     isOn?: boolean;
@@ -25,12 +26,13 @@ class StatusBarComponent extends ReactClientComponent<{}, StatusBarState> {
         this.state = {
             errorCount: 0,
             warningCount: 0,
+            projects: server.projects,
             isOff: world.isOff,
             isConnecting: world.isConnecting,
             isOn: world.isOn,
             isReady: world.isReady,
             isError: world.isError,
-            status: world.status || <any>{}
+            status: server.status || <any>{}
         };
     }
 
@@ -47,22 +49,29 @@ class StatusBarComponent extends ReactClientComponent<{}, StatusBarState> {
 
         this.disposable.add(world.observe.updates.bufferWithTime(50)
             .subscribe(items => {
-            var updates = _(items)
-                .filter(item => _.contains(['isOff', 'isConnecting', 'isOn', 'isReady', 'isError'], item.name))
-                .value();
+                var updates = _(items)
+                    .filter(item => _.contains(['isOff', 'isConnecting', 'isOn', 'isReady', 'isError'], item.name))
+                    .value();
 
-            if (updates.length) {
-                var update = {};
-                _.each(updates, item => {
-                    update[item.name] = world[item.name];
-                })
-                this.setState(update);
-            }
-        }));
+                if (updates.length) {
+                    var update = {};
+                    _.each(updates, item => {
+                        update[item.name] = world[item.name];
+                    })
+                    this.setState(update);
+                }
+            }));
 
-        this.disposable.add(server.observe.status.subscribe(status => {
-            this.setState({ status });
-        }));
+        this.disposable.add(server.observe.projects
+            .subscribe(projects => this.setState({ projects })));
+
+        this.disposable.add(server.observe.status
+            .subscribe(status => this.setState({ status })));
+        this.disposable.add(server.observe.model
+            .subscribe(status => this.setState({})));
+
+        this.disposable.add(solutionInformation.observe.solutions
+            .subscribe(solutions => this.setState({})));
     }
 
     private getIconClassName() {
@@ -96,19 +105,26 @@ class StatusBarComponent extends ReactClientComponent<{}, StatusBarState> {
     public render() {
         var hasClientAndIsOn = this.state.isOn;
 
-        return React.DOM.div({
-            className: "inline-block"
-        }, React.DOM.a({
-            href: '#',
-            className: "omnisharp-atom-button",
-            onClick: (e) => this.toggle()
-        }, React.DOM.span({
-            className: this.getIconClassName()
-        }),
-            React.DOM.span({
-                className: 'outgoing-requests' + (!this.state.status.hasOutgoingRequests ? ' fade' : '')
-            }, this.state.status.outgoingRequests || '0')),
-            !hasClientAndIsOn ? React.DOM.span({}) :
+        var children = [];
+
+        children.push(
+            React.DOM.a({
+                href: '#',
+                className: "omnisharp-atom-button",
+                onClick: (e) => this.toggle()
+            },
+                React.DOM.span({
+                    className: this.getIconClassName()
+                }),
+                React.DOM.span({
+                    className: 'outgoing-requests' + (!this.state.status.hasOutgoingRequests ? ' fade' : '')
+                }, this.state.status.outgoingRequests || '0'))
+            );
+
+        if (hasClientAndIsOn) {
+            var solutionNumber = solutionInformation.solutions.length > 1 ? _.trim(server.model && server.model.index, 'client') : '';
+
+            children.push(
                 React.DOM.a({
                     href: '#',
                     className: 'inline-block error-warning-summary',
@@ -125,9 +141,21 @@ class StatusBarComponent extends ReactClientComponent<{}, StatusBarState> {
                     }),
                     React.DOM.span({
                         className: 'warning-summary'
-                    }, this.state.warningCount))
-            );
+                    }, this.state.warningCount)),
+                React.DOM.a({
+                    className: "inline-block project-summary",
+                },
+                    React.DOM.span({
+                        className: "icon icon-pulse"
+                    },
+                        React.DOM.sub({}, solutionNumber)),
+                    React.DOM.span({
+                        className: "projects"
+                    }, `${this.state.projects.length} Projects`))
+                );
+        }
 
+        return React.DOM.div({ className: "inline-block" }, ...children);
     }
 
 }

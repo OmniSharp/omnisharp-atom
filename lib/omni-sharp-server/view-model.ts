@@ -4,7 +4,7 @@ import {DriverState, OmnisharpClientStatus} from "omnisharp-client";
 import {Observable, Subject} from "rx";
 import {basename} from "path";
 
-class ProjectViewModel {
+class ProjectViewModel implements OmniSharp.IProjectViewModel {
     constructor(
         public name: string,
         public path: string,
@@ -22,8 +22,11 @@ class ViewModel {
     public isReady: boolean;
     public isError: boolean;
 
+
     private _uniqueId;
     public get uniqueId() { return this._client.uniqueId; }
+
+    public get index() { return this._client.index; }
     public output: OmniSharp.OutputMessage[] = [];
     public diagnostics: OmniSharp.Models.DiagnosticLocation[] = [];
     public status: OmnisharpClientStatus;

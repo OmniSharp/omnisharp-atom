@@ -7,12 +7,14 @@ class Client extends OmnisharpClient {
     public model: ViewModel;
     public logs: Observable<OmniSharp.OutputMessage>;
     public path: string;
+    public index: string;
 
     constructor(options: OmnisharpClientOptions) {
         super(options);
         this.configureClient();
         this.model = new ViewModel(this);
         this.path = options.projectPath;
+        this.index = options['index'];
     }
 
     public toggle() {
