@@ -1,6 +1,6 @@
 import _ = require('lodash')
 import path = require('path');
-import {Observable, AsyncSubject, RefCountDisposable, Disposable, ReplaySubject, Scheduler} from "rx";
+import {Observable, AsyncSubject, RefCountDisposable, Disposable, CompositeDisposable, ReplaySubject, Scheduler} from "rx";
 import Client = require('./client');
 import {ObservationClient, CombinationClient} from './composite-client';
 import {findCandidates, DriverState} from "omnisharp-client";
@@ -94,7 +94,7 @@ class ClientManager {
         localPaths.push(candidate);
         this._clientPaths.push(candidate);
 
-        var client = new Client(candidate, {
+        var client = new Client({
             projectPath: candidate
         });
 
@@ -222,6 +222,15 @@ class ClientManager {
             if (csClient)
                 return [directory, csClient];
         } else {
+            var intersect = intersectPath(location, this._clientPaths);
+            if (intersect) {
+                return [intersect, this._clients[intersect]];
+            }
+        }
+
+        // Attempt to see if this file is part a clients solution
+        for (var client of this._activeClients) {
+            var paths = client.model.projects.map(z => path);
             var intersect = intersectPath(location, this._clientPaths);
             if (intersect) {
                 return [intersect, this._clients[intersect]];

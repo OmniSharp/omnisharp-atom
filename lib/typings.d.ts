@@ -17,9 +17,12 @@ declare var WeakMap: WeakMapConstructor;
 
 declare module OmniSharp {
     interface IFeature {
-        name: string;
-        path: string;
-        invoke(method: string, ...args: any[]);
+        activate(): void;
+        dispose(): void;
+    }
+    
+    interface IAtomFeature extends IFeature {
+        attach(): void;
     }
 
     interface ICompletionResult {

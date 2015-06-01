@@ -1,42 +1,26 @@
 import _ = require('lodash');
+import {CompositeDisposable, Observable} from "rx";
 import Omni = require('../../omni-sharp-server/omni');
-import OmniSharpAtom = require('../omnisharp-atom');
-import rx = require('rx');
 import $ = require('jquery');
 var Range = require('atom').Range;
 
-class GoToDefinition {
-    private disposable: { dispose: () => void; };
-
+class GoToDefinition implements OmniSharp.IFeature {
+    private disposable: Rx.CompositeDisposable;
     private exprTypeTimeout = null;
     private marker = null;
-    public goToDefinition() {
-        var editor = atom.workspace.getActiveTextEditor();
-        if (editor) {
-            var word = <any>editor.getWordUnderCursor();
-            Omni.request(editor, client => client.gotodefinition(client.makeRequest()))
-                .subscribe((data) => {
-                    if (data.FileName != null) {
-                        Omni.navigateTo(data);
-                    } else {
-                        atom.emitter.emit("omnisharp-atom:error",
-                            "Can't navigate to '" + word + "'");
-                    }
-                });
-        }
-    }
 
     public activate() {
-        OmniSharpAtom.onEditor((editor: Atom.TextEditor) => _.defer(() => {
+        this.disposable = new CompositeDisposable();
+        this.disposable.add(Omni.editors.subscribe((editor: Atom.TextEditor) => _.defer(() => {
             var view = $(atom.views.getView(editor));
             var scroll = this.getFromShadowDom(view, '.scroll-view');
-            var mousemove = rx.Observable.fromEvent<MouseEvent>(scroll[0], 'mousemove');
-            var click = rx.Observable.fromEvent<MouseEvent>(scroll[0], 'click');
-
-            var cd = this.disposable = new rx.CompositeDisposable();
+            var mousemove = Observable.fromEvent<MouseEvent>(scroll[0], 'mousemove');
+            var click = Observable.fromEvent<MouseEvent>(scroll[0], 'click');
 
             // to debounce mousemove event's firing for some reason on some machines
             var lastExprTypeBufferPt: any;
+
+            var cd = new CompositeDisposable();
 
             cd.add(mousemove.subscribe((e) => {
                 if (!e.ctrlKey && !e.metaKey) {
@@ -63,15 +47,31 @@ class GoToDefinition {
                 this.removeMarker();
                 this.goToDefinition();
             }));
-        }));
+            this.disposable.add(cd);
+        })));
 
-        atom.emitter.on("symbols-view:go-to-declaration", this.goToDefinition);
-
-        OmniSharpAtom.addCommand("omnisharp-atom:go-to-definition", this.goToDefinition);
+        this.disposable.add(atom.emitter.on("symbols-view:go-to-declaration", this.goToDefinition));
+        this.disposable.add(Omni.addCommand("atom-text-editor", "omnisharp-atom:go-to-definition", this.goToDefinition));
     }
 
-    public deactivate() {
-        this.disposable.dispose()
+    public dispose() {
+        this.disposable.dispose();
+    }
+
+    public goToDefinition() {
+        var editor = atom.workspace.getActiveTextEditor();
+        if (editor) {
+            var word = <any>editor.getWordUnderCursor();
+            Omni.request(editor, client => client.gotodefinition(client.makeRequest()))
+                .subscribe((data) => {
+                    if (data.FileName != null) {
+                        Omni.navigateTo(data);
+                    } else {
+                        atom.emitter.emit("omnisharp-atom:error",
+                            "Can't navigate to '" + word + "'");
+                    }
+                });
+        }
     }
 
     private clearExprTypeTimeout() {
@@ -142,4 +142,4 @@ class GoToDefinition {
     }
 }
 
-export = GoToDefinition;
+export var goToDefintion = new GoToDefinition;

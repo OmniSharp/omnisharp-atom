@@ -1,6 +1,6 @@
 require('./configure-rx');
 import _ = require('lodash');
-import {Observable, BehaviorSubject} from "rx";
+import {Observable, BehaviorSubject, Subject, CompositeDisposable} from "rx";
 import path = require('path');
 import fs = require('fs');
 import a = require("atom");
@@ -10,101 +10,76 @@ var Emitter = (<any>a).Emitter
 import Omni = require('../omni-sharp-server/omni');
 import ClientManager = require('../omni-sharp-server/client-manager');
 import dependencyChecker = require('./dependency-checker');
-import StatusBarComponent = require('./views/status-bar-view');
-import DockWindow = require('./views/dock-view');
-import React = require('react');
-
-class Feature implements OmniSharp.IFeature {
-    public name: string;
-    public path: string;
-    private _instance: any;
-
-    constructor(atom: OmniSharpAtom, feature: string) {
-        this.name = feature.replace('.ts', '');
-        this.path = "./features/" + feature;
-
-        var _cls = require(this.path);
-        this._instance = new _cls(atom);
-    }
-
-    public invoke(method: string, ...args: any[]) {
-        if (this._instance[method])
-            this._instance[method].apply(this._instance, args);
-    }
-}
+import {world} from './world';
 
 class OmniSharpAtom {
-    private features: OmniSharp.IFeature[];
-    private observeEditors: { dispose: Function };
-    private activeEditorAtomDisposable: { dispose: Function };
+    private features: OmniSharp.IFeature[] = [];
     private emitter: EventKit.Emitter;
-    private statusBarView;
-    private outputView;
+    private disposable: Rx.CompositeDisposable;
     private autoCompleteProvider;
-    private statusBar;
     private generator: { run(generator: string, path?: string): void; start(prefix: string, path?: string): void; };
     private menu: EventKit.Disposable;
 
+    public editors: Observable<Atom.TextEditor>;
+    public configEditors: Observable<Atom.TextEditor>;
+
     private _activeEditor = new BehaviorSubject<Atom.TextEditor>(null);
-    private _activeEditorObservable = this._activeEditor.replay(z => z, 1);
+    private _activeEditorObservable = this._activeEditor.shareReplay(1);
     public get activeEditor(): Observable<Atom.TextEditor> { return this._activeEditorObservable; }
 
     public activate(state) {
-        atom.commands.add('atom-workspace', 'omnisharp-atom:toggle', () => this.toggle());
-        atom.commands.add('atom-workspace', 'omnisharp-atom:new-application', () => this.generator.run("aspnet:app"));
-        atom.commands.add('atom-workspace', 'omnisharp-atom:new-class', () => this.generator.run("aspnet:Class"));
-
-        // This needs to be set earlier so that the auto-start can also connect
-        // to the output
-        var p = atom.workspace.addBottomPanel({
-            item: document.createElement('span'),
-            visible: false
-        });
-        this.outputView = p.item.parentElement;
-        this.outputView.classList.add('omnisharp-atom-pane')
-        React.render(React.createElement(DockWindow, { panel: p }), this.outputView);
+        this.disposable = new CompositeDisposable;
 
         if (dependencyChecker.findAllDeps(this.getPackageDir())) {
             this.emitter = new Emitter;
-            this.loadFeatures(state).toPromise().then(() => {
-                ClientManager.activate(this);
-                this.subscribeToEvents();
-            });
+
+            var editors = new Subject<Atom.TextEditor>();
+            this.editors = editors;
+
+            var configEditors = new Subject<Atom.TextEditor>();
+            this.configEditors = configEditors;
+
+            this.disposable.add(atom.commands.add('atom-workspace', 'omnisharp-atom:toggle', () => this.toggle()));
+            this.disposable.add(atom.commands.add('atom-workspace', 'omnisharp-atom:new-application', () => this.generator.run("aspnet:app")));
+            this.disposable.add(atom.commands.add('atom-workspace', 'omnisharp-atom:new-class', () => this.generator.run("aspnet:Class")));
+            this.disposable.add(this.emitter);
+
+            Omni.activate(this);
+
+            this.loadAtomFeatures(state).toPromise()
+                .then(() => this.loadFeatures(state).toPromise())
+                .then(() => {
+                    world.activate();
+                    _.each(this.features, f => {
+                        f.activate();
+                        this.disposable.add(f);
+                    });
+
+                    ClientManager.activate(this);
+                    this.subscribeToEvents();
+
+                    this.disposable.add(atom.workspace.observeTextEditors((editor: Atom.TextEditor) => {
+                        var editorFilePath;
+                        var grammarName = editor.getGrammar().name;
+                        if (grammarName === 'C#' || grammarName === 'C# Script File') {
+                            editors.onNext(editor);
+                            editorFilePath = editor.buffer.file.path;
+                        } else if (grammarName === "JSON") {
+                            configEditors.onNext(editor);
+                        }
+
+                        this.detectAutoToggleGrammar(editor);
+                    }));
+
+                    _.each(this.features, f => {
+                        if (_.isFunction(f['attach'])) {
+                            f['attach']()
+                        }
+                    });
+                });
         } else {
             _.map(dependencyChecker.errors() || [], missingDependency => console.error(missingDependency))
         }
-    }
-
-    public addCommand(commandName: string, callback: (...args: any[]) => any) {
-        atom.commands.add("atom-text-editor", commandName, (event) => {
-            var editor = atom.workspace.getActiveTextEditor();
-            if (!editor) {
-                return;
-            };
-
-            var grammarName = editor.getGrammar().name;
-            if (grammarName === 'C#' || grammarName === 'C# Script File') {
-                callback(event);
-            }
-        });
-    };
-
-    public onEditor(callback: (...args: any[]) => void) {
-        return this.emitter.on('omnisharp-atom-editor', callback);
-    }
-
-    public onEditorDestroyed(callback: (path: string) => any) {
-        return this.emitter.on('omnisharp-atom-editor-destroyed', (filePath) => callback(filePath))
-    }
-
-    public onConfigEditor(callback: (...args: any[]) => void) {
-        return this.emitter.on('omnisharp-atom-config-editor', callback);
-    }
-
-    public onConfigEditorDestroyed(callback: (path: string) => any) {
-        return this.emitter.on('omnisharp-atom-config-editor-destroyed', (filePath) => {
-            callback(filePath);
-        });
     }
 
     public getPackageDir() {
@@ -123,32 +98,46 @@ class OmniSharpAtom {
             .flatMap(file => Observable.fromNodeCallback(fs.stat)(featureDir + "/" + file).map(stat => ({ file, stat })))
             .where(z => !z.stat.isDirectory())
             .map(z => z.file)
-            .map(file => new Feature(this, file));
+            .map(feature => {
+                var path = "./features/" + feature;
+                return <OmniSharp.IFeature[]>_.values(require(path))
+            });
 
-        features.subscribe(feature => feature.invoke('activate', state));
-        var result = features.toArray();
-        result.subscribe(features => this.features = features);
+        var result = features.toArray()
+            .map(features => _.flatten<OmniSharp.IFeature>(features));
+        result.subscribe(features => {
+            this.features = this.features.concat(features);
+        });
+
+        return result;
+    }
+
+    public loadAtomFeatures(state) {
+        var packageDir = this.getPackageDir();
+        var atomFeatureDir = packageDir + "/omnisharp-atom/lib/omnisharp-atom/atom";
+
+        var atomFeatures = Observable.fromNodeCallback(fs.readdir)(atomFeatureDir)
+            .flatMap(files => Observable.from(files))
+            .where(file => /\.js$/.test(file))
+            .flatMap(file => Observable.fromNodeCallback(fs.stat)(atomFeatureDir + "/" + file).map(stat => ({ file, stat })))
+            .where(z => !z.stat.isDirectory())
+            .map(z => z.file)
+            .map(feature => {
+                var path = "./atom/" + feature;
+                return <OmniSharp.IFeature[]>_.values(require(path))
+            });
+
+        var result = atomFeatures.toArray()
+            .map(features => _.flatten<OmniSharp.IFeature>(features));
+        result.subscribe(features => {
+            this.features = this.features.concat(features);
+        });
 
         return result;
     }
 
     public subscribeToEvents() {
-        this.observeEditors = atom.workspace.observeTextEditors((editor: Atom.TextEditor) => {
-            var editorFilePath;
-            var grammarName = editor.getGrammar().name;
-            if (grammarName === 'C#' || grammarName === 'C# Script File') {
-                this.emitter.emit('omnisharp-atom-editor', editor);
-                editorFilePath = editor.buffer.file.path;
-                editor.onDidDestroy(() => this.emitter.emit('omnisharp-atom-editor-destroyed', editorFilePath));
-            } else if (grammarName === "JSON") {
-                this.emitter.emit('omnisharp-atom-config-editor', editor);
-                editor.onDidDestroy(() => this.emitter.emit('omnisharp-atom-config-editor-destroyed', editor.buffer.file.path));
-            }
-
-            this.detectAutoToggleGrammar(editor);
-        });
-
-        this.activeEditorAtomDisposable = atom.workspace.observeActivePaneItem((pane: any) => {
+        this.disposable.add(atom.workspace.observeActivePaneItem((pane: any) => {
             if (pane && pane.getGrammar) {
                 var grammarName = pane.getGrammar().name;
                 if (grammarName === 'C#' || grammarName === 'C# Script File') {
@@ -159,25 +148,23 @@ class OmniSharpAtom {
 
             // This will tell us when the editor is no longer an appropriate editor
             this._activeEditor.onNext(null);
-        });
+        }));
     }
 
     private detectAutoToggleGrammar(editor: Atom.TextEditor) {
         var grammar = editor.getGrammar();
-
         this.detectGrammar(editor, grammar);
-        editor.onDidChangeGrammar((grammar: FirstMate.Grammar) => this.detectGrammar(editor, grammar));
+        this.disposable.add(editor.onDidChangeGrammar((grammar: FirstMate.Grammar) => this.detectGrammar(editor, grammar)));
     }
 
     private detectGrammar(editor: Atom.TextEditor, grammar: FirstMate.Grammar) {
-
         if (!atom.config.get('omnisharp-atom.autoStartOnCompatibleFile')) {
             return; //short out, if setting to not auto start is enabled
         }
 
-
-        if (ClientManager.isOn && !this.menu)
+        if (ClientManager.isOn && !this.menu) {
             this.toggleMenu();
+        }
 
         if (grammar.name === 'C#') {
             if (ClientManager.isOff) {
@@ -200,6 +187,7 @@ class OmniSharpAtom {
         var menuJsonFile = this.getPackageDir() + "/omnisharp-atom/menus/omnisharp-menu.json";
         var menuJson = JSON.parse(fs.readFileSync(menuJsonFile, 'utf8'));
         this.menu = atom.menu.add(menuJson.menu);
+        this.disposable.add(this.menu);
     }
 
     public toggle() {
@@ -209,10 +197,10 @@ class OmniSharpAtom {
                 ClientManager.connect();
                 this.toggleMenu();
             } else if (ClientManager.isOn) {
-                //this.turnOffIcon();
                 ClientManager.disconnect();
 
                 if (this.menu) {
+                    this.disposable.remove(this.menu);
                     this.menu.dispose();
                     this.menu = null;
                 }
@@ -223,26 +211,14 @@ class OmniSharpAtom {
     }
 
     public deactivate() {
-        var ref, ref1, ref2;
-        this.emitter.dispose();
-        this.observeEditors.dispose();
-        // This was not defined in .coffee
-        //observePackagesActivated.dispose();
         this.features = null;
-        this.statusBarView && React.unmountComponentAtNode(this.statusBarView.destroy());
-        this.outputView && this.outputView.destroy();
         this.autoCompleteProvider && this.autoCompleteProvider.destroy();
         ClientManager.disconnect();
     }
 
     public consumeStatusBar(statusBar) {
-        this.statusBar = statusBar;
-        this.statusBarView = document.createElement("span")
-        React.render(React.createElement(StatusBarComponent, {}), this.statusBarView);
-        statusBar.addLeftTile({
-            item: this.statusBarView,
-            priority: -1000
-        });
+        var feature = require('./atom/status-bar');
+        feature.statusBar.setup(statusBar);
     }
 
     public consumeYeomanEnvironment(generatorService: { run(generator: string, path: string): void; start(prefix: string, path: string): void; }) {

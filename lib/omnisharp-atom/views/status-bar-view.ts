@@ -5,7 +5,7 @@ import ClientManager = require('../../omni-sharp-server/client-manager');
 import Client = require('../../omni-sharp-server/client');
 import React = require('react');
 import {ReactClientComponent} from "./react-client-component";
-import {world} from '../world';
+import {world, server} from '../world';
 
 interface StatusBarState {
     errorCount?: number;
@@ -15,7 +15,7 @@ interface StatusBarState {
     isOn?: boolean;
     isReady?: boolean;
     isError?: boolean;
-    status?: typeof world.status;
+    status?: typeof server.status;
 }
 
 class StatusBarComponent extends ReactClientComponent<{}, StatusBarState> {
@@ -60,7 +60,7 @@ class StatusBarComponent extends ReactClientComponent<{}, StatusBarState> {
             }
         }));
 
-        this.disposable.add(world.observe.status.subscribe(status => {
+        this.disposable.add(server.observe.status.subscribe(status => {
             this.setState({ status });
         }));
     }
@@ -86,7 +86,7 @@ class StatusBarComponent extends ReactClientComponent<{}, StatusBarState> {
     }
 
     public toggle() {
-        atom.commands.dispatch(atom.views.getView(atom.workspace), 'omnisharp-atom:toggle-output');
+        atom.commands.dispatch(atom.views.getView(atom.workspace), 'omnisharp-atom:toggle-dock');
     }
 
     public toggleErrorWarningPanel() {

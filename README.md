@@ -30,6 +30,7 @@ When the flame icon in the bottom left corner turns green, the server has starte
   `shift-alt-t` or `ctrl-,` Find type
 - `ctrl-F12` Go to implementation
 - `shift-F12` Find usages
+- `F8, shift-F8` Go to next/previous usage
 - `ctrl-k, ctrl-d` Format document
 - `ctrl-k ctrl-c` Comment selection
 - `f2` Rename
