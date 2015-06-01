@@ -1,5 +1,6 @@
 import ClientManager = require('../../../omni-sharp-server/client-manager');
 import Omni = require('../../../omni-sharp-server/omni')
+import OmniSharpAtom = require('../../omnisharp-atom');
 
 import _ = require('lodash')
 import rx = require('rx')
@@ -118,14 +119,33 @@ export var CompletionProvider = {
     excludeLowerPriority: false,
 
     makeSuggestion(item: OmniSharp.Models.AutoCompleteResponse) {
+        var description, leftLabel, iconHTML, type;
+
+        if (OmniSharpAtom.cfgUseLeftLabelColumnForSuggestions == true) {
+            description = item.RequiredNamespaceImport;
+            leftLabel = item.ReturnType;
+        } else {
+            description = this.renderReturnType(item.ReturnType);
+            leftLabel = '';
+        }
+
+        if (OmniSharpAtom.cfgUseIcons == true) {
+            iconHTML = this.renderIcon(item);
+            type = item.Kind;
+        } else {
+            iconHTML = null;
+            type = item.Kind.toLowerCase();
+        }
+
         return {
             _search: item.CompletionText,
             snippet: item.Snippet,
-            type: item.Kind,
-            iconHTML: this.renderIcon(item),
+            type: type,
+            iconHTML: iconHTML,
             displayText: escape(item.DisplayText),
             className: 'autocomplete-omnisharp-atom',
-            description: this.renderReturnType(item.ReturnType)
+            description: description,
+            leftLabel: leftLabel,
         }
     },
 

@@ -49,6 +49,9 @@ class OmniSharpAtom {
     private _activeEditorObservable = this._activeEditor.replay(z => z, 1);
     public get activeEditor(): Observable<Atom.TextEditor> { return this._activeEditorObservable; }
 
+    public cfgUseIcons: boolean;
+    public cfgUseLeftLabelColumnForSuggestions: boolean;
+
     public activate(state) {
         atom.commands.add('atom-workspace', 'omnisharp-atom:toggle', () => this.toggle());
         atom.commands.add('atom-workspace', 'omnisharp-atom:new-application', () => this.generator.run("aspnet:app"));
@@ -160,6 +163,13 @@ class OmniSharpAtom {
             // This will tell us when the editor is no longer an appropriate editor
             this._activeEditor.onNext(null);
         });
+
+        atom.config.observe('omnisharp-atom.useIcons', (value) => {
+            this.cfgUseIcons = value;
+        })
+        atom.config.observe('omnisharp-atom.useLeftLabelColumnForSuggestions', (value) => {
+            this.cfgUseLeftLabelColumnForSuggestions = value;
+        })
     }
 
     private detectAutoToggleGrammar(editor: Atom.TextEditor) {
@@ -273,6 +283,18 @@ class OmniSharpAtom {
             description: 'Advanced: This will show diagnostics for all open solutions.  NOTE: May take a restart or change to each server to take effect when turned on.',
             type: 'boolean',
             default: false
+        },
+        useLeftLabelColumnForSuggestions: {
+            title: 'Use Left-Label column in Suggestions',
+            description: 'Shows return types in a right-aligned column to the left of the completion suggestion text.',
+            type: 'boolean',
+            default: false
+        },
+        useIcons: {
+            title: 'Use unique icons for kind indicators in Suggestions',
+            description: 'Shows kinds with unique icons rather than autocomplete default styles.',
+            type: 'boolean',
+            default: true
         }
     }
 
