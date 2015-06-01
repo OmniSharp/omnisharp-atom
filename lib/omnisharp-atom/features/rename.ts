@@ -12,7 +12,7 @@ class Rename implements OmniSharp.IFeature {
     public activate() {
         this.disposable = new CompositeDisposable();
         this.renameView = new RenameView();
-        this.disposable.add(Omni.addCommand("atom-text-editor", 'omnisharp-atom:rename', (e) => {
+        this.disposable.add(Omni.addTextEditorCommand('omnisharp-atom:rename', (e) => {
             e.stopImmediatePropagation();
             e.stopPropagation();
             e.preventDefault();

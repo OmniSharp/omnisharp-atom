@@ -7,7 +7,7 @@ class CodeFormat implements OmniSharp.IFeature {
 
     public activate() {
         this.disposable = new CompositeDisposable();
-        this.disposable.add(Omni.addCommand("atom-text-editor", 'omnisharp-atom:code-format',
+        this.disposable.add(Omni.addTextEditorCommand('omnisharp-atom:code-format',
             () => {
                 var editor = atom.workspace.getActiveTextEditor();
                 if (editor) {
@@ -26,9 +26,9 @@ class CodeFormat implements OmniSharp.IFeature {
                 }
             }));
 
-        this.disposable.add(Omni.addCommand("atom-text-editor", 'omnisharp-atom:code-format-on-semicolon',
+        this.disposable.add(Omni.addTextEditorCommand('omnisharp-atom:code-format-on-semicolon',
             (event) => this.formatOnKeystroke(event, ';')));
-        this.disposable.add(Omni.addCommand("atom-text-editor", 'omnisharp-atom:code-format-on-curly-brace',
+        this.disposable.add(Omni.addTextEditorCommand('omnisharp-atom:code-format-on-curly-brace',
             (event) => this.formatOnKeystroke(event, '}')));
     }
 

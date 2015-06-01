@@ -27,7 +27,7 @@ class TypeLookup implements OmniSharp.IFeature {
             });
         })));
 
-        this.disposable.add(Omni.addCommand("atom-text-editor", "omnisharp-atom:type-lookup", () => {
+        this.disposable.add(Omni.addTextEditorCommand("omnisharp-atom:type-lookup", () => {
             Omni.activeEditor.first().subscribe(editor => {
                 var tooltip = <Tooltip>editor['__omniTooltip'];
                 tooltip.showExpressionTypeOnCommand();

@@ -6,17 +6,17 @@ class Intellisense implements OmniSharp.IFeature {
 
     public activate() {
         this.disposable = new CompositeDisposable();
-        this.disposable.add(Omni.addCommand("atom-text-editor", 'omnisharp-atom:intellisense-dot',
+        this.disposable.add(Omni.addTextEditorCommand('omnisharp-atom:intellisense-dot',
             (event) => {
                 this.complete(event, '.');
                 setTimeout(() =>
                     atom.commands.dispatch(atom.views.getView(atom.workspace.getActiveTextEditor()), 'autocomplete-plus:activate'), 0);
             }));
 
-        this.disposable.add(Omni.addCommand("atom-text-editor", 'omnisharp-atom:intellisense-space',
+        this.disposable.add(Omni.addTextEditorCommand('omnisharp-atom:intellisense-space',
             (event) => this.complete(event, ' ')));
 
-        this.disposable.add(Omni.addCommand("atom-text-editor", 'omnisharp-atom:intellisense-semicolon',
+        this.disposable.add(Omni.addTextEditorCommand('omnisharp-atom:intellisense-semicolon',
             (event) => this.complete(event, ';')));
 
     }
