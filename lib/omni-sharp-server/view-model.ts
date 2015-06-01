@@ -27,6 +27,7 @@ class ViewModel {
     public get uniqueId() { return this._client.uniqueId; }
 
     public get index() { return this._client.index; }
+    public get path() { return this._client.path; }
     public output: OmniSharp.OutputMessage[] = [];
     public diagnostics: OmniSharp.Models.DiagnosticLocation[] = [];
     public status: OmnisharpClientStatus;

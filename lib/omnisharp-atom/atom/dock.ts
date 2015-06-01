@@ -41,6 +41,9 @@ class Dock implements OmniSharp.IAtomFeature {
         this.disposable.dispose();
     }
 
+    public get isOpen () { return this.dock.isOpen; }
+    public get selected() { return this.dock.selected; }
+
     public toggle() {
         this.dock.toggleView();
     }

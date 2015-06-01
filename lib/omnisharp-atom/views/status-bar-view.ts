@@ -102,6 +102,10 @@ class StatusBarComponent extends ReactClientComponent<{}, StatusBarState> {
         atom.commands.dispatch(atom.views.getView(atom.workspace), 'omnisharp-atom:toggle-errors');
     }
 
+    public toggleSolutionInformation() {
+        atom.commands.dispatch(atom.views.getView(atom.workspace), 'omnisharp-atom:solutions');
+    }
+
     public render() {
         var hasClientAndIsOn = this.state.isOn;
 
@@ -144,6 +148,7 @@ class StatusBarComponent extends ReactClientComponent<{}, StatusBarState> {
                     }, this.state.warningCount)),
                 React.DOM.a({
                     className: "inline-block project-summary",
+                    onClick: (e) => this.toggleSolutionInformation()
                 },
                     React.DOM.span({
                         className: "icon icon-pulse"

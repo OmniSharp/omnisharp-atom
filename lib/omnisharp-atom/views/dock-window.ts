@@ -102,6 +102,7 @@ export class DockWindow<T extends IDockWindowProps> extends ReactClientComponent
 
     public get selected() { return this.state.selected; }
     private visible = false;
+    public get isOpen () { return this.visible }
 
     private _convert;
 
