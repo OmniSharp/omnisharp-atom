@@ -9,7 +9,7 @@ class FindSymbols implements OmniSharp.IFeature {
 
     public activate() {
         this.disposable = new CompositeDisposable();
-        this.disposable.add(Omni.addCommand("atom-workspace", 'omnisharp-atom:find-symbols', () => {
+        this.disposable.add(atom.commands.add("atom-workspace", 'omnisharp-atom:find-symbols', () => {
             this.view = new FindSymbolsView();
         }));
 

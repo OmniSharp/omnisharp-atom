@@ -21,25 +21,25 @@ class CodeCheck implements OmniSharp.IFeature {
         this.disposable = new CompositeDisposable();
         this.setup();
 
-        this.disposable.add(Omni.addCommand("atom-workspace", 'omnisharp-atom:next-diagnostic', () => {
+        this.disposable.add(atom.commands.add("atom-workspace", 'omnisharp-atom:next-diagnostic', () => {
             this.updateSelectedItem(this.selectedIndex + 1);
         }));
 
-        this.disposable.add(Omni.addCommand("atom-workspace", 'omnisharp-atom:go-to-diagnostic', () => {
+        this.disposable.add(atom.commands.add("atom-workspace", 'omnisharp-atom:go-to-diagnostic', () => {
             if (this.displayDiagnostics[this.selectedIndex])
                 Omni.navigateTo(this.displayDiagnostics[this.selectedIndex]);
         }));
 
-        this.disposable.add(Omni.addCommand("atom-workspace", 'omnisharp-atom:previous-diagnostic', () => {
+        this.disposable.add(atom.commands.add("atom-workspace", 'omnisharp-atom:previous-diagnostic', () => {
             this.updateSelectedItem(this.selectedIndex - 1);
         }));
 
-        this.disposable.add(Omni.addCommand("atom-workspace", 'omnisharp-atom:go-to-next-diagnostic', () => {
+        this.disposable.add(atom.commands.add("atom-workspace", 'omnisharp-atom:go-to-next-diagnostic', () => {
             this.updateSelectedItem(this.selectedIndex + 1);
             Omni.navigateTo(this.displayDiagnostics[this.selectedIndex]);
         }));
 
-        this.disposable.add(Omni.addCommand("atom-workspace", 'omnisharp-atom:go-to-previous-diagnostic', () => {
+        this.disposable.add(atom.commands.add("atom-workspace", 'omnisharp-atom:go-to-previous-diagnostic', () => {
             this.updateSelectedItem(this.selectedIndex - 1);
             Omni.navigateTo(this.displayDiagnostics[this.selectedIndex]);
         }));

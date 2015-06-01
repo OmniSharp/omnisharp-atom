@@ -50,26 +50,26 @@ class FindUsages implements OmniSharp.IFeature {
             Omni.request(client => client.findimplementations(client.makeRequest()));
         }));
 
-        this.disposable.add(Omni.addCommand("atom-workspace", 'omnisharp-atom:next-usage', () => {
+        this.disposable.add(atom.commands.add("atom-workspace", 'omnisharp-atom:next-usage', () => {
             this.updateSelectedItem(this.selectedIndex + 1);
         }));
 
-        this.disposable.add(Omni.addCommand("atom-workspace", 'omnisharp-atom:go-to-usage', () => {
+        this.disposable.add(atom.commands.add("atom-workspace", 'omnisharp-atom:go-to-usage', () => {
             if (this.usages[this.selectedIndex])
                 Omni.navigateTo(this.usages[this.selectedIndex]);
         }));
 
-        this.disposable.add(Omni.addCommand("atom-workspace", 'omnisharp-atom:previous-usage', () => {
+        this.disposable.add(atom.commands.add("atom-workspace", 'omnisharp-atom:previous-usage', () => {
             this.updateSelectedItem(this.selectedIndex - 1);
         }));
 
-        this.disposable.add(Omni.addCommand("atom-workspace", 'omnisharp-atom:go-to-next-usage', () => {
+        this.disposable.add(atom.commands.add("atom-workspace", 'omnisharp-atom:go-to-next-usage', () => {
             this.updateSelectedItem(this.selectedIndex + 1);
             if (this.usages[this.selectedIndex])
                 Omni.navigateTo(this.usages[this.selectedIndex]);
         }));
 
-        this.disposable.add(Omni.addCommand("atom-workspace", 'omnisharp-atom:go-to-previous-usage', () => {
+        this.disposable.add(atom.commands.add("atom-workspace", 'omnisharp-atom:go-to-previous-usage', () => {
             this.updateSelectedItem(this.selectedIndex - 1);
             if (this.usages[this.selectedIndex])
                 Omni.navigateTo(this.usages[this.selectedIndex]);
