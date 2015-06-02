@@ -5,114 +5,84 @@
 
 // TODO: Somehow unify the "omnisharp-card".
 .omnisharp-card {
-    padding: @component-padding*1.5;
+    padding: (@component-padding);
     margin-bottom: @component-padding;
     list-style-type: none;
-    font-size: 1.2em;
     border-radius: @component-border-radius*2;
     border: 1px solid @base-border-color;
     background-color: @omnisharp-card-background-color;
     overflow: hidden;
-    cursor: pointer;
     -webkit-user-select: none;
-    &:hover {
-        background-color: contrast(@omnisharp-card-background-color, darken(@omnisharp-card-background-color, 2%), lighten(@omnisharp-card-background-color, 2%));
-    }
-    &:active {
-        background-color: @omnisharp-card-background-color;
-    }
-    &.col-lg-4 {
-        min-width: 190px;
-        padding: @component-padding;
-    }
-    .thumbnail {
-        border-radius: 3px;
-        margin: 0;
-        min-height: 140px;
-        color: @text-color;
-        border-radius: @component-border-radius*2;
-        border: 1px solid @base-border-color;
-        background-color: @omnisharp-card-background-color;
-        .caption {
-            width: 100%;
-            position: relative;
-        }
-    }
+    max-height: 126px;
+    max-width: 530px;
+    display: flex;
+    position: relative;
     .name {
         text-overflow: ellipsis;
         white-space: nowrap;
         width: 100%;
         color: @text-color-highlight;
         overflow: hidden;
-        line-height: 20px;
+        margin-top: 4px;
+        margin-bottom: 4px;
         margin: 5px 0;
+        margin: 0 0 0.2em;
     }
     .description {
         color: @text-color;
         overflow: hidden;
-        min-height: 38px;
-        max-height: 38px;
         text-overflow: ellipsis;
         display: -webkit-box;
         -webkit-line-clamp: 2;
         /* number of lines to show */
         -webkit-box-orient: vertical;
+        font-style: italic;
+        font-size: 10px;
+        line-height: 1;
     }
-    .downloads {
-        color: @text-color-highlight;
-        overflow: hidden;
-        text-overflow: ellipsis;
-        display: -webkit-box;
-        -webkit-line-clamp: 1;
-        /* number of lines to show */
-        -webkit-box-orient: vertical;
+    .selector + .body .name {
+        margin-left: 42px;
     }
-    .status {
-        right: 0;
-        top: 5px;
-        text-align: center;
-        &.icon-cloud-download {
-            color: #428bca;
-        }
-        &.icon-check {
-            color: #6cc644;
-        }
-        &.icon-alert {
-            color: #bd2c00;
-        }
-    }
-    .omnisharp-card-name {
-        font-weight: 300;
-        margin: 0 0 0.2em;
-        font-size: 1.2em;
-        line-height: 1.4;
-        .css-truncate-target {
-            color: $greenDark;
-        }
-    }
-    .stats {
-        .stats-item {
-            margin-left: @component-padding*1.5;
-            height: 26px;
-            display: inline-block;
-            line-height: 24px;
-            vertical-align: top;
-            .icon {
-                color: @text-color-subtle;
+    .selector {
+        position: absolute;
+        top: 12px;
+        left: 8px;
+        .btn {
+            height: 18px;
+            padding: 0;
+            &:before {
+                margin-right: 0;
             }
         }
-        .star-box {
-            display: inline-block;
-            vertical-align: top;
-            .star-button {
-                padding: 0 6px;
-                .octicon {
-                    margin-right: 0;
-                }
-            }
+    }
+    .stats-item {
+        margin-left: 0;
+        margin-right: 4px;
+        display: block;
+        line-height: 24px;
+        vertical-align: top;
+        color: @text-color-subtle;
+        .btn {
+            cursor: default;
+        }
+        &.connected {
+            color: @text-color-success;
+        }
+        &.disconnected {
+            color: @text-color-subtle;
+        }
+        &.error {
+            color: @text-color-error;
+        }
+        &.connecting {
+            color: @text-color-warning;
         }
     }
     .body {
+        width: 300px;
+        display: flex;
+        flex-direction: column;
+        flex: 7;
         .css-truncate-target {
             max-width: 100%;
         }
@@ -122,10 +92,8 @@
         line-height: 1.4;
     }
     .meta {
-        display: flex;
-        flex-wrap: wrap;
-        justify-content: flex-end;
-        width: 100%;
+        width: 230px;
+        flex: 5;
         a.linked-octicon {
             text-decoration: none;
             &:hover {
@@ -144,61 +112,37 @@
                 background-color: #eaeaea;
             }
         }
-        .value {
+        .value, .header {
             color: #999;
         }
-    }
-    .meta-user {
-        flex: 1 0 auto;
-        margin-top: @component-padding;
-        margin-right: @component-padding;
-        .avatar {
-            border-radius: @component-border-radius;
-            height: 24px;
-            width: 24px;
-            display: inline-block;
-            vertical-align: middle;
-            background-color: hsla(0,0%,0%,.1);
+        th {
+            font-weight: bold;
         }
-        .author {
-            color: @text-color-subtle;
-            margin-left: @component-padding;
-            &:focus {
-                outline: none;
-            }
+        overflow-y: auto;
+        tbody {
+
+        }
+    }
+    .meta-projects {
+        .project {
+            border-top: 1px solid @text-color-subtle;
+            display: block;
+            width: 100%;
+        }
+        .name {
+
+        }
+        .path {
+            text-align: left;
+            font-weight: normal;
         }
     }
     .meta-controls {
-        margin-top: @component-padding;
-        .restart-btn {
-
+        button {
+            vertical-align: middle;
         }
-
-        .stop-btn {
-
+        .fa {
+            margin-right: 4px;
         }
-
-        .status-indicator {
-            padding: 0;
-            width: @component-padding/2;
-            min-width: 4px;
-            pointer-events: none;
-            transition: background 0.4s;
-            background: @background-color-success;
-            &.is-disabled {
-                background: @background-color-warning;
-            }
-        }
-    }
-    .meta-lower {
-        padding: 13px;
-        background-color: @input-background-color;
-        line-height: 1;
-    }
-    &.blank-slate {
-        text-align: center;
-        color: $beigeDark;
-        height: 132px;
-        line-height: 132px;
     }
 }

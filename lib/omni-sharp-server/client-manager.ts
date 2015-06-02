@@ -120,10 +120,18 @@ class ClientManager {
         // keep track of the active clients
         this._observationClient.add(client);
         this._combinationClient.add(client);
+
+        client.state
+            .where(z => z === DriverState.Error)
+            .delay(100)
+            .subscribe(state => this.evictClient(client));
+
         return client;
     }
 
     private removeClient(candidate: string) {
+        var client = this._clients[candidate];
+
         var refCountDisposable = this._temporaryClients[candidate]
         if (refCountDisposable) {
             refCountDisposable.dispose();
@@ -131,14 +139,21 @@ class ClientManager {
                 return;
             }
 
-            delete this._temporaryClients[candidate];
+            this.evictClient(client);
         }
 
         // keep track of the removed clients
-        var client = this._clients[candidate];
-        delete this._clients[candidate];
         client.disconnect();
-        _.pull(this._clientPaths, candidate);
+    }
+
+    public evictClient(client: Client) {
+        if (client.currentState === DriverState.Connected || client.currentState === DriverState.Connecting) {
+            client.disconnect();
+        }
+
+        delete this._temporaryClients[client.path];
+        delete this._clients[client.path];
+        _.pull(this._clientPaths, client.path);
         _.pull(this._activeClients, client);
         this._observationClient.remove(client);
         this._combinationClient.remove(client);
@@ -184,17 +199,32 @@ class ClientManager {
         var p = (<any>editor).omniProject;
         // Not sure if we should just add properties onto editors...
         // but it works...
-        if (p && (client = Observable.just(this._clients[p]))) {
-            if (this._temporaryClients[p]) {
-                this.setupDisposableForTemporaryClient(p, editor);
-            }
+        if (p) {
+            if (this._clients[p]) {
+                var tempC = this._clients[p];
+                // If the client has disconnected, reconnect it
+                if (tempC.currentState === DriverState.Disconnected)
+                    tempC.connect();
 
-            return client;
+                // Client is in an invalid state
+                if (tempC.currentState === DriverState.Error) {
+                    return Observable.empty<Client>();
+                }
+
+                client = Observable.just(this._clients[p]);
+
+                if (this._temporaryClients[p]) {
+                    this.setupDisposableForTemporaryClient(p, editor);
+                }
+
+                return client;
+            }
         }
 
         var location = editor.getPath();
         var [intersect, clientInstance] = this.getClientForUnderlyingPath(location, grammarName);
         p = (<any>editor).omniProject = intersect;
+
         if (this._temporaryClients[p]) {
             this.setupDisposableForTemporaryClient(p, editor);
         }

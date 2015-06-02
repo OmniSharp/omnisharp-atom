@@ -103,7 +103,7 @@ class StatusBarComponent extends ReactClientComponent<{}, StatusBarState> {
     }
 
     public toggleSolutionInformation() {
-        atom.commands.dispatch(atom.views.getView(atom.workspace), 'omnisharp-atom:solutions');
+        atom.commands.dispatch(atom.views.getView(atom.workspace), 'omnisharp-atom:solution-status');
     }
 
     public render() {
@@ -126,7 +126,7 @@ class StatusBarComponent extends ReactClientComponent<{}, StatusBarState> {
             );
 
         if (hasClientAndIsOn) {
-            var solutionNumber = solutionInformation.solutions.length > 1 ? _.trim(server.model && server.model.index, 'client') : '';
+            var solutionNumber = solutionInformation.solutions.length > 1 ? _.trim(server.model && (<any>server.model).index, 'client') : '';
 
             children.push(
                 React.DOM.a({
@@ -145,20 +145,20 @@ class StatusBarComponent extends ReactClientComponent<{}, StatusBarState> {
                     }),
                     React.DOM.span({
                         className: 'warning-summary'
-                    }, this.state.warningCount)),
-                React.DOM.a({
-                    className: "inline-block project-summary",
-                    onClick: (e) => this.toggleSolutionInformation()
-                },
-                    React.DOM.span({
-                        className: "icon icon-pulse"
-                    },
-                        React.DOM.sub({}, solutionNumber)),
-                    React.DOM.span({
-                        className: "projects"
-                    }, `${this.state.projects.length} Projects`))
-                );
+                    }, this.state.warningCount)));
         }
+        children.push(React.DOM.a({
+            className: "inline-block project-summary projects-icon",
+            onClick: (e) => this.toggleSolutionInformation()
+        },
+            React.DOM.span({
+                className: "icon icon-pulse"
+            },
+                React.DOM.sub({}, solutionNumber)),
+            React.DOM.span({
+                className: "projects"
+            }, `${this.state.projects.length} Projects`)));
+
 
         return React.DOM.div({ className: "inline-block" }, ...children);
     }

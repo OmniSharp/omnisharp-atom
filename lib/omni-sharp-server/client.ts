@@ -7,7 +7,7 @@ class Client extends OmnisharpClient {
     public model: ViewModel;
     public logs: Observable<OmniSharp.OutputMessage>;
     public path: string;
-    public index: string;
+    public index: number;
 
     constructor(options: OmnisharpClientOptions) {
         super(options);
