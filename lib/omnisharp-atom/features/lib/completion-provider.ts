@@ -7,6 +7,9 @@ import rx = require('rx')
 var escape = require("escape-html");
 var filter = require('fuzzaldrin').filter;
 
+var cfgUseIcons: boolean;
+var cfgUseLeftLabelColumnForSuggestions: boolean;
+
 export interface RequestOptions {
     editor: Atom.TextEditor;
     bufferPosition: TextBuffer.Point; // the position of the cursor
@@ -87,6 +90,15 @@ var dataSource = (function() {
         }
     });
 
+    // TODO: Dispose of these when not needed
+    atom.config.observe('omnisharp-atom.useIcons', (value) => {
+        cfgUseIcons = value;
+    });
+
+    atom.config.observe('omnisharp-atom.useLeftLabelColumnForSuggestions', (value) => {
+        cfgUseLeftLabelColumnForSuggestions = value;
+    });
+
     // Always reset if the value is a dot
     var clearCacheWithDotPrefixObservable = requestSubject
         .where(z => z.prefix === "." || (z.prefix && !_.trim(z.prefix)) || !z.prefix);
@@ -121,7 +133,7 @@ export var CompletionProvider = {
     makeSuggestion(item: OmniSharp.Models.AutoCompleteResponse) {
         var description, leftLabel, iconHTML, type;
 
-        if (OmniSharpAtom.cfgUseLeftLabelColumnForSuggestions == true) {
+        if (cfgUseLeftLabelColumnForSuggestions == true) {
             description = item.RequiredNamespaceImport;
             leftLabel = item.ReturnType;
         } else {
@@ -129,7 +141,7 @@ export var CompletionProvider = {
             leftLabel = '';
         }
 
-        if (OmniSharpAtom.cfgUseIcons == true) {
+        if (cfgUseIcons == true) {
             iconHTML = this.renderIcon(item);
             type = item.Kind;
         } else {

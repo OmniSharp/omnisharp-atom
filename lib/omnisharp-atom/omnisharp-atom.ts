@@ -27,9 +27,6 @@ class OmniSharpAtom {
     private _activeEditorObservable = this._activeEditor.shareReplay(1);
     public get activeEditor(): Observable<Atom.TextEditor> { return this._activeEditorObservable; }
 
-    public cfgUseIcons: boolean;
-    public cfgUseLeftLabelColumnForSuggestions: boolean;
-
     public activate(state) {
         this.disposable = new CompositeDisposable;
 
@@ -152,13 +149,6 @@ class OmniSharpAtom {
             // This will tell us when the editor is no longer an appropriate editor
             this._activeEditor.onNext(null);
         }));
-
-        atom.config.observe('omnisharp-atom.useIcons', (value) => {
-            this.cfgUseIcons = value;
-        })
-        atom.config.observe('omnisharp-atom.useLeftLabelColumnForSuggestions', (value) => {
-            this.cfgUseLeftLabelColumnForSuggestions = value;
-        })
     }
 
     private detectAutoToggleGrammar(editor: Atom.TextEditor) {
