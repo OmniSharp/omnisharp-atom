@@ -4,14 +4,32 @@ import Client = require("./client");
 import _ = require('lodash');
 import {DriverState} from "omnisharp-client";
 
+function createTextEditorObservable(grammars: string[], disposable: CompositeDisposable) {
+    var editors: Atom.TextEditor[] = [];
+    var subject = new Subject<Atom.TextEditor>();
+
+    disposable.add(atom.workspace.observeTextEditors((editor: Atom.TextEditor) => {
+        var editorFilePath;
+        if (editor.getGrammar) {
+            var grammarName = editor.getGrammar().name;
+            if (_.contains(grammars, grammarName)) {
+                editors.push(editor);
+                subject.onNext(editor);
+
+                // pull old editors.
+                disposable.add(editor.onDidDestroy(() => _.pull(editors, editor)));
+            }
+        }
+    }));
+
+    return Observable.merge(subject, Observable.defer(() => Observable.from(editors)));
+}
+
 class Omni {
     private disposable: CompositeDisposable;
 
-    private _editorsSubject = new Subject<Atom.TextEditor>();
-    private _editors = this._editorsSubject.asObservable();
-
-    private _configEditorsSubject = new Subject<Atom.TextEditor>();
-    private _configEditors = this._configEditorsSubject.asObservable();
+    private _editors: Observable<Atom.TextEditor>;
+    private _configEditors: Observable<Atom.TextEditor>;
 
     private _activeEditorSubject = new BehaviorSubject<Atom.TextEditor>(null);
     private _activeEditor = this._activeEditorSubject.shareReplay(1).asObservable();
@@ -28,16 +46,8 @@ class Omni {
         // we are only off if all our clients are disconncted or erroed.
         this.disposable.add(manager.combinationClient.state.subscribe(z => this._isOff = _.all(z, x => x.value === DriverState.Disconnected || x.value === DriverState.Error)));
 
-        this.disposable.add(atom.workspace.observeTextEditors((editor: Atom.TextEditor) => {
-            var editorFilePath;
-            var grammarName = editor.getGrammar().name;
-            if (grammarName === 'C#' || grammarName === 'C# Script File') {
-                this._editorsSubject.onNext(editor);
-                editorFilePath = editor.buffer.file.path;
-            } else if (grammarName === "JSON") {
-                this._configEditorsSubject.onNext(editor);
-            }
-        }));
+        this._editors = createTextEditorObservable(['C#', 'C# Script File'], this.disposable);
+        this._configEditors = createTextEditorObservable(['JSON'], this.disposable);
 
         this.disposable.add(atom.workspace.observeActivePaneItem((pane: any) => {
             if (pane && pane.getGrammar) {
