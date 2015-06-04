@@ -4,9 +4,9 @@ import {Observable, AsyncSubject, RefCountDisposable, Disposable, CompositeDispo
 import Client = require('./client');
 import {ObservationClient, CombinationClient} from './composite-client';
 import {findCandidates, DriverState} from "omnisharp-client";
-import OmniSharpAtom = require('../omnisharp-atom/omnisharp-atom');
 
 class ClientManager {
+    private _disposable = new CompositeDisposable;
     private _clients: { [path: string]: Client } = {};
     private _configurations: ((client: Client) => void)[] = [];
     private _projectClientPaths: { [key: string]: string[] } = {};
@@ -27,32 +27,23 @@ class ClientManager {
     private _combinationClient = new CombinationClient();
     public get combinationClient() { return this._combinationClient; }
 
-    private _isOff = true;
-    public get isOff() { return this._isOff; }
-    public get isOn() { return !this.isOff; }
-
     private _activeClient = new ReplaySubject<Client>(1);
     private _activeClientObserable = this._activeClient.distinctUntilChanged();
     public get activeClient(): Observable<Client> { return this._activeClientObserable; }
 
-    constructor() {
-        // we are only off if all our clients are disconncted or erroed.
-        this._combinationClient.state.subscribe(z => this._isOff = _.all(z, x => x.value === DriverState.Disconnected || x.value === DriverState.Error));
-    }
-
-    public activate(omnisharpAtom: typeof OmniSharpAtom) {
+    public activate(activeEditor: Observable<Atom.TextEditor>) {
         this._activated = true;
 
         // monitor atom project paths
         this.updatePaths(atom.project.getPaths());
-        atom.project.onDidChangePaths((paths) => this.updatePaths(paths));
+        this._disposable.add(atom.project.onDidChangePaths((paths) => this.updatePaths(paths)));
 
         // We use the active editor on omnisharpAtom to
         // create another observable that chnages when we get a new client.
-        omnisharpAtom.activeEditor
+        this._disposable.add(activeEditor
             .where(z => !!z)
             .flatMap(z => this.getClientForEditor(z))
-            .subscribe(x => this._activeClient.onNext(x));
+            .subscribe(x => this._activeClient.onNext(x)));
     }
 
     public connect() {
@@ -61,6 +52,10 @@ class ClientManager {
 
     public disconnect() {
         _.each(this._clients, x => x.disconnect());
+    }
+
+    public deactivate() {
+
     }
 
     public get connected() {
