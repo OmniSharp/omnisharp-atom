@@ -35,8 +35,8 @@ class Omni {
         return frameworks.join(',');
     }
 
-    public addCommand(target: string, commandName: string, callback: (...args: any[]) => any) {
-        return atom.commands.add(target, commandName, (event) => {
+    public addTextEditorCommand(commandName: string, callback: (...args: any[]) => any) {
+        return atom.commands.add("atom-text-editor", commandName, (event) => {
             var editor = atom.workspace.getActiveTextEditor();
             if (!editor) {
                 return;
