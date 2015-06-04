@@ -1,4 +1,3 @@
-import ClientManager = require('../../../omni-sharp-server/client-manager');
 import Omni = require('../../../omni-sharp-server/omni')
 import OmniSharpAtom = require('../../omnisharp-atom');
 

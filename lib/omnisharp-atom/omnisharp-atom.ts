@@ -8,7 +8,6 @@ var Emitter = (<any>a).Emitter
 
 // TODO: Remove these at some point to stream line startup.
 import Omni = require('../omni-sharp-server/omni');
-import ClientManager = require('../omni-sharp-server/client-manager');
 import dependencyChecker = require('./dependency-checker');
 import {world} from './world';
 
@@ -20,54 +19,29 @@ class OmniSharpAtom {
     private generator: { run(generator: string, path?: string): void; start(prefix: string, path?: string): void; };
     private menu: EventKit.Disposable;
 
-    public editors: Observable<Atom.TextEditor>;
-    public configEditors: Observable<Atom.TextEditor>;
-
-    private _activeEditor = new BehaviorSubject<Atom.TextEditor>(null);
-    private _activeEditorObservable = this._activeEditor.shareReplay(1);
-    public get activeEditor(): Observable<Atom.TextEditor> { return this._activeEditorObservable; }
-
     public activate(state) {
         this.disposable = new CompositeDisposable;
 
         if (dependencyChecker.findAllDeps(this.getPackageDir())) {
             this.emitter = new Emitter;
 
-            var editors = new Subject<Atom.TextEditor>();
-            this.editors = editors;
-
-            var configEditors = new Subject<Atom.TextEditor>();
-            this.configEditors = configEditors;
-
             this.disposable.add(atom.commands.add('atom-workspace', 'omnisharp-atom:toggle', () => this.toggle()));
             this.disposable.add(atom.commands.add('atom-workspace', 'omnisharp-atom:new-application', () => this.generator.run("aspnet:app")));
             this.disposable.add(atom.commands.add('atom-workspace', 'omnisharp-atom:new-class', () => this.generator.run("aspnet:Class")));
             this.disposable.add(this.emitter);
 
-            Omni.activate(this);
-
             this.loadAtomFeatures(state).toPromise()
                 .then(() => this.loadFeatures(state).toPromise())
                 .then(() => {
+                    Omni.activate();
+
                     world.activate();
                     _.each(this.features, f => {
                         f.activate();
                         this.disposable.add(f);
                     });
 
-                    ClientManager.activate(this);
-                    this.subscribeToEvents();
-
                     this.disposable.add(atom.workspace.observeTextEditors((editor: Atom.TextEditor) => {
-                        var editorFilePath;
-                        var grammarName = editor.getGrammar().name;
-                        if (grammarName === 'C#' || grammarName === 'C# Script File') {
-                            editors.onNext(editor);
-                            editorFilePath = editor.buffer.file.path;
-                        } else if (grammarName === "JSON") {
-                            configEditors.onNext(editor);
-                        }
-
                         this.detectAutoToggleGrammar(editor);
                     }));
 
@@ -136,21 +110,6 @@ class OmniSharpAtom {
         return result;
     }
 
-    public subscribeToEvents() {
-        this.disposable.add(atom.workspace.observeActivePaneItem((pane: any) => {
-            if (pane && pane.getGrammar) {
-                var grammarName = pane.getGrammar().name;
-                if (grammarName === 'C#' || grammarName === 'C# Script File') {
-                    this._activeEditor.onNext(pane);
-                    return;
-                }
-            }
-
-            // This will tell us when the editor is no longer an appropriate editor
-            this._activeEditor.onNext(null);
-        }));
-    }
-
     private detectAutoToggleGrammar(editor: Atom.TextEditor) {
         var grammar = editor.getGrammar();
         this.detectGrammar(editor, grammar);
@@ -162,22 +121,22 @@ class OmniSharpAtom {
             return; //short out, if setting to not auto start is enabled
         }
 
-        if (ClientManager.isOn && !this.menu) {
+        if (Omni.isOn && !this.menu) {
             this.toggleMenu();
         }
 
         if (grammar.name === 'C#') {
-            if (ClientManager.isOff) {
+            if (Omni.isOff) {
                 this.toggle();
             }
         } else if (grammar.name === "JSON") {
             if (path.basename(editor.getPath()) === "project.json") {
-                if (ClientManager.isOff) {
+                if (Omni.isOff) {
                     this.toggle();
                 }
             }
         } else if (grammar.name === "C# Script File") {
-            if (ClientManager.isOff) {
+            if (Omni.isOff) {
                 this.toggle()
             }
         }
@@ -193,11 +152,11 @@ class OmniSharpAtom {
     public toggle() {
         var dependencyErrors = dependencyChecker.errors();
         if (dependencyErrors.length === 0) {
-            if (ClientManager.isOff) {
-                ClientManager.connect();
+            if (Omni.isOff) {
+                Omni.connect();
                 this.toggleMenu();
-            } else if (ClientManager.isOn) {
-                ClientManager.disconnect();
+            } else if (Omni.isOn) {
+                Omni.disconnect();
 
                 if (this.menu) {
                     this.disposable.remove(this.menu);
@@ -213,7 +172,7 @@ class OmniSharpAtom {
     public deactivate() {
         this.features = null;
         this.autoCompleteProvider && this.autoCompleteProvider.destroy();
-        ClientManager.disconnect();
+        Omni.deactivate();
     }
 
     public consumeStatusBar(statusBar) {
@@ -263,7 +222,6 @@ class OmniSharpAtom {
             default: true
         }
     }
-
 }
 
 var instance = new OmniSharpAtom

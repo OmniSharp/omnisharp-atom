@@ -1,14 +1,66 @@
-import {helpers, Observable, ReplaySubject} from 'rx';
+import {helpers, Observable, ReplaySubject, Subject, CompositeDisposable, BehaviorSubject} from 'rx';
 import manager = require("./client-manager");
 import Client = require("./client");
 import _ = require('lodash');
-import OmnisharpAtom = require("../omnisharp-atom/omnisharp-atom");
+import {DriverState} from "omnisharp-client";
 
 class Omni {
-    private _atom: typeof OmnisharpAtom;
-    public activate(atom: typeof OmnisharpAtom) {
-        this._atom = atom;
+    private disposable: CompositeDisposable;
+
+    private _editorsSubject = new Subject<Atom.TextEditor>();
+    private _editors = this._editorsSubject.asObservable();
+
+    private _configEditorsSubject = new Subject<Atom.TextEditor>();
+    private _configEditors = this._configEditorsSubject.asObservable();
+
+    private _activeEditorSubject = new BehaviorSubject<Atom.TextEditor>(null);
+    private _activeEditor = this._activeEditorSubject.shareReplay(1).asObservable();
+
+    private _isOff = true;
+
+    public get isOff() { return this._isOff; }
+    public get isOn() { return !this.isOff; }
+
+    public activate() {
+        this.disposable = new CompositeDisposable;
+        manager.activate(this._activeEditor);
+
+        // we are only off if all our clients are disconncted or erroed.
+        this.disposable.add(manager.combinationClient.state.subscribe(z => this._isOff = _.all(z, x => x.value === DriverState.Disconnected || x.value === DriverState.Error)));
+
+        this.disposable.add(atom.workspace.observeTextEditors((editor: Atom.TextEditor) => {
+            var editorFilePath;
+            var grammarName = editor.getGrammar().name;
+            if (grammarName === 'C#' || grammarName === 'C# Script File') {
+                this._editorsSubject.onNext(editor);
+                editorFilePath = editor.buffer.file.path;
+            } else if (grammarName === "JSON") {
+                this._configEditorsSubject.onNext(editor);
+            }
+        }));
+
+        this.disposable.add(atom.workspace.observeActivePaneItem((pane: any) => {
+            if (pane && pane.getGrammar) {
+                var grammarName = pane.getGrammar().name;
+                if (grammarName === 'C#' || grammarName === 'C# Script File') {
+                    this._activeEditorSubject.onNext(pane);
+                    return;
+                }
+            }
+
+            // This will tell us when the editor is no longer an appropriate editor
+            this._activeEditorSubject.onNext(null);
+        }));
     }
+
+    public deactivate() {
+        this.disposable.dispose();
+        manager.deactivate();
+    }
+
+    public connect() { manager.connect(); }
+
+    public disconnect() { manager.disconnect(); }
 
     public toggle() {
         if (manager.connected) {
@@ -17,9 +69,6 @@ class Omni {
             manager.connect();
         }
     }
-
-    public get isOff() { return manager.isOff; }
-    public get isOn() { return manager.isOn; }
 
     public navigateTo(response: { FileName: string; Line: number; Column: number; }) {
         atom.workspace.open(response.FileName, undefined)
@@ -106,7 +155,7 @@ class Omni {
 
         // Ensure that the underying promise is connected
         //   (if we don't subscribe to the reuslt of the request, which is not a requirement).
-        result.subscribeOnCompleted(() => {});
+        result.subscribeOnCompleted(() => { });
 
         return result;
     }
@@ -119,15 +168,15 @@ class Omni {
     }
 
     public get activeEditor() {
-        return this._atom.activeEditor;
+        return this._activeEditor;
     }
 
     public get editors() {
-        return this._atom.editors;
+        return this._editors;
     }
 
     public get configEditors() {
-        return this._atom.configEditors;
+        return this._configEditors;
     }
 
     public registerConfiguration(callback: (client: Client) => void) {
