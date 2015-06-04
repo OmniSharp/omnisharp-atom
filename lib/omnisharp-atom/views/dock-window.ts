@@ -1,6 +1,6 @@
 //var Convert = require('ansi-to-html')
 import _ = require('lodash')
-import {Observable, SingleAssignmentDisposable, Disposable, CompositeDisposable} from "rx";
+import {Observable, SingleAssignmentDisposable, Disposable, CompositeDisposable, Subject} from "rx";
 import Omni = require('../../omni-sharp-server/omni');
 import React = require('react');
 import {ReactClientComponent} from "./react-client-component";
@@ -80,7 +80,7 @@ class DockWindows<T extends IDockWindowButtonsProps> extends ReactClientComponen
                 this.props.setSelected(id);
                 this.setState({});
             }
-        }, children);
+        }, ...children);
     }
 
     private getButtons() {
@@ -89,11 +89,9 @@ class DockWindows<T extends IDockWindowButtonsProps> extends ReactClientComponen
 
     public render() {
         return React.DOM.div({
-            className: "inset-panel"
-        }, React.DOM.div({
             className: "panel-heading clearfix"
         }, React.DOM.div({ className: 'btn-toolbar pull-left' },
-            React.DOM.div({ className: 'btn-group btn-toggle' }, this.getButtons()))), this.props.children);
+            React.DOM.div({ className: 'btn-group btn-toggle' }, this.getButtons())));
     }
 }
 
@@ -102,7 +100,9 @@ export class DockWindow<T extends IDockWindowProps> extends ReactClientComponent
 
     public get selected() { return this.state.selected; }
     private visible = false;
-    public get isOpen () { return this.visible }
+    public get isOpen() { return this.visible }
+    private height = 0;
+    private tempHeight = 0;
 
     private _convert;
 
@@ -115,16 +115,26 @@ export class DockWindow<T extends IDockWindowProps> extends ReactClientComponent
         super.componentWillMount();
     }
 
+    public componentDidMount() {
+        super.componentDidMount();
+
+        var node = React.findDOMNode(this);
+        this.height = node.clientHeight;
+    }
+
     private updateState(cb?: () => void) {
         this.setState(<any>{}, () => this.updateAtom(cb));
     }
 
     private updateAtom(cb: () => void) {
         if (this.props.panel.visible !== this.visible) {
-            if (this.visible)
+            if (this.visible) {
+                var node = React.findDOMNode(this);
                 this.props.panel.show();
-            else
+                this.height = node.clientHeight;
+            } else {
                 this.props.panel.hide();
+            }
         }
         if (cb) cb();
     }
@@ -201,13 +211,95 @@ export class DockWindow<T extends IDockWindowProps> extends ReactClientComponent
     }
 
     public render() {
-        if (!this.visible)
+        if (!this.visible) {
             return React.DOM.span({
                 style: {
                     display: 'none'
                 }
             });
+        }
 
-        return React.createElement(DockWindows, { selected: this.state.selected, setSelected: this.selectWindow.bind(this), panes: this.props.panes }, this.getWindows());
+        var insetProps = <any> {
+            className: "inset-panel"
+        };
+
+        if (this.height || this.tempHeight) {
+            insetProps.style = { height: this.height + this.tempHeight };
+        }
+
+        return React.DOM.div(insetProps,
+            React.createElement(Resizer, {
+                className: 'omnisharp-atom-output-resizer',
+                update: ({top}: { left: number, top: number }) => {
+                    console.log(top);
+                    this.tempHeight = -(top);
+                    this.setState(<any>{});
+                },
+                done: () => {
+                    this.height = this.height + this.tempHeight;
+                    this.tempHeight = 0;
+                    this.setState(<any>{});
+                }
+            }),
+            React.createElement(DockWindows, { selected: this.state.selected, setSelected: this.selectWindow.bind(this), panes: this.props.panes }),
+            this.getWindows());
+    }
+}
+
+function makeRxReactEventHandler<T>() {
+    var subject = new Subject<T>();
+
+    return {
+        handler: <(value: T) => void> subject.onNext.bind(subject),
+        observable: subject.asObservable()
+    }
+}
+
+interface IResizeProps {
+    update(location: { left: number; top: number });
+    done();
+    className: string;
+}
+
+export class Resizer<T extends IResizeProps> extends React.Component<T, {}> {
+    private _mousedown = makeRxReactEventHandler<React.MouseEvent>();
+    private disposable = new CompositeDisposable();
+
+    public componentDidMount() {
+        var node = React.findDOMNode(this);
+        var mousemove = Observable.fromEvent<MouseEvent>(document.body, 'mousemove').share();
+        var mouseup = Observable.fromEvent<MouseEvent>(document.body, 'mouseup').share();
+        var mousedown = this._mousedown.observable;
+
+        var mousedrag = mousedown.selectMany((md) => {
+            const startX = md.clientX + window.scrollX,
+                startY = md.clientY + window.scrollY,
+                startLeft = parseInt((<any>md.target).style.left, 10) || 0,
+                startTop = parseInt((<any>md.target).style.top, 10) || 0;
+
+            return mousemove.map((mm) => {
+                mm.preventDefault();
+
+                return {
+                    left: startLeft + mm.clientX - startX,
+                    top: startTop + mm.clientY - startY
+                };
+            }).takeUntil(mouseup);
+        });
+
+        mousedown.flatMapLatest(x => mousemove.skipUntil(mouseup)).subscribe(() => this.props.done())
+        this.disposable.add(mousedrag.subscribe(this.props.update));
+    }
+
+    public componentWillUnmount() {
+        var node = React.findDOMNode(this);
+        this.disposable.dispose();
+    }
+
+    public render() {
+        return React.DOM.div({
+            className: this.props.className,
+            onMouseDown: (e) => this._mousedown.handler(e)
+        });
     }
 }
