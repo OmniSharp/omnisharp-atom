@@ -9,13 +9,14 @@ class PackageRestore implements OmniSharp.IFeature {
         this.disposable = new CompositeDisposable();
         this.disposable.add(Omni.configEditors.subscribe((editor: Atom.TextEditor) => {
             var disposer = this.registerEventHandlerOnEditor(editor);
-            if (disposer)
+            if (disposer) {
                 this.disposable.add(disposer);
 
-            editor.onDidDestroy(() => {
-                this.disposable.remove(disposer);
-                disposer.dispose();
-            });
+                editor.onDidDestroy(() => {
+                    this.disposable.remove(disposer);
+                    disposer.dispose();
+                });
+            }
         }));
     }
 
