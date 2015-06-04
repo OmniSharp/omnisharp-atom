@@ -81,11 +81,7 @@ class PackageRestoreNotification {
     }
 
     public handleEvents = (event: OmniSharp.Stdio.Protocol.EventPacket) => {
-        if (event.Event === 'log' && event.Body && event.Body.Message && event.Body.Name) {
-            if (event.Body.Name === 'OmniSharp.AspNet5.PackagesRestoreTool' && event.Body.Message.startsWith('Installing')) {
-                this.setPackageInstalled(event.Body.Message);
-            }
-        }
+        this.setPackageInstalled(event.Body.Message);
     }
 
     private findProjectNameFromFileName(fileName: string): string {
