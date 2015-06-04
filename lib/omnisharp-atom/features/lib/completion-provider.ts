@@ -1,10 +1,14 @@
 import ClientManager = require('../../../omni-sharp-server/client-manager');
 import Omni = require('../../../omni-sharp-server/omni')
+import OmniSharpAtom = require('../../omnisharp-atom');
 
 import _ = require('lodash')
 import rx = require('rx')
 var escape = require("escape-html");
 var filter = require('fuzzaldrin').filter;
+
+var cfgUseIcons: boolean;
+var cfgUseLeftLabelColumnForSuggestions: boolean;
 
 export interface RequestOptions {
     editor: Atom.TextEditor;
@@ -86,6 +90,15 @@ var dataSource = (function() {
         }
     });
 
+    // TODO: Dispose of these when not needed
+    atom.config.observe('omnisharp-atom.useIcons', (value) => {
+        cfgUseIcons = value;
+    });
+
+    atom.config.observe('omnisharp-atom.useLeftLabelColumnForSuggestions', (value) => {
+        cfgUseLeftLabelColumnForSuggestions = value;
+    });
+
     // Always reset if the value is a dot
     var clearCacheWithDotPrefixObservable = requestSubject
         .where(z => z.prefix === "." || (z.prefix && !_.trim(z.prefix)) || !z.prefix);
@@ -118,14 +131,33 @@ export var CompletionProvider = {
     excludeLowerPriority: false,
 
     makeSuggestion(item: OmniSharp.Models.AutoCompleteResponse) {
+        var description, leftLabel, iconHTML, type;
+
+        if (cfgUseLeftLabelColumnForSuggestions == true) {
+            description = item.RequiredNamespaceImport;
+            leftLabel = item.ReturnType;
+        } else {
+            description = this.renderReturnType(item.ReturnType);
+            leftLabel = '';
+        }
+
+        if (cfgUseIcons == true) {
+            iconHTML = this.renderIcon(item);
+            type = item.Kind;
+        } else {
+            iconHTML = null;
+            type = item.Kind.toLowerCase();
+        }
+
         return {
             _search: item.CompletionText,
             snippet: item.Snippet,
-            type: item.Kind,
-            iconHTML: this.renderIcon(item),
+            type: type,
+            iconHTML: iconHTML,
             displayText: escape(item.DisplayText),
             className: 'autocomplete-omnisharp-atom',
-            description: this.renderReturnType(item.ReturnType)
+            description: description,
+            leftLabel: leftLabel,
         }
     },
 
