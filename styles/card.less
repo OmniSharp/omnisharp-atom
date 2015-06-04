@@ -1,0 +1,148 @@
+@import "octicon-mixins";
+@import "ui-variables";
+@omnisharp-card-background-color: lighten(@tool-panel-background-color, 8%);
+@omnisharp-card-disabled-background-color: darken(@omnisharp-card-background-color, 3%);
+
+// TODO: Somehow unify the "omnisharp-card".
+.omnisharp-card {
+    padding: (@component-padding);
+    margin-bottom: @component-padding;
+    list-style-type: none;
+    border-radius: @component-border-radius*2;
+    border: 1px solid @base-border-color;
+    background-color: @omnisharp-card-background-color;
+    overflow: hidden;
+    -webkit-user-select: none;
+    max-height: 126px;
+    max-width: 530px;
+    display: flex;
+    position: relative;
+    .name {
+        text-overflow: ellipsis;
+        white-space: nowrap;
+        width: 100%;
+        color: @text-color-highlight;
+        overflow: hidden;
+        margin-top: 4px;
+        margin-bottom: 4px;
+        margin: 5px 0;
+        margin: 0 0 0.2em;
+    }
+    .description {
+        color: @text-color;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        display: -webkit-box;
+        -webkit-line-clamp: 2;
+        /* number of lines to show */
+        -webkit-box-orient: vertical;
+        font-style: italic;
+        font-size: 10px;
+        line-height: 1;
+    }
+    .selector + .body .name {
+        margin-left: 42px;
+    }
+    .selector {
+        position: absolute;
+        top: 12px;
+        left: 8px;
+        .btn {
+            height: 18px;
+            padding: 0;
+            &:before {
+                margin-right: 0;
+            }
+        }
+    }
+    .stats-item {
+        margin-left: 0;
+        margin-right: 4px;
+        display: block;
+        line-height: 24px;
+        vertical-align: top;
+        color: @text-color-subtle;
+        .btn {
+            cursor: default;
+        }
+        &.connected {
+            color: @text-color-success;
+        }
+        &.disconnected {
+            color: @text-color-subtle;
+        }
+        &.error {
+            color: @text-color-error;
+        }
+        &.connecting {
+            color: @text-color-warning;
+        }
+    }
+    .body {
+        width: 300px;
+        display: flex;
+        flex-direction: column;
+        flex: 7;
+        .css-truncate-target {
+            max-width: 100%;
+        }
+    }
+    .description {
+        white-space: normal;
+        line-height: 1.4;
+    }
+    .meta {
+        width: 230px;
+        flex: 5;
+        a.linked-octicon {
+            text-decoration: none;
+            &:hover {
+                .octicon {
+                    color: $greenDark;
+                }
+                .value {
+                    color: $greenDark;
+                }
+            }
+        }
+        .action {
+            border-radius: 3px;
+            padding: 3px 6px;
+            &:hover {
+                background-color: #eaeaea;
+            }
+        }
+        .value, .header {
+            color: #999;
+        }
+        th {
+            font-weight: bold;
+        }
+        overflow-y: auto;
+        tbody {
+
+        }
+    }
+    .meta-projects {
+        .project {
+            border-top: 1px solid @text-color-subtle;
+            display: block;
+            width: 100%;
+        }
+        .name {
+
+        }
+        .path {
+            text-align: left;
+            font-weight: normal;
+        }
+    }
+    .meta-controls {
+        button {
+            vertical-align: middle;
+        }
+        .fa {
+            margin-right: 4px;
+        }
+    }
+}

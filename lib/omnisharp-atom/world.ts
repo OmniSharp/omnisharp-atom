@@ -4,6 +4,7 @@ import {Observable} from "rx";
 import {findUsages} from "./features/find-usages";
 import {codeCheck} from "./features/code-check";
 import {server} from "./features/server-information";
+import {solutionInformation} from "./features/solution-information";
 
 var statefulProperties = ['isOff', 'isConnecting', 'isOn', 'isReady', 'isError'];
 
@@ -13,6 +14,7 @@ class WorldModel {
     public findUsages = findUsages;
     public codeCheck = codeCheck;
     public server = server;
+    public solutions = solutionInformation;
 
     public isOff: boolean;
     public isConnecting: boolean;
@@ -71,4 +73,4 @@ class WorldModel {
 var world = new WorldModel();
 window['world'] = world; //TEMP
 
-export {world, findUsages, codeCheck, server};
+export {world, findUsages, codeCheck, server, solutionInformation};

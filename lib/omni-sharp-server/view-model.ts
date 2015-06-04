@@ -4,7 +4,7 @@ import {DriverState, OmnisharpClientStatus} from "omnisharp-client";
 import {Observable, Subject} from "rx";
 import {basename} from "path";
 
-class ProjectViewModel {
+class ProjectViewModel implements OmniSharp.IProjectViewModel {
     constructor(
         public name: string,
         public path: string,
@@ -22,11 +22,16 @@ class ViewModel {
     public isReady: boolean;
     public isError: boolean;
 
+
     private _uniqueId;
     public get uniqueId() { return this._client.uniqueId; }
+
+    public get index() { return this._client.index; }
+    public get path() { return this._client.path; }
     public output: OmniSharp.OutputMessage[] = [];
     public diagnostics: OmniSharp.Models.DiagnosticLocation[] = [];
     public status: OmnisharpClientStatus;
+    public get state() { return this._client.currentState };
 
     // Project information
     public msbuild: OmniSharp.Models.MsBuildWorkspaceInformation;
@@ -62,6 +67,11 @@ class ViewModel {
                 this.output.shift();
         });
 
+        _client.state.where(z => z === DriverState.Disconnected).subscribe(() => {
+            this.projects = [];
+            this.diagnostics = [];
+        })
+
         var codecheck = this.setupCodecheck(_client);
         var status = this.setupStatus(_client);
         var output = this.output;
@@ -92,38 +102,41 @@ class ViewModel {
 
         (window['clients'] || (window['clients'] = [])).push(this);  //TEMP
 
-        // Get projects as soon as they're loaded
-        _client.projects().toPromise().then(() => {
+        _client.state.where(z => z === DriverState.Connected).subscribe(() => {
+            _client.projects();
+        });
+
+        _client.observeProjects.first().subscribe(() => {
             _client.projectAdded
                 .where(z => z.MsBuildProject != null)
                 .map(z => z.MsBuildProject)
+                .where(z => !_.any(this.msbuild.Projects, { Path: z.Path }))
                 .subscribe(project => {
                     this.msbuild.Projects.push(project);
                     this._projectAddedStream.onNext(
-                        new ProjectViewModel(project.AssemblyName,
-                            project.Path, [project.TargetFramework]));
+                        new ProjectViewModel(project.AssemblyName, project.Path, [project.TargetFramework]));
                 });
 
             _client.projectRemoved
                 .where(z => z.MsBuildProject != null)
                 .map(z => z.MsBuildProject)
                 .subscribe(project => {
-                    _.pull(this.msbuild.Projects, _.find(this.msbuild.Projects, z => z.Path === project.Path));
-                    this._projectRemovedStream.onNext(_.find(this.projects, z => z.path === project.Path));
+                    _.pull(this.msbuild.Projects, _.find(this.msbuild.Projects, { Path: project.Path }));
+                    this._projectRemovedStream.onNext(_.find(this.projects, { Path: project.Path }));
                 });
 
             _client.projectChanged
                 .where(z => z.MsBuildProject != null)
                 .map(z => z.MsBuildProject)
                 .subscribe(project => {
-                    _.assign(_.find(this.msbuild.Projects, z => z.Path === project.Path), project);
-                    this._projectChangedStream.onNext(new ProjectViewModel(project.AssemblyName,
-                        project.Path, [project.TargetFramework]));
+                    _.assign(_.find(this.msbuild.Projects, z => { Path: project.Path }), project);
+                    this._projectChangedStream.onNext(new ProjectViewModel(project.AssemblyName, project.Path, [project.TargetFramework]));
                 });
 
             _client.projectAdded
                 .where(z => z.AspNet5Project != null)
                 .map(z => z.AspNet5Project)
+                .where(z => !_.any(this.aspnet5.Projects, { Path: z.Path }))
                 .subscribe(project => {
                     this.aspnet5.Projects.push(project);
                     this._projectAddedStream.onNext(
@@ -134,19 +147,19 @@ class ViewModel {
                 .where(z => z.AspNet5Project != null)
                 .map(z => z.AspNet5Project)
                 .subscribe(project => {
-                    _.pull(this.aspnet5.Projects, _.find(this.aspnet5.Projects, z => z.Path === project.Path));
-                    this._projectRemovedStream.onNext(_.find(this.projects, z => z.path === project.Path));
+                    _.pull(this.aspnet5.Projects, _.find(this.aspnet5.Projects, { Path: project.Path }));
+                    this._projectRemovedStream.onNext(_.find(this.projects, { Path: project.Path }));
                 });
 
             _client.projectChanged
                 .where(z => z.AspNet5Project != null)
                 .map(z => z.AspNet5Project)
                 .subscribe(project => {
-                    _.assign(_.find(this.aspnet5.Projects, z => z.Path === project.Path), project);
+                    _.assign(_.find(this.aspnet5.Projects, z => { Path: project.Path }), project);
                     this._projectChangedStream.onNext(
                         new ProjectViewModel(project.Name, project.Path, project.Frameworks, project.Configurations, project.Commands));
                 });
-        })
+        });
     }
 
     private _updateState(state) {
@@ -158,8 +171,9 @@ class ViewModel {
     }
 
     private _observeProjectEvents() {
-        this._projectAddedStream.subscribe(
-            project => this.projects.push(project));
+        this._projectAddedStream
+            .where(z => !_.any(this.projects, { path: z.path }))
+            .subscribe(project => this.projects.push(project));
 
         this._projectRemovedStream.subscribe(
             project => _.pull(this.projects, _.find(this.projects, z => z.path === project.path)));

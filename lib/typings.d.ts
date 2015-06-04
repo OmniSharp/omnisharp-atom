@@ -20,7 +20,7 @@ declare module OmniSharp {
         activate(): void;
         dispose(): void;
     }
-    
+
     interface IAtomFeature extends IFeature {
         attach(): void;
     }
@@ -45,6 +45,15 @@ declare module OmniSharp {
         makeRequest(editor?: Atom.TextEditor, buffer?: TextBuffer.TextBuffer): OmniSharp.Models.Request;
         makeDataRequest<T>(data: T, editor?: Atom.TextEditor, buffer?: TextBuffer.TextBuffer): T;
     }
+
+    interface IProjectViewModel {
+        name: string;
+        path: string;
+        frameworks: string[];
+        configurations: string[];
+        commands: { [key: string]: string };
+    }
+
 }
 
 declare module Rx {
