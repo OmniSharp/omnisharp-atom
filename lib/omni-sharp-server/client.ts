@@ -97,12 +97,12 @@ class Client extends OmnisharpClient {
         });
     }
 
-    public request<TRequest, TResponse>(action: string, request?: TRequest): Rx.Observable<TResponse> {
+    public request<TRequest, TResponse>(action: string, request?: TRequest, options?: OmniSharp.RequestOptions): Rx.Observable<TResponse> {
         // Custom property that we set inside make request if the editor is no longer active.
         if (request['abort']) {
             return Observable.empty<TResponse>();
         }
-        return OmnisharpClient.prototype.request.call(this, action, request);
+        return OmnisharpClient.prototype.request.call(this, action, request, options);
     }
 }
 
