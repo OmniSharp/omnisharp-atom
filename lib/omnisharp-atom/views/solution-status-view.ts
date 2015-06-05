@@ -148,6 +148,9 @@ export class SolutionStatusCard<T extends ICardProps> extends ReactClientCompone
     }
 
     public render() {
+        if (!this.state.model) {
+            return React.DOM.div({ className: 'omnisharp-card' });
+        }
         var path = truncateStringReverse(this.state.model.path);
 
         var stats = [

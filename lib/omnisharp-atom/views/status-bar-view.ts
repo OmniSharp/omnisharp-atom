@@ -145,18 +145,19 @@ class StatusBarComponent extends ReactClientComponent<{}, StatusBarState> {
                     React.DOM.span({
                         className: 'warning-summary'
                     }, this.state.warningCount)));
-        }
-        children.push(React.DOM.a({
-            className: "inline-block project-summary projects-icon",
-            onClick: (e) => this.toggleSolutionInformation()
-        },
-            React.DOM.span({
-                className: "icon icon-pulse"
+
+            children.push(React.DOM.a({
+                className: "inline-block project-summary projects-icon",
+                onClick: (e) => this.toggleSolutionInformation()
             },
-                React.DOM.sub({}, solutionNumber)),
-            React.DOM.span({
-                className: "projects"
-            }, `${this.state.projects.length} Projects`)));
+                React.DOM.span({
+                    className: "icon icon-pulse"
+                },
+                    React.DOM.sub({}, solutionNumber)),
+                React.DOM.span({
+                    className: "projects"
+                }, `${this.state.projects.length} Projects`)));
+        }
 
 
         return React.DOM.div({ className: "inline-block" }, ...children);

@@ -38,10 +38,8 @@ class SolutionInformation implements OmniSharp.IFeature {
         this.disposable.add(atom.commands.add("atom-workspace", 'omnisharp-atom:solution-status', () => {
             if (this.cardDisposable) {
                 this.cardDisposable.dispose();
-                this.disposable.remove(this.cardDisposable);
             } else {
                 this.cardDisposable = this.createSolutionCard();
-                this.disposable.add(this.cardDisposable);
             }
         }));
 
@@ -71,11 +69,12 @@ class SolutionInformation implements OmniSharp.IFeature {
         if (this.selectedIndex !== index)
             this.selectedIndex = index;
 
-            if (this.card)
-        this.card.updateCard({
-            model: this.solutions[this.selectedIndex],
-            count: this.solutions.length
-        });
+        if (this.card) {
+            this.card.updateCard({
+                model: this.solutions[this.selectedIndex],
+                count: this.solutions.length
+            });
+        }
     }
 
     private setupSolutions() {
@@ -92,29 +91,46 @@ class SolutionInformation implements OmniSharp.IFeature {
 
     private createSolutionCard() {
         var disposable = new CompositeDisposable();
+        this.disposable.add(disposable);
         var workspace = <any>atom.views.getView(atom.workspace);
         if (!this.container) {
             var container = this.container = document.createElement("div");
             workspace.appendChild(container);
         }
-        var element: SolutionStatusCard<ICardProps> = <any>React.render(React.createElement(SolutionStatusCard, {
-            model: this.solutions[this.selectedIndex],
-            count: this.solutions.length,
-            attachTo: '.projects-icon'
-        }), this.container);
 
-        this.card = element;
+        if (this.solutions.length) {
+            var element: SolutionStatusCard<ICardProps> = <any>React.render(React.createElement(SolutionStatusCard, {
+                model: this.solutions[this.selectedIndex],
+                count: this.solutions.length,
+                attachTo: '.projects-icon'
+            }), this.container);
 
-        disposable.add(atom.commands.add("atom-workspace", 'core:cancel', () => {
-            disposable.dispose();
-            this.disposable.remove(disposable);
-        }));
+            this.card = element;
 
-        disposable.add(Disposable.create(() => {
-            React.unmountComponentAtNode(this.container);
-            this.card = null;
-            this.cardDisposable = null;
-        }));
+            disposable.add(atom.commands.add("atom-workspace", 'core:cancel', () => {
+                disposable.dispose();
+                this.disposable.remove(disposable);
+            }));
+
+            disposable.add(Disposable.create(() => {
+                React.unmountComponentAtNode(this.container);
+                this.card = null;
+                this.cardDisposable = null;
+            }));
+        } else {
+            if (this.cardDisposable) {
+                this.cardDisposable.dispose();
+            }
+
+            var notice = <any>React.render(React.DOM.div({}, "Solution not loaded!"), this.container);
+
+            disposable.add(Disposable.create(() => {
+                React.unmountComponentAtNode(this.container);
+                this.card = null;
+                this.cardDisposable = null;
+            }));
+
+        }
 
         return disposable;
     }
