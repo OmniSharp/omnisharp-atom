@@ -9,16 +9,40 @@ function createTextEditorObservable(grammars: string[], disposable: CompositeDis
     var subject = new Subject<Atom.TextEditor>();
 
     disposable.add(atom.workspace.observeTextEditors((editor: Atom.TextEditor) => {
+        function cb() {
+            editors.push(editor);
+            subject.onNext(editor);
+
+            // pull old editors.
+            disposable.add(editor.onDidDestroy(() => _.pull(editors, editor)));
+        }
+
         var editorFilePath;
         if (editor.getGrammar) {
-            var grammarName = editor.getGrammar().name;
-            if (_.contains(grammars, grammarName)) {
-                editors.push(editor);
-                subject.onNext(editor);
+            var s = editor.observeGrammar(grammar => {
+                var grammarName = editor.getGrammar().name;
+                if (_.contains(grammars, grammarName)) {
+                    var path = editor.getPath();
+                    if (!path) {
+                        // editor isn't saved yet.
+                        var sub = editor.onDidSave(() => {
+                            if (editor.getPath()) {
+                                cb();
+                                s.dispose();
+                            }
+                            sub.dispose();
+                        });
+                        disposable.add(sub);
 
-                // pull old editors.
-                disposable.add(editor.onDidDestroy(() => _.pull(editors, editor)));
-            }
+                        atom.notifications.addInfo("OmniSharp", { detail: "Functionality will limited until the file has been saved." });
+                    } else {
+                        cb();
+                        s.dispose();
+                    }
+                }
+            });
+
+            disposable.add(s);
         }
     }));
 
