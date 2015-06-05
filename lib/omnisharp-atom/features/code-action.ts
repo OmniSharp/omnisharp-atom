@@ -1,5 +1,5 @@
 import _ = require('lodash');
-import {CompositeDisposable} from "rx";
+import {CompositeDisposable, Subject, Observable} from "rx";
 import Omni = require('../../omni-sharp-server/omni')
 import SpacePen = require('atom-space-pen-views');
 import CodeActionsView = require('../views/code-actions-view');
@@ -14,13 +14,9 @@ class CodeAction implements OmniSharp.IFeature {
     private disposable: Rx.CompositeDisposable;
 
     private view: SpacePen.SelectListView;
-    private editor: Atom.TextEditor;
-    private marker: Atom.Marker;
-    private word: string;
 
     public activate() {
         this.disposable = new CompositeDisposable();
-        this.editor = atom.workspace.getActiveTextEditor();
 
         this.disposable.add(Omni.addTextEditorCommand("omnisharp-atom:get-code-actions", () => {
             //store the editor that this was triggered by.
@@ -34,43 +30,49 @@ class CodeAction implements OmniSharp.IFeature {
 
             //pop ui to user.
             this.view = new CodeActionsView(wrappedCodeActions, (selectedItem) => {
-                //callback when an item is selected
-                Omni.request(client => client.runcodeactionPromise(client.makeDataRequest<OmniSharp.Models.CodeActionRequest>({
-                    CodeAction: selectedItem.Id,
-                    WantsTextChanges: true
-                })));
+                Omni.activeEditor
+                    .first()
+                    .subscribe(editor => {
+                        Omni.request(editor, client => client.runcodeaction(client.makeDataRequest<OmniSharp.Models.CodeActionRequest>({
+                            CodeAction: selectedItem.Id,
+                            WantsTextChanges: true
+                        }))).subscribe((response) => this.applyAllChanges(editor, response.Changes));
+                    });
             });
         }));
 
-        this.disposable.add(Omni.listener.observeRuncodeaction.subscribe((data) => {
-            this.applyAllChanges(data.response.Changes);
-        }));
+        this.disposable.add(Omni.editors.subscribe(editor => {
+            var word, marker: Atom.Marker, subscription : Rx.Disposable;
+            var makeLightbulbRequest = _.debounce((position: TextBuffer.Point) => {
+                if (subscription) subscription.dispose();
 
-        this.disposable.add(this.editor.onDidChangeCursorPosition(e => {
-            var oldPos = e.oldBufferPosition;
-            var newPos = e.newBufferPosition;
+                subscription = Omni.request(client => client.getcodeactions(client.makeRequest(), { silent: true })).subscribe(response => {
+                    if (response.CodeActions.length > 0) {
+                        var range = [[position.row, 0], [position.row, 0]];
+                        marker = editor.markBufferRange(range);
+                        editor.decorateMarker(marker, { type: "line-number", class: "quickfix" });
+                    }
+                });
+            }, 150);
 
-            var word : string = <any>this.editor.getWordUnderCursor();
-            if (this.word !== word || oldPos.row !== newPos.row) {
-                this.word = word;
-                if (this.marker) {
-                    this.marker.destroy();
-                    this.marker = null;
+            this.disposable.add(editor.onDidChangeCursorPosition(e => {
+                var oldPos = e.oldBufferPosition;
+                var newPos = e.newBufferPosition;
+
+                var newWord: string = <any>editor.getWordUnderCursor();
+                if (word !== newWord || oldPos.row !== newPos.row) {
+                    word = newWord;
+                    if (marker) {
+                        marker.destroy();
+                        marker = null;
+                    }
+
+                    if (subscription) subscription.dispose();
+                    makeLightbulbRequest(newPos);
                 }
-                this.makeLightbulbRequest(newPos);
-            }
+            }));
         }));
     }
-
-    private makeLightbulbRequest = _.debounce((position: TextBuffer.Point) => {
-        Omni.request(client => client.getcodeactions(client.makeRequest(), { silent: true })).subscribe(response => {
-            if (response.CodeActions.length > 0) {
-                var range = [[position.row, 0], [position.row, 0]];
-                this.marker = this.editor.markBufferRange(range);
-                this.editor.decorateMarker(this.marker, { type: "line-number", class: "quickfix" });
-            }
-        });
-    }, 150);
 
     public dispose() {
         this.disposable.dispose();
@@ -84,8 +86,8 @@ class CodeAction implements OmniSharp.IFeature {
         return wrappedCodeActions;
     }
 
-    public applyAllChanges(changes: OmniSharp.Models.LinePositionSpanTextChange[]) {
-        Changes.applyChanges(this.editor, changes)
+    public applyAllChanges(editor: Atom.TextEditor, changes: OmniSharp.Models.LinePositionSpanTextChange[]) {
+        Changes.applyChanges(editor, changes)
     }
 }
 
