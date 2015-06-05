@@ -26,7 +26,7 @@ export class OutputWindow<T> extends ReactClientComponent<T, IOutputWindowState>
 
         this.disposable.add(world.observe.output
             .subscribe(z => this.setState({ output: z }, () => this.scrollToBottom())));
-        this.scrollToBottom();
+        _.defer(_.bind(this.scrollToBottom, this));
     }
 
     private scrollToBottom() {

@@ -57,12 +57,6 @@ class CodeCheck implements OmniSharp.IFeature {
             }));
         }));
 
-        this.disposable.add(Omni.activeEditor.subscribe(editor => {
-            if (editor) {
-                this.doCodeCheck(editor);
-            }
-        }));
-
         this.disposable.add(this.observe.diagnostics
             .subscribe(diagnostics => {
                 this.diagnostics = diagnostics;
@@ -70,9 +64,9 @@ class CodeCheck implements OmniSharp.IFeature {
             }));
 
         this.disposable.add(this.observe.diagnostics.subscribe(s => {
-                this.scrollTop = 0;
-                this.selectedIndex = 0;
-            }));
+            this.scrollTop = 0;
+            this.selectedIndex = 0;
+        }));
 
         this.disposable.add(dock.addWindow('errors', 'Errors & Warnings', CodeCheckOutputWindow, {
             scrollTop: () => this.scrollTop,
@@ -157,18 +151,16 @@ class CodeCheck implements OmniSharp.IFeature {
         this.disposable.dispose();
     }
 
-    public doCodeCheck(editor: Atom.TextEditor) {
-        _.debounce(() => {
-            Omni.request(editor, client => {
-                var request = <OmniSharp.Models.FormatRangeRequest>client.makeRequest(editor);
-                return client.updatebufferPromise(request)
-                    .then(() => {
-                        request.FileName = null;
-                        Omni.request(editor, client => client.codecheck(request));
-                    });
-            });
-        }, 500)();
-    }
+    public doCodeCheck = _.debounce((editor: Atom.TextEditor) => {
+        Omni.request(editor, client => {
+            var request = <OmniSharp.Models.FormatRangeRequest>client.makeRequest(editor);
+            return client.updatebufferPromise(request)
+                .then(() => {
+                    request.FileName = null;
+                    Omni.request(editor, client => client.codecheck(request));
+                });
+        });
+    }, 500);
 }
 
 export var codeCheck = new CodeCheck;
