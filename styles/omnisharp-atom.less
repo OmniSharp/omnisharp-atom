@@ -303,3 +303,16 @@ li.selected span.filename {
     text-shadow: none;
     color: #aaa;
 }
+
+
+.gutter .line-number {
+    background-size: 0px;
+    transition: background-size .5s;
+    &.quickfix
+    {
+        background-image: url('atom://omnisharp-atom/styles/light-bulb.png');
+        background-size: 3px;
+        background-repeat: no-repeat;
+        background-position: right center;
+    }
+}
