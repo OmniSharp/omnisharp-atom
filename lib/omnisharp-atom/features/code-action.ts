@@ -16,6 +16,7 @@ class CodeAction implements OmniSharp.IFeature {
     private view: SpacePen.SelectListView;
     private editor: Atom.TextEditor;
     private marker: Atom.Marker;
+    private word: string;
 
     public activate() {
         this.disposable = new CompositeDisposable();
@@ -45,26 +46,31 @@ class CodeAction implements OmniSharp.IFeature {
             this.applyAllChanges(data.response.Changes);
         }));
 
-        this.disposable.add(this.editor.onDidChangeCursorPosition(_.debounce(e => {
+        this.disposable.add(this.editor.onDidChangeCursorPosition(e => {
             var oldPos = e.oldBufferPosition;
             var newPos = e.newBufferPosition;
 
-            if (oldPos.row !== newPos.row || oldPos.column !== newPos.column) {
-
+            var word : string = <any>this.editor.getWordUnderCursor();
+            if (this.word !== word || oldPos.row !== newPos.row) {
+                this.word = word;
                 if (this.marker) {
                     this.marker.destroy();
+                    this.marker = null;
                 }
-
-                Omni.request(client => client.getcodeactions(client.makeRequest(), { silent: true })).subscribe(response => {
-                    if (response.CodeActions.length > 0) {
-                        var range = [[newPos.row, 0], [newPos.row, 0]];
-                        this.marker = this.editor.markBufferRange(range);
-                        this.editor.decorateMarker(this.marker, { type: "line-number", class: "quickfix" });
-                    }
-                });
+                this.makeLightbulbRequest(newPos);
             }
-        }, 300)));
+        }));
     }
+
+    private makeLightbulbRequest = _.debounce((position: TextBuffer.Point) => {
+        Omni.request(client => client.getcodeactions(client.makeRequest(), { silent: true })).subscribe(response => {
+            if (response.CodeActions.length > 0) {
+                var range = [[position.row, 0], [position.row, 0]];
+                this.marker = this.editor.markBufferRange(range);
+                this.editor.decorateMarker(this.marker, { type: "line-number", class: "quickfix" });
+            }
+        });
+    }, 150);
 
     public dispose() {
         this.disposable.dispose();
