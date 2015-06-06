@@ -16,7 +16,7 @@ class OmniSharpAtom {
     private emitter: EventKit.Emitter;
     private disposable: Rx.CompositeDisposable;
     private autoCompleteProvider;
-    private generator: { run(generator: string, path?: string): void; start(prefix: string, path?: string): void; };
+    private generator: { run(generator: string, path?: string, options?: any): void; start(prefix: string, path?: string, options?: any): void; };
     private menu: EventKit.Disposable;
 
     public activate(state) {
@@ -26,8 +26,8 @@ class OmniSharpAtom {
             this.emitter = new Emitter;
 
             this.disposable.add(atom.commands.add('atom-workspace', 'omnisharp-atom:toggle', () => this.toggle()));
-            this.disposable.add(atom.commands.add('atom-workspace', 'omnisharp-atom:new-application', () => this.generator.run("aspnet:app")));
-            this.disposable.add(atom.commands.add('atom-workspace', 'omnisharp-atom:new-class', () => this.generator.run("aspnet:Class")));
+            this.disposable.add(atom.commands.add('atom-workspace', 'omnisharp-atom:new-application', () => this.generator.run("aspnet:app", undefined, {promptOnZeroDirectories: true})));
+            this.disposable.add(atom.commands.add('atom-workspace', 'omnisharp-atom:new-class', () => this.generator.run("aspnet:Class", undefined, { promptOnZeroDirectories: true })));
             this.disposable.add(this.emitter);
 
             this.loadAtomFeatures(state).toPromise()
