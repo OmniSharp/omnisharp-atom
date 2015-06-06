@@ -33,6 +33,8 @@ class CodeActionsView extends SpacePen.SelectListView {
         return null;
     }
 
+    public getFilterKey() { return 'Name'; }
+
     public viewForItem(item) {
 
         return SpacePen.$$(function() {
