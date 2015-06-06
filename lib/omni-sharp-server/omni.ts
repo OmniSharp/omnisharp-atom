@@ -4,27 +4,6 @@ import Client = require("./client");
 import _ = require('lodash');
 import {DriverState} from "omnisharp-client";
 
-function createTextEditorObservable(grammars: string[], disposable: CompositeDisposable) {
-    var editors: Atom.TextEditor[] = [];
-    var subject = new Subject<Atom.TextEditor>();
-
-    disposable.add(atom.workspace.observeTextEditors((editor: Atom.TextEditor) => {
-        var editorFilePath;
-        if (editor.getGrammar) {
-            var grammarName = editor.getGrammar().name;
-            if (_.contains(grammars, grammarName)) {
-                editors.push(editor);
-                subject.onNext(editor);
-
-                // pull old editors.
-                disposable.add(editor.onDidDestroy(() => _.pull(editors, editor)));
-            }
-        }
-    }));
-
-    return Observable.merge(subject, Observable.defer(() => Observable.from(editors)));
-}
-
 class Omni {
     private disposable: CompositeDisposable;
 
@@ -46,8 +25,8 @@ class Omni {
         // we are only off if all our clients are disconncted or erroed.
         this.disposable.add(manager.combinationClient.state.subscribe(z => this._isOff = _.all(z, x => x.value === DriverState.Disconnected || x.value === DriverState.Error)));
 
-        this._editors = createTextEditorObservable(['C#', 'C# Script File'], this.disposable);
-        this._configEditors = createTextEditorObservable(['JSON'], this.disposable);
+        this._editors = Omni.createTextEditorObservable(['C#', 'C# Script File'], this.disposable);
+        this._configEditors = Omni.createTextEditorObservable(['JSON'], this.disposable);
 
         this.disposable.add(atom.workspace.observeActivePaneItem((pane: any) => {
             if (pane && pane.getGrammar) {
@@ -108,6 +87,69 @@ class Omni {
                 callback(event);
             }
         });
+    }
+
+    private static createTextEditorObservable(grammars: string[], disposable: CompositeDisposable) {
+        var editors: Atom.TextEditor[] = [];
+        var subject = new Subject<Atom.TextEditor>();
+
+        var editorSubject = new Subject<Atom.TextEditor>();
+        disposable.add(atom.workspace.observeActivePaneItem((pane: any) => editorSubject.onNext(pane)));
+        var editorObservable = editorSubject.where(z => z && !!z.getGrammar);
+
+        Observable.zip(editorObservable, editorObservable.skip(1), (editor, nextEditor) => ({ editor, nextEditor }))
+            .debounce(50)
+            .subscribe(function({editor, nextEditor}) {
+                var path = nextEditor.getPath();
+                if (!path) {
+                    // editor isn't saved yet.
+                    if (editor && _.contains(grammars, editor.getGrammar().name)) {
+                        atom.notifications.addInfo("OmniSharp", { detail: "Functionality will limited until the file has been saved." });
+                    }
+                }
+            });
+
+        disposable.add(atom.workspace.observeTextEditors((editor: Atom.TextEditor) => {
+            function cb() {
+                editors.push(editor);
+                subject.onNext(editor);
+
+                // pull old editors.
+                disposable.add(editor.onDidDestroy(() => _.pull(editors, editor)));
+            }
+
+            var editorFilePath;
+            if (editor.getGrammar) {
+                var s = editor.observeGrammar(grammar => {
+                    var grammarName = editor.getGrammar().name;
+                    if (_.contains(grammars, grammarName)) {
+                        var path = editor.getPath();
+                        if (!path) {
+                            // editor isn't saved yet.
+                            var sub = editor.onDidSave(() => {
+                                if (editor.getPath()) {
+                                    _.defer(() => {
+                                        cb();
+                                        s.dispose();
+                                    });
+                                }
+                                sub.dispose();
+                            });
+                            disposable.add(sub);
+                        } else {
+                            _.defer(() => {
+                                cb();
+                                s.dispose();
+                            });
+                        }
+                    }
+                });
+
+                disposable.add(s);
+            }
+        }));
+
+        return Observable.merge(subject, Observable.defer(() => Observable.from(editors)));
     }
 
     /**

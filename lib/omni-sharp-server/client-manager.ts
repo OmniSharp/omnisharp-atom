@@ -217,6 +217,11 @@ class ClientManager {
         }
 
         var location = editor.getPath();
+        if (!location) {
+            // Text editor not saved yet?
+            return Observable.empty<Client>();
+        }
+        
         var [intersect, clientInstance] = this.getClientForUnderlyingPath(location, grammarName);
         p = (<any>editor).omniProject = intersect;
 
