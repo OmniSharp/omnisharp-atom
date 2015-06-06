@@ -27,8 +27,10 @@ function createTextEditorObservable(grammars: string[], disposable: CompositeDis
                         // editor isn't saved yet.
                         var sub = editor.onDidSave(() => {
                             if (editor.getPath()) {
-                                cb();
-                                s.dispose();
+                                _.defer(() => {
+                                    cb();
+                                    s.dispose();
+                                });
                             }
                             sub.dispose();
                         });
@@ -36,8 +38,10 @@ function createTextEditorObservable(grammars: string[], disposable: CompositeDis
 
                         atom.notifications.addInfo("OmniSharp", { detail: "Functionality will limited until the file has been saved." });
                     } else {
-                        cb();
-                        s.dispose();
+                        _.defer(() => {
+                            cb();
+                            s.dispose();
+                        });
                     }
                 }
             });

@@ -25,6 +25,8 @@ class OmniSharpAtom {
         if (dependencyChecker.findAllDeps(this.getPackageDir())) {
             this.emitter = new Emitter;
 
+            this.configureKeybindings();
+
             this.disposable.add(atom.commands.add('atom-workspace', 'omnisharp-atom:toggle', () => this.toggle()));
             this.disposable.add(atom.commands.add('atom-workspace', 'omnisharp-atom:new-application', () => this.generator.run("aspnet:app")));
             this.disposable.add(atom.commands.add('atom-workspace', 'omnisharp-atom:new-class', () => this.generator.run("aspnet:Class")));
@@ -56,10 +58,14 @@ class OmniSharpAtom {
         }
     }
 
+    private _packageDir: string;
     public getPackageDir() {
-        return _.find(atom.packages.getPackageDirPaths(), function(packagePath) {
-            return fs.existsSync(packagePath + "/omnisharp-atom");
-        });
+        if (!this._packageDir) {
+            this._packageDir = _.find(atom.packages.getPackageDirPaths(), function(packagePath) {
+                return fs.existsSync(packagePath + "/omnisharp-atom");
+            });
+        }
+        return this._packageDir;
     }
 
     public loadFeatures(state) {
@@ -190,6 +196,44 @@ class OmniSharpAtom {
         return this.autoCompleteProvider;
     }
 
+    private configureKeybindings() {
+        var omnisharpFileNew = this.getPackageDir() + "/omnisharp-atom/keymaps/omnisharp-file-new.cson";
+        var omnisharpAdvancedFileNew = this.getPackageDir() + "/omnisharp-atom/keymaps/omnisharp-advanced-file-new.cson";
+        this.disposable.add(atom.config.observe("omnisharp-atom.enableAdvancedFileNew", (enabled) => {
+            if (enabled) {
+                atom.keymaps.loadKeymap(omnisharpFileNew);
+            } else {
+                atom.keymaps.removeBindingsFromSource(omnisharpFileNew);
+            }
+        }));
+
+        var disposable: EventKit.Disposable;
+        this.disposable.add(atom.config.observe("omnisharp-atom.useAdvancedFileNew", (enabled) => {
+            if (enabled) {
+                atom.keymaps.loadKeymap(omnisharpAdvancedFileNew);
+
+                var anymenu = <any>atom.menu;
+                _.each(anymenu.template, (template: any) => {
+                    var item = <any>_.find(template.submenu, { command: "application:new-file" });
+                    if (item) {
+                        item.command = 'advanced-new-file:toggle';
+                    }
+                });
+            } else {
+                if (disposable) disposable.dispose();
+                atom.keymaps.removeBindingsFromSource(omnisharpAdvancedFileNew);
+
+                var anymenu = <any>atom.menu;
+                _.each(anymenu.template, (template: any) => {
+                    var item = <any>_.find(template.submenu, { command: "advanced-new-file:toggle" });
+                    if (item) {
+                        item.command = 'application:new-file';
+                    }
+                });
+            }
+        }));
+    }
+
     public config = {
         autoStartOnCompatibleFile: {
             title: "Autostart Omnisharp Roslyn",
@@ -206,6 +250,18 @@ class OmniSharpAtom {
         showDiagnosticsForAllSolutions: {
             title: 'Show Diagnostics for all Solutions',
             description: 'Advanced: This will show diagnostics for all open solutions.  NOTE: May take a restart or change to each server to take effect when turned on.',
+            type: 'boolean',
+            default: false
+        },
+        enableAdvancedFileNew: {
+            title: 'Enable `Advanced File New`',
+            description: 'Enable `Advanced File New` when doing ctrl-n/cmd-n within a C# editor.',
+            type: 'boolean',
+            default: true
+        },
+        useAdvancedFileNew: {
+            title: 'Use `Advanced File New` as default',
+            description: 'Use `Advanced File New` as your default new command everywhere.',
             type: 'boolean',
             default: false
         },
