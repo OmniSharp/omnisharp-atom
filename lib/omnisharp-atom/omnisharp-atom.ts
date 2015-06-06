@@ -198,7 +198,6 @@ class OmniSharpAtom {
 
     private configureKeybindings() {
         var omnisharpFileNew = this.getPackageDir() + "/omnisharp-atom/keymaps/omnisharp-file-new.cson";
-        var omnisharpAdvancedFileNew = this.getPackageDir() + "/omnisharp-atom/keymaps/omnisharp-advanced-file-new.cson";
         this.disposable.add(atom.config.observe("omnisharp-atom.enableAdvancedFileNew", (enabled) => {
             if (enabled) {
                 atom.keymaps.loadKeymap(omnisharpFileNew);
@@ -208,6 +207,7 @@ class OmniSharpAtom {
         }));
 
         var disposable: EventKit.Disposable;
+        var omnisharpAdvancedFileNew = this.getPackageDir() + "/omnisharp-atom/keymaps/omnisharp-advanced-file-new.cson";
         this.disposable.add(atom.config.observe("omnisharp-atom.useAdvancedFileNew", (enabled) => {
             if (enabled) {
                 atom.keymaps.loadKeymap(omnisharpAdvancedFileNew);
