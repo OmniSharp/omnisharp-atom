@@ -73,7 +73,7 @@ var dataSource = (function() {
         // (Is it possible it will be the same set?)
         var row = Math.abs(current.bufferPosition.row - previous.bufferPosition.row) > 0;
         // If the column jumped, lets get them again to be safe.
-        var column = Math.abs(current.bufferPosition.column - previous.bufferPosition.column) > 1;
+        var column = Math.abs(current.bufferPosition.column - previous.bufferPosition.column) > 3;
         return { reset: row || column || false, previous: previous, current: current };
     }).where(z => z.reset).select(x => x.current);
 
@@ -105,9 +105,9 @@ var dataSource = (function() {
     rx.Observable.merge(bufferMovement, clearCacheWithDotPrefixObservable).subscribe(justResults);
     rx.Observable.merge(clearCacheSubject).subscribe(nextResults);
 
-    function clearCachedValue() {
+    var clearCachedValue = _.debounce(function() {
         clearCacheSubject.onNext(true);
-    }
+    }, 100, { leading: true });
 
     return {
         onNext(options: RequestOptions) {
