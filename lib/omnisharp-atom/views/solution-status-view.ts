@@ -85,11 +85,13 @@ export class SolutionStatusCard<T extends ICardProps> extends ReactClientCompone
     private verifyPosition() {
         var node = React.findDOMNode(this);
         var offset = $(document.querySelectorAll(this.props.attachTo)).offset();
-        $(node).css({
-            position: 'fixed',
-            top: offset.top - node.clientHeight,
-            left: offset.left
-        });
+        if (offset) {
+            $(node).css({
+                position: 'fixed',
+                top: offset.top - node.clientHeight,
+                left: offset.left
+            });
+        }
     }
 
     private getButtons() {
@@ -116,13 +118,6 @@ export class SolutionStatusCard<T extends ICardProps> extends ReactClientCompone
                 onClick: () => atom.commands.dispatch(atom.views.getView(atom.workspace), 'omnisharp-atom:restart-server')
             }, React.DOM.span({ className: 'fa fa-refresh' }), 'Restart'));
         }
-
-        /*
-                buttons.push(React.DOM.button({
-                    type: 'button',
-                    className: 'btn btn-xs',
-                    onClick: () => atom.commands.dispatch(atom.views.getView(atom.workspace), 'omnisharp-atom:remove-server')
-                }, React.DOM.span({ className: 'fa fa-times' }), 'Remove'));*/
 
         return buttons;
     }
