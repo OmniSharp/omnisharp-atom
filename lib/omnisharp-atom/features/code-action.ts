@@ -42,18 +42,28 @@ class CodeAction implements OmniSharp.IFeature {
         }));
 
         this.disposable.add(Omni.editors.subscribe(editor => {
-            var word, marker: Atom.Marker, subscription : Rx.Disposable;
-            var makeLightbulbRequest = _.debounce((position: TextBuffer.Point) => {
+            var word, marker: Atom.Marker, subscription: Rx.Disposable;
+            var makeLightbulbRequest = (position: TextBuffer.Point) => {
                 if (subscription) subscription.dispose();
 
-                subscription = Omni.request(client => client.getcodeactions(client.makeRequest(), { silent: true })).subscribe(response => {
-                    if (response.CodeActions.length > 0) {
-                        var range = [[position.row, 0], [position.row, 0]];
-                        marker = editor.markBufferRange(range);
-                        editor.decorateMarker(marker, { type: "line-number", class: "quickfix" });
-                    }
-                });
-            }, 150);
+                subscription = Omni.request(client => client.getcodeactions(client.makeRequest(), { silent: true }))
+                    .subscribe(response => {
+                        if (response.CodeActions.length > 0) {
+                            if (marker) {
+                                marker.destroy();
+                                marker = null;
+                            }
+
+                            var range = [[position.row, 0], [position.row, 0]];
+                            marker = editor.markBufferRange(range);
+                            editor.decorateMarker(marker, { type: "line-number", class: "quickfix" });
+                        }
+                    });
+
+            var update = _.debounce((pos: TextBuffer.Point) => {
+                if (subscription) subscription.dispose();
+                makeLightbulbRequest(pos);
+            }, 400);
 
             this.disposable.add(editor.onDidChangeCursorPosition(e => {
                 var oldPos = e.oldBufferPosition;
@@ -67,8 +77,7 @@ class CodeAction implements OmniSharp.IFeature {
                         marker = null;
                     }
 
-                    if (subscription) subscription.dispose();
-                    makeLightbulbRequest(newPos);
+                    update(newPos);
                 }
             }));
         }));
