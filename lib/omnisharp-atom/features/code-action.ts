@@ -59,6 +59,7 @@ class CodeAction implements OmniSharp.IFeature {
                             editor.decorateMarker(marker, { type: "line-number", class: "quickfix" });
                         }
                     });
+            };
 
             var update = _.debounce((pos: TextBuffer.Point) => {
                 if (subscription) subscription.dispose();
