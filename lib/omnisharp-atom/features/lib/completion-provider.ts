@@ -32,6 +32,7 @@ interface Suggestion {
 }
 
 function calcuateMovement(previous: RequestOptions, current: RequestOptions) {
+    if (!current) return { reset: true, current: current };
     // If the row changes we moved lines, we should refetch the completions
     // (Is it possible it will be the same set?)
     var row = Math.abs(current.bufferPosition.row - previous.bufferPosition.row) > 0;
@@ -128,12 +129,12 @@ let setupSubscriptions = () => {
     _initialized = true;
 }
 
-function onNext(options: RequestOptions) {
+var onNext = (options: RequestOptions) => {
     // Hold on to options incase we're activating
     _currentOptions = options;
     _subject.onNext(options);
     _currentOptions = null;
-}
+};
 
 // This method returns the currently held promise
 // This is out cache container.  This resets when we ask for new values.
@@ -222,9 +223,10 @@ function dispose() {
 export var CompletionProvider = {
     selector: '.source.cs, .source.csx',
     disableForSelector: 'source.cs .comment',
-    inclusionPriorit: 3,
+    inclusionPriority: 3,
     excludeLowerPriority: false,
-    getSuggestions: _.throttle(getSuggestions, 0),
+    getSuggestions,
+    //getSuggestions: _.throttle(getSuggestions, 0),
     onDidInsertSuggestion,
     dispose
 }
