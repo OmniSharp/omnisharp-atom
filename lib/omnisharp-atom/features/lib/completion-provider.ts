@@ -12,6 +12,7 @@ interface RequestOptions {
     bufferPosition: TextBuffer.Point; // the position of the cursor
     prefix: string;
     scopeDescriptor: { scopes: string[] };
+    activatedManually: boolean;
 }
 
 interface Suggestion {
@@ -37,7 +38,7 @@ function calcuateMovement(previous: RequestOptions, current: RequestOptions) {
     // (Is it possible it will be the same set?)
     var row = Math.abs(current.bufferPosition.row - previous.bufferPosition.row) > 0;
     // If the column jumped, lets get them again to be safe.
-    var column = Math.abs(current.bufferPosition.column - previous.bufferPosition.column) > 1;
+    var column = Math.abs(current.bufferPosition.column - previous.bufferPosition.column) > 3;
     return { reset: row || column || false, previous: previous, current: current };
 }
 
@@ -49,7 +50,6 @@ var autoCompleteOptions = <OmniSharp.Models.AutoCompleteRequest>{
     WantReturnType: true
 };
 
-
 let _disposable: CompositeDisposable;
 let _initialized = false;
 
@@ -60,13 +60,13 @@ let _currentOptions: RequestOptions;
 let _subject = new Subject<RequestOptions>();
 
 let _clearCacheOnBufferMovement = Observable.zip(_subject, _subject.skip(1), calcuateMovement).where(z => z.reset).select(x => x.current);
-let _clearCacheOnDot = _subject.where(z => z.prefix === "." || (z.prefix && !_.trim(z.prefix)) || !z.prefix);
+let _clearCacheOnDot = _subject.where(z => z.prefix === "." || (z.prefix && !_.trim(z.prefix)) || !z.prefix || z.activatedManually);
 let _cacheClearOnForce = new Subject<RequestOptions>();
 
 // Only issue new requests when ever a cache change event occurs.
 let _requestStream = Observable.merge(_clearCacheOnDot, _clearCacheOnBufferMovement, _cacheClearOnForce)
     // This covers us incase both return the same value.
-    .distinctUntilChanged(z => z, (z, y) => z === y)
+    .distinctUntilChanged()
     // Make the request
     .flatMapLatest(options => Omni.request(client => client.autocomplete(client.makeDataRequest(autoCompleteOptions))))
     // Ensure the array is not null;

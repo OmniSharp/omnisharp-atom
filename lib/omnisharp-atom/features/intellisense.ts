@@ -1,5 +1,7 @@
 import {CompositeDisposable} from "rx";
+import {defer} from "lodash";
 import Omni = require('../../omni-sharp-server/omni')
+import {CompletionProvider} from "./lib/completion-provider";
 
 class Intellisense implements OmniSharp.IFeature {
     private disposable: Rx.CompositeDisposable;
@@ -9,8 +11,7 @@ class Intellisense implements OmniSharp.IFeature {
         this.disposable.add(Omni.addTextEditorCommand('omnisharp-atom:intellisense-dot',
             (event) => {
                 this.complete(event, '.');
-                setTimeout(() =>
-                    atom.commands.dispatch(atom.views.getView(atom.workspace.getActiveTextEditor()), 'autocomplete-plus:activate'), 0);
+                //atom.commands.dispatch(atom.views.getView(atom.workspace.getActiveTextEditor()), 'autocomplete-plus:activate');
             }));
 
         this.disposable.add(Omni.addTextEditorCommand('omnisharp-atom:intellisense-space',
@@ -30,7 +31,7 @@ class Intellisense implements OmniSharp.IFeature {
         if (editor) {
             var view = atom.views.getView(editor);
             atom.commands.dispatch(atom.views.getView(editor), 'autocomplete-plus:confirm');
-            editor.insertText(char);
+            defer(() => editor.insertText(char));
 
             event.preventDefault();
             event.stopImmediatePropagation();
