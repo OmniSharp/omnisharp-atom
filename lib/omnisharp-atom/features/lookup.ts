@@ -1,35 +1,51 @@
 // Inspiration : https://atom.io/packages/ide-haskell
 // and https://atom.io/packages/ide-flow
 // https://atom.io/packages/atom-typescript
-import ClientManager = require('../../omni-sharp-server/client-manager');
+import {CompositeDisposable, Observable} from "rx";
 import Omni = require('../../omni-sharp-server/omni');
 import path = require('path');
 import fs = require('fs');
 import TooltipView = require('../views/tooltip-view');
-import rx = require('rx');
 import $ = require('jquery');
-import omnisharpAtom = require('../omnisharp-atom');
-import omnisharp = require("omnisharp-client");
 var escape = require("escape-html");
+import _ = require('lodash');
 
-class TypeLookup {
+class TypeLookup implements OmniSharp.IFeature {
+    private disposable: Rx.CompositeDisposable;
+
     public activate() {
-        omnisharpAtom.onEditor((editor: Atom.TextEditor) => {
-
+        this.disposable = new CompositeDisposable();
+        this.disposable.add(Omni.editors.subscribe((editor: Atom.TextEditor) => _.defer(() => {
             // subscribe for tooltips
             // inspiration : https://github.com/chaika2013/ide-haskell
             var editorView = $(atom.views.getView(editor));
-            new Tooltip(editorView, editor);
-        });
+            var tooltip = editor['__omniTooltip'] = new Tooltip(editorView, editor);
+
+            editor.onDidDestroy(() => {
+                editor['__omniTooltip'] = null;
+                tooltip.dispose();
+            });
+        })));
+
+        this.disposable.add(Omni.addTextEditorCommand("omnisharp-atom:type-lookup", () => {
+            Omni.activeEditor.first().subscribe(editor => {
+                var tooltip = <Tooltip>editor['__omniTooltip'];
+                tooltip.showExpressionTypeOnCommand();
+            })
+        }));
+    }
+
+    public dispose() {
+        this.disposable.dispose();
     }
 }
 
-class Tooltip implements rx.Disposable {
+class Tooltip implements Rx.Disposable {
 
     private exprTypeTimeout = null;
     private exprTypeTooltip: TooltipView = null;
     private rawView: any;
-    private disposable: rx.Disposable;
+    private disposable: Rx.Disposable;
 
     constructor(private editorView: JQuery, private editor: Atom.TextEditor) {
         this.rawView = editorView[0];
@@ -39,11 +55,11 @@ class Tooltip implements rx.Disposable {
         // to debounce mousemove event's firing for some reason on some machines
         var lastExprTypeBufferPt: any;
 
-        var mousemove = rx.Observable.fromEvent<MouseEvent>(scroll[0], 'mousemove');
-        var mouseout = rx.Observable.fromEvent<MouseEvent>(scroll[0], 'mouseout');
-        var keydown = rx.Observable.fromEvent<KeyboardEvent>(scroll[0], 'keydown');
+        var mousemove = Observable.fromEvent<MouseEvent>(scroll[0], 'mousemove');
+        var mouseout = Observable.fromEvent<MouseEvent>(scroll[0], 'mouseout');
+        var keydown = Observable.fromEvent<KeyboardEvent>(scroll[0], 'keydown');
 
-        var cd = this.disposable = new rx.CompositeDisposable();
+        var cd = this.disposable = new CompositeDisposable();
 
         cd.add(mousemove.subscribe((e) => {
             var pixelPt = this.pixelPositionFromMouseEvent(editorView, e)
@@ -60,16 +76,12 @@ class Tooltip implements rx.Disposable {
         cd.add(mouseout.subscribe((e) => this.clearExprTypeTimeout()));
         cd.add(keydown.subscribe((e) => this.clearExprTypeTimeout()));
 
-        editor.onDidDestroy(() => this.dispose());
-
-        omnisharpAtom.addCommand("omnisharp-atom:type-lookup", () => {
-            this.showExpressionTypeOnCommand();
-        })
-
-        atom.workspace.onDidChangeActivePaneItem((activeItem) => this.hideExpressionType());
+        cd.add(Omni.activeEditor.subscribe((activeItem) => {
+            this.hideExpressionType();
+        }));
     }
 
-    private showExpressionTypeOnCommand() {
+    public showExpressionTypeOnCommand() {
         if (this.editor.cursors.length < 1) return;
 
         var buffer = this.editor.getBuffer();
@@ -92,7 +104,7 @@ class Tooltip implements rx.Disposable {
     }
 
     private showExpressionTypeOnMouseOver(e: MouseEvent) {
-        if (!ClientManager.connected) {
+        if (!Omni.isOn) {
             return;
         }
 
@@ -134,25 +146,25 @@ class Tooltip implements rx.Disposable {
         // characterIndexForPosition should return a number
         //var position = buffer.characterIndexForPosition(bufferPt);
         // Actually make the program manager query
-        ClientManager.getClientForActiveEditor()
-            .flatMap(client => client.typelookup({
-                IncludeDocumentation: true,
-                Line: bufferPt.row + 1,
-                Column: bufferPt.column + 1,
-                FileName: this.editor.getURI()
-            })).subscribe((response: OmniSharp.Models.TypeLookupResponse) => {
-                if (response.Type === null) {
-                    return;
-                }
-                var message = `<b>${escape(response.Type) }</b>`;
-                if (response.Documentation) {
-                    message = message + `<br/><i>${escape(response.Documentation) }</i>`;
-                }
-                // Sorry about this "if". It's in the code I copied so I guess its there for a reason
-                if (this.exprTypeTooltip) {
-                    this.exprTypeTooltip.updateText(message);
-                }
-            });
+
+        Omni.request(client => client.typelookup({
+            IncludeDocumentation: true,
+            Line: bufferPt.row + 1,
+            Column: bufferPt.column + 1,
+            FileName: this.editor.getURI()
+        })).subscribe((response: OmniSharp.Models.TypeLookupResponse) => {
+            if (response.Type === null) {
+                return;
+            }
+            var message = `<b>${escape(response.Type) }</b>`;
+            if (response.Documentation) {
+                message = message + `<br/><i>${escape(response.Documentation) }</i>`;
+            }
+            // Sorry about this "if". It's in the code I copied so I guess its there for a reason
+            if (this.exprTypeTooltip) {
+                this.exprTypeTooltip.updateText(message);
+            }
+        });
     }
 
     public dispose() {
@@ -185,6 +197,8 @@ class Tooltip implements rx.Disposable {
         var linesClientRect = this.getFromShadowDom(editorView, '.lines')[0].getBoundingClientRect();
         var top = clientY - linesClientRect.top;
         var left = clientX - linesClientRect.left;
+        top += this.editor.displayBuffer.getScrollTop();
+        left += this.editor.displayBuffer.getScrollLeft();
         return { top: top, left: left };
     }
 
@@ -193,4 +207,4 @@ class Tooltip implements rx.Disposable {
     }
 }
 
-export = TypeLookup;
+export var typeLookup = new TypeLookup;

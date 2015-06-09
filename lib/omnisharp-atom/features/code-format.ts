@@ -1,34 +1,39 @@
+import {CompositeDisposable} from "rx";
 import Omni = require('../../omni-sharp-server/omni')
-import ClientManager = require('../../omni-sharp-server/client-manager');
 import Changes = require('./lib/apply-changes');
-import OmniSharpAtom = require('../omnisharp-atom')
 
-class CodeFormat {
+class CodeFormat implements OmniSharp.IFeature {
+    private disposable: Rx.CompositeDisposable;
 
     public activate() {
-        OmniSharpAtom.addCommand('omnisharp-atom:code-format',
+        this.disposable = new CompositeDisposable();
+        this.disposable.add(Omni.addTextEditorCommand('omnisharp-atom:code-format',
             () => {
                 var editor = atom.workspace.getActiveTextEditor();
                 if (editor) {
                     var buffer = editor.getBuffer();
-                    ClientManager.getClientForEditor(editor).subscribe(client => {
+                    Omni.request(editor, client => {
                         var request = <OmniSharp.Models.FormatRangeRequest>client.makeRequest();
                         request.Line = 1;
                         request.Column = 1;
                         request.EndLine = buffer.getLineCount();
                         request.EndColumn = 1;
 
-                        client
+                        return client
                             .formatRangePromise(request)
                             .then((data) => Changes.applyChanges(editor, data.Changes));
-                    })
+                    });
                 }
-            });
+            }));
 
-        OmniSharpAtom.addCommand('omnisharp-atom:code-format-on-semicolon',
-            (event) => this.formatOnKeystroke(event, ';'));
-        OmniSharpAtom.addCommand('omnisharp-atom:code-format-on-curly-brace',
-            (event) => this.formatOnKeystroke(event, '}'));
+        this.disposable.add(Omni.addTextEditorCommand('omnisharp-atom:code-format-on-semicolon',
+            (event) => this.formatOnKeystroke(event, ';')));
+        this.disposable.add(Omni.addTextEditorCommand('omnisharp-atom:code-format-on-curly-brace',
+            (event) => this.formatOnKeystroke(event, '}')));
+    }
+
+    public dispose() {
+        this.disposable.dispose();
     }
 
     private formatOnKeystroke(event: Event, char: string): any {
@@ -36,11 +41,11 @@ class CodeFormat {
         if (editor) {
             editor.insertText(char);
 
-            ClientManager.getClientForEditor(editor).subscribe(client => {
+            Omni.request(editor, client => {
                 var request = <OmniSharp.Models.FormatAfterKeystrokeRequest>client.makeRequest();
                 request.Character = char;
 
-                client.formatAfterKeystrokePromise(request)
+                return client.formatAfterKeystrokePromise(request)
                     .then((data) => Changes.applyChanges(editor, data.Changes));
             });
         }
@@ -50,4 +55,4 @@ class CodeFormat {
         return false;
     }
 }
-export = CodeFormat
+export var codeFormat = new CodeFormat

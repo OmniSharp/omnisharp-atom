@@ -1,26 +1,31 @@
 import _ = require('lodash')
+import {CompositeDisposable} from "rx";
 import RenameView = require('../views/rename-view')
-import Omni = require('../../omni-sharp-server/omni')
+import Omni = require('../../omni-sharp-server/omni');
 import Changes = require('./lib/apply-changes')
-import OmnisharpAtom = require('../omnisharp-atom');
 
-class Rename {
+class Rename implements OmniSharp.IFeature {
+    private disposable: Rx.CompositeDisposable;
+
     private renameView: RenameView
 
     public activate() {
+        this.disposable = new CompositeDisposable();
         this.renameView = new RenameView();
-        OmnisharpAtom.addCommand('omnisharp-atom:rename', (e) => {
+        this.disposable.add(Omni.addTextEditorCommand('omnisharp-atom:rename', (e) => {
             e.stopImmediatePropagation();
             e.stopPropagation();
             e.preventDefault();
             this.rename();
-        });
+        }));
 
-        Omni.registerConfiguration(client => {
-            client.observeRename.subscribe((data) => {
-                this.applyAllChanges(data.response.Changes);
-            })
-        });
+        this.disposable.add(Omni.listener.observeRename.subscribe((data) => {
+            this.applyAllChanges(data.response.Changes);
+        }));
+    }
+
+    public dispose() {
+        this.disposable.dispose();
     }
 
     public rename() {
@@ -41,4 +46,4 @@ class Rename {
         });
     }
 }
-export =  Rename
+export var rename = new Rename

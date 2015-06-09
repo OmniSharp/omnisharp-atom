@@ -1,10 +1,12 @@
 import _ = require('lodash')
 import path = require('path');
+import {Observable, AsyncSubject, RefCountDisposable, Disposable, CompositeDisposable, ReplaySubject, Scheduler} from "rx";
 import Client = require('./client');
+import {ObservationClient, CombinationClient} from './composite-client';
 import {findCandidates, DriverState} from "omnisharp-client";
-import {Observable, AsyncSubject, RefCountDisposable, Disposable} from "rx";
 
 class ClientManager {
+    private _disposable = new CompositeDisposable;
     private _clients: { [path: string]: Client } = {};
     private _configurations: ((client: Client) => void)[] = [];
     private _projectClientPaths: { [key: string]: string[] } = {};
@@ -12,11 +14,36 @@ class ClientManager {
     private _projectPaths: string[] = [];
     private _activated = false;
     private _temporaryClients: { [path: string]: RefCountDisposable } = {};
+    private _nextIndex = 0;
 
-    public activate() {
+    public get activeClients() { return this._activeClients }
+    private _activeClients: Client[] = [];
+
+    // this client can be used to observe behavior across all clients.
+    private _observationClient = new ObservationClient();
+    public get observationClient() { return this._observationClient; }
+
+    // this client can be used to aggregate behavior across all clients
+    private _combinationClient = new CombinationClient();
+    public get combinationClient() { return this._combinationClient; }
+
+    private _activeClient = new ReplaySubject<Client>(1);
+    private _activeClientObserable = this._activeClient.distinctUntilChanged();
+    public get activeClient(): Observable<Client> { return this._activeClientObserable; }
+
+    public activate(activeEditor: Observable<Atom.TextEditor>) {
         this._activated = true;
+
+        // monitor atom project paths
         this.updatePaths(atom.project.getPaths());
-        atom.project.onDidChangePaths((paths) => this.updatePaths(paths));
+        this._disposable.add(atom.project.onDidChangePaths((paths) => this.updatePaths(paths)));
+
+        // We use the active editor on omnisharpAtom to
+        // create another observable that chnages when we get a new client.
+        this._disposable.add(activeEditor
+            .where(z => !!z)
+            .flatMap(z => this.getClientForEditor(z))
+            .subscribe(x => this._activeClient.onNext(x)));
     }
 
     public connect() {
@@ -25,6 +52,10 @@ class ClientManager {
 
     public disconnect() {
         _.each(this._clients, x => x.disconnect());
+    }
+
+    public deactivate() {
+
     }
 
     public get connected() {
@@ -53,18 +84,22 @@ class ClientManager {
     }
 
     private addClient(candidate: string, localPaths: string[], delay = 1200, temporary?: boolean) {
+        if (this._clients[candidate])
+            return;
+
         localPaths.push(candidate);
         this._clientPaths.push(candidate);
 
         var client = new Client({
-            projectPath: candidate
+            projectPath: candidate,
+            index: ++this._nextIndex
         });
 
         _.each(this._configurations, config => config(client));
         this._clients[candidate] = client;
 
         if (temporary) {
-            var tempD = Disposable.create(() => {});
+            var tempD = Disposable.create(() => { });
             tempD.dispose();
             this._temporaryClients[candidate] = new RefCountDisposable(tempD);
         }
@@ -74,10 +109,24 @@ class ClientManager {
             _.delay(() => client.connect(), delay);
         }
 
+        this._activeClients.push(client);
+        if (this._activeClients.length === 1)
+            this._activeClient.onNext(client);
+        // keep track of the active clients
+        this._observationClient.add(client);
+        this._combinationClient.add(client);
+
+        client.state
+            .where(z => z === DriverState.Error)
+            .delay(100)
+            .subscribe(state => this.evictClient(client));
+
         return client;
     }
 
     private removeClient(candidate: string) {
+        var client = this._clients[candidate];
+
         var refCountDisposable = this._temporaryClients[candidate]
         if (refCountDisposable) {
             refCountDisposable.dispose();
@@ -85,16 +134,27 @@ class ClientManager {
                 return;
             }
 
-            delete this._temporaryClients[candidate];
+            this.evictClient(client);
         }
 
-        var client = this._clients[candidate];
-        delete this._clients[candidate];
+        // keep track of the removed clients
         client.disconnect();
-        _.pull(this._clientPaths, candidate);
     }
 
-    public getClientForActiveEditor() {
+    public evictClient(client: Client) {
+        if (client.currentState === DriverState.Connected || client.currentState === DriverState.Connecting) {
+            client.disconnect();
+        }
+
+        delete this._temporaryClients[client.path];
+        delete this._clients[client.path];
+        _.pull(this._clientPaths, client.path);
+        _.pull(this._activeClients, client);
+        this._observationClient.remove(client);
+        this._combinationClient.remove(client);
+    }
+
+    private getClientForActiveEditor() {
         var editor = atom.workspace.getActiveTextEditor();
         var client: Observable<Client>;
         if (editor)
@@ -134,17 +194,37 @@ class ClientManager {
         var p = (<any>editor).omniProject;
         // Not sure if we should just add properties onto editors...
         // but it works...
-        if (p && (client = Observable.just(this._clients[p]))) {
-            if (this._temporaryClients[p]) {
-                this.setupDisposableForTemporaryClient(p, editor);
-            }
+        if (p) {
+            if (this._clients[p]) {
+                var tempC = this._clients[p];
+                // If the client has disconnected, reconnect it
+                if (tempC.currentState === DriverState.Disconnected)
+                    tempC.connect();
 
-            return client;
+                // Client is in an invalid state
+                if (tempC.currentState === DriverState.Error) {
+                    return Observable.empty<Client>();
+                }
+
+                client = Observable.just(this._clients[p]);
+
+                if (this._temporaryClients[p]) {
+                    this.setupDisposableForTemporaryClient(p, editor);
+                }
+
+                return client;
+            }
         }
 
         var location = editor.getPath();
+        if (!location) {
+            // Text editor not saved yet?
+            return Observable.empty<Client>();
+        }
+        
         var [intersect, clientInstance] = this.getClientForUnderlyingPath(location, grammarName);
         p = (<any>editor).omniProject = intersect;
+
         if (this._temporaryClients[p]) {
             this.setupDisposableForTemporaryClient(p, editor);
         }
@@ -175,6 +255,15 @@ class ClientManager {
             if (csClient)
                 return [directory, csClient];
         } else {
+            var intersect = intersectPath(location, this._clientPaths);
+            if (intersect) {
+                return [intersect, this._clients[intersect]];
+            }
+        }
+
+        // Attempt to see if this file is part a clients solution
+        for (var client of this._activeClients) {
+            var paths = client.model.projects.map(z => path);
             var intersect = intersectPath(location, this._clientPaths);
             if (intersect) {
                 return [intersect, this._clients[intersect]];

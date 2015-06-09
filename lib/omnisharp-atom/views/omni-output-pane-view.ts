@@ -1,112 +1,53 @@
-import spacePenViews = require('atom-space-pen-views')
-var $ = spacePenViews.jQuery;
-var Convert = require('ansi-to-html')
-import Vue = require('vue')
+import {Disposable} from "rx";
+var Convert = require('ansi-to-html');
 import _ = require('lodash')
 import Omni = require('../../omni-sharp-server/omni')
+import React = require('react');
+import {ReactClientComponent} from "./react-client-component";
+import {world} from '../world';
 
-// Internal: A tool-panel view for the test result output.
-class OmniOutputPaneView extends spacePenViews.View {
-    private vm: { uninitialized: boolean; initialized: boolean; output: OmniSharp.VueArray<any> };
-    private convert: typeof Convert;
-
-    public static content() {
-        return this.div({
-            "class": 'omni-output-pane-view native-key-bindings',
-            "tabindex": '-1'
-        }, () => {
-                this.ul({
-                    "class": 'background-message centered',
-                    'v-class': 'hide: initialized'
-                }, () => {
-                        return this.li(() => {
-                            this.span('Omnisharp server is turned off');
-                            return this.kbd({
-                                "class": 'key-binding text-highlight'
-                            }, '⌃⌥O');
-                        });
-                    });
-                return this.div({
-                    "class": 'messages-container',
-                    'v-class': 'hide: uninitialized'
-                }, () => {
-                        return this.pre({
-                            'v-class': 'l.logLevel',
-                            'v-repeat': 'l :output'
-                        }, '{{{ l.message | ansi-to-html }}}');
-                    });
-            });
-    }
-
-    public initialize() {
-        var scrollToBottom;
-        scrollToBottom = _.throttle(() => {
-            var ref;
-            return (ref = this.find(".messages-container")[0].lastElementChild) != null ? ref.scrollIntoViewIfNeeded() : void 0;
-        }, 100);
-        Vue.filter('ansi-to-html', (value) => {
-            var v;
-            scrollToBottom();
-            if (this.convert == null) {
-                this.convert = new Convert();
-            }
-            v = this.convert.toHtml(value);
-            return v.trim();
-        });
-        var viewModel = new Vue({
-            el: this[0],
-            data: _.extend(Omni.vm, {
-                initialized: true,
-                output: []
-            })
-        });
-        this.vm = <any>viewModel;
-        atom.emitter.on("omni-sharp-server:out", (data) => {
-            if (this.vm.output.length >= 1000) {
-                this.vm.output.$remove(0);
-            }
-            return this.vm.output.push({
-                message: data.message,
-                logLevel: data.logLevel
-            });
-        });
-        atom.emitter.on("omni-sharp-server:err", (data) => {
-            if (this.vm.output.length >= 1000) {
-                this.vm.output.$remove(0);
-            }
-            return this.vm.output.push({
-                message: data.message,
-                logLevel: data.logLevel
-            });
-        });
-        atom.emitter.on("omni-sharp-server:stop", () => {
-            this.vm.output = <OmniSharp.VueArray<any>> [];
-            return this.vm.output.push({
-                message: "Omnisharp server stopped."
-            });
-        });
-
-        return atom.emitter.on("omni-sharp-server:start", (data) => {
-            this.vm.initialized = true;
-            this.vm.output = <OmniSharp.VueArray<any>> [];
-            this.vm.output.push({
-                message: "Starting OmniSharp server (pid:" + data.pid + ")"
-            });
-            this.vm.output.push({
-                message: "OmniSharp Location: " + data.exePath
-            });
-            this.vm.output.push({
-                message: "Change the location that OmniSharp is loaded from by setting the OMNISHARP environment variable"
-            });
-            this.vm.output.push({
-                message: "OmniSharp Path: " + data.path
-            });
-        });
-    }
-
-    destroy() {
-        this.detach()
-    }
+interface IOutputWindowState {
+    output: OmniSharp.OutputMessage[];
 }
 
-export = OmniOutputPaneView;
+export class OutputWindow<T> extends ReactClientComponent<T, IOutputWindowState>  {
+    public displayName = "OutputWindow";
+
+    private _convert;
+
+    constructor(props?: T, context?: any) {
+        super(props, context);
+        this._convert = new Convert();
+        this.state = { output: world.server.output };
+    }
+
+    public componentDidMount() {
+        super.componentDidMount();
+
+        this.disposable.add(world.observe.output
+            .subscribe(z => this.setState({ output: z }, () => this.scrollToBottom())));
+        _.defer(_.bind(this.scrollToBottom, this));
+    }
+
+    private scrollToBottom() {
+        var item = <any> React.findDOMNode(this).lastElementChild.lastElementChild;
+        if (item) item.scrollIntoViewIfNeeded();
+    }
+
+    private createItem(item: OmniSharp.OutputMessage, index: number) {
+        return React.DOM.pre({
+            key: index,
+            className: item.logLevel
+        }, this._convert.toHtml(item.message).trim());
+    }
+
+    public render() {
+        return React.DOM.div({
+            className: 'omni-output-pane-view native-key-bindings ' + (this.props['className'] || ''),
+            tabIndex: -1
+        },
+            React.DOM.div({
+                className: 'messages-container'
+            }, _.map(this.state.output, (item, index) => this.createItem(item, index))));
+    }
+}

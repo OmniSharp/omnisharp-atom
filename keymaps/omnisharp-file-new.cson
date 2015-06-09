@@ -1,0 +1,4 @@
+'.platform-win32 atom-text-editor:not([mini])[data-grammar~="cs"], .platform-win32 atom-text-editor:not([mini])[data-grammar~="csx"]':
+  'ctrl-n': 'advanced-new-file:toggle'
+':not(.platform-win32) atom-text-editor:not([mini])[data-grammar~="cs"], :not(.platform-win32) atom-text-editor:not([mini])[data-grammar~="csx"]':
+  'cmd-n': 'advanced-new-file:toggle'

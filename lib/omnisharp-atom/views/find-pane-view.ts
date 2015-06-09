@@ -1,98 +1,125 @@
-import spacePenViews = require('atom-space-pen-views')
-var $ = spacePenViews.jQuery;
-var Convert = require('ansi-to-html')
-import Vue = require('vue')
 import _ = require('lodash')
 import Omni = require('../../omni-sharp-server/omni')
+import React = require('react');
+import path = require('path');
+import $ = require('jquery');
+import {ReactClientComponent} from "./react-client-component";
+import {findUsages} from "../features/find-usages";
 
-// Internal: A tool-panel view for find usages/implementations
-class FindPaneView extends spacePenViews.View {
-    private vm: { usages: any[] };
-
-    public static content() {
-        return this.div({
-            "class": 'error-output-pane',
-            outlet: 'atomSharpFindPane'
-        }, () => {
-                this.ul({
-                    "class": 'background-message centered',
-                    'v-class': 'hide: isLoadingOrReady'
-                }, () => {
-                        return this.li(() => {
-                            this.span('Omnisharp server is turned off');
-                            return this.kbd({
-                                "class": 'key-binding text-highlight'
-                            }, '⌃⌥O');
-                        });
-                    });
-                this.ul({
-                    "class": 'background-message centered',
-                    'v-class': 'hide: isNotLoading'
-                }, () => {
-                        return this.li(() => {
-                            return this.progress({
-                                "class": 'inline-block'
-                            });
-                        });
-                    });
-                return this.table({
-                    "class": 'error-table',
-                    'v-class': 'hide: isNotReady'
-                }, () => {
-                        this.thead(() => {
-                            this.th('line');
-                            this.th('column');
-                            this.th('message');
-                            return this.th('filename');
-                        });
-                        return this.tbody(() => {
-                            var data;
-                            return this.tr({
-                                'v-repeat': 'usages',
-                                'v-on': 'click: gotoUsage'
-                            }, data = '{{$index}}', () => {
-                                    this.td('{{Line}}');
-                                    this.td('{{Column}}');
-                                    this.td('{{Text}}');
-                                    return this.td('{{FileName}}');
-                                });
-                        });
-                    });
-            });
+interface FindWindowState {
+    selectedIndex: number; usages?:
+    OmniSharp.Models.DiagnosticLocation[] ;
     }
 
-    public initialize() {
+interface FindWindowProps {
+    scrollTop: () => number;
+    setScrollTop: (scrollTop: number) => void;
+    findUsages: typeof findUsages;
+}
 
-        var viewModel = new Vue({
-            el: this[0],
-            data: _.extend(Omni.vm, {
-                usages: []
-            }),
-            methods: {
-                gotoUsage: (arg) => {
-                    var targetVM;
-                    targetVM = arg.targetVM;
-                    Omni.navigateTo(targetVM.$data);
-                }
-            }
-        });
-        this.vm = <any>viewModel;
+export class FindWindow extends ReactClientComponent<FindWindowProps, FindWindowState> {
+    public displayName = 'FindPaneWindow';
 
-        Omni.registerConfiguration(client => {
-            client.observeFindusages.subscribe((data) => {
-                this.vm.usages = data.response.QuickFixes;
-            });
+    private model: typeof findUsages;
 
-            client.observeFindimplementations.subscribe((data) => {
-                if (data.response.QuickFixes.length > 1) {
-                    this.vm.usages = data.response.QuickFixes;
-                }
-            });
-        });
+    constructor(props?: FindWindowProps, context?: any) {
+        super(props, context);
+        this.model = this.props.findUsages;
+        this.state = { usages: this.model.usages, selectedIndex: this.model.selectedIndex };
     }
 
-    public destroy() {
-        this.detach();
+    public componentWillMount() {
+        super.componentWillMount();
+        this.disposable.add(this.model.observe
+            .updated
+            .where(z => z.name !== "selectedIndex")
+            .subscribe(z => this.setState({
+                usages: this.model.usages,
+                selectedIndex: this.model.selectedIndex
+            })));
+
+        this.disposable.add(this.model.observe
+            .updated
+            .where(z => z.name === "selectedIndex")
+            .delay(0)
+            .subscribe(z => this.updateStateAndScroll()));
+    }
+
+    public componentDidMount() {
+        super.componentWillMount();
+
+        React.findDOMNode(this).scrollTop = this.props.scrollTop();
+        (<any>React.findDOMNode(this)).onkeydown = (e) => this.keydownPane(e);
+    }
+
+    public componentWillUnmount() {
+        super.componentWillUnmount();
+        (<any>React.findDOMNode(this)).onkeydown = undefined;
+    }
+
+    private updateStateAndScroll() {
+        this.setState({ selectedIndex: this.model.selectedIndex }, () => this.scrollToItemView());
+    }
+
+    private scrollToItemView() {
+        var self = $(React.findDOMNode(this));
+        var item = self.find(`li.selected`);
+        if (!item || !item.position()) return;
+
+        var pane = self;
+        var scrollTop = pane.scrollTop();
+        var desiredTop = item.position().top + scrollTop;
+        var desiredBottom = desiredTop + item.outerHeight();
+
+        if (desiredTop < scrollTop)
+            pane.scrollTop(desiredTop);
+        else if (desiredBottom > pane.scrollBottom())
+            pane.scrollBottom(desiredBottom);
+    }
+
+    private keydownPane(e: any) {
+        if (e.keyIdentifier == 'Down') {
+            atom.commands.dispatch(atom.views.getView(atom.workspace), "omnisharp-atom:next-usage");
+        }
+        else if (e.keyIdentifier == 'Up') {
+            atom.commands.dispatch(atom.views.getView(atom.workspace), "omnisharp-atom:previous-usage");
+        }
+        else if (e.keyIdentifier == 'Enter') {
+            atom.commands.dispatch(atom.views.getView(atom.workspace), "omnisharp-atom:go-to-usage");
+        }
+    }
+
+    private gotoUsage(quickfix: OmniSharp.Models.QuickFix, index: number) {
+        Omni.navigateTo(quickfix);
+        this.model.selectedIndex = index;
+    }
+
+    public render() {
+        return React.DOM.div({
+            className: 'error-output-pane ' + (this.props['className'] || ''),
+            onScroll: (e) => {
+                this.props.setScrollTop((<any>e.currentTarget).scrollTop);
+            },
+            tabIndex: -1,
+        },
+            React.DOM.ol({
+                style: { cursor: "pointer" },
+            }, ..._.map(this.state.usages, (usage: OmniSharp.Models.QuickFix, index) =>
+                React.DOM.li({
+                    key: index,
+                    className: 'find-usages' + (index === this.state.selectedIndex ? ' selected' : ''),
+                    onClick: (e) => this.gotoUsage(usage, index)
+                },
+                    React.DOM.pre({
+                        className: "text-highlight"
+                    }, usage.Text),
+                    React.DOM.pre({
+                        className: "inline-block"
+                    }, `${path.basename(usage.FileName) }(${usage.Line},${usage.Column})`),
+                    React.DOM.pre({
+                        className: "text-subtle inline-block"
+                    }, `${path.dirname(usage.FileName) }`)
+                    ))
+                ));
     }
 }
-export = FindPaneView;

@@ -1,11 +1,20 @@
 import _ = require('lodash');
 import {Observable} from 'rx';
 import {OmnisharpClient, DriverState, OmnisharpClientOptions} from "omnisharp-client";
+import ViewModel = require("./view-model");
 
-class Client extends  OmnisharpClient {
+class Client extends OmnisharpClient {
+    public model: ViewModel;
+    public logs: Observable<OmniSharp.OutputMessage>;
+    public path: string;
+    public index: number;
+
     constructor(options: OmnisharpClientOptions) {
         super(options);
         this.configureClient();
+        this.model = new ViewModel(this);
+        this.path = options.projectPath;
+        this.index = options['index'];
     }
 
     public toggle() {
@@ -14,11 +23,23 @@ class Client extends  OmnisharpClient {
             this.connect({
                 projectPath: path
             });
-            atom.emitter.emit("omni-sharp-server:start", { pid: this.id, path: this.projectPath, exePath: this.serverPath});
         } else {
             this.disconnect();
-            atom.emitter.emit("omni-sharp-server:stop");
         }
+    }
+
+    public connect(options?) {
+        super.connect(options);
+
+        this.log("Starting OmniSharp server (pid:" + this.id + ")");
+        this.log("OmniSharp Location: " + this.serverPath);
+        this.log("Change the location that OmniSharp is loaded from by setting the OMNISHARP environment variable");
+        this.log("OmniSharp Path: " + this.projectPath);
+    }
+
+    public disconnect() {
+        super.disconnect();
+        this.log("Omnisharp server stopped.");
     }
 
     public getEditorContext(editor: Atom.TextEditor): OmniSharp.Models.Request {
@@ -60,27 +81,10 @@ class Client extends  OmnisharpClient {
     }
 
     private configureClient() {
-        this.events.subscribe(event => {
-
-            if (event.Type === "error") {
-                atom.emitter.emit("omni-sharp-server:err", {
-                    message: event.Body && event.Body.Message || event.Event || '',
-                    logLevel: event.Body && event.Body.LogLevel || 'ERROR'
-                });
-            } else {
-                atom.emitter.emit("omni-sharp-server:out", {
-                    message: event.Body && event.Body.Message || event.Event || '',
-                    logLevel: event.Body && event.Body.LogLevel || 'INFORMATION'
-                });
-
-                if (typeof(event.Event) !== "undefined" && event.Event !== "unknown") {
-                    atom.emitter.emit("omni-sharp-server:event", {
-                        Event: event.Event,
-                        Body: event.Body
-                    });
-                }
-            }
-        });
+        this.logs = this.events.map(event => ({
+            message: event.Body && event.Body.Message || event.Event || '',
+            logLevel: event.Body && event.Body.LogLevel || (event.Type === "error" && 'ERROR') || 'INFORMATION'
+        }));
 
         this.errors.subscribe(exception => {
             console.error(exception);
@@ -93,13 +97,19 @@ class Client extends  OmnisharpClient {
         });
     }
 
-    public request<TRequest, TResponse>(action: string, request?: TRequest): Rx.Observable<TResponse> {
+    public request<TRequest, TResponse>(action: string, request?: TRequest, options?: OmniSharp.RequestOptions): Rx.Observable<TResponse> {
         // Custom property that we set inside make request if the editor is no longer active.
         if (request['abort']) {
             return Observable.empty<TResponse>();
         }
-        return OmnisharpClient.prototype.request.call(this, action, request);
+        return OmnisharpClient.prototype.request.call(this, action, request, options);
     }
 }
 
 export = Client;
+
+// Hack to workaround issue with ts.transpile not working correctly
+(function(Client: any) {
+    Client.connect = Client.prototype.connect;
+    Client.disconnect = Client.prototype.disconnect;
+})(OmnisharpClient);

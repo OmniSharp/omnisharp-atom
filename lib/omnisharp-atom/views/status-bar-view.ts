@@ -1,99 +1,168 @@
-import spacePenViews = require('atom-space-pen-views')
-var $ = spacePenViews.jQuery;
-import Vue = require('vue')
-import Omni = require('../../omni-sharp-server/omni');
+import {CompositeDisposable, Disposable, Scheduler} from "rx";
 import _ = require('lodash');
+import Omni = require('../../omni-sharp-server/omni')
+import Client = require('../../omni-sharp-server/client');
+import React = require('react');
+import {ReactClientComponent} from "./react-client-component";
+import {world, server, solutionInformation} from '../world';
 
-class StatusBarView extends spacePenViews.View {
-    private vm;
+interface StatusBarState {
+    errorCount?: number;
+    warningCount?: number;
+    projects?: typeof server.projects;
+    isOff?: boolean;
+    isConnecting?: boolean;
+    isOn?: boolean;
+    isReady?: boolean;
+    isError?: boolean;
+    status?: typeof server.status;
+}
 
-    constructor(...args: any[]) {
-        super(args[0]);
+class StatusBarComponent extends ReactClientComponent<{}, StatusBarState> {
+
+    constructor(props?: {}, context?: any) {
+        super(props, context);
+        this.state = {
+            errorCount: 0,
+            warningCount: 0,
+            projects: server.projects,
+            isOff: world.isOff,
+            isConnecting: world.isConnecting,
+            isOn: world.isOn,
+            isReady: world.isReady,
+            isError: world.isError,
+            status: server.status || <any>{}
+        };
     }
 
-    // Internal: Initialize test-status status bar view DOM contents.
-    public static content() {
-        // space-pen.d.ts is not working correctly...
-        return this.div({
-            'class': 'inline-block'
-        }, () => {
-            this.a({
-                href: '#',
-                'v-on': 'click: toggle',
-                outlet: 'omni-meter',
-                "class": 'omnisharp-atom-button'
-            }, () => {
-                    this.span({
-                        "class": 'icon icon-flame',
-                        'v-class': 'text-subtle: isOff, text-success: isReady, text-error: isError, icon-flame-loading: isLoading'
-                    }, '{{iconText}}');
+    public componentWillMount() {
+        super.componentWillMount();
+
+        this.disposable.add(world.observe.diagnostics.subscribe(diagnostics => {
+            var counts = _.countBy(diagnostics, quickFix => quickFix.LogLevel);
+            this.setState({
+                errorCount: counts['Error'] || 0,
+                warningCount: counts['Warning'] || 0
             });
-            return this.a({
-                href: '#',
-                'v-on': 'click: toggleErrorWarningPanel',
-                'class': 'inline-block error-warning-summary',
-                'v-class': 'hide: isNotReady'
-            }, () => {
-                this.span({
-                    'class': 'icon icon-issue-opened'
-                });
-                this.span({
-                    'class': 'error-summary'
-                }, '{{errorCount}}');
-                this.span({
-                    'class': 'icon icon-alert'
-                });
-                this.span({
-                    'class': 'warning-summary'
-                }, '{{warningCount}}');
-            });
-        });
+        }));
+
+        this.disposable.add(world.observe.updates.bufferWithTime(50)
+            .subscribe(items => {
+                var updates = _(items)
+                    .filter(item => _.contains(['isOff', 'isConnecting', 'isOn', 'isReady', 'isError'], item.name))
+                    .value();
+
+                if (updates.length) {
+                    var update = {};
+                    _.each(updates, item => {
+                        update[item.name] = world[item.name];
+                    })
+                    this.setState(update);
+                }
+            }));
+
+        this.disposable.add(server.observe.projects
+            .subscribe(projects => this.setState({ projects })));
+
+        this.disposable.add(server.observe.status
+            .subscribe(status => this.setState({ status })));
+        this.disposable.add(server.observe.model
+            .subscribe(status => this.setState({})));
+
+        this.disposable.add(solutionInformation.observe.solutions
+            .subscribe(solutions => this.setState({})));
     }
 
-    // Internal: Initialize the status bar view and event handlers.
-    public initialize(statusBar) {
-        var viewModel = new Vue({
-            el: this[0],
-            data: _.extend(Omni.vm, { errorCount: 0, warningCount: 0 }),
-            methods: {
-                toggle: () => this.toggleView(),
-                toggleErrorWarningPanel: () => this.toggleErrorWarningPanel()
-            }
-        });
-        this.vm = <any>viewModel;
-        statusBar.addLeftTile({
-            item: this,
-            priority: -1000
-        });
-        Omni.registerConfiguration(client => {
-            client.observeCodecheck
-                .where(z => z.request.FileName === null)
-                .subscribe((data) => {
-                    var counts = _.countBy(data.response.QuickFixes, (quickFix: OmniSharp.Models.DiagnosticLocation) => quickFix.LogLevel);
-                    this.vm.errorCount = counts['Error'] || 0;
-                    this.vm.warningCount = (counts['Warning'] || 0);
-                });
-        });
+    private getIconClassName() {
+        var cls = ["icon", "icon-flame"];
+
+        if (!this.state.isOff)
+            cls.push('text-subtle');
+
+        if (this.state.isReady)
+            cls.push('text-success')
+
+        if (this.state.isError)
+            cls.push('text-error')
+
+        if (this.state.isConnecting)
+            cls.push('icon-flame-loading')
+        else if (this.state.status.hasOutgoingRequests)
+            cls.push('icon-flame-processing')
+
+        return cls.join(' ');
     }
 
-    public toggleView() {
-        atom.commands.dispatch(atom.views.getView(atom.workspace), 'omnisharp-atom:toggle-output');
-        return this.vm.isOpen = !this.vm.isOpen;
+    public toggle() {
+        atom.commands.dispatch(atom.views.getView(atom.workspace), 'omnisharp-atom:toggle-dock');
     }
 
     public toggleErrorWarningPanel() {
         atom.commands.dispatch(atom.views.getView(atom.workspace), 'omnisharp-atom:toggle-errors');
     }
 
-    public turnOffIcon() {
-      return this.find('.icon-flame').removeClass("text-success");
+    public toggleSolutionInformation() {
+        atom.commands.dispatch(atom.views.getView(atom.workspace), 'omnisharp-atom:solution-status');
     }
 
-    //Returns nothing.
-    public destroy() {
-        return this.detach();
+    public render() {
+        var hasClientAndIsOn = this.state.isOn;
+
+        var children = [];
+
+        children.push(
+            React.DOM.a({
+                href: '#',
+                className: "omnisharp-atom-button",
+                onClick: (e) => this.toggle()
+            },
+                React.DOM.span({
+                    className: this.getIconClassName()
+                }),
+                React.DOM.span({
+                    className: 'outgoing-requests' + (!this.state.status.hasOutgoingRequests ? ' fade' : '')
+                }, this.state.status.outgoingRequests || '0'))
+            );
+
+        if (hasClientAndIsOn) {
+            var solutionNumber = solutionInformation.solutions.length > 1 ? _.trim(server.model && (<any>server.model).index, 'client') : '';
+
+            children.push(
+                React.DOM.a({
+                    href: '#',
+                    className: 'inline-block error-warning-summary',
+                    onClick: (e) => this.toggleErrorWarningPanel()
+                },
+                    React.DOM.span({
+                        className: 'icon icon-issue-opened'
+                    }),
+                    React.DOM.span({
+                        className: 'error-summary'
+                    }, this.state.errorCount),
+                    React.DOM.span({
+                        className: 'icon icon-alert'
+                    }),
+                    React.DOM.span({
+                        className: 'warning-summary'
+                    }, this.state.warningCount)));
+
+            children.push(React.DOM.a({
+                className: "inline-block project-summary projects-icon",
+                onClick: (e) => this.toggleSolutionInformation()
+            },
+                React.DOM.span({
+                    className: "icon icon-pulse"
+                },
+                    React.DOM.sub({}, solutionNumber)),
+                React.DOM.span({
+                    className: "projects"
+                }, `${this.state.projects.length} Projects`)));
+        }
+
+
+        return React.DOM.div({ className: "inline-block" }, ...children);
     }
 
 }
 
-export = StatusBarView
+export = StatusBarComponent

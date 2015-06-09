@@ -26,11 +26,14 @@
     "semver/semver.d.ts": {
       "commit": "437e1f1f2e0d229a94ee766d128f8550f462274b"
     },
-    "vue/vue.d.ts": {
-      "commit": "437e1f1f2e0d229a94ee766d128f8550f462274b"
-    },
     "jasmine/jasmine.d.ts": {
       "commit": "954c64c100478ebb0b3cd1d9949237c2ee6c2a9d"
+    },
+    "chai/chai.d.ts": {
+      "commit": "c2b70ba731a485968fa3e0561a32652f59787015"
+    },
+    "react/react.d.ts": {
+      "commit": "c2b70ba731a485968fa3e0561a32652f59787015"
     }
   }
 }

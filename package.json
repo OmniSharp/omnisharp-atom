@@ -1,7 +1,7 @@
 {
   "name": "omnisharp-atom",
   "main": "./lib/omnisharp-atom/omnisharp-atom",
-  "version": "0.7.0",
+  "version": "0.12.3",
   "description": "Brings the wonderful OmniSharp server to powercharge Atom's C# development experience",
   "keywords": [
     "c#",
@@ -66,25 +66,24 @@
     "del": "^1.1.1",
     "escape-html": "^1.0.1",
     "event-kit": "0.7.2",
+    "font-awesome": "^4.3.0",
     "fs-plus": "^2.3.1",
     "fuzzaldrin": "^2.1.0",
-    "generator-aspnet": "0.0.34",
+    "generator-aspnet": "0.0.35",
     "glob": "^5.0.5",
     "gulp": "^3.8.11",
     "gulp-util": "^3.0.4",
     "jquery": "^2.1.1",
     "lodash": "^3.6.0",
     "merge-stream": "^0.1.7",
-    "omnisharp-client": "^1.4.2",
+    "omnisharp-client": "^1.4.18",
+    "react": "^0.13.3",
     "request-promise": "~0.1.2",
     "rx": "^2.5.2",
     "semver": "^4.2.0",
     "through2": "^0.6.5",
     "tsd": "~0.6.0-beta.5",
-    "typescript": "^1.5.0-beta",
-    "vue": "~0.10.6",
-    "yeoman-environment": "^1.2.5",
-    "yo": "^1.4.6"
+    "typescript": "^1.5.0-beta"
   },
   "consumedServices": {
     "status-bar": {
@@ -106,14 +105,10 @@
       }
     }
   },
-  "devDependencies": {
-    "coffeelint": "^1.6.0",
-    "grunt-coffeelint": "0.0.13",
-    "grunt-contrib-watch": "^0.6.1"
-  },
   "package-dependencies": {
     "language-csharp": ">=0.3.0",
     "linter": ">=0.12.0",
-    "atom-yeoman": ">=0.1.5"
+    "atom-yeoman": ">=0.3.0",
+    "advanced-new-file": ">=0.4.3"
   }
 }

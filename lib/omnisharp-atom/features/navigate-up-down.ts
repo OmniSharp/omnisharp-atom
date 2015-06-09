@@ -1,40 +1,39 @@
-import ClientManager = require('../../omni-sharp-server/client-manager');
+import {CompositeDisposable} from "rx";
 import Omni = require('../../omni-sharp-server/omni')
-import OmniSharpAtom = require('../omnisharp-atom');
 
-class Navigate {
-    private disposable: { dispose: () => void; };
+class Navigate implements OmniSharp.IFeature {
+    private disposable: Rx.CompositeDisposable;
+
+    public activate() {
+        this.disposable = new CompositeDisposable();
+
+        this.disposable.add(Omni.addTextEditorCommand("omnisharp-atom:navigate-up", () => {
+            return this.navigateUp();
+        }));
+
+        this.disposable.add(Omni.addTextEditorCommand("omnisharp-atom:navigate-down", () => {
+            return this.navigateDown();
+        }));
+
+        this.disposable.add(Omni.listener.observeNavigateup.subscribe((data) => this.navigateTo(data.response)));
+        this.disposable.add(Omni.listener.observeNavigatedown.subscribe((data) => this.navigateTo(data.response)));
+    }
+
+    public dispose() {
+        this.disposable.dispose();
+    }
 
     public navigateUp() {
-        ClientManager.getClientForActiveEditor().subscribe(client => client.navigateup(client.makeRequest()));
+        Omni.request(client => client.navigateup(client.makeRequest()));
     }
 
     public navigateDown() {
-        ClientManager.getClientForActiveEditor().subscribe(client => client.navigatedown(client.makeRequest()));
-    }
-
-    public activate() {
-        OmniSharpAtom.addCommand("omnisharp-atom:navigate-up", () => {
-            return this.navigateUp();
-        });
-
-        OmniSharpAtom.addCommand("omnisharp-atom:navigate-down", () => {
-            return this.navigateDown();
-        });
-
-        Omni.registerConfiguration(client => {
-            client.observeNavigateup.subscribe((data) => this.navigateTo(data.response));
-            client.observeNavigatedown.subscribe((data) => this.navigateTo(data.response));
-        });
+        Omni.request(client => client.navigatedown(client.makeRequest()));
     }
 
     private navigateTo(data: OmniSharp.Models.NavigateResponse) {
         var editor = atom.workspace.getActiveTextEditor();
         Omni.navigateTo({ FileName: editor.getURI(), Line: data.Line, Column: data.Column });
     }
-
-    public deactivate() {
-        this.disposable.dispose()
-    }
 }
-export = Navigate;
+export var navigate = new Navigate;
