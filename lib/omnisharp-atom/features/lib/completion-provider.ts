@@ -49,7 +49,7 @@ var autoCompleteOptions = <OmniSharp.Models.AutoCompleteRequest>{
     WantReturnType: true
 };
 
-
+let _isComplete = false;
 let _disposable: CompositeDisposable;
 let _initialized = false;
 
@@ -65,11 +65,11 @@ let _cacheClearOnForce = new Subject<RequestOptions>();
 
 // Only issue new requests when ever a cache change event occurs.
 let _requestStream = Observable.merge(_clearCacheOnDot, _clearCacheOnBufferMovement, _cacheClearOnForce)
-    // This covers us incase both return the same value.
+// This covers us incase both return the same value.
     .distinctUntilChanged(z => z, (z, y) => z === y)
-    // Make the request
+// Make the request
     .flatMapLatest(options => Omni.request(client => client.autocomplete(client.makeDataRequest(autoCompleteOptions))))
-    // Ensure the array is not null;
+// Ensure the array is not null;
     .map(completions => completions || [])
     .share();
 
@@ -188,6 +188,9 @@ function renderIcon(item) {
 function getSuggestions(options: RequestOptions): Rx.IPromise<Suggestion[]> {
     if (!_initialized) setupSubscriptions();
 
+    if (_isComplete)
+        return;
+
     onNext(options);
 
     var buffer = options.editor.getBuffer();
@@ -228,5 +231,6 @@ export var CompletionProvider = {
     getSuggestions,
     //getSuggestions: _.throttle(getSuggestions, 0),
     onDidInsertSuggestion,
-    dispose
+    dispose,
+    isComplete: (complete) => _isComplete = complete
 }
