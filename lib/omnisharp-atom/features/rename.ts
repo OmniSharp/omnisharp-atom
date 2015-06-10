@@ -31,18 +31,18 @@ class Rename implements OmniSharp.IFeature {
 
     public rename() {
         var editor = atom.workspace.getActiveTextEditor();
-        var disposable = new CompositeDisposable();
-
-
-        var cancel = () => {
-            disposable.dispose();
-        }
-
-        var confirm = () => {
-            disposable.dispose();
-        }
 
         if (editor) {
+            var disposable = new CompositeDisposable();
+
+            var cancel = () => {
+                disposable.dispose();
+            }
+
+            var confirm = () => {
+                disposable.dispose();
+            }
+
             var currentCursors = editor.getCursors().map(z => z.getMarker());
             var newCursors: Atom.Cursor[];
             var promise = Omni.request(client => client.findusages(client.makeRequest(), { silent: true }))
@@ -73,17 +73,15 @@ class Rename implements OmniSharp.IFeature {
 
                     disposable.add(Disposable.create(() => {
                         editor.clearSelections();
-                        editor.getCursors().forEach(cursor => editor.removeCursor(cursor));
-                        _.each(currentCursors, x => editor.addCursor(x));
+                        //editor.getCursors().forEach(cursor => editor.removeCursor(cursor));
+                        //_.each(currentCursors, x => editor.addCursor(x));
                     }));
 
-                    return fixes;
-                }).then(fixes => {
                     _.each(fixes, fix => {
                         var {cursor, position} = fix;
 
                         cursor.setVisible(true);
-                        disposable.add(cursor.onDidChangePosition((e) => {
+                        /*disposable.add(cursor.onDidChangePosition((e) => {
                             if (e.newBufferPosition.row !== position.Line) {
                                 cancel();
                             }
@@ -94,7 +92,7 @@ class Rename implements OmniSharp.IFeature {
                                 }
 
                             }
-                        }));
+                        }));*/
                     });
 
                     disposable.add(atom.commands.add("atom-text-editor", "core:confirm", confirm));
