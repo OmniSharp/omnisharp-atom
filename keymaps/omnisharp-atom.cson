@@ -40,6 +40,7 @@
   'ctrl-n': 'advanced-new-file:toggle'
   'cmd-n': 'advanced-new-file:toggle'
   'ctrl-space': 'omnisharp-atom:signature-help'
+  'cmd-space': 'omnisharp-atom:signature-help'
 
 '.platform-darwin atom-text-editor:not([mini])[data-grammar~="cs"], atom-text-editor:not([mini])[data-grammar~="csx"]':
   'cmd-d': 'omnisharp-atom:go-to-definition'
