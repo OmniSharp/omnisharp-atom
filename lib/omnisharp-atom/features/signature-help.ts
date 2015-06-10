@@ -1,34 +1,35 @@
 import ClientManager = require('../../omni-sharp-server/client-manager');
+import {CompositeDisposable, Subject, Observable} from "rx";
 import OmniSharpAtom = require('../omnisharp-atom');
 import Omni = require('../../omni-sharp-server/omni')
 import SignatureHelpView = require('../views/signature-help-view');
+import SpacePen = require('atom-space-pen-views');
 
 
-class SignatureHelp {
+class SignatureHelp implements OmniSharp.IFeature {
+    private disposable: CompositeDisposable;
+    private view: SpacePen.View;
 
-    private view;
 
     public activate() {
-        OmniSharpAtom.addCommand("omnisharp-atom:signature-help", () => {
+        this.disposable = new CompositeDisposable();
 
-            ClientManager.getClientForActiveEditor()
-                .subscribe(client => {
-                    client.signatureHelpPromise(client.makeRequest());
-                });
+        this.disposable.add(Omni.addTextEditorCommand("omnisharp-atom:signature-help", () => {
+            console.log("RUNNING");
 
-        });
+            Omni.request(client => client.signatureHelp(client.makeRequest()))
+        }));
 
-        Omni.registerConfiguration(client => {
-            client.observeSignatureHelp.subscribe((data) => {
-                console.log(data);
+        this.disposable.add(Omni.listener.observeSignatureHelp.subscribe((data) => {
+            console.log("sup");
+            this.view = new SignatureHelpView(data.response.Signatures);
+        }));
 
-                this.view = new SignatureHelpView(data.response.Signatures);
+    }
 
-            });
-        });
-
-
+    public dispose() {
+        this.disposable.dispose();
     }
 }
 
-export = SignatureHelp;
+export var signatureHelp = new SignatureHelp;
