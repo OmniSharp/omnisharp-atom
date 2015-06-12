@@ -276,6 +276,28 @@ class OmniSharpAtom {
             description: 'Shows kinds with unique icons rather than autocomplete default styles.',
             type: 'boolean',
             default: true
+        },
+        autoAdjustTreeView: {
+            title: 'Adjust the tree view to match the solution root.',
+            descrption: 'This will automatically adjust the treeview to be the root of the solution.',
+            type: 'boolean',
+            default: false
+        },
+        nagAdjustTreeView: {
+            title: 'Show the notifications to Adjust the tree view',
+            type: 'boolean',
+            default: true
+        },
+        autoAddExternalProjects: {
+            title: 'Add external projects to the tree view.',
+            descrption: 'This will automatically add external sources to the tree view.\n External sources are any projects that are loaded outside of the solution root.',
+            type: 'boolean',
+            default: false
+        },
+        nagAddExternalProjects: {
+            title: 'Show the notifications to add or remove external projects',
+            type: 'boolean',
+            default: true
         }
     }
 }

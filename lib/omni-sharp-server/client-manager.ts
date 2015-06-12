@@ -288,6 +288,8 @@ class ClientManager {
             var csClient = this._clients[directory];
             if (csClient)
                 return [directory, csClient];
+
+            return [null, null];
         } else {
             var intersect = intersectPath(location, this._clientPaths);
             if (intersect) {
