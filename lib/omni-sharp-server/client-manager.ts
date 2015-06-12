@@ -7,10 +7,11 @@ import {findCandidates, DriverState} from "omnisharp-client";
 
 class ClientManager {
     private _disposable: CompositeDisposable;
-    private _clients: { [path: string]: Client } = {};
     private _configurations: ((client: Client) => void)[] = [];
-    private _projectClientPaths: { [key: string]: string[] } = {};
-    private _clientPaths: string[] = [];
+
+    private _clients: WeakMap<string, Client>;
+    private _clientPaths: Set<string>;
+
     private _projectPaths: string[] = [];
     private _clientProjectPaths: string[] = [];
     private _activated = false;
@@ -80,9 +81,8 @@ class ClientManager {
         var observablePaths = addedPaths
             .filter(project => !_.any(this._activeClients, client => _.any(client.model.projects, p => p.path === project)))
             .map(project => {
-                var localPaths = this._projectClientPaths[project] = [];
                 return findCandidates(project, console)
-                    .flatMap(candidates => addCandidatesInOrder(candidates, candidate => this.addClient(candidate, localPaths, { project })));
+                    .flatMap(candidates => addCandidatesInOrder(candidates, candidate => this.addClient(candidate, { project })));
             });
 
         this._activeSearch = this._activeSearch
@@ -91,7 +91,7 @@ class ClientManager {
         this._projectPaths = paths;
     }
 
-    private addClient(candidate: string, localPaths: string[], {delay = 1200, temporary = false, project}: { delay?: number; temporary?: boolean; project?: string; }) {
+    private addClient(candidate: string, {delay = 1200, temporary = false, project}: { delay?: number; temporary?: boolean; project?: string; }) {
         if (this._clients[candidate])
             return Observable.just(this._clients[candidate]);
 
@@ -102,7 +102,6 @@ class ClientManager {
             }
         }
 
-        localPaths.push(candidate);
         this._clientPaths.push(candidate);
 
         var client = new Client({
@@ -312,10 +311,6 @@ class ClientManager {
     private findClientForUnderlyingPath(location: string, grammar?: string): Observable<[string, Client, boolean]> {
         var directory = path.dirname(location);
         var project = intersectPath(directory, this._projectPaths);
-        var localPaths: string[];
-        if (project)
-            localPaths = this._projectClientPaths[project] = [];
-
         var subject = new AsyncSubject<[string, Client, boolean]>();
 
         var cb = (candidates: string[]) => {
@@ -338,7 +333,7 @@ class ClientManager {
             }
 
             var newCandidates = _.difference(candidates, this._clientPaths);
-            this._activeSearch.then(() => addCandidatesInOrder(newCandidates, candidate => this.addClient(candidate, localPaths || [], { delay: 0, temporary: !project }))
+            this._activeSearch.then(() => addCandidatesInOrder(newCandidates, candidate => this.addClient(candidate, { delay: 0, temporary: !project }))
                 .subscribeOnCompleted(() => {
                     // Attempt to see if this file is part a clients solution
                     for (var client of this._activeClients) {
