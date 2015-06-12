@@ -1,7 +1,7 @@
 import _ = require('lodash');
 import {Observable} from 'rx';
 import {OmnisharpClient, DriverState, OmnisharpClientOptions} from "omnisharp-client";
-import ViewModel = require("./view-model");
+import {ViewModel} from "./view-model";
 
 class Client extends OmnisharpClient {
     public model: ViewModel;

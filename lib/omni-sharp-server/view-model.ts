@@ -2,20 +2,23 @@ import * as _ from "lodash";
 import Client = require('./client');
 import {DriverState, OmnisharpClientStatus} from "omnisharp-client";
 import {Observable, Subject} from "rx";
-import {basename} from "path";
+import {basename, dirname} from "path";
 
-class ProjectViewModel implements OmniSharp.IProjectViewModel {
+export class ProjectViewModel implements OmniSharp.IProjectViewModel {
+    public path: string;
+
     constructor(
         public name: string,
-        public path: string,
+        path: string,
         public frameworks: string[] = [],
         public configurations: string[] = [],
         public commands: { [key: string]: string } = <any>{}
         ) {
+            this.path = dirname(path);
     }
 }
 
-class ViewModel {
+export class ViewModel {
     public isOff: boolean;
     public isConnecting: boolean;
     public isOn: boolean;
@@ -256,5 +259,3 @@ class ViewModel {
         return context;
     }
 }
-
-export = ViewModel;

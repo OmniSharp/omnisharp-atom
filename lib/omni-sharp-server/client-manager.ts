@@ -6,15 +6,17 @@ import {ObservationClient, CombinationClient} from './composite-client';
 import {findCandidates, DriverState} from "omnisharp-client";
 
 class ClientManager {
-    private _disposable = new CompositeDisposable;
+    private _disposable: CompositeDisposable;
     private _clients: { [path: string]: Client } = {};
     private _configurations: ((client: Client) => void)[] = [];
     private _projectClientPaths: { [key: string]: string[] } = {};
     private _clientPaths: string[] = [];
     private _projectPaths: string[] = [];
+    private _clientProjectPaths: string[] = [];
     private _activated = false;
     private _temporaryClients: { [path: string]: RefCountDisposable } = {};
     private _nextIndex = 0;
+    private _activeSearch: Rx.IPromise<any> = Promise.resolve(undefined);
 
     public get activeClients() { return this._activeClients }
     private _activeClients: Client[] = [];
@@ -31,9 +33,10 @@ class ClientManager {
     private _activeClientObserable = this._activeClient.distinctUntilChanged();
     public get activeClient(): Observable<Client> { return this._activeClientObserable; }
 
-    public activate(activeEditor: Observable<Atom.TextEditor>) {
-        this._activated = true;
 
+
+    public activate(activeEditor: Observable<Atom.TextEditor>) {
+        this._disposable = new CompositeDisposable();
         // monitor atom project paths
         this.updatePaths(atom.project.getPaths());
         this._disposable.add(atom.project.onDidChangePaths((paths) => this.updatePaths(paths)));
@@ -44,6 +47,8 @@ class ClientManager {
             .where(z => !!z)
             .flatMap(z => this.getClientForEditor(z))
             .subscribe(x => this._activeClient.onNext(x)));
+
+        this._activated = true;
     }
 
     public connect() {
@@ -55,7 +60,8 @@ class ClientManager {
     }
 
     public deactivate() {
-
+        this._activated = false;
+        this._disposable.dispose();
     }
 
     public get connected() {
@@ -64,28 +70,37 @@ class ClientManager {
 
     private updatePaths(paths: string[]) {
         var newPaths = _.difference(paths, this._projectPaths);
-        var removePaths = _.intersection(newPaths, _.keys(this._clients));
-        var addedPaths = _.difference(newPaths, _.keys(this._clients));
+        var removePaths = _.intersection(newPaths, this._projectPaths, this._clientPaths);
+        var addedPaths = _.difference(newPaths, this._clientPaths);
 
         _.each(removePaths, project => {
             this.removeClient(project);
         });
 
-        _.each(addedPaths, project => {
-            var localPaths = this._projectClientPaths[project] = [];
-            findCandidates(project, console).toPromise().then(candidates => {
-                for (var candidate of candidates) {
-                    this.addClient(candidate, localPaths);
-                }
+        var observablePaths = addedPaths
+            .filter(project => !_.any(this._activeClients, client => _.any(client.model.projects, p => p.path === project)))
+            .map(project => {
+                var localPaths = this._projectClientPaths[project] = [];
+                return findCandidates(project, console)
+                    .flatMap(candidates => addCandidatesInOrder(candidates, candidate => this.addClient(candidate, localPaths, { project })));
             });
-        });
+
+        this._activeSearch = this._activeSearch
+            .then(() => Observable.concat(observablePaths).toPromise());
 
         this._projectPaths = paths;
     }
 
-    private addClient(candidate: string, localPaths: string[], delay = 1200, temporary?: boolean) {
+    private addClient(candidate: string, localPaths: string[], {delay = 1200, temporary = false, project}: { delay?: number; temporary?: boolean; project?: string; }) {
         if (this._clients[candidate])
-            return;
+            return Observable.just(this._clients[candidate]);
+
+        if (project) {
+            var containedInClient = _.find(this.activeClients, client => _.any(client.model.projects, p => p.path === project));
+            if (containedInClient) {
+                return Observable.just(containedInClient);
+            }
+        }
 
         localPaths.push(candidate);
         this._clientPaths.push(candidate);
@@ -116,12 +131,31 @@ class ClientManager {
         this._observationClient.add(client);
         this._combinationClient.add(client);
 
-        client.state
+        var result = new AsyncSubject<Client>();
+        var errorResult = client.state
             .where(z => z === DriverState.Error)
             .delay(100)
-            .subscribe(state => this.evictClient(client));
+            .take(1);
 
-        return client;
+        errorResult.subscribe(state => this.evictClient(client));
+        errorResult.subscribe(() => result.onCompleted()); // If this client errors move on to the next
+
+        // Wait for the projects to return from the client
+        client.model.observe.projects
+            .debounce(100)
+            .take(1)
+            .map(() => client)
+            .timeout(10000) // Wait 10 seconds for the project to load.
+            .subscribe(() => {
+                // We loaded successfully return the client
+                result.onNext(client);
+                result.onCompleted()
+            }, () => {
+                // Move along.
+                result.onCompleted()
+            });
+
+        return result;
     }
 
     private removeClient(candidate: string) {
@@ -221,7 +255,7 @@ class ClientManager {
             // Text editor not saved yet?
             return Observable.empty<Client>();
         }
-        
+
         var [intersect, clientInstance] = this.getClientForUnderlyingPath(location, grammarName);
         p = (<any>editor).omniProject = intersect;
 
@@ -263,10 +297,10 @@ class ClientManager {
 
         // Attempt to see if this file is part a clients solution
         for (var client of this._activeClients) {
-            var paths = client.model.projects.map(z => path);
-            var intersect = intersectPath(location, this._clientPaths);
+            var paths = client.model.projects.map(z => z.path);
+            var intersect = intersectPath(location, paths);
             if (intersect) {
-                return [intersect, this._clients[intersect]];
+                return [client.path, client];
             }
         }
 
@@ -282,21 +316,51 @@ class ClientManager {
 
         var subject = new AsyncSubject<[string, Client, boolean]>();
 
-        var foundCandidates = findCandidates(directory, console)
-            .subscribe(candidates => {
-                var newCandidates = _.difference(candidates, this._clientPaths);
-                for (var candidate of candidates) {
-                    this.addClient(candidate, localPaths || [], 0, !project);
-                }
+        var cb = (candidates: string[]) => {
+            // We only want to search for clients after the main clients have been processed.
+            // We can get into this race condition if the user has windows that were opened previously.
+            if (!this._activated) {
+                _.delay(cb, 5000);
+                return;
+            }
 
-                var intersect = intersectPath(location, this._clientPaths) || intersectPath(location, this._projectPaths);
+            // Attempt to see if this file is part a clients solution
+            for (var client of this._activeClients) {
+                var paths = client.model.projects.map(z => z.path);
+                var intersect = intersectPath(location, paths);
                 if (intersect) {
-                    subject.onNext([intersect, this._clients[intersect], !project]); // The boolean means this client is temporary.
-                } else {
-                    subject.onError('Could not find a client for location ' + location);
+                    subject.onNext([client.path, client, false]); // The boolean means this client is temporary.
+                    subject.onCompleted();
+                    return;
                 }
-                subject.onCompleted();
-            });
+            }
+
+            var newCandidates = _.difference(candidates, this._clientPaths);
+            this._activeSearch.then(() => addCandidatesInOrder(newCandidates, candidate => this.addClient(candidate, localPaths || [], { delay: 0, temporary: !project }))
+                .subscribeOnCompleted(() => {
+                    // Attempt to see if this file is part a clients solution
+                    for (var client of this._activeClients) {
+                        var paths = client.model.projects.map(z => z.path);
+                        var intersect = intersectPath(location, paths);
+                        if (intersect) {
+                            subject.onNext([client.path, client, false]); // The boolean means this client is temporary.
+                            subject.onCompleted();
+                            return;
+                        }
+                    }
+
+                    var intersect = intersectPath(location, this._clientPaths) || intersectPath(location, this._projectPaths);
+                    if (intersect) {
+                        subject.onNext([intersect, this._clients[intersect], !project]); // The boolean means this client is temporary.
+                    } else {
+                        subject.onError('Could not find a client for location ' + location);
+                    }
+                    subject.onCompleted();
+                }));
+        }
+
+        var foundCandidates = findCandidates(directory, console)
+            .subscribe(cb);
 
         return subject;
     }
@@ -335,6 +399,33 @@ function intersectPath(location: string, paths: string[]): string {
     if (intersect) {
         return intersect;
     }
+}
+
+function addCandidatesInOrder(candidates: string[], cb: (candidate: string) => Rx.Observable<Client>) {
+    var asyncSubject = new AsyncSubject();
+
+    if (!candidates.length) {
+        asyncSubject.onNext(candidates)
+        asyncSubject.onCompleted();
+        return asyncSubject;
+    }
+
+    var cds = candidates.slice();
+
+    var candidate = cds.shift();
+    var handleCandidate = (candidate: string) => {
+        cb(candidate).subscribeOnCompleted(() => {
+            if (cds.length) {
+                candidate = cds.shift();
+                handleCandidate(candidate);
+            } else {
+                asyncSubject.onNext(candidates)
+                asyncSubject.onCompleted();
+            }
+        })
+    }
+    handleCandidate(candidate);
+    return asyncSubject.asObservable();
 }
 
 var instance = new ClientManager();

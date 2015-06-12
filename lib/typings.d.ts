@@ -78,4 +78,8 @@ declare module Rx {
         ofObjectChanges<T>(obj: T): Observable<ObjectObserveChange<T>>;
         ofArrayChanges<T>(obj: T): Observable<ArrayObserveChange<T>>;
     }
+
+    interface Observable {
+        throttleFirst(windowDuration: number, scheduler?: Rx.Scheduler);
+    }
 }
