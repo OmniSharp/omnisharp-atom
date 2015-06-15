@@ -14,7 +14,7 @@ export class ProjectViewModel implements OmniSharp.IProjectViewModel {
         public configurations: string[] = [],
         public commands: { [key: string]: string } = <any>{}
         ) {
-            this.path = dirname(path);
+        this.path = dirname(path);
     }
 }
 
@@ -105,9 +105,10 @@ export class ViewModel {
 
         (window['clients'] || (window['clients'] = [])).push(this);  //TEMP
 
-        _client.state.where(z => z === DriverState.Connected).subscribe(() => {
-            _client.projects();
-        });
+        _client.state.where(z => z === DriverState.Connected)
+            .subscribe(() => {
+                _client.projects();
+            });
 
         _client.observeProjects.first().subscribe(() => {
             _client.projectAdded
@@ -163,6 +164,10 @@ export class ViewModel {
                         new ProjectViewModel(project.Name, project.Path, project.Frameworks, project.Configurations, project.Commands));
                 });
         });
+    }
+
+    public removeProjects() {
+        _.each(this.projects, project => this._projectRemovedStream.onNext(project));
     }
 
     private _updateState(state) {
