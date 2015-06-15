@@ -124,11 +124,15 @@ class Client extends OmnisharpClient {
     protected requestMutator(data: any) {
         var itemsToChange = _.intersection(serverLineNumbers, _.keys(data));
         _.each(itemsToChange, key => data[key] = data[key] + 1);
+
+        return data;
     }
 
     protected responseMutator(data: any) {
         var itemsToChange = _.intersection(serverLineNumbers, _.keys(data));
         _.each(itemsToChange, key => data[key] = data[key] - 1);
+
+        return data;
     }
 }
 
