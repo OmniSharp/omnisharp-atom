@@ -1,4 +1,5 @@
 import {CompositeDisposable, Subject} from "rx";
+import {difference} from "lodash";
 
 
 export class AtomProjectTracker implements Rx.IDisposable {
@@ -18,11 +19,11 @@ export class AtomProjectTracker implements Rx.IDisposable {
     }
 
     private updatePaths(paths: string[]) {
-        var addedPaths = _.difference(paths, this._projectPaths);
-        var removedPaths = _.difference(this._projectPaths, paths);
+        var addedPaths = difference(paths, this._projectPaths);
+        var removedPaths = difference(this._projectPaths, paths);
 
-        _.each(addedPaths, project => this._addedSubject.onNext(project));
-        _.each(removedPaths, project => this._removedSubject.onNext(project));
+        for (let project of addedPaths) this._addedSubject.onNext(project);
+        for (let project of removedPaths) this._removedSubject.onNext(project);
 
         this._projectPaths = paths;
     }

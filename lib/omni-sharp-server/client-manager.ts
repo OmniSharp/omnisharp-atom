@@ -12,7 +12,6 @@ class SolutionManager {
     private _atomProjects: AtomProjectTracker;
 
     private _solutions = new Map<string, Solution>();
-    private _csxSolutions = new Map<string, Solution>();
     private _solutionProjects = new Map<string, Solution>();
     private _temporarySolutions = new WeakMap<Solution, RefCountDisposable>();
 
@@ -48,9 +47,11 @@ class SolutionManager {
         // create another observable that chnages when we get a new solution.
         this._disposable.add(activeEditor
             .where(z => !!z)
+            .doOnNext(x => console.log('activeEditor', x))
             .flatMap(z => this.getClientForEditor(z))
             .subscribe(x => this._activeSolution.onNext(x)));
 
+        this._atomProjects.activate();
         this._activated = true;
     }
 
@@ -78,13 +79,13 @@ class SolutionManager {
     private subscribeToAtomProjectTracker() {
         this._disposable.add(this._atomProjects.removed
             .where(z => this._solutions.has(z))
-            .subscribe(project => this.removeClient(project)));
+            .subscribe(project => this.removeSolution(project)));
 
         this._disposable.add(this._atomProjects.added
-            .where(project => !_.any(this._activeSolutions, solution => _.any(solution.model.projects, p => p.path === project)))
+            .where(project => !this._solutionProjects.has(project))
             .map(project => {
                 return findCandidates(project, console)
-                    .flatMap(candidates => addCandidatesInOrder(candidates, candidate => this.addClient(candidate, { project })));
+                    .flatMap(candidates => addCandidatesInOrder(candidates, candidate => this.addSolution(candidate, { project })));
             })
             .subscribe(candidateObservable => {
                 this._activeSearch = this._activeSearch.then(() => candidateObservable.toPromise());
@@ -94,8 +95,8 @@ class SolutionManager {
     private subscribeToInternalEvents() {
     }
 
-    private addClient(candidate: string, {delay = 1200, temporary = false, project}: { delay?: number; temporary?: boolean; project?: string; }) {
-        if (this._solutions.get(candidate))
+    private addSolution(candidate: string, {delay = 1200, temporary = false, project}: { delay?: number; temporary?: boolean; project?: string; }) {
+        if (this._solutions.has(candidate))
             return Observable.just(this._solutions.get(candidate));
 
         if (project && this._solutionProjects.has(project)) {
@@ -129,24 +130,24 @@ class SolutionManager {
             _.delay(() => solution.connect(), delay);
         }
 
-        return this.subscribeToClient(solution);
+        return this.addSolutionSubscriptions(solution);
     }
 
-    private subscribeToClient(solution: Solution) {
+    private addSolutionSubscriptions(solution: Solution) {
         var result = new AsyncSubject<Solution>();
         var errorResult = solution.state
             .where(z => z === DriverState.Error)
             .delay(100)
             .take(1);
 
-        this._disposable.add(errorResult.subscribe(state => this.evictClient(solution)));
-        this._disposable.add(errorResult.subscribe(() => result.onCompleted())); // If this solution errors move on to the next
+        errorResult.subscribe(state => this.evictClient(solution));
+        errorResult.subscribe(() => result.onCompleted()); // If this solution errors move on to the next
 
-        this._disposable.add(solution.model.observe.projectAdded.subscribe(project => this._solutionProjects.set(project.path, solution)));
-        this._disposable.add(solution.model.observe.projectRemoved.subscribe(project => this._solutionProjects.delete(project.path)));
+        solution.model.observe.projectAdded.subscribe(project => this._solutionProjects.set(project.path, solution))
+        solution.model.observe.projectRemoved.subscribe(project => this._solutionProjects.delete(project.path));
 
         // Wait for the projects to return from the solution
-        this._disposable.add(solution.model.observe.projects
+        solution.model.observe.projects
             .debounce(100)
             .take(1)
             .map(() => solution)
@@ -158,12 +159,12 @@ class SolutionManager {
             }, () => {
                 // Move along.
                 result.onCompleted()
-            }));
+            });
 
         return result;
     }
 
-    private removeClient(candidate: string) {
+    private removeSolution(candidate: string) {
         var solution = this._solutions.get(candidate);
 
         var refCountDisposable = this._temporarySolutions.has(solution) && this._temporarySolutions.get(solution);
@@ -185,14 +186,14 @@ class SolutionManager {
             solution.disconnect();
         }
 
-        delete this._temporarySolutions.delete(solution);
-        delete this._solutions.delete(solution.path);
+        this._temporarySolutions.has(solution) && this._temporarySolutions.delete(solution);
+        this._solutions.has(solution.path) && this._solutions.delete(solution.path);
         _.pull(this._activeSolutions, solution);
         this._observation.remove(solution);
         this._combination.remove(solution);
     }
 
-    private getClientForActiveEditor() {
+    private getSolutionForActiveEditor() {
         var editor = atom.workspace.getActiveTextEditor();
         var solution: Observable<Solution>;
         if (editor)
@@ -214,9 +215,12 @@ class SolutionManager {
             return Observable.empty<Solution>();
         }
 
+
         var grammarName = editor.getGrammar().name;
+        var isCsx = grammarName === "C# Script File" || _.endsWith(editor.getPath(), '.csx');
+
         var valid = false;
-        if (grammarName === 'C#' || grammarName === 'C# Script File')
+        if (grammarName === 'C#' || isCsx)
             valid = true;
 
         var filename = path.basename(editor.getPath());
@@ -232,27 +236,24 @@ class SolutionManager {
         var p = (<any>editor).omniProject;
         // Not sure if we should just add properties onto editors...
         // but it works...
-        if (p) {
-            if (this._solutions.get(p)) {
-                var tempC = this._solutions.get(p);
-                // If the solution has disconnected, reconnect it
-                if (tempC.currentState === DriverState.Disconnected)
-                    tempC.connect();
+        if (p && this._solutions.has(p)) {
+            var solutionValue = this._solutions.get(p);
+            // If the solution has disconnected, reconnect it
+            if (solutionValue.currentState === DriverState.Disconnected)
+            solutionValue.connect();
 
-                // Client is in an invalid state
-                if (tempC.currentState === DriverState.Error) {
-                    return Observable.empty<Solution>();
-                }
-
-                var solutionValue = this._solutions.get(p);
-                solution = Observable.just(solutionValue);
-
-                if (solutionValue && this._temporarySolutions.has(solutionValue)) {
-                    this.setupDisposableForTemporaryClient(solutionValue, editor);
-                }
-
-                return solution;
+            // Client is in an invalid state
+            if (solutionValue.currentState === DriverState.Error) {
+                return Observable.empty<Solution>();
             }
+
+            solution = Observable.just(solutionValue);
+
+            if (solutionValue && this._temporarySolutions.has(solutionValue)) {
+                this.setupDisposableForTemporaryClient(solutionValue, editor);
+            }
+
+            return solution;
         }
 
         var location = editor.getPath();
@@ -261,7 +262,7 @@ class SolutionManager {
             return Observable.empty<Solution>();
         }
 
-        var [intersect, solutionValue] = this.getClientForUnderlyingPath(location, grammarName);
+        var [intersect, solutionValue] = this.getSolutionForUnderlyingPath(location, isCsx);
         p = (<any>editor).omniProject = intersect;
 
         if (solutionValue && this._temporarySolutions.has(solutionValue)) {
@@ -271,7 +272,7 @@ class SolutionManager {
         if (solutionValue)
             return Observable.just(solutionValue);
 
-        return this.findClientForUnderlyingPath(location)
+        return this.findSolutionForUnderlyingPath(location, isCsx)
             .map(z => {
                 var [p, solution, temporary] = z;
                 (<any>editor).omniProject = p;
@@ -282,17 +283,26 @@ class SolutionManager {
             });
     }
 
-    private getClientForUnderlyingPath(location: string, grammar?: string): [string, Solution] {
+    private _isPartOfSolution<T>(location: string, cb: (intersect: string, solution: Solution) => T) {
+        for (var solution of this._activeSolutions) {
+            var paths = solution.model.projects.map(z => z.path);
+            var intersect = intersectPath(location, paths);
+            if (intersect) {
+                return cb(intersect, solution);
+            }
+        }
+    }
+
+    private getSolutionForUnderlyingPath(location: string, isCsx: boolean): [string, Solution] {
         if (location === undefined) {
             return;
         }
 
-        if (grammar === 'C# Script File' || _.endsWith(location, '.csx')) {
+        if (isCsx) {
             // CSX are special, and need a solution per directory.
             var directory = path.dirname(location);
-            var csClient = this._solutions.get(directory);
-            if (csClient)
-                return [directory, csClient];
+            if (this._solutions.has(directory))
+                return [directory, this._solutions.get(directory)];
 
             return [null, null];
         } else {
@@ -302,19 +312,18 @@ class SolutionManager {
             }
         }
 
-        // Attempt to see if this file is part a solutions solution
-        for (var solution of this._activeSolutions) {
-            var paths = solution.model.projects.map(z => z.path);
-            var intersect = intersectPath(location, paths);
-            if (intersect) {
-                return [solution.path, solution];
+        if (!isCsx) {
+            // Attempt to see if this file is part a solution
+            var r = this._isPartOfSolution(location, (intersect, solution) => <[string, Solution]>[solution.path, solution]);
+            if (r) {
+                return r;
             }
         }
 
         return [null, null];
     }
 
-    private findClientForUnderlyingPath(location: string, grammar?: string): Observable<[string, Solution, boolean]> {
+    private findSolutionForUnderlyingPath(location: string, isCsx: boolean): Observable<[string, Solution, boolean]> {
         var directory = path.dirname(location);
         var project = intersectPath(directory, this._atomProjects.paths);
         var subject = new AsyncSubject<[string, Solution, boolean]>();
@@ -327,29 +336,27 @@ class SolutionManager {
                 return;
             }
 
-            // Attempt to see if this file is part a solutions solution
-            for (var solution of this._activeSolutions) {
-                var paths = solution.model.projects.map(z => z.path);
-                var intersect = intersectPath(location, paths);
-                if (intersect) {
+            if (!isCsx) {
+                // Attempt to see if this file is part a solution
+                var r = this._isPartOfSolution(location, (intersect, solution) => {
                     subject.onNext([solution.path, solution, false]); // The boolean means this solution is temporary.
                     subject.onCompleted();
-                    return;
-                }
+                    return true;
+                });
+                if (r) return;
             }
 
             var newCandidates = _.difference(candidates, fromIterator(this._solutions.keys()));
-            this._activeSearch.then(() => addCandidatesInOrder(newCandidates, candidate => this.addClient(candidate, { delay: 0, temporary: !project }))
+            this._activeSearch.then(() => addCandidatesInOrder(newCandidates, candidate => this.addSolution(candidate, { delay: 0, temporary: !project }))
                 .subscribeOnCompleted(() => {
-                    // Attempt to see if this file is part a solutions solution
-                    for (var solution of this._activeSolutions) {
-                        var paths = solution.model.projects.map(z => z.path);
-                        var intersect = intersectPath(location, paths);
-                        if (intersect) {
+                    if (!isCsx) {
+                        // Attempt to see if this file is part a solution
+                        var r = this._isPartOfSolution(location, (intersect, solution) => {
                             subject.onNext([solution.path, solution, false]); // The boolean means this solution is temporary.
                             subject.onCompleted();
                             return;
-                        }
+                        });
+                        if (r) return;
                     }
 
                     var intersect = intersectPath(location, fromIterator(this._solutions.keys())) || intersectPath(location, this._atomProjects.paths);
@@ -375,7 +382,7 @@ class SolutionManager {
             editor['__setup_temp__'] = true
             editor.onDidDestroy(() => {
                 disposable.dispose();
-                this.removeClient(solution.path);
+                this.removeSolution(solution.path);
             });
         }
     }
