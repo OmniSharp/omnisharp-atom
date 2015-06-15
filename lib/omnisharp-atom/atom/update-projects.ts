@@ -25,51 +25,53 @@ class UpdateProject implements OmniSharp.IAtomFeature {
         this._paths = atom.project.getPaths();
         atom.project.onDidChangePaths(paths => this._paths = paths);
 
+        this.disposable.add(Omni.listener.model.projectAdded
+            .where(z => this._autoAddExternalProjects || this._nagAddExternalProjects)
+            .where(z => !_.startsWith(z.path, z.solutionPath))
+            .where(z => !_.any(this._paths, x => _.startsWith(z.path, x)))
+            .buffer(Omni.listener.model.projectAdded.throttleFirst(1000), () => Observable.timer(1000))
+            .where(z => z.length > 0)
+            .subscribe(project => this.handleProjectAdded(project)));
+
+        this.disposable.add(Omni.listener.model.projectRemoved
+            .where(z => this._autoAddExternalProjects || this._nagAddExternalProjects)
+            .where(z => !_.startsWith(z.path, z.solutionPath))
+            .where(z => _.any(this._paths, x => _.startsWith(z.path, x)))
+            .buffer(Omni.listener.model.projectRemoved.throttleFirst(1000), () => Observable.timer(1000))
+            .where(z => z.length > 0)
+            .subscribe(project => this.handleProjectRemoved(project)));
+
         Omni.registerConfiguration(client => {
-            var path = _.find(this._paths, x => _.startsWith(x, client.path) && x !== client.path);
-            if (path) {
-                if (this._autoAdjustTreeView) {
-                    this.adjustTreeView(path, client.path);
-                } else if (this._nagAdjustTreeView) {
-                    // notify for adjustment
-                    let notification = atom.notifications.addInfo("Show solution root?", {
-                        detail: `${path}\n-> ${client.path}`,
-                        description: 'It appears the solution root is not displayed in the treeview.  Would you like to show the entire solution in the tree view?',
-                        buttons: [
-                            {
-                                text: 'Okay',
-                                className: 'btn-success',
-                                onDidClick: () => {
-                                    this.adjustTreeView(path, client.path);
-                                    notification.dismiss();
+            if (!client.temporary) {
+                var path = _.find(this._paths, x => _.startsWith(x, client.path) && x !== client.path);
+                if (path) {
+                    if (this._autoAdjustTreeView) {
+                        this.adjustTreeView(path, client.path);
+                    } else if (this._nagAdjustTreeView) {
+                        // notify for adjustment
+                        let notification = atom.notifications.addInfo("Show solution root?", {
+                            detail: `${path}\n-> ${client.path}`,
+                            description: 'It appears the solution root is not displayed in the treeview.  Would you like to show the entire solution in the tree view?',
+                            buttons: [
+                                {
+                                    text: 'Okay',
+                                    className: 'btn-success',
+                                    onDidClick: () => {
+                                        this.adjustTreeView(path, client.path);
+                                        notification.dismiss();
+                                    }
+                                }, {
+                                    text: 'Dismiss',
+                                    onDidClick: () => {
+                                        notification.dismiss();
+                                    }
                                 }
-                            }, {
-                                text: 'Dismiss',
-                                onDidClick: () => {
-                                    notification.dismiss();
-                                }
-                            }
-                        ],
-                        dismissable: true
-                    });
+                            ],
+                            dismissable: true
+                        });
+                    }
                 }
             }
-
-            this.disposable.add(client.model.observe.projectAdded
-                .where(z => this._autoAddExternalProjects || this._nagAddExternalProjects)
-                .where(z => !_.startsWith(z.path, client.path))
-                .where(z => !_.any(this._paths, x => _.startsWith(z.path, x)))
-                .buffer(client.model.observe.projectAdded.throttleFirst(1000), () => Observable.timer(1000))
-                .where(z => z.length > 0)
-                .subscribe(project => this.handleProjectAdded(project)));
-
-            this.disposable.add(client.model.observe.projectRemoved
-                .where(z => this._autoAddExternalProjects || this._nagAddExternalProjects)
-                .where(z => !_.startsWith(z.path, client.path))
-                .where(z => _.any(this._paths, x => _.startsWith(z.path, x)))
-                .buffer(client.model.observe.projectRemoved.throttleFirst(1000), () => Observable.timer(1000))
-                .where(z => z.length > 0)
-                .subscribe(project => this.handleProjectRemoved(project)));
         });
     }
 

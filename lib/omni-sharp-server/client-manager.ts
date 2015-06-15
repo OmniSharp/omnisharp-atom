@@ -105,7 +105,8 @@ class SolutionManager {
 
         var solution = new Solution({
             projectPath: candidate,
-            index: ++this._nextIndex
+            index: ++this._nextIndex,
+            temporary: temporary
         });
 
         this._configurations.forEach(config => config(solution));

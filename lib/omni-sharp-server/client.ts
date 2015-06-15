@@ -1,6 +1,11 @@
 import _ = require('lodash');
 import {Observable} from 'rx';
 import {OmnisharpClient, DriverState, OmnisharpClientOptions} from "omnisharp-client";
+
+interface ClientOptions extends OmnisharpClientOptions {
+    temporary: boolean;
+}
+
 import {ViewModel} from "./view-model";
 
 class Client extends OmnisharpClient {
@@ -8,10 +13,12 @@ class Client extends OmnisharpClient {
     public logs: Observable<OmniSharp.OutputMessage>;
     public path: string;
     public index: number;
+    public temporary: boolean = false;
 
-    constructor(options: OmnisharpClientOptions) {
+    constructor(options: ClientOptions) {
         super(options);
         this.configureClient();
+        this.temporary = options.temporary;
         this.model = new ViewModel(this);
         this.path = options.projectPath;
         this.index = options['index'];

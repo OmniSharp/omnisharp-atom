@@ -10,6 +10,7 @@ export class ProjectViewModel implements OmniSharp.IProjectViewModel {
     constructor(
         public name: string,
         path: string,
+        public solutionPath: string,
         public frameworks: string[] = [],
         public configurations: string[] = [],
         public commands: { [key: string]: string } = <any>{}
@@ -118,7 +119,7 @@ export class ViewModel {
                 .subscribe(project => {
                     this.msbuild.Projects.push(project);
                     this._projectAddedStream.onNext(
-                        new ProjectViewModel(project.AssemblyName, project.Path, [project.TargetFramework]));
+                        new ProjectViewModel(project.AssemblyName, project.Path, _client.path, [project.TargetFramework]));
                 });
 
             _client.projectRemoved
@@ -134,7 +135,7 @@ export class ViewModel {
                 .map(z => z.MsBuildProject)
                 .subscribe(project => {
                     _.assign(_.find(this.msbuild.Projects, z => { Path: project.Path }), project);
-                    this._projectChangedStream.onNext(new ProjectViewModel(project.AssemblyName, project.Path, [project.TargetFramework]));
+                    this._projectChangedStream.onNext(new ProjectViewModel(project.AssemblyName, project.Path, _client.path, [project.TargetFramework]));
                 });
 
             _client.projectAdded
@@ -144,7 +145,7 @@ export class ViewModel {
                 .subscribe(project => {
                     this.aspnet5.Projects.push(project);
                     this._projectAddedStream.onNext(
-                        new ProjectViewModel(project.Name, project.Path, project.Frameworks, project.Configurations, project.Commands));
+                        new ProjectViewModel(project.Name, project.Path, _client.path, project.Frameworks, project.Configurations, project.Commands));
                 });
 
             _client.projectRemoved
@@ -161,7 +162,7 @@ export class ViewModel {
                 .subscribe(project => {
                     _.assign(_.find(this.aspnet5.Projects, z => { Path: project.Path }), project);
                     this._projectChangedStream.onNext(
-                        new ProjectViewModel(project.Name, project.Path, project.Frameworks, project.Configurations, project.Commands));
+                        new ProjectViewModel(project.Name, project.Path, _client.path, project.Frameworks, project.Configurations, project.Commands));
                 });
         });
     }
@@ -225,7 +226,7 @@ export class ViewModel {
 
             _.each(this.msbuild.Projects
                 .map(p => new ProjectViewModel(p.AssemblyName,
-                    p.Path, [p.TargetFramework])),
+                    p.Path, _client.path, [p.TargetFramework])),
                 project => this._projectAddedStream.onNext(project));
         });
 
@@ -243,7 +244,7 @@ export class ViewModel {
             this.runtime = basename(project.RuntimePath);
 
             _.each(this.aspnet5.Projects
-                .map(p => new ProjectViewModel(p.Name, p.Path, p.Frameworks, p.Configurations, p.Commands)),
+                .map(p => new ProjectViewModel(p.Name, p.Path, _client.path, p.Frameworks, p.Configurations, p.Commands)),
                 project => this._projectAddedStream.onNext(project));
         });
 
@@ -258,7 +259,7 @@ export class ViewModel {
 
         context.subscribe(context => {
             this.scriptcs = context;
-            this._projectAddedStream.onNext(new ProjectViewModel("ScriptCs", context.Path));
+            this._projectAddedStream.onNext(new ProjectViewModel("ScriptCs", context.Path, _client.path));
         });
 
         return context;
