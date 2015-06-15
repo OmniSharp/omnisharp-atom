@@ -2,6 +2,7 @@ import {helpers, Observable, ReplaySubject, Subject, CompositeDisposable, Behavi
 import manager = require("./client-manager");
 import Client = require("./client");
 import _ = require('lodash');
+import {basename} from "path";
 import {DriverState} from "omnisharp-client";
 
 class Omni {
@@ -32,6 +33,12 @@ class Omni {
             if (pane && pane.getGrammar) {
                 var grammarName = pane.getGrammar().name;
                 if (grammarName === 'C#' || grammarName === 'C# Script File') {
+                    this._activeEditorSubject.onNext(pane);
+                    return;
+                }
+
+                var filename = basename(pane.getPath());
+                if (filename === 'project.json') {
                     this._activeEditorSubject.onNext(pane);
                     return;
                 }
