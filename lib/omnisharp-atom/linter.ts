@@ -54,8 +54,8 @@ class LinterCSharp extends Linter.Linter {
                     Omni.request(this.editor, client => client.codecheck(client.makeRequest(this.editor)))
                         .subscribe(data => {
                             var errors = _.map(data.QuickFixes, (error: OmniSharp.Models.DiagnosticLocation): LinterError => {
-                                var line = error.Line - 1;
-                                var column = error.Column - 1;
+                                var line = error.Line;
+                                var column = error.Column;
                                 var text = this.editor.lineTextForBufferRow(line);
                                 var wordLocation = this.getWordAt(text, column);
                                 var level = error.LogLevel.toLowerCase();

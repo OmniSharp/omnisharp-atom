@@ -8,6 +8,14 @@ interface ClientOptions extends OmnisharpClientOptions {
 
 import {ViewModel} from "./view-model";
 
+var serverLineNumbers = [
+    'Line','Column',
+    'StartLine','StartColumn',
+    'EndLine','EndColumn',
+    'SelectionStartColumn','SelectionStartLine',
+    'SelectionEndColumn','SelectionEndLine'
+];
+
 class Client extends OmnisharpClient {
     public model: ViewModel;
     public logs: Observable<OmniSharp.OutputMessage>;
@@ -58,9 +66,9 @@ class Client extends OmnisharpClient {
         var marker = editor.getCursorBufferPosition();
         var buffer = editor.getBuffer().getLines().join('\n');
         return {
-            Column: marker.column + 1,
+            Column: marker.column,
             FileName: editor.getURI(),
-            Line: marker.row + 1,
+            Line: marker.row,
             Buffer: buffer
         };
     }
@@ -77,9 +85,9 @@ class Client extends OmnisharpClient {
 
         var marker = editor.getCursorBufferPosition();
         return <OmniSharp.Models.Request>{
-            Column: marker.column + 1,
+            Column: marker.column,
             FileName: editor.getURI(),
-            Line: marker.row + 1,
+            Line: marker.row,
             Buffer: bufferText
         };
     }
@@ -111,6 +119,16 @@ class Client extends OmnisharpClient {
             return Observable.empty<TResponse>();
         }
         return OmnisharpClient.prototype.request.call(this, action, request, options);
+    }
+
+    protected requestMutator(data: any) {
+        var itemsToChange = _.intersection(serverLineNumbers, _.keys(data));
+        _.each(itemsToChange, key => data[key] = data[key] + 1);
+    }
+
+    protected responseMutator(data: any) {
+        var itemsToChange = _.intersection(serverLineNumbers, _.keys(data));
+        _.each(itemsToChange, key => data[key] = data[key] - 1);
     }
 }
 

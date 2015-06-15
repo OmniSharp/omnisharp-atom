@@ -5,7 +5,7 @@ class Changes {
         var buffer = editor.getBuffer();
         var checkpoint = buffer.createCheckpoint();
         changes.forEach((change) => {
-            var range = new Range([change.StartLine - 1, change.StartColumn - 1], [change.EndLine - 1, change.EndColumn - 1]);
+            var range = new Range([change.StartLine, change.StartColumn], [change.EndLine, change.EndColumn]);
             buffer.setTextInRange(range, change.NewText);
         });
         buffer.groupChangesSinceCheckpoint(checkpoint);
