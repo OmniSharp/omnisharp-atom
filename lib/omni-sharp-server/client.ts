@@ -55,6 +55,7 @@ class Client extends OmnisharpClient {
     public disconnect() {
         this.model.removeProjects();
         super.disconnect();
+        
         this.log("Omnisharp server stopped.");
     }
 
@@ -122,15 +123,29 @@ class Client extends OmnisharpClient {
     }
 
     protected requestMutator(data: any) {
+        if (_.isArray(data)) {
+            _.each(data, item => this.requestMutator(item));
+            return data;
+        }
+
         var itemsToChange = _.intersection(serverLineNumbers, _.keys(data));
         _.each(itemsToChange, key => data[key] = data[key] + 1);
+
+        _.each(_.filter(data, z => _.isArray(z)), item => this.requestMutator(item));
 
         return data;
     }
 
     protected responseMutator(data: any) {
+        if (_.isArray(data)) {
+            _.each(data, item => this.responseMutator(item));
+            return data;
+        }
+
         var itemsToChange = _.intersection(serverLineNumbers, _.keys(data));
         _.each(itemsToChange, key => data[key] = data[key] - 1);
+
+        _.each(_.filter(data, z => _.isArray(z)), item => this.responseMutator(item));
 
         return data;
     }
