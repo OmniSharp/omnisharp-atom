@@ -53,9 +53,8 @@ class Client extends OmnisharpClient {
     }
 
     public disconnect() {
-        this.model.removeProjects();
         super.disconnect();
-        
+
         this.log("Omnisharp server stopped.");
     }
 

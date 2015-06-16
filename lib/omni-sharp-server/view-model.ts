@@ -72,6 +72,7 @@ export class ViewModel {
         });
 
         _client.state.where(z => z === DriverState.Disconnected).subscribe(() => {
+            _.each(this.projects.slice(), project => this._projectRemovedStream.onNext(project));
             this.projects = [];
             this.diagnostics = [];
         })
@@ -165,10 +166,6 @@ export class ViewModel {
                         new ProjectViewModel(project.Name, project.Path, _client.path, project.Frameworks, project.Configurations, project.Commands));
                 });
         });
-    }
-
-    public removeProjects() {
-        _.each(this.projects, project => this._projectRemovedStream.onNext(project));
     }
 
     private _updateState(state) {
