@@ -107,8 +107,8 @@ class GoToDefinition implements OmniSharp.IFeature {
             return;
 
         Omni.request(editor, client => client.gotodefinition({
-            Line: bufferPt.row + 1,
-            Column: bufferPt.column + 1,
+            Line: bufferPt.row,
+            Column: bufferPt.column,
             FileName: editor.getURI()
         }))
             .subscribe(data => {

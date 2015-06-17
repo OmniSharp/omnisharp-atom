@@ -4,7 +4,7 @@ import Omni = require('../../omni-sharp-server/omni')
 import React = require('react');
 import {ReactClientComponent} from "./react-client-component";
 import {solutionInformation} from "../features/solution-information";
-import ViewModel = require('../../omni-sharp-server/view-model');
+import {ViewModel} from "../../omni-sharp-server/view-model";
 import {DriverState} from "omnisharp-client";
 import $ = require('jquery');
 import {Observable} from "rx";

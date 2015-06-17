@@ -1,17 +1,32 @@
 import _ = require('lodash');
 import {Observable} from 'rx';
 import {OmnisharpClient, DriverState, OmnisharpClientOptions} from "omnisharp-client";
-import ViewModel = require("./view-model");
+
+interface ClientOptions extends OmnisharpClientOptions {
+    temporary: boolean;
+}
+
+import {ViewModel} from "./view-model";
+
+var serverLineNumbers = [
+    'Line','Column',
+    'StartLine','StartColumn',
+    'EndLine','EndColumn',
+    'SelectionStartColumn','SelectionStartLine',
+    'SelectionEndColumn','SelectionEndLine'
+];
 
 class Client extends OmnisharpClient {
     public model: ViewModel;
     public logs: Observable<OmniSharp.OutputMessage>;
     public path: string;
     public index: number;
+    public temporary: boolean = false;
 
-    constructor(options: OmnisharpClientOptions) {
+    constructor(options: ClientOptions) {
         super(options);
         this.configureClient();
+        this.temporary = options.temporary;
         this.model = new ViewModel(this);
         this.path = options.projectPath;
         this.index = options['index'];
@@ -39,6 +54,7 @@ class Client extends OmnisharpClient {
 
     public disconnect() {
         super.disconnect();
+
         this.log("Omnisharp server stopped.");
     }
 
@@ -50,9 +66,9 @@ class Client extends OmnisharpClient {
         var marker = editor.getCursorBufferPosition();
         var buffer = editor.getBuffer().getLines().join('\n');
         return {
-            Column: marker.column + 1,
+            Column: marker.column,
             FileName: editor.getURI(),
-            Line: marker.row + 1,
+            Line: marker.row,
             Buffer: buffer
         };
     }
@@ -69,9 +85,9 @@ class Client extends OmnisharpClient {
 
         var marker = editor.getCursorBufferPosition();
         return <OmniSharp.Models.Request>{
-            Column: marker.column + 1,
+            Column: marker.column,
             FileName: editor.getURI(),
-            Line: marker.row + 1,
+            Line: marker.row,
             Buffer: bufferText
         };
     }
@@ -103,6 +119,34 @@ class Client extends OmnisharpClient {
             return Observable.empty<TResponse>();
         }
         return OmnisharpClient.prototype.request.call(this, action, request, options);
+    }
+
+    protected requestMutator(data: any) {
+        if (_.isArray(data)) {
+            _.each(data, item => this.requestMutator(item));
+            return data;
+        }
+
+        var itemsToChange = _.intersection(serverLineNumbers, _.keys(data));
+        _.each(itemsToChange, key => data[key] = data[key] + 1);
+
+        _.each(_.filter(data, z => _.isArray(z)), item => this.requestMutator(item));
+
+        return data;
+    }
+
+    protected responseMutator(data: any) {
+        if (_.isArray(data)) {
+            _.each(data, item => this.responseMutator(item));
+            return data;
+        }
+
+        var itemsToChange = _.intersection(serverLineNumbers, _.keys(data));
+        _.each(itemsToChange, key => data[key] = data[key] - 1);
+
+        _.each(_.filter(data, z => _.isArray(z)), item => this.responseMutator(item));
+
+        return data;
     }
 }
 

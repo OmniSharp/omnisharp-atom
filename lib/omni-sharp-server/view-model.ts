@@ -2,20 +2,24 @@ import * as _ from "lodash";
 import Client = require('./client');
 import {DriverState, OmnisharpClientStatus} from "omnisharp-client";
 import {Observable, Subject} from "rx";
-import {basename} from "path";
+import {basename, dirname} from "path";
 
-class ProjectViewModel implements OmniSharp.IProjectViewModel {
+export class ProjectViewModel implements OmniSharp.IProjectViewModel {
+    public path: string;
+
     constructor(
         public name: string,
-        public path: string,
+        path: string,
+        public solutionPath: string,
         public frameworks: string[] = [],
         public configurations: string[] = [],
         public commands: { [key: string]: string } = <any>{}
         ) {
+        this.path = dirname(path);
     }
 }
 
-class ViewModel {
+export class ViewModel {
     public isOff: boolean;
     public isConnecting: boolean;
     public isOn: boolean;
@@ -68,6 +72,7 @@ class ViewModel {
         });
 
         _client.state.where(z => z === DriverState.Disconnected).subscribe(() => {
+            _.each(this.projects.slice(), project => this._projectRemovedStream.onNext(project));
             this.projects = [];
             this.diagnostics = [];
         })
@@ -102,9 +107,10 @@ class ViewModel {
 
         (window['clients'] || (window['clients'] = [])).push(this);  //TEMP
 
-        _client.state.where(z => z === DriverState.Connected).subscribe(() => {
-            _client.projects();
-        });
+        _client.state.where(z => z === DriverState.Connected)
+            .subscribe(() => {
+                _client.projects();
+            });
 
         _client.observeProjects.first().subscribe(() => {
             _client.projectAdded
@@ -114,7 +120,7 @@ class ViewModel {
                 .subscribe(project => {
                     this.msbuild.Projects.push(project);
                     this._projectAddedStream.onNext(
-                        new ProjectViewModel(project.AssemblyName, project.Path, [project.TargetFramework]));
+                        new ProjectViewModel(project.AssemblyName, project.Path, _client.path, [project.TargetFramework]));
                 });
 
             _client.projectRemoved
@@ -130,7 +136,7 @@ class ViewModel {
                 .map(z => z.MsBuildProject)
                 .subscribe(project => {
                     _.assign(_.find(this.msbuild.Projects, z => { Path: project.Path }), project);
-                    this._projectChangedStream.onNext(new ProjectViewModel(project.AssemblyName, project.Path, [project.TargetFramework]));
+                    this._projectChangedStream.onNext(new ProjectViewModel(project.AssemblyName, project.Path, _client.path, [project.TargetFramework]));
                 });
 
             _client.projectAdded
@@ -140,7 +146,7 @@ class ViewModel {
                 .subscribe(project => {
                     this.aspnet5.Projects.push(project);
                     this._projectAddedStream.onNext(
-                        new ProjectViewModel(project.Name, project.Path, project.Frameworks, project.Configurations, project.Commands));
+                        new ProjectViewModel(project.Name, project.Path, _client.path, project.Frameworks, project.Configurations, project.Commands));
                 });
 
             _client.projectRemoved
@@ -157,7 +163,7 @@ class ViewModel {
                 .subscribe(project => {
                     _.assign(_.find(this.aspnet5.Projects, z => { Path: project.Path }), project);
                     this._projectChangedStream.onNext(
-                        new ProjectViewModel(project.Name, project.Path, project.Frameworks, project.Configurations, project.Commands));
+                        new ProjectViewModel(project.Name, project.Path, _client.path, project.Frameworks, project.Configurations, project.Commands));
                 });
         });
     }
@@ -217,7 +223,7 @@ class ViewModel {
 
             _.each(this.msbuild.Projects
                 .map(p => new ProjectViewModel(p.AssemblyName,
-                    p.Path, [p.TargetFramework])),
+                    p.Path, _client.path, [p.TargetFramework])),
                 project => this._projectAddedStream.onNext(project));
         });
 
@@ -235,7 +241,7 @@ class ViewModel {
             this.runtime = basename(project.RuntimePath);
 
             _.each(this.aspnet5.Projects
-                .map(p => new ProjectViewModel(p.Name, p.Path, p.Frameworks, p.Configurations, p.Commands)),
+                .map(p => new ProjectViewModel(p.Name, p.Path, _client.path, p.Frameworks, p.Configurations, p.Commands)),
                 project => this._projectAddedStream.onNext(project));
         });
 
@@ -250,11 +256,9 @@ class ViewModel {
 
         context.subscribe(context => {
             this.scriptcs = context;
-            this._projectAddedStream.onNext(new ProjectViewModel("ScriptCs", context.Path));
+            this._projectAddedStream.onNext(new ProjectViewModel("ScriptCs", context.Path, _client.path));
         });
 
         return context;
     }
 }
-
-export = ViewModel;

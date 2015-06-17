@@ -4,7 +4,7 @@ import * as _ from 'lodash';
 import {OmnisharpClientStatus} from "omnisharp-client";
 import {dock} from "../atom/dock";
 import {OutputWindow} from '../views/omni-output-pane-view';
-import ViewModel = require("../../omni-sharp-server/view-model");
+import {ViewModel} from "../../omni-sharp-server/view-model";
 
 class ServerInformation implements OmniSharp.IFeature {
     private disposable: CompositeDisposable;

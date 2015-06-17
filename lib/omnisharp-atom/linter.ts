@@ -49,35 +49,32 @@ class LinterCSharp extends Linter.Linter {
 
     public lintFile(filePath: string, callback): any {
         Omni.activeEditor.first()
-            .subscribe(editor => {
-                if (this.editor === editor) {
-                    Omni.request(this.editor, client => client.codecheck(client.makeRequest(this.editor)))
-                        .subscribe(data => {
-                            var errors = _.map(data.QuickFixes, (error: OmniSharp.Models.DiagnosticLocation): LinterError => {
-                                var line = error.Line - 1;
-                                var column = error.Column - 1;
-                                var text = this.editor.lineTextForBufferRow(line);
-                                var wordLocation = this.getWordAt(text, column);
-                                var level = error.LogLevel.toLowerCase();
+            .where(editor => editor === this.editor)
+            .flatMap(editor => Omni.request(editor, client => client.codecheck(client.makeRequest(editor))))
+            .subscribe(data => {
+                var errors = _.map(data.QuickFixes, (error: OmniSharp.Models.DiagnosticLocation): LinterError => {
+                    var line = error.Line;
+                    var column = error.Column;
+                    var text = this.editor.lineTextForBufferRow(line);
+                    var wordLocation = this.getWordAt(text, column);
+                    var level = error.LogLevel.toLowerCase();
 
-                                if (level === "hidden") {
-                                    level = "info"
-                                }
+                    if (level === "hidden") {
+                        level = "info"
+                    }
 
-                                return {
-                                    message: `${error.Text} [${Omni.getFrameworks(error.Projects) }] `,
-                                    line: line + 1,
-                                    col: column,
-                                    level: level,
-                                    range: new Range([line, wordLocation.start], [line, wordLocation.end]),
-                                    linter: "C#"
-                                }
-                            });
+                    return {
+                        message: `${error.Text} [${Omni.getFrameworks(error.Projects) }] `,
+                        line: line + 1,
+                        col: column + 1,
+                        level: level,
+                        range: new Range([line, wordLocation.start], [line, wordLocation.end]),
+                        linter: "C#"
+                    }
+                });
 
-                            return callback(errors)
-                        });
-                }
-            })
+                return callback(errors)
+            });
     }
 }
 

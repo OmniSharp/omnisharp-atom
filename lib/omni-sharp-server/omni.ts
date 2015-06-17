@@ -2,6 +2,7 @@ import {helpers, Observable, ReplaySubject, Subject, CompositeDisposable, Behavi
 import manager = require("./client-manager");
 import Client = require("./client");
 import _ = require('lodash');
+import {basename} from "path";
 import {DriverState} from "omnisharp-client";
 
 class Omni {
@@ -35,6 +36,12 @@ class Omni {
                     this._activeEditorSubject.onNext(pane);
                     return;
                 }
+
+                var filename = basename(pane.getPath());
+                if (filename === 'project.json') {
+                    this._activeEditorSubject.onNext(pane);
+                    return;
+                }
             }
 
             // This will tell us when the editor is no longer an appropriate editor
@@ -62,7 +69,7 @@ class Omni {
     public navigateTo(response: { FileName: string; Line: number; Column: number; }) {
         atom.workspace.open(response.FileName, undefined)
             .then((editor) => {
-                editor.setCursorBufferPosition([response.Line && response.Line - 1, response.Column && response.Column - 1])
+                editor.setCursorBufferPosition([response.Line && response.Line, response.Column && response.Column])
             });
     }
 

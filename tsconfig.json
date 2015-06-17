@@ -29,6 +29,8 @@
         "!./node_modules/**/*.ts"
     ],
     "files": [
+        "./lib/es6.d.ts",
+        "./lib/omni-sharp-server/atom-projects.ts",
         "./lib/omni-sharp-server/client-manager.ts",
         "./lib/omni-sharp-server/client.ts",
         "./lib/omni-sharp-server/composite-client.ts",
@@ -36,6 +38,7 @@
         "./lib/omni-sharp-server/view-model.ts",
         "./lib/omnisharp-atom/atom/dock.ts",
         "./lib/omnisharp-atom/atom/status-bar.ts",
+        "./lib/omnisharp-atom/atom/update-projects.ts",
         "./lib/omnisharp-atom/configure-rx.ts",
         "./lib/omnisharp-atom/dependency-checker.ts",
         "./lib/omnisharp-atom/features/build.ts",

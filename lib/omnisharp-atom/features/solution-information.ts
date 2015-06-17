@@ -3,7 +3,7 @@ import Omni = require("../../omni-sharp-server/omni");
 import * as _ from 'lodash';
 import {dock} from "../atom/dock";
 import {SolutionStatusCard, ICardProps} from '../views/solution-status-view';
-import ViewModel = require('../../omni-sharp-server/view-model');
+import {ViewModel} from "../../omni-sharp-server/view-model";
 import manager = require("../../omni-sharp-server/client-manager");
 import React = require('react');
 import $ = require('jquery');
