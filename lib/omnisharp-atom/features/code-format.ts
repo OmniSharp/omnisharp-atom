@@ -14,10 +14,10 @@ class CodeFormat implements OmniSharp.IFeature {
                     var buffer = editor.getBuffer();
                     Omni.request(editor, client => {
                         var request = <OmniSharp.Models.FormatRangeRequest>client.makeRequest();
-                        request.Line = 1;
-                        request.Column = 1;
-                        request.EndLine = buffer.getLineCount();
-                        request.EndColumn = 1;
+                        request.Line = 0;
+                        request.Column = 0;
+                        request.EndLine = buffer.getLineCount() - 1;
+                        request.EndColumn = 0;
 
                         return client
                             .formatRangePromise(request)
