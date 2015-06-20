@@ -91,10 +91,10 @@ class CodeAction implements OmniSharp.IFeature {
 
         var request = client.makeDataRequest<OmniSharp.Models.CodeActionRequest>({
             WantsTextChanges: true,
-            SelectionStartLine: range.start.row + 1,
-            SelectionStartColumn: range.start.column + 1,
-            SelectionEndLine: range.end.row + 1,
-            SelectionEndColumn: range.end.column + 1
+            SelectionStartLine: range.start.row,
+            SelectionStartColumn: range.start.column,
+            SelectionEndLine: range.end.row,
+            SelectionEndColumn: range.end.column
         });
 
         if (codeAction) {
