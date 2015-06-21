@@ -20,7 +20,7 @@ class CodeAction implements OmniSharp.IFeature {
 
         this.disposable.add(Omni.addTextEditorCommand("omnisharp-atom:get-code-actions", () => {
             //store the editor that this was triggered by.
-            Omni.request(client => client.getcodeactions(client.makeRequest()));
+            Omni.request(client => client.getcodeactions(this.getRequest(client)));
         }));
 
         this.disposable.add(Omni.listener.observeGetcodeactions.subscribe((data) => {
@@ -33,10 +33,9 @@ class CodeAction implements OmniSharp.IFeature {
                 Omni.activeEditor
                     .first()
                     .subscribe(editor => {
-                        Omni.request(editor, client => client.runcodeaction(client.makeDataRequest<OmniSharp.Models.CodeActionRequest>({
-                            CodeAction: selectedItem.Id,
-                            WantsTextChanges: true
-                        }))).subscribe((response) => this.applyAllChanges(response.Changes));
+                        var range = editor.getSelectedBufferRange();
+                        Omni.request(editor, client => client.runcodeaction(this.getRequest(client, selectedItem.Id)))
+                            .subscribe((response) => this.applyAllChanges(response.Changes));
                     });
             });
         }));
@@ -46,7 +45,9 @@ class CodeAction implements OmniSharp.IFeature {
             var makeLightbulbRequest = (position: TextBuffer.Point) => {
                 if (subscription) subscription.dispose();
 
-                subscription = Omni.request(client => client.getcodeactions(client.makeRequest(), { silent: true }))
+                var range = editor.getSelectedBufferRange();
+
+                subscription = Omni.request(client => client.getcodeactions(this.getRequest(client), { silent: true }))
                     .subscribe(response => {
                         if (response.CodeActions.length > 0) {
                             if (marker) {
@@ -82,6 +83,25 @@ class CodeAction implements OmniSharp.IFeature {
                 }
             }));
         }));
+    }
+
+    private getRequest(client: OmniSharp.ExtendApi, codeAction?: number) {
+        var editor = atom.workspace.getActiveTextEditor();
+        var range = editor.getSelectedBufferRange();
+
+        var request = client.makeDataRequest<OmniSharp.Models.CodeActionRequest>({
+            WantsTextChanges: true,
+            SelectionStartLine: range.start.row,
+            SelectionStartColumn: range.start.column,
+            SelectionEndLine: range.end.row,
+            SelectionEndColumn: range.end.column
+        });
+
+        if (codeAction) {
+            request.CodeAction = codeAction;
+        }
+
+        return request;
     }
 
     public dispose() {
