@@ -97,7 +97,7 @@ class CodeAction implements OmniSharp.IFeature {
             SelectionEndColumn: range.end.column
         });
 
-        if (codeAction) {
+        if (codeAction !== undefined) {
             request.CodeAction = codeAction;
         }
 
