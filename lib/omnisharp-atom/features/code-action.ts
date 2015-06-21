@@ -84,6 +84,25 @@ class CodeAction implements OmniSharp.IFeature {
         }));
     }
 
+    private getRequest(client: OmniSharp.ExtendApi, codeAction?: number) {
+        var editor = atom.workspace.getActiveTextEditor();
+        var range = editor.getSelectedBufferRange();
+
+        var request = client.makeDataRequest<OmniSharp.Models.CodeActionRequest>({
+            WantsTextChanges: true,
+            SelectionStartLine: range.start.row,
+            SelectionStartColumn: range.start.column,
+            SelectionEndLine: range.end.row,
+            SelectionEndColumn: range.end.column
+        });
+
+        if (codeAction !== undefined) {
+            request.CodeAction = codeAction;
+        }
+
+        return request;
+    }
+
     public dispose() {
         this.disposable.dispose();
     }
