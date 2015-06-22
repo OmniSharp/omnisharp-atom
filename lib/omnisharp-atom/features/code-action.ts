@@ -35,7 +35,7 @@ class CodeAction implements OmniSharp.IFeature {
                     .subscribe(editor => {
                         var range = editor.getSelectedBufferRange();
                         Omni.request(editor, client => client.runcodeaction(this.getRequest(client, selectedItem.Id)))
-                            .subscribe((response) => this.applyAllChanges(editor, response.Changes));
+                            .subscribe((response) => this.applyAllChanges(response.Changes));
                     });
             });
         }));
@@ -116,8 +116,11 @@ class CodeAction implements OmniSharp.IFeature {
         return wrappedCodeActions;
     }
 
-    public applyAllChanges(editor: Atom.TextEditor, changes: OmniSharp.Models.LinePositionSpanTextChange[]) {
-        Changes.applyChanges(editor, changes)
+    public applyAllChanges(changes: any[]) {
+        return _.each(changes, (change) => {
+            atom.workspace.open(change.FileName, undefined)
+                .then((editor) => { Changes.applyChanges(editor, change.Changes); })
+        });
     }
 }
 
