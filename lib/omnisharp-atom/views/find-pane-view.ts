@@ -7,9 +7,9 @@ import {ReactClientComponent} from "./react-client-component";
 import {findUsages} from "../features/find-usages";
 
 interface FindWindowState {
-    selectedIndex: number; usages?:
-    OmniSharp.Models.DiagnosticLocation[] ;
-    }
+    selectedIndex?: number;
+    usages?: OmniSharp.Models.DiagnosticLocation[];
+}
 
 interface FindWindowProps {
     scrollTop: () => number;
@@ -32,10 +32,9 @@ export class FindWindow extends ReactClientComponent<FindWindowProps, FindWindow
         super.componentWillMount();
         this.disposable.add(this.model.observe
             .updated
-            .where(z => z.name !== "selectedIndex")
+            .where(z => z.name === "usages")
             .subscribe(z => this.setState({
-                usages: this.model.usages,
-                selectedIndex: this.model.selectedIndex
+                usages: this.model.usages
             })));
 
         this.disposable.add(this.model.observe
@@ -46,7 +45,7 @@ export class FindWindow extends ReactClientComponent<FindWindowProps, FindWindow
     }
 
     public componentDidMount() {
-        super.componentWillMount();
+        super.componentDidMount();
 
         React.findDOMNode(this).scrollTop = this.props.scrollTop();
         (<any>React.findDOMNode(this)).onkeydown = (e) => this.keydownPane(e);
@@ -104,9 +103,9 @@ export class FindWindow extends ReactClientComponent<FindWindowProps, FindWindow
         },
             React.DOM.ol({
                 style: { cursor: "pointer" },
-            }, ..._.map(this.state.usages, (usage: OmniSharp.Models.QuickFix, index) =>
+            }, _.map(this.state.usages, (usage: OmniSharp.Models.QuickFix, index) =>
                 React.DOM.li({
-                    key: index,
+                    key: `quick-fix-${usage.FileName}-(${usage.Line}-${usage.Column})-(${usage.EndLine}-${usage.EndColumn})-(${usage.Projects.join('-') })`,
                     className: 'find-usages' + (index === this.state.selectedIndex ? ' selected' : ''),
                     onClick: (e) => this.gotoUsage(usage, index)
                 },
