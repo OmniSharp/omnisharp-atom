@@ -20,16 +20,6 @@ class CodeAction implements OmniSharp.IFeature {
 
         this.disposable.add(Omni.addTextEditorCommand("omnisharp-atom:get-code-actions", () => {
             //store the editor that this was triggered by.
-// <<<<<<< Updated upstream
-//             Omni.request(client => client.v1.getcodeactions(this.getRequest(client)))
-//         }));
-//
-//         this.disposable.add(Omni.listener.v1.observeGetcodeactions.subscribe((data) => {
-//             //hack: this is a temporary workaround until the server
-//             //can give us code actions based on an Id.
-//             var wrappedCodeActions = this.WrapCodeActionWithFakeIdGeneration(data.response)
-
-// =======
             Omni.request(client => client.getcodeactions(this.getRequest(client)))
                 .subscribe(response => {
                     //pop ui to user.
@@ -45,20 +35,6 @@ class CodeAction implements OmniSharp.IFeature {
                 });
         }));
 
-//         this.disposable.add(Omni.listener.observeGetcodeactions.subscribe((data) => {
-// // >>>>>>> Stashed changes
-//             //pop ui to user.
-//             this.view = new CodeActionsView(data.response.CodeActions, (selectedItem) => {
-//                 Omni.activeEditor
-//                     .first()
-//                     .subscribe(editor => {
-//                         var range = editor.getSelectedBufferRange();
-//                         Omni.request(editor, client => client.v1.runcodeaction(this.getRequest(client, selectedItem.Id)))
-//                             .subscribe((response) => this.applyAllChanges(response.Changes));
-//                     });
-//             });
-//         }));
-
         this.disposable.add(Omni.editors.subscribe(editor => {
             var word, marker: Atom.Marker, subscription: Rx.Disposable;
             var makeLightbulbRequest = (position: TextBuffer.Point) => {
@@ -66,7 +42,7 @@ class CodeAction implements OmniSharp.IFeature {
 
                 var range = editor.getSelectedBufferRange();
 
-                subscription = Omni.request(client => client.v1.getcodeactions(this.getRequest(client), { silent: true }))
+                subscription = Omni.request(client => client.getcodeactions(this.getRequest(client), { silent: true }))
                     .subscribe(response => {
                         if (response.CodeActions.length > 0) {
                             if (marker) {
