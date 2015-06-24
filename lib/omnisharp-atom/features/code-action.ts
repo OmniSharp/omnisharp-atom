@@ -20,24 +20,23 @@ class CodeAction implements OmniSharp.IFeature {
 
         this.disposable.add(Omni.addTextEditorCommand("omnisharp-atom:get-code-actions", () => {
             //store the editor that this was triggered by.
-            Omni.request(client => client.getcodeactions(this.getRequest(client)));
-        }));
+            Omni.request(client => client.v1.getcodeactions(this.getRequest(client)))
+                .subscribe((data) => {
+                    //hack: this is a temporary workaround until the server
+                    //can give us code actions based on an Id.
+                    var wrappedCodeActions = this.WrapCodeActionWithFakeIdGeneration(data)
 
-        this.disposable.add(Omni.listener.observeGetcodeactions.subscribe((data) => {
-            //hack: this is a temporary workaround until the server
-            //can give us code actions based on an Id.
-            var wrappedCodeActions = this.WrapCodeActionWithFakeIdGeneration(data.response)
-
-            //pop ui to user.
-            this.view = new CodeActionsView(wrappedCodeActions, (selectedItem) => {
-                Omni.activeEditor
-                    .first()
-                    .subscribe(editor => {
-                        var range = editor.getSelectedBufferRange();
-                        Omni.request(editor, client => client.runcodeaction(this.getRequest(client, selectedItem.Id)))
-                            .subscribe((response) => this.applyAllChanges(editor, response.Changes));
+                    //pop ui to user.
+                    this.view = new CodeActionsView(wrappedCodeActions, (selectedItem) => {
+                        Omni.activeEditor
+                            .first()
+                            .subscribe(editor => {
+                                var range = editor.getSelectedBufferRange();
+                                Omni.request(editor, client => client.v1.runcodeaction(this.getRequest(client, selectedItem.Id)))
+                                    .subscribe((response) => this.applyAllChanges(editor, response.Changes));
+                            });
                     });
-            });
+                });
         }));
 
         this.disposable.add(Omni.editors.subscribe(editor => {
@@ -47,7 +46,7 @@ class CodeAction implements OmniSharp.IFeature {
 
                 var range = editor.getSelectedBufferRange();
 
-                subscription = Omni.request(client => client.getcodeactions(this.getRequest(client), { silent: true }))
+                subscription = Omni.request(client => client.v1.getcodeactions(this.getRequest(client), { silent: true }))
                     .subscribe(response => {
                         if (response.CodeActions.length > 0) {
                             if (marker) {
