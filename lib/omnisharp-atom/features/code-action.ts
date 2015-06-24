@@ -5,11 +5,6 @@ import SpacePen = require('atom-space-pen-views');
 import CodeActionsView = require('../views/code-actions-view');
 import Changes = require('./lib/apply-changes');
 
-// interface TemporaryCodeAction {
-//     Name: string;
-//     Identifier: string;
-// }
-
 class CodeAction implements OmniSharp.IFeature {
     private disposable: Rx.CompositeDisposable;
 
@@ -86,6 +81,7 @@ class CodeAction implements OmniSharp.IFeature {
         var editor = atom.workspace.getActiveTextEditor();
         var range = <any>editor.getSelectedBufferRange();
         var request = client.makeDataRequest<OmniSharp.Models.V2.RunCodeActionRequest>({
+            WantsTextChanges: true,
             Selection: {
                 Start: {
                     Line: range.start.row,
