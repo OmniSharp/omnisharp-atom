@@ -23,7 +23,7 @@ class CodeAction implements OmniSharp.IFeature {
             Omni.request(client => client.getcodeactions(this.getRequest(client)));
         }));
 
-        this.disposable.add(Omni.listener.observeGetcodeactions.subscribe((data) => {
+        this.disposable.add(Omni.listener.v1.observeGetcodeactions.subscribe((data) => {
             //hack: this is a temporary workaround until the server
             //can give us code actions based on an Id.
             var wrappedCodeActions = this.WrapCodeActionWithFakeIdGeneration(data.response)
