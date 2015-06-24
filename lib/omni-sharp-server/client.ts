@@ -1,20 +1,12 @@
 import _ = require('lodash');
 import {Observable} from 'rx';
-import {OmnisharpClient, DriverState, OmnisharpClientOptions} from "omnisharp-client";
+import {OmnisharpClientV2 as OmnisharpClient, DriverState, OmnisharpClientOptions} from "omnisharp-client";
 
 interface ClientOptions extends OmnisharpClientOptions {
     temporary: boolean;
 }
 
 import {ViewModel} from "./view-model";
-
-var serverLineNumbers = [
-    'Line','Column',
-    'StartLine','StartColumn',
-    'EndLine','EndColumn',
-    'SelectionStartColumn','SelectionStartLine',
-    'SelectionEndColumn','SelectionEndLine'
-];
 
 class Client extends OmnisharpClient {
     public model: ViewModel;
@@ -119,34 +111,6 @@ class Client extends OmnisharpClient {
             return Observable.empty<TResponse>();
         }
         return OmnisharpClient.prototype.request.call(this, action, request, options);
-    }
-
-    protected requestMutator(data: any) {
-        if (_.isArray(data)) {
-            _.each(data, item => this.requestMutator(item));
-            return data;
-        }
-
-        var itemsToChange = _.intersection(serverLineNumbers, _.keys(data));
-        _.each(itemsToChange, key => data[key] = data[key] + 1);
-
-        _.each(_.filter(data, z => _.isArray(z)), item => this.requestMutator(item));
-
-        return data;
-    }
-
-    protected responseMutator(data: any) {
-        if (_.isArray(data)) {
-            _.each(data, item => this.responseMutator(item));
-            return data;
-        }
-
-        var itemsToChange = _.intersection(serverLineNumbers, _.keys(data));
-        _.each(itemsToChange, key => data[key] = data[key] - 1);
-
-        _.each(_.filter(data, z => _.isArray(z)), item => this.responseMutator(item));
-
-        return data;
     }
 }
 

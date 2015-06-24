@@ -1,15 +1,15 @@
 import _ = require('lodash');
 import {Observable} from 'rx';
-import {OmnisharpObservationClient, OmnisharpCombinationClient} from "omnisharp-client";
+import {OmnisharpObservationClientV2, OmnisharpCombinationClientV2} from "omnisharp-client";
 import Client = require("./client");
 import {ViewModel} from './view-model';
 
-export class ObservationClient extends OmnisharpObservationClient<Client> {
+export class ObservationClient extends OmnisharpObservationClientV2<Client> {
     model: typeof ViewModel.prototype.observe;
 
     constructor(clients: Client[] = []) {
         super(clients);
-        
+
         this.model = {
             codecheck: this.makeMergeObserable((client: Client) => client.model.observe.codecheck),
             output: this.makeMergeObserable((client: Client) => client.model.observe.output),
@@ -22,4 +22,4 @@ export class ObservationClient extends OmnisharpObservationClient<Client> {
         };
     }
 }
-export class CombinationClient extends OmnisharpCombinationClient<Client> { }
+export class CombinationClient extends OmnisharpCombinationClientV2<Client> { }

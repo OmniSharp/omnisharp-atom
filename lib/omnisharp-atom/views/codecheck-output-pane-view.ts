@@ -8,7 +8,7 @@ import {codeCheck} from "../features/code-check";
 
 interface ICodeCheckOutputWindowState {
     diagnostics?: OmniSharp.Models.DiagnosticLocation[];
-    selectedIndex: number;
+    selectedIndex?: number;
 }
 
 export interface ICodeCheckOutputWindowProps {
@@ -30,13 +30,11 @@ export class CodeCheckOutputWindow<T extends ICodeCheckOutputWindowProps> extend
 
     public componentWillMount() {
         super.componentWillMount();
-
         this.disposable.add(this.model.observe
             .updated
-            .where(z => z.name !== "selectedIndex")
+            .where(z => z.name === "displayDiagnostics")
             .subscribe(z => this.setState({
-                diagnostics: this.model.displayDiagnostics,
-                selectedIndex: this.model.selectedIndex
+                diagnostics: this.model.displayDiagnostics
             })));
 
         this.disposable.add(this.model.observe
@@ -105,8 +103,9 @@ export class CodeCheckOutputWindow<T extends ICodeCheckOutputWindowProps> extend
         },
             React.DOM.ol({
                 style: { cursor: "pointer" },
-            }, ..._.map(this.state.diagnostics, (error, index) =>
+            }, _.map(this.state.diagnostics, (error, index) =>
                 React.DOM.li({
+                    key: `code-check-${error.LogLevel}-${error.FileName}-(${error.Line}-${error.Column})-(${error.EndLine}-${error.EndColumn})-(${error.Projects.join('-')})`,
                     className: `codecheck ${error.LogLevel}` + (index === this.state.selectedIndex ? ' selected' : ''),
                     onClick: (e) => this.goToLine(error, index)
                 },
@@ -121,23 +120,5 @@ export class CodeCheckOutputWindow<T extends ICodeCheckOutputWindowProps> extend
                     }, `${path.dirname(error.FileName) }`)
                     ))
                 ));
-        /*
-            React.DOM.div({
-                scrollTop: this.props.scrollTop()
-            }, ..._.map(this.state.diagnostics, (error, index) => {
-                var filename = path.basename(error.FileName);
-                var dirname = path.dirname(error.FileName);
-                var projectTargetFramework = Omni.getFrameworks(error.Projects);
-
-                return React.DOM.div({
-                    key: index,
-                    className: `codecheck ${error.LogLevel}`,
-                    onClick: (e) => this.goToLine(error)
-                },
-                    React.DOM.pre({ className: "text-highlight" }, error.Text),
-                    React.DOM.pre({ className: "inline-block" }, `${filename}(${error.Line},${error.Column})`),
-                    React.DOM.pre({ className: "text-subtle inline-block" }, ` ${dirname}  [${projectTargetFramework}]`)
-                    )
-            })));*/
     }
 }

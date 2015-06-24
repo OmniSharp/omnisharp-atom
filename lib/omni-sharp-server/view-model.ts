@@ -39,7 +39,7 @@ export class ViewModel {
 
     // Project information
     public msbuild: OmniSharp.Models.MsBuildWorkspaceInformation;
-    public aspnet5: OmniSharp.Models.AspNet5WorkspaceInformation;
+    public dnx: OmniSharp.Models.DnxWorkspaceInformation;
     public scriptcs: OmniSharp.ScriptCs.ScriptCsContext;
 
     public runtime = '';
@@ -82,7 +82,7 @@ export class ViewModel {
         var output = this.output;
         var updates = Observable.ofObjectChanges(this);
         var msbuild = this.setupMsbuild(_client);
-        var aspnet5 = this.setupAspnet5(_client);
+        var dnx = this.setupDnx(_client);
         var scriptcs = this.setupScriptCs(_client);
 
 
@@ -140,28 +140,28 @@ export class ViewModel {
                 });
 
             _client.projectAdded
-                .where(z => z.AspNet5Project != null)
-                .map(z => z.AspNet5Project)
-                .where(z => !_.any(this.aspnet5.Projects, { Path: z.Path }))
+                .where(z => z.DnxProject != null)
+                .map(z => z.DnxProject)
+                .where(z => !_.any(this.dnx.Projects, { Path: z.Path }))
                 .subscribe(project => {
-                    this.aspnet5.Projects.push(project);
+                    this.dnx.Projects.push(project);
                     this._projectAddedStream.onNext(
                         new ProjectViewModel(project.Name, project.Path, _client.path, project.Frameworks, project.Configurations, project.Commands));
                 });
 
             _client.projectRemoved
-                .where(z => z.AspNet5Project != null)
-                .map(z => z.AspNet5Project)
+                .where(z => z.DnxProject != null)
+                .map(z => z.DnxProject)
                 .subscribe(project => {
-                    _.pull(this.aspnet5.Projects, _.find(this.aspnet5.Projects, { Path: project.Path }));
+                    _.pull(this.dnx.Projects, _.find(this.dnx.Projects, { Path: project.Path }));
                     this._projectRemovedStream.onNext(_.find(this.projects, { Path: project.Path }));
                 });
 
             _client.projectChanged
-                .where(z => z.AspNet5Project != null)
-                .map(z => z.AspNet5Project)
+                .where(z => z.DnxProject != null)
+                .map(z => z.DnxProject)
                 .subscribe(project => {
-                    _.assign(_.find(this.aspnet5.Projects, z => { Path: project.Path }), project);
+                    _.assign(_.find(this.dnx.Projects, z => { Path: project.Path }), project);
                     this._projectChangedStream.onNext(
                         new ProjectViewModel(project.Name, project.Path, _client.path, project.Frameworks, project.Configurations, project.Commands));
                 });
@@ -230,17 +230,17 @@ export class ViewModel {
         return workspace;
     }
 
-    private setupAspnet5(_client: Client) {
+    private setupDnx(_client: Client) {
         var workspace = _client.observeProjects
-            .where(z => z.response.AspNet5 != null)
-            .where(z => z.response.AspNet5.Projects.length > 0)
-            .map(z => z.response.AspNet5);
+            .where(z => z.response.Dnx != null)
+            .where(z => z.response.Dnx.Projects.length > 0)
+            .map(z => z.response.Dnx);
 
         workspace.subscribe(project => {
-            this.aspnet5 = project;
+            this.dnx = project;
             this.runtime = basename(project.RuntimePath);
 
-            _.each(this.aspnet5.Projects
+            _.each(this.dnx.Projects
                 .map(p => new ProjectViewModel(p.Name, p.Path, _client.path, p.Frameworks, p.Configurations, p.Commands)),
                 project => this._projectAddedStream.onNext(project));
         });
