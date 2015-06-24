@@ -1,11 +1,11 @@
 import SpacePen = require('atom-space-pen-views');
 
 
-class CodeActionsView extends SpacePen.SelectListView {
+class CodeActionsView<T> extends SpacePen.SelectListView {
 
     private panel: Atom.Panel;
 
-    constructor(items : any[], private invokeNext: (result: any) => void) {
+    constructor(items : T[], private invokeNext: (result: T) => void) {
         super({ placeholderText: "Code actions" }); //note: doesn't work.
 
         this.setItems(items);

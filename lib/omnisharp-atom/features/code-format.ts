@@ -21,7 +21,7 @@ class CodeFormat implements OmniSharp.IFeature {
 
                         return client
                             .formatRangePromise(request)
-                            .then((data) => Changes.applyChanges(editor, data.Changes));
+                            .then((data) => Changes.applyChanges(editor, data));
                     });
                 }
             }));
@@ -46,7 +46,7 @@ class CodeFormat implements OmniSharp.IFeature {
                 request.Character = char;
 
                 return client.formatAfterKeystrokePromise(request)
-                    .then((data) => Changes.applyChanges(editor, data.Changes));
+                    .then((data) => Changes.applyChanges(editor, data));
             });
         }
         event.preventDefault();

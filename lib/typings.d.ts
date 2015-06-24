@@ -68,3 +68,10 @@ declare module Rx {
         throttleFirst(windowDuration: number, scheduler?: Rx.Scheduler);
     }
 }
+
+declare module _ {
+    interface LoDashStatic {
+        get: Function;
+        set: Function;
+    }
+}

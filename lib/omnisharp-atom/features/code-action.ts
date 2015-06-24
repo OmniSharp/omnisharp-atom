@@ -28,7 +28,7 @@ class CodeAction implements OmniSharp.IFeature {
                             .first()
                             .subscribe(editor => {
                                 var range = editor.getSelectedBufferRange();
-                                Omni.request(editor, client => client.runcodeaction(this.getRequest(client, selectedItem.Id)))
+                                Omni.request(editor, client => client.runcodeaction(this.getRequest(client, selectedItem.Identifier)))
                                     .subscribe((response) => this.applyAllChanges(response.Changes));
                             });
                     });
@@ -80,10 +80,12 @@ class CodeAction implements OmniSharp.IFeature {
         }));
     }
 
-    private getRequest(client: OmniSharp.ExtendApi, codeAction?: number) {
+    private getRequest(client: OmniSharp.ExtendApi) : OmniSharp.Models.V2.GetCodeActionsRequest;
+    private getRequest(client: OmniSharp.ExtendApi, codeAction: string): OmniSharp.Models.V2.RunCodeActionRequest;
+    private getRequest(client: OmniSharp.ExtendApi, codeAction?: string) {
         var editor = atom.workspace.getActiveTextEditor();
         var range = <any>editor.getSelectedBufferRange();
-        var request = client.makeDataRequest<OmniSharp.Models.V2.GetCodeActionsRequest>({
+        var request = client.makeDataRequest<OmniSharp.Models.V2.RunCodeActionRequest>({
             Selection: {
                 Start: {
                     Line: range.start.row,
@@ -96,9 +98,9 @@ class CodeAction implements OmniSharp.IFeature {
             }
         });
 
-        // if (codeAction !== undefined) {
-        //     request.CodeAction = codeAction;
-        // }
+        if (codeAction !== undefined) {
+            request.Identifier = codeAction;
+        }
 
         return request;
     }
@@ -110,7 +112,7 @@ class CodeAction implements OmniSharp.IFeature {
     public applyAllChanges(changes: OmniSharp.Models.ModifiedFileResponse[]) {
         return _.each(changes, (change) => {
             atom.workspace.open(change.FileName, undefined)
-                .then((editor) => { Changes.applyChanges(editor, change.Changes); })
+                .then((editor) => { Changes.applyChanges(editor, change); })
         });
     }
 }
