@@ -39,10 +39,10 @@ class Rename implements OmniSharp.IFeature {
         return this.renameView.configure(wordToRename);
     }
 
-    public applyAllChanges(changes: any[]) {
+    public applyAllChanges(changes: OmniSharp.Models.ModifiedFileResponse[]) {
         return _.each(changes, (change) => {
             atom.workspace.open(change.FileName, undefined)
-                .then((editor) => { Changes.applyChanges(editor, change.Changes); })
+                .then((editor) => { Changes.applyChanges(editor, change); })
         });
     }
 }
