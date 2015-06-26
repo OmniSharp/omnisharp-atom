@@ -1,4 +1,4 @@
-import {CompositeDisposable, Disposable, Scheduler} from "rx";
+import {CompositeDisposable, Disposable, Scheduler, Observable} from "rx";
 import _ = require('lodash');
 import Omni = require('../../omni-sharp-server/omni')
 import Client = require('../../omni-sharp-server/client');
@@ -46,7 +46,8 @@ class StatusBarComponent extends ReactClientComponent<{}, StatusBarState> {
             });
         }));
 
-        this.disposable.add(world.observe.updates.bufferWithTime(50)
+        this.disposable.add(world.observe.updates
+            .buffer(world.observe.updates.throttleFirst(100), () => Observable.timer(100))
             .subscribe(items => {
                 var updates = _(items)
                     .filter(item => _.contains(['isOff', 'isConnecting', 'isOn', 'isReady', 'isError'], item.name))

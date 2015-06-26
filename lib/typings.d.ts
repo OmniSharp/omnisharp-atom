@@ -65,6 +65,6 @@ declare module Rx {
     }
 
     interface Observable<T> {
-        throttleFirst(windowDuration: number, scheduler?: Rx.Scheduler);
+        throttleFirst(windowDuration: number, scheduler?: Rx.Scheduler): Observable<T>;
     }
 }

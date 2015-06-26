@@ -1,5 +1,7 @@
 // Configure rx / Bluebird for long stacks
 var rx = require("rx");
+var promise = require('bluebird');
+
 rx.Observable.ofObjectChanges = function(obj) {
     if (obj == null) { throw new TypeError('object must not be null or undefined.'); }
     if (typeof (<any>Object).observe !== 'function' && typeof (<any>Object).unobserve !== 'function') { throw new TypeError('Object.observe is not supported on your platform') }
@@ -36,7 +38,8 @@ rx.Observable.ofArrayChanges = function(array) {
     });
 };
 
-var promise = require('bluebird');
-promise.longStackTraces();
-rx.config.promise = promise;
-rx.config.longStackSupport = true;
+if ((<any>atom).devMode) {
+    promise.longStackTraces();
+    rx.config.promise = promise;
+    rx.config.longStackSupport = true;
+}
