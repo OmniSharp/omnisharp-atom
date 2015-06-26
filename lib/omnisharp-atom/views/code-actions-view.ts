@@ -20,9 +20,11 @@ class CodeActionsView<T> extends SpacePen.SelectListView {
     private panel: Atom.Panel;
     private _overlayDecoration: any;
     private _vimMode: boolean;
+    private _editorElement: any;
 
     constructor(public options: SelectListViewOptions<T>, public editor: Atom.TextEditor) {
         super();
+        this._editorElement = atom.views.getView(editor);
         this._vimMode = atom.packages.isPackageActive("vim-mode");
         this.$.addClass('code-actions-overlay');
         (<any>this).filterEditorView.model.placeholderText = 'Filter list';
@@ -69,13 +71,13 @@ class CodeActionsView<T> extends SpacePen.SelectListView {
 
     enableVimMode() {
         if (this._vimMode) {
-            atom.views.getView(this.editor).addClass("vim-mode");
+            this._editorElement.classList.add("vim-mode");
         }
     }
 
     disableVimMode() {
         if (this._vimMode) {
-            atom.views.getView(this.editor).removeClass("vim-mode");
+            this._editorElement.classList.remove("vim-mode");
         }
     }
 
@@ -93,6 +95,5 @@ class CodeActionsView<T> extends SpacePen.SelectListView {
                 });
             });
         });
-
     }
 }
