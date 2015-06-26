@@ -35,7 +35,8 @@ class CodeActionsView<T> extends SpacePen.SelectListView {
     }
 
     public setItems() {
-        super.setItems(this.options.items)
+        //super.setItems(this.options.items)
+        SpacePen.SelectListView.prototype.setItems.call(this, this.options.items)
     }
 
     public confirmed(item) {
