@@ -48,7 +48,7 @@ class WorldModel {
         Omni.activeModel
             .flatMapLatest(newModel =>
                 newModel.observe.updates// Track changes to the model
-                    .bufferWithTime(50) // Group the changes so that we capture all the differences at once.
+                    .buffer(newModel.observe.updates.throttleFirst(50), () => Observable.timer(50)) // Group the changes so that we capture all the differences at once.
                     .map(items => _.filter(items, item => _.contains(statefulProperties, item.name)))
                     .where(z => z.length > 0)
                     .map(items => ({ items, newModel })))

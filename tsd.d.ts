@@ -30,3 +30,9 @@ declare module chai {
         isAbove(valueToCheck: number, valueToBeAbove: number, message?: string);
     }
 }
+
+declare module _ {
+    interface LoDashStatic {
+        set: any;
+    }
+}
