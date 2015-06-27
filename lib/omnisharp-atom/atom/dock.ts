@@ -81,7 +81,6 @@ class Dock implements OmniSharp.IAtomFeature {
 
         if (options.closeable) {
             cd.add(atom.commands.add('atom-workspace', "omnisharp-atom:close-" + id, () => {
-                debugger;
                 this.disposable.remove(disposable);
                 if (this.dock.selected === id) {
                     this.dock.state.selected = 'output';
