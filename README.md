@@ -4,8 +4,13 @@
 
 ![omnisharp-atom](https://cloud.githubusercontent.com/assets/667194/7758038/8ad7bdfa-fffe-11e4-98be-74e0c660aabd.gif)
 
-## Installation
+## Runtime prerequisites
 
+Please ensure you've got [Mono](http://www.mono-project.com/) 4.0.1 or later installed if you're on OS X/Linux. Or .NET 4.5.1 on Windows.
+
+You will also need dnx version 1.0.0-beta4 to be installed.
+Please refer to the instructions detailed in the [aspnet/home](https://github.com/aspnet/home/#minimum-requirements) repository. 
+## Installation
 From the packages settings inside Atom:
 
 * install omnisharp-atom
