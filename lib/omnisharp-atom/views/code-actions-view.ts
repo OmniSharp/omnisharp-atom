@@ -7,10 +7,13 @@ export interface SelectListViewOptions<T> {
 
 export default function <T>(options: SelectListViewOptions<T>, editor: Atom.TextEditor): CodeActionsView<T> {
     var codeActionView = (<any>editor).codeActionView;
-    if (!codeActionView) (<any>editor).codeActionView
-        = codeActionView = new CodeActionsView<T>(options, editor);
-
-    else { codeActionView.options = options; }
+    if (!codeActionView) {
+        (<any>editor).codeActionView
+            = codeActionView = new CodeActionsView<T>(options, editor);
+    }
+    else {
+        codeActionView.options = options;
+    }
 
     codeActionView.setItems();
     codeActionView.show();
@@ -53,7 +56,7 @@ class CodeActionsView<T> extends SpacePen.SelectListView {
     show() {
         this.storeFocusedElement();
         this.disableVimMode();
-
+        this.destroyOverlay();
         this._overlayDecoration = this.editor.decorateMarker(this.editor.getLastCursor().getMarker(),
             { type: "overlay", position: "tail", item: this });
 
@@ -63,10 +66,14 @@ class CodeActionsView<T> extends SpacePen.SelectListView {
     hide() {
         this.restoreFocus();
         this.enableVimMode();
+        this.destroyOverlay();
+    }
 
+    destroyOverlay() {
         if (this._overlayDecoration)
             this._overlayDecoration.destroy();
     }
+
 
     cancelled() {
         this.hide();
