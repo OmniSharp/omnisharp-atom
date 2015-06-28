@@ -16,6 +16,7 @@ class OmniSharpAtom {
     private emitter: EventKit.Emitter;
     private disposable: Rx.CompositeDisposable;
     private autoCompleteProvider;
+    private linterProvider;
     private generator: { run(generator: string, path?: string, options?: any): void; start(prefix: string, path?: string, options?: any): void; };
     private menu: EventKit.Disposable;
 
@@ -196,6 +197,12 @@ class OmniSharpAtom {
         var {CompletionProvider} = require("./features/lib/completion-provider");
         this.autoCompleteProvider = CompletionProvider;
         return this.autoCompleteProvider;
+    }
+
+    public provideLinter() {
+        var LinterProvider = require("./features/lib/linter-provider");
+        this.linterProvider = LinterProvider;
+        return this.linterProvider.provider;
     }
 
     private configureKeybindings() {

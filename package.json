@@ -102,11 +102,15 @@
       "versions": {
         "2.0.0": "provideAutocomplete"
       }
-    }
+    },
+    "linter": {
+      "versions": {
+        "1.0.0": "provideLinter"
+      }
+     }
   },
   "package-dependencies": {
     "language-csharp": ">=0.3.0",
-    "linter": ">=0.12.0",
     "atom-yeoman": ">=0.3.0",
     "advanced-new-file": ">=0.4.3"
   }
