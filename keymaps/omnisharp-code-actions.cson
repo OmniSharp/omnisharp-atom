@@ -1,0 +1,3 @@
+'.code-actions-overlay':
+  'alt-enter': '!unset'
+  'ctrl-.': '!unset'
