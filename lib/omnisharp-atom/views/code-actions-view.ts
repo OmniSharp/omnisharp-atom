@@ -7,7 +7,9 @@ export interface SelectListViewOptions<T> {
 
 export default function <T>(options: SelectListViewOptions<T>, editor: Atom.TextEditor): CodeActionsView<T> {
     var codeActionView = (<any>editor).codeActionView;
-    if (!codeActionView) codeActionView = new CodeActionsView<T>(options, editor);
+    if (!codeActionView) (<any>editor).codeActionView
+        = codeActionView = new CodeActionsView<T>(options, editor);
+
     else { codeActionView.options = options; }
 
     codeActionView.setItems();
