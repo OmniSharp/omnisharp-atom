@@ -15,40 +15,49 @@ class Highlight implements OmniSharp.IFeature {
     private disposable: Rx.CompositeDisposable;
     private editors: Array<Atom.TextEditor>;
     private wantIdentifiers = true;
-    
+    private retokenizeAll = new Subject<boolean>();
+
     constructor() {
         atom.config.observe("omnisharp-atom.enhancedHighlighting", (enabled: boolean) => {
-            if (!this.enabled && enabled) {
-                highlight.activate();
-            } else if (this.enabled && !enabled) {
-                highlight.dispose();
-            }
-
+            var currentlyEnabled = this.enabled;
             this.enabled = enabled;
+            if (!currentlyEnabled && enabled) {
+                this.activate(true);
+            } else if (currentlyEnabled && !enabled) {
+                this.dispose();
+            }
         });
 
         atom.config.observe('omnisharp-atom.enhancedHighlightingIdentifiers', (enabled: boolean) => {
             this.wantIdentifiers = enabled;
+            if (this.active) {
+                this.retokenizeAll.onNext(enabled);
+            }
         });
     }
 
     public active = false;
-    public enabled = true;
+    private beenActivatedByPlugin = false;
+    public enabled: boolean;
 
-    public activate() {
-        if (this.active || !this.enabled) return;
+    public activate(enabledByConfig = false) {
+        if (!enabledByConfig) this.beenActivatedByPlugin = true;
+        if (this.active || !this.beenActivatedByPlugin) return;
 
         this.disposable = new CompositeDisposable();
         this.editors = [];
 
         this.active = true;
-        this.disposable.add(Disposable.create(() => this.active = false));
+        this.disposable.add(Disposable.create(() => {
+            this.active = false
+        }));
 
         this.disposable.add(Omni.editors
             .subscribe(editor => this.setupEditor(editor)));
 
         this.disposable.add(
             Omni.activeEditor.take(1)
+                .where(x => !!x)
                 .flatMap(editor => Omni.listener.responses
                     .where(z => z.command === "highlight")
                     .where(z => z.request.FileName == editor.getPath())
@@ -78,7 +87,7 @@ class Highlight implements OmniSharp.IFeature {
     }
 
     public dispose() {
-        this.disposable.dispose();
+        this.disposable && this.disposable.dispose();
     }
 
     private setupEditor(editor: Atom.TextEditor) {
@@ -143,6 +152,7 @@ class Highlight implements OmniSharp.IFeature {
                     }, editor)));
         }
 
+        disposable.add(this.retokenizeAll.subscribe(() => doRequest()));
         disposable.add(editor.onDidStopChanging(() => doRequest()));
         disposable.add(editor.onDidSave(() => doRequest()));
         doRequest();
@@ -329,15 +339,21 @@ function getAtomStyleForToken(tags: number[], token: HighlightResponse, index: n
 
     switch (token.Kind) {
         case "number":
-        case "struct name":
             add('constant.numeric.source.cs');
+        case "struct name":
+            add('constant.numeric.struct.source.cs');
             break;
         case "identifier":
             add('identifier.source.cs');
             break;
         case "class name":
-        case "enum name":
             add('support.class.type.source.cs');
+        case "delegate name":
+            add('support.class.type.source.cs');
+        case "enum name":
+            add('support.class.type.enum.source.cs');
+        case "delegate name":
+            add('support.class.type.delegate.source.cs');
             break;
         case "interface name":
             add('support.class.type.interface.source.cs');
