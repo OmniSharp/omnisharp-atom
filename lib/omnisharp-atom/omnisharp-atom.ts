@@ -304,6 +304,12 @@ class OmniSharpAtom {
             description: "Enables server based highlighting, which includes support for string interpolation, class names and more.",
             type: 'boolean',
             default: true
+        },
+        enhancedHighlightingIdentifiers: {
+            title: 'Enhanced Highlighting - Highlight Identifiers',
+            description: "Disable this if you don't like how omnisharp atom highlights things like paramater names.",
+            type: 'boolean',
+            default: true
         }
     }
 }
