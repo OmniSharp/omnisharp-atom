@@ -6,11 +6,6 @@ import {Observable, Subject, Scheduler, CompositeDisposable, Disposable} from "r
 var AtomGrammar = require((<any> atom).config.resourcePath + "/node_modules/first-mate/lib/grammar.js");
 var Range: typeof TextBuffer.Range = <any>require('atom').Range;
 
-// TEMP
-var ClientBase = require('../../omni-sharp-server/client');
-ClientBase.serverLineNumbers.push('Lines', /*'Start.Line',*/ 'Start.Character', /*'End.Line',*/ 'End.Character');
-// TEMP
-
 class Highlight implements OmniSharp.IFeature {
     private disposable: Rx.CompositeDisposable;
     private editors: Array<Atom.TextEditor>;
@@ -81,8 +76,6 @@ class Highlight implements OmniSharp.IFeature {
             .where(z => !!z)
             .subscribe(editor => {
                 editor.displayBuffer.tokenizedBuffer.retokenizeLines();
-                /*if (editor.displayBuffer.tokenizedBuffer['silentRetokenizeLines'])
-                    editor.displayBuffer.tokenizedBuffer['silentRetokenizeLines']();*/
             }));
     }
 
@@ -170,8 +163,10 @@ interface HighlightRequest {
 }
 
 interface HighlightResponse {
-    Start: { Character: number; Line: number; };
-    End: { Character: number; Line: number; };
+    StartLine: number;
+    StartColumn: number;
+    EndLine: number;
+    EndColumn: number;
     Kind: string;
 }
 
@@ -216,7 +211,7 @@ function Grammar(editor: Atom.TextEditor, base: FirstMate.Grammar) {
     this.setResponses = (value: HighlightResponse[]) => {
         var results = chain(value).chain();
 
-        var groupedItems = <any>results.map(highlight => range(highlight.Start.Line, highlight.End.Line + 1)
+        var groupedItems = <any>results.map(highlight => range(highlight.StartLine, highlight.EndLine + 1)
             .map(line => ({ line, highlight })))
             .flatten<{ line: number; highlight: HighlightResponse }>()
             .groupBy(z => z.line)
@@ -252,10 +247,10 @@ Grammar.prototype.getCsTokensForLine = function(highlights: HighlightResponse[],
     ruleStack = [{ rule: this.getInitialRule() }];
 
     each(highlights, function(highlight) {
-        var start = highlight.Start.Character;
-        var end = highlight.End.Character
+        var start = highlight.StartColumn;
+        var end = highlight.EndColumn
 
-        if (highlight.End.Line > highlight.Start.Line && highlight.End.Line !== row) {
+        if (highlight.EndLine > highlight.StartLine && highlight.EndLine !== row) {
             start = 0;
             end = line.length;
         }
@@ -366,24 +361,11 @@ function getAtomStyleForToken(tags: number[], token: HighlightResponse, index: n
             break;
         default:
             console.log(`unhandled Kind ${token.Kind}`);
-            add('unknown.source.cs'); // This should not happen
             break;
     }
     if (replacement.length > 1) {
         tags.splice(index, 1, ...replacement);
     }
-}
-
-function findLine(response: HighlightResponse, index: number) {
-    if (response.Start.Line === index || response.End.Line === index) {
-        return true;
-    }
-
-    if (response.Start.Line <= index && response.End.Line >= index) {
-        return true;
-    }
-
-    return false;
 }
 
 function setGrammar(grammar: FirstMate.Grammar): FirstMate.Grammar {
