@@ -19,7 +19,6 @@ class Intellisense implements OmniSharp.IFeature {
 
         this.disposable.add(Omni.addTextEditorCommand('omnisharp-atom:intellisense-semicolon',
             (event) => this.complete(event, ';')));
-
     }
 
     public dispose() {

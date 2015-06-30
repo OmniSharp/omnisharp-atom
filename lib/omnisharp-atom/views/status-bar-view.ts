@@ -5,17 +5,18 @@ import Client = require('../../omni-sharp-server/client');
 import React = require('react');
 import {ReactClientComponent} from "./react-client-component";
 import {world, server, solutionInformation} from '../world';
+import {OmnisharpClientStatus} from "omnisharp-client";
 
 interface StatusBarState {
     errorCount?: number;
     warningCount?: number;
-    projects?: typeof server.projects;
+    projects?: OmniSharp.IProjectViewModel[];
     isOff?: boolean;
     isConnecting?: boolean;
     isOn?: boolean;
     isReady?: boolean;
     isError?: boolean;
-    status?: typeof server.status;
+    status?: OmnisharpClientStatus;
 }
 
 class StatusBarComponent extends ReactClientComponent<{}, StatusBarState> {
@@ -25,13 +26,13 @@ class StatusBarComponent extends ReactClientComponent<{}, StatusBarState> {
         this.state = {
             errorCount: 0,
             warningCount: 0,
-            projects: server.projects,
+            projects: [],
             isOff: world.isOff,
             isConnecting: world.isConnecting,
             isOn: world.isOn,
             isReady: world.isReady,
             isError: world.isError,
-            status: server.status || <any>{}
+            status: <OmnisharpClientStatus>{}
         };
     }
 
@@ -67,6 +68,7 @@ class StatusBarComponent extends ReactClientComponent<{}, StatusBarState> {
 
         this.disposable.add(server.observe.status
             .subscribe(status => this.setState({ status })));
+            
         this.disposable.add(server.observe.model
             .subscribe(status => this.setState({})));
 

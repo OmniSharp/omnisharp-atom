@@ -92,9 +92,14 @@ export class ViewModel {
         var projects = Observable.merge(_projectAddedStream, _projectRemovedStream, _projectChangedStream)
             .map(z => this.projects);
 
+        var outputObservable = _client.logs
+            .window(_client.logs.throttleFirst(100), () => Observable.timer(100))
+            .flatMap(x => x.last())
+            .map(() => output);
+
         this.observe = {
             get codecheck() { return codecheck; },
-            get output() { return _client.logs.map(() => output); },
+            get output() { return outputObservable; },
             get status() { return status; },
             get updates() { return updates; },
             get projects() { return projects; },

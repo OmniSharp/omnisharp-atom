@@ -21,7 +21,7 @@ class SolutionInformation implements OmniSharp.IFeature {
         updates: Observable<Rx.ObjectObserveChange<SolutionInformation>>;
     }
 
-    public solutions: ViewModel[] = manager.activeClients.map(z => z.model);
+    public solutions: ViewModel[] = [];
 
     public activate() {
         this.disposable = new CompositeDisposable();
