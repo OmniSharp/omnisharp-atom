@@ -9,7 +9,6 @@ var Range: typeof TextBuffer.Range = <any>require('atom').Range;
 class Highlight implements OmniSharp.IFeature {
     private disposable: Rx.CompositeDisposable;
     private editors: Array<Atom.TextEditor>;
-    private wantIdentifiers = true;
     private retokenizeAll = new Subject<boolean>();
 
     constructor() {
@@ -20,13 +19,6 @@ class Highlight implements OmniSharp.IFeature {
                 this.activate(true);
             } else if (currentlyEnabled && !enabled) {
                 this.dispose();
-            }
-        });
-
-        atom.config.observe('omnisharp-atom.enhancedHighlightingIdentifiers', (enabled: boolean) => {
-            this.wantIdentifiers = enabled;
-            if (this.active) {
-                this.retokenizeAll.onNext(enabled);
             }
         });
     }
@@ -57,18 +49,18 @@ class Highlight implements OmniSharp.IFeature {
                     .where(z => z.command === "highlight")
                     .where(z => z.request.FileName == editor.getPath())
                     .take(1))
-                .subscribe(({request, response}: { request: HighlightRequest, response: HighlightResponse[] }) => {
+                .subscribe(({request, response}: { request: HighlightRequest, response: HighlightResponse }) => {
                     var editor = find(this.editors, editor => editor.getPath() === request.FileName);
-                    (<any>editor.getGrammar()).setResponses(response);
+                    (<any>editor.getGrammar()).setResponses(response.Highlights);
                     editor.displayBuffer.tokenizedBuffer.retokenizeLines();
                 }));
 
         this.disposable.add(
             Omni.listener.responses
                 .where(z => z.command === "highlight")
-                .subscribe(({request, response}: { request: HighlightRequest, response: HighlightResponse[] }) => {
+                .subscribe(({request, response}: { request: HighlightRequest, response: HighlightResponse }) => {
                     var editor = find(this.editors, editor => editor.getPath() === request.FileName);
-                    (<any>editor.getGrammar()).setResponses(response);
+                    (<any>editor.getGrammar()).setResponses(response.Highlights);
                     editor.displayBuffer.tokenizedBuffer['silentRetokenizeLines']();
                 }));
 
@@ -131,17 +123,18 @@ class Highlight implements OmniSharp.IFeature {
 
         var doRequest = () => {
             Omni.request(editor, client => client
-                .request<HighlightRequest, HighlightResponse[]>(
+                .request<HighlightRequest, HighlightResponse>(
                     "highlight",
                     client.makeDataRequest<HighlightRequest>({
                         FileName: editor.getPath(),
                         Lines: [],
-                        WantComments: false,
-                        WantStrings: false,
-                        WantOperators: false,
-                        WantPunctuation: false,
-                        WantKeywords: false,
-                        WantIdentifiers: this.wantIdentifiers
+                        ExcludeClassifications: [
+                            HighlightClassification.Comment,
+                            HighlightClassification.String,
+                            HighlightClassification.Punctuation,
+                            HighlightClassification.Operator,
+                            HighlightClassification.Keyword
+                        ]
                     }, editor)));
         }
 
@@ -155,14 +148,15 @@ class Highlight implements OmniSharp.IFeature {
 interface HighlightRequest {
     FileName: string;
     Lines?: number[];
-    WantComments?: boolean;
-    WantStrings?: boolean;
-    WantOperators?: boolean;
-    WantPunctuation?: boolean;
-    WantKeywords?: boolean;
+    Classifications?: HighlightClassification[];
+    ExcludeClassifications?: HighlightClassification[];
 }
 
 interface HighlightResponse {
+    Highlights: HighlightSpan[];
+}
+
+interface HighlightSpan {
     StartLine: number;
     StartColumn: number;
     EndLine: number;
@@ -170,9 +164,22 @@ interface HighlightResponse {
     Kind: string;
 }
 
+enum HighlightClassification {
+    Name = 1,
+    Comment = 2,
+    String = 3,
+    Operator = 4,
+    Punctuation = 5,
+    Keyword = 6,
+    Number = 7,
+    Identifier = 8,
+    PreprocessorKeyword = 9,
+    ExcludedCode = 10
+}
+
 function Grammar(editor: Atom.TextEditor, base: FirstMate.Grammar) {
     this.editor = editor;
-    var responses = new Map<number, HighlightResponse[]>();
+    var responses = new Map<number, HighlightSpan[]>();
     Object.defineProperty(this, 'responses', {
         writable: false,
         value: responses
@@ -208,17 +215,17 @@ function Grammar(editor: Atom.TextEditor, base: FirstMate.Grammar) {
         }
     });
 
-    this.setResponses = (value: HighlightResponse[]) => {
+    this.setResponses = (value: HighlightSpan[]) => {
         var results = chain(value).chain();
 
         var groupedItems = <any>results.map(highlight => range(highlight.StartLine, highlight.EndLine + 1)
             .map(line => ({ line, highlight })))
-            .flatten<{ line: number; highlight: HighlightResponse }>()
+            .flatten<{ line: number; highlight: HighlightSpan }>()
             .groupBy(z => z.line)
             .value();
 
         responses.clear();
-        each(groupedItems, (item: { highlight: HighlightResponse }[], key: number) => {
+        each(groupedItems, (item: { highlight: HighlightSpan }[], key: number) => {
             if (!responses.has(+key)) {
                 responses.set(+key, item.map(x => x.highlight));
             }
@@ -243,12 +250,12 @@ Grammar.prototype.tokenizeLine = function(line: string, ruleStack: any[], firstL
     return baseResult;
 }
 
-Grammar.prototype.getCsTokensForLine = function(highlights: HighlightResponse[], line: string, row: number, ruleStack: any[], firstLine, tags: number[]) {
+Grammar.prototype.getCsTokensForLine = function(highlights: HighlightSpan[], line: string, row: number, ruleStack: any[], firstLine, tags: number[]) {
     ruleStack = [{ rule: this.getInitialRule() }];
 
     each(highlights, function(highlight) {
-        var start = highlight.StartColumn;
-        var end = highlight.EndColumn
+        var start = highlight.StartColumn - 1;
+        var end = highlight.EndColumn - 1;
 
         if (highlight.EndLine > highlight.StartLine && highlight.EndLine !== row) {
             start = 0;
@@ -310,7 +317,7 @@ var getIdForScope = (function() {
 
 /// NOTE: best way I have found for these is to just look at theme "less" files
 // Alternatively just inspect the token for a .js file
-function getAtomStyleForToken(tags: number[], token: HighlightResponse, index: number, str: string) {
+function getAtomStyleForToken(tags: number[], token: HighlightSpan, index: number, str: string) {
     var previousScopes = [];
 
     for (var i = index - 1; i >= 0; i--) {
@@ -335,18 +342,19 @@ function getAtomStyleForToken(tags: number[], token: HighlightResponse, index: n
     switch (token.Kind) {
         case "number":
             add('constant.numeric.source.cs');
+            break;
         case "struct name":
-            add('constant.numeric.struct.source.cs');
+            add('support.constant.numeric.struct.source.cs');
+            break;
+        case "enum name":
+            add('support.constant.numeric.enum.source.cs');
             break;
         case "identifier":
             add('identifier.source.cs');
             break;
         case "class name":
             add('support.class.type.source.cs');
-        case "delegate name":
-            add('support.class.type.source.cs');
-        case "enum name":
-            add('support.class.type.enum.source.cs');
+            break;
         case "delegate name":
             add('support.class.type.delegate.source.cs');
             break;
