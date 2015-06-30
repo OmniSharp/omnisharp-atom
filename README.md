@@ -42,6 +42,13 @@ When the flame icon in the bottom left corner turns green, the server has starte
 - Automatic Package restore in vNext when you save `project.json` files
 - Enjoy!
 
+## Test Runner
+
+- ctrl-r ctrl-a Run all tests
+- ctrl-r ctrl-f Run all fixture tests
+- ctrl-r ctrl-t Run single test
+- ctrl-r ctrl-l Run last test
+
 # Wiki
 
 https://github.com/OmniSharp/omnisharp-atom/wiki
