@@ -2,7 +2,7 @@ import Omni = require('../../omni-sharp-server/omni');
 import {DriverState} from "omnisharp-client";
 import OmniSharpAtom = require('../omnisharp-atom');
 import {each, indexOf, extend, has, map, flatten, contains, any, range, remove, pull, find, defer, startsWith, trim, isArray, chain} from "lodash";
-import {Observable, Subject, Scheduler, CompositeDisposable, Disposable} from "rx";
+import {Observable, Subject, ReplaySubject, Scheduler, CompositeDisposable, Disposable} from "rx";
 var AtomGrammar = require((<any> atom).config.resourcePath + "/node_modules/first-mate/lib/grammar.js");
 var Range: typeof TextBuffer.Range = <any>require('atom').Range;
 
@@ -12,6 +12,7 @@ class Highlight implements OmniSharp.IFeature {
     private retokenizeAll = new Subject<boolean>();
 
     constructor() {
+        var subject = new ReplaySubject<boolean>(1);
         atom.config.observe("omnisharp-atom.enhancedHighlighting", (enabled: boolean) => {
             var currentlyEnabled = this.enabled;
             this.enabled = enabled;
@@ -20,12 +21,17 @@ class Highlight implements OmniSharp.IFeature {
             } else if (currentlyEnabled && !enabled) {
                 this.dispose();
             }
+            subject.onNext(enabled);
         });
+
+        this.observe = { enabled: subject.asObservable() };
     }
 
     public active = false;
     private beenActivatedByPlugin = false;
     public enabled: boolean;
+
+    public observe: { enabled: Observable<boolean> };
 
     public activate(enabledByConfig = false) {
         if (!enabledByConfig) this.beenActivatedByPlugin = true;
@@ -344,22 +350,22 @@ function getAtomStyleForToken(tags: number[], token: HighlightSpan, index: numbe
             add('constant.numeric.source.cs');
             break;
         case "struct name":
-            add('support.constant.numeric.struct.source.cs');
+            add('support.constant.numeric.identifier.struct.source.cs');
             break;
         case "enum name":
-            add('support.constant.numeric.enum.source.cs');
+            add('support.constant.numeric.identifier.enum.source.cs');
             break;
         case "identifier":
-            add('identifier.source.cs');
+            add('identifier');
             break;
         case "class name":
-            add('support.class.type.source.cs');
+            add('support.class.type.identifier.source.cs');
             break;
         case "delegate name":
-            add('support.class.type.delegate.source.cs');
+            add('support.class.type.identifier.delegate.source.cs');
             break;
         case "interface name":
-            add('support.class.type.interface.source.cs');
+            add('support.class.type.identifier.interface.source.cs');
             break;
         case "preprocessor keyword":
             add('constant.other.symbo.source.csl');
