@@ -62,10 +62,11 @@ class Highlight implements OmniSharp.IFeature {
                 }));
 
         this.disposable.add(
-            Omni.listener.responses
-                .where(z => z.command === "highlight")
-                .subscribe(({request, response}: { request: HighlightRequest, response: HighlightResponse }) => {
-                    var editor = find(this.editors, editor => editor.getPath() === request.FileName);
+            Observable.combineLatest(Omni.listener.responses, Omni.activeEditor,
+                (ctx, editor) => ({ command: ctx.command, response: <HighlightResponse>ctx.response, request: <HighlightRequest>ctx.request, editor, path: editor.getPath() }))
+                .where(z => z.command === "highlight" && z.request.FileName === z.path)
+                .debounce(400)
+                .subscribe(({request, response, editor}) => {
                     (<any>editor.getGrammar()).setResponses(response.Highlights);
                     editor.displayBuffer.tokenizedBuffer['silentRetokenizeLines']();
                 }));

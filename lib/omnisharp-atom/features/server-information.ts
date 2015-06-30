@@ -33,35 +33,28 @@ class ServerInformation implements OmniSharp.IFeature {
 
     private setupStatus() {
         // Stream the status from the active model
-        var status = Omni.activeModel
+        return Omni.activeModel
             .flatMapLatest(model => model.observe.status)
             .share();
-
-        //this.disposable.add(status.subscribe(status => this.status = status));
-        return status;
     }
 
     private setupOutput() {
         // As the active model changes (when we go from an editor for ClientA to an editor for ClientB)
         // We want to make sure that the output field is
-        var output = Omni.activeModel
+        return Omni.activeModel
             .flatMapLatest(z => z.observe.output)
         // This starts us off with the current models output
             .merge(Omni.activeModel.map(z => z.output))
             .startWith([])
             .share();
-
-        return output;
     }
 
     private setupProjects() {
-        var projects = Omni.activeModel
+        return Omni.activeModel
             .flatMapLatest(model => model.observe.projects)
         // This starts us off with the current projects output
             .merge(Omni.activeModel.map(z => z.projects))
             .share();
-
-        return projects;
     }
 
     public dispose() {

@@ -55,18 +55,12 @@ class GoToDefinition implements OmniSharp.IFeature {
 
             var eventDisposable: Rx.Disposable;
             cd.add(highlight.observe.enabled.subscribe((enabled: boolean) => {
-                var mouseObservable = specialKeyDown;
-
-                // Old behavior waited to mark
-                if (!(highlight.enabled && highlight.active))
-                    mouseObservable = mouseObservable.delay(100);
-
                 if (eventDisposable) {
                     eventDisposable.dispose();
                     cd.remove(eventDisposable);
                 }
 
-                eventDisposable = mouseObservable.subscribe((e) => this.underlineIfNavigable(editor, e));
+                eventDisposable = specialKeyDown.subscribe((e) => this.underlineIfNavigable(editor, e));
                 cd.add(eventDisposable);
             }));
 
@@ -119,8 +113,10 @@ class GoToDefinition implements OmniSharp.IFeature {
         var endColumn = bufferPt.column;
         var line = buffer.getLines()[bufferPt.row];
 
-        if (!/[A-Z_0-9]/i.test(line[bufferPt.column]))
+        if (!/[A-Z_0-9]/i.test(line[bufferPt.column])) {
+            if (this.marker) this.removeMarker();
             return;
+        }
 
         while (startColumn > 0 && /[A-Z_0-9]/i.test(line[--startColumn])) {
         }

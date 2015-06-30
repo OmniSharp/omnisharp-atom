@@ -37,7 +37,28 @@ class CodeAction implements OmniSharp.IFeature {
                 });
         }));
 
-        this.disposable.add(Omni.editors.subscribe(editor => {
+        this.disposable.add(Omni.activeEditor.where(editor => !!editor).subscribe(editor => {
+            var cd = new CompositeDisposable();
+            cd.add(Omni.listener.observeGetcodeactions
+                .where(z => z.request.FileName === editor.getPath())
+                .subscribe(({response, request}) => {
+                    if (response.CodeActions.length > 0) {
+                        if (marker) {
+                            marker.destroy();
+                            marker = null;
+                        }
+
+                        var range = [[position.row, 0], [position.row, 0]];
+                        marker = editor.markBufferRange(range);
+                        editor.decorateMarker(marker, { type: "line-number", class: "quickfix" });
+                    }
+                }))
+
+            cd.add(Omni.activeEditor.where(active => active !== editor).subscribe(() => {
+                cd.dispose();
+                this.disposable.remove(cd);
+            }));
+
             var word, marker: Atom.Marker, subscription: Rx.Disposable;
             var makeLightbulbRequest = (position: TextBuffer.Point) => {
                 if (subscription) subscription.dispose();
@@ -64,7 +85,15 @@ class CodeAction implements OmniSharp.IFeature {
                 makeLightbulbRequest(pos);
             }, 400);
 
-            this.disposable.add(editor.onDidChangeCursorPosition(e => {
+            var onDidChangeCursorPosition = new Subject<{ oldBufferPosition: TextBuffer.Point; oldScreenPosition: TextBuffer.Point; newBufferPosition: TextBuffer.Point; newScreenPosition: TextBuffer.Point; textChanged: boolean; cursor: Cursor; }>();
+            var onDidStopChanging = new Subject<any>();
+
+            cd.add(Observable.combineLatest(onDidChangeCursorPosition.debounce(100), onDidStopChanging, (cursor, changing) => cursor)
+                .debounce(500)
+                .subscribe(cursor => update(cursor.newBufferPosition)));
+
+            cd.add(editor.onDidStopChanging(() => onDidStopChanging.onNext(true)));
+            cd.add(editor.onDidChangeCursorPosition(e => {
                 var oldPos = e.oldBufferPosition;
                 var newPos = e.newBufferPosition;
 
@@ -75,9 +104,9 @@ class CodeAction implements OmniSharp.IFeature {
                         marker.destroy();
                         marker = null;
                     }
-
-                    update(newPos);
                 }
+
+                onDidChangeCursorPosition.onNext(e);
             }));
         }));
     }
