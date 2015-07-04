@@ -86,8 +86,10 @@ _.delay(() => {
                 .where(z => !!z)
                 .subscribe(hideLinter));
         } else {
-            disposable.remove(cd);
-            cd.dispose();
+            if (cd) {
+                disposable.remove(cd);
+                cd.dispose();
+            }
             showLinter();
         }
     }));
