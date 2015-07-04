@@ -49,7 +49,6 @@ class CodeCheck implements OmniSharp.IFeature {
 
             //disposer.add(editor.getBuffer().onDidStopChanging(() => this.doCodeCheck(editor)));
             disposer.add(editor.getBuffer().onDidSave(() => this.doCodeCheck(editor)));
-            //disposer.add(editor.getBuffer().onDidDelete(() => this.doCodeCheck(editor)));
             disposer.add(editor.getBuffer().onDidReload(() => this.doCodeCheck(editor)));
             disposer.add(editor.getBuffer().onDidDestroy(() => {
                 this.disposable.remove(disposer);

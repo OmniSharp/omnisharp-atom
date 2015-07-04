@@ -231,16 +231,26 @@ export class ViewModel {
     }
 
     private setupCodecheck(_client: Client) {
-        var codecheck = _client.observeCodecheck
-            .where(z => !z.request.FileName)
-            .map(z => z.response)
-            .map(z => <OmniSharp.Models.DiagnosticLocation[]>z.QuickFixes)
+        var codecheck = Observable.merge(
+            // Catch global code checks
+            _client.observeCodecheck
+                .where(z => !z.request.FileName)
+                .map(z => z.response)
+                .map(z => <OmniSharp.Models.DiagnosticLocation[]>z.QuickFixes),
+            // Evict diagnostics from a code check for the given file
+            // Then insert the new diagnostics
+            _client.observeCodecheck
+                .where(z => !!z.request.FileName)
+                .map(({request, response}) => {
+                    var results = _.filter(this.diagnostics, (fix: OmniSharp.Models.DiagnosticLocation) => request.FileName !== fix.FileName);
+                    results.unshift(...<OmniSharp.Models.DiagnosticLocation[]>response.QuickFixes);
+                    return results;
+                }))
             .map(data => _.sortBy(data, quickFix => quickFix.LogLevel))
             .startWith([])
             .shareReplay(1);
 
         codecheck.subscribe((data) => this.diagnostics = data);
-
         return codecheck;
     }
 
@@ -270,7 +280,6 @@ export class ViewModel {
                     }])),
                 project => this._projectAddedStream.onNext(project));
         });
-
         return workspace;
     }
 
@@ -288,7 +297,6 @@ export class ViewModel {
                 .map(p => new ProjectViewModel(p.Name, p.Path, _client.path, p.DnxFrameworks, p.Configurations, p.Commands)),
                 project => this._projectAddedStream.onNext(project));
         });
-
         return workspace;
     }
 
@@ -302,7 +310,6 @@ export class ViewModel {
             this.scriptcs = context;
             this._projectAddedStream.onNext(new ProjectViewModel("ScriptCs", context.Path, _client.path));
         });
-
         return context;
     }
 }
