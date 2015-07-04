@@ -316,6 +316,11 @@ class OmniSharpAtom {
             type: 'boolean',
             default: true
         },
+        hideLinterInterface: {
+            title: 'Hide the linter interface when using omnisharp-atom editors',
+            type: 'boolean',
+            default: true
+        },
         enhancedHighlighting: {
             title: 'Enhanced Highlighting',
             description: "Enables server based highlighting, which includes support for string interpolation, class names and more.",

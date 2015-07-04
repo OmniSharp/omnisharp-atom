@@ -53,50 +53,68 @@ function mapValues(editor: Atom.TextEditor, error: OmniSharp.Models.DiagnosticLo
     };
 }
 
-_.delay(() => {
-    // show linter buttons
-    disposable.add(Omni.activeEditor
-        .where(z => !z)
-        .subscribe(() => {
-            _.each(document.querySelectorAll('linter-bottom-tab'), (element: HTMLElement) => element.style.display = '');
-            _.each(document.querySelectorAll('linter-bottom-status'), (element: HTMLElement) => element.style.display = '');
-            var panel = <HTMLElement>document.getElementById('#linter-panel');
-            if (panel)
-                panel.style.display = '';
-        }));
+function showLinter() {
+    _.each(document.querySelectorAll('linter-bottom-tab'), (element: HTMLElement) => element.style.display = '');
+    _.each(document.querySelectorAll('linter-bottom-status'), (element: HTMLElement) => element.style.display = '');
+    var panel = <HTMLElement>document.getElementById('#linter-panel');
+    if (panel)
+        panel.style.display = '';
+}
 
-    // hide linter buttons
-    disposable.add(Omni.activeEditor
-        .where(z => !!z)
-        .subscribe(() => {
-            _.each(document.querySelectorAll('linter-bottom-tab'), (element: HTMLElement) => element.style.display = 'none');
-            _.each(document.querySelectorAll('linter-bottom-status'), (element: HTMLElement) => element.style.display = 'none');
-            var panel = <HTMLElement>document.getElementById('#linter-panel');
-            if (panel)
-                panel.style.display = 'none';
-        }));
+function hideLinter() {
+    _.each(document.querySelectorAll('linter-bottom-tab'), (element: HTMLElement) => element.style.display = 'none');
+    _.each(document.querySelectorAll('linter-bottom-status'), (element: HTMLElement) => element.style.display = 'none');
+    var panel = <HTMLElement>document.getElementById('#linter-panel');
+    if (panel)
+        panel.style.display = 'none';
+}
+
+_.delay(() => {
+    var cd: CompositeDisposable;
+    disposable.add(atom.config.observe('omnisharp-atom.hideLinterInterface', hidden => {
+        if (hidden) {
+            cd = new CompositeDisposable();
+            disposable.add(cd);
+
+            // show linter buttons
+            cd.add(Omni.activeEditor
+                .where(z => !z)
+                .subscribe(showLinter));
+
+            // hide linter buttons
+            cd.add(Omni.activeEditor
+                .where(z => !!z)
+                .subscribe(hideLinter));
+        } else {
+            disposable.remove(cd);
+            cd.dispose();
+            showLinter();
+        }
+    }));
 }, 1000);
 
-export var provider = [{
-    grammarScopes: ['source.cs'],
-    scope: 'file',
-    lintOnFly: true,
-    lint: (editor: Atom.TextEditor) =>
-        Omni.request(editor, client => client.codecheck(client.makeRequest(editor)))
-            .flatMap(x => Observable.from<OmniSharp.Models.DiagnosticLocation>(x.QuickFixes))
-            .where(z => z.LogLevel !== "Hidden")
-            .map(error => mapValues(editor, error))
-            .toArray()
-            .toPromise()
-}/*, {
+export var provider = [
+    {
+        grammarScopes: ['source.cs'],
+        scope: 'file',
+        lintOnFly: true,
+        lint: (editor: Atom.TextEditor) =>
+            Omni.request(editor, client => client.codecheck(client.makeRequest(editor)))
+                .flatMap(x => Observable.from<OmniSharp.Models.DiagnosticLocation>(x.QuickFixes))
+                .where(z => z.LogLevel !== "Hidden")
+                .map(error => mapValues(editor, error))
+                .toArray()
+                .toPromise()
+    }, {
         grammarScopes: ['source.cs'],
         scope: 'project',
         lintOnFly: false,
         lint: (editor: Atom.TextEditor) =>
-            Omni.request(editor, client => { var r = client.makeRequest(editor); r.FileName = null; return client.codecheck(r) })
-                .flatMap(x => Observable.from<OmniSharp.Models.DiagnosticLocation>(x.QuickFixes))
+            Omni.activeModel
+                .flatMap(x => Observable.from<OmniSharp.Models.DiagnosticLocation>(x.diagnostics))
                 .where(z => z.LogLevel != "Hidden")
                 .map(error => mapValues(editor, error))
                 .toArray()
                 .toPromise()
-    }*/];
+    }
+];
