@@ -71,16 +71,15 @@ class Highlight implements OmniSharp.IFeature {
                     (<any>editor.getGrammar()).setResponses(response.Highlights);
                 }));
 
-        this.disposable.add(
-            Observable.combineLatest(Omni.listener.observeHighlight, Omni.activeEditor.where(z => !!z),
-                (ctx, editor) => ({ response: ctx.response, request: ctx.request, editor, path: editor.getPath() }))
-                .where(z => z.request.FileName === z.path)
+            Omni.listener.observeHighlight
+                .map(z => ({ editor: find(atom.workspace.getTextEditors(), editor => editor.getPath() == z.request.FileName), request: z.request, response: z.response }))
+                .flatMap(z => Omni.activeEditor.take(1).where(x => x === z.editor).map(x => z))
                 .where(z => !!(<Observable<boolean>>(<any>z.editor.getGrammar()).isObserveRetokenizing))
                 .flatMap(z => (<Observable<boolean>>(<any>z.editor.getGrammar()).isObserveRetokenizing).where(z => !!z).take(1).map(x => z))
                 .debounce(400)
                 .subscribe(({request, response, editor}) => {
                     editor.displayBuffer.tokenizedBuffer['silentRetokenizeLines']();
-                }));
+                });
 
         this.disposable.add(Omni.activeEditor
             .where(z => !!z)
