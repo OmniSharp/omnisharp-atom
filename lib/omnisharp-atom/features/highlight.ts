@@ -1,7 +1,7 @@
 import Omni = require('../../omni-sharp-server/omni');
 import {DriverState} from "omnisharp-client";
 import OmniSharpAtom = require('../omnisharp-atom');
-import {each, indexOf, extend, has, map, flatten, contains, any, range, remove, pull, find, defer, startsWith, trim, isArray, chain, unique, set} from "lodash";
+import {each, indexOf, extend, has, map, flatten, contains, any, range, remove, pull, find, defer, startsWith, trim, isArray, chain, unique, set, findIndex} from "lodash";
 import {Observable, Subject, ReplaySubject, Scheduler, CompositeDisposable, Disposable} from "rx";
 var AtomGrammar = require((<any> atom).config.resourcePath + "/node_modules/first-mate/lib/grammar.js");
 var Range: typeof TextBuffer.Range = <any>require('atom').Range;
@@ -71,15 +71,15 @@ class Highlight implements OmniSharp.IFeature {
                     (<any>editor.getGrammar()).setResponses(response.Highlights);
                 }));
 
-            Omni.listener.observeHighlight
-                .map(z => ({ editor: find(atom.workspace.getTextEditors(), editor => editor.getPath() == z.request.FileName), request: z.request, response: z.response }))
-                .flatMap(z => Omni.activeEditor.take(1).where(x => x === z.editor).map(x => z))
-                .where(z => !!(<Observable<boolean>>(<any>z.editor.getGrammar()).isObserveRetokenizing))
-                .flatMap(z => (<Observable<boolean>>(<any>z.editor.getGrammar()).isObserveRetokenizing).where(z => !!z).take(1).map(x => z))
-                .debounce(400)
-                .subscribe(({request, response, editor}) => {
-                    editor.displayBuffer.tokenizedBuffer['silentRetokenizeLines']();
-                });
+        Omni.listener.observeHighlight
+            .map(z => ({ editor: find(atom.workspace.getTextEditors(), editor => editor.getPath() == z.request.FileName), request: z.request, response: z.response }))
+            .flatMap(z => Omni.activeEditor.take(1).where(x => x === z.editor).map(x => z))
+            .where(z => !!(<Observable<boolean>>(<any>z.editor.getGrammar()).isObserveRetokenizing))
+            .flatMap(z => (<Observable<boolean>>(<any>z.editor.getGrammar()).isObserveRetokenizing).where(z => !!z).take(1).map(x => z))
+            .debounce(400)
+            .subscribe(({request, response, editor}) => {
+                editor.displayBuffer.tokenizedBuffer['silentRetokenizeLines']();
+            });
 
         this.disposable.add(Omni.activeEditor
             .where(z => !!z)
@@ -166,7 +166,8 @@ class Highlight implements OmniSharp.IFeature {
             .debounce(400)
             .subscribe(() => {
                 var linesToFetch = unique<number>((<any>editor.getGrammar()).linesToFetch) || [];
-                (<any>editor.getGrammar()).linesToFetch = [];
+                if (!linesToFetch || !linesToFetch.length)
+                    linesToFetch = [];
 
                 Omni.request(editor, client => client.highlight(
                     client.makeDataRequest<OmniSharp.Models.HighlightRequest>({
@@ -268,8 +269,18 @@ function Grammar(editor: Atom.TextEditor, base: FirstMate.Grammar) {
             .value();
 
         each(groupedItems, (item: { highlight: OmniSharp.Models.HighlightSpan }[], key: number) => {
-            if (!responses.has(+key)) {
-                responses.set(+key, item.map(x => x.highlight));
+            var k = +key;
+            if (!responses.has(k)) {
+                var excludedCode = find(item, i => i.highlight.Kind === "excluded code");
+                if (excludedCode) {
+                    var h = excludedCode.highlight;
+                    if (!(h.EndColumn === 0 && h.EndLine === k)) {
+                        responses.set(k, [excludedCode.highlight]);
+                        return;
+                    }
+                }
+
+                responses.set(k, item.map(x => x.highlight));
             }
         });
     };
@@ -280,13 +291,22 @@ extend(Grammar.prototype, AtomGrammar.prototype);
 Grammar.prototype.omnisharp = true;
 Grammar.prototype.tokenizeLine = function(line: string, ruleStack: any[], firstLine = false): { tags: number[]; ruleStack: any } {
     var baseResult = AtomGrammar.prototype.tokenizeLine.call(this, line, ruleStack, firstLine);
+    var tags;
 
     if (this.responses) {
         var row = this['__row__'];
 
         if (!this.responses.has(row)) return baseResult;
 
-        var tags = this.getCsTokensForLine(this.responses.get(row), line, row, ruleStack, firstLine, baseResult.tags);
+        var highlights = this.responses.get(row);
+        // Excluded code blows away any other formatting, otherwise we get into a very weird state.
+        if (highlights[0] && highlights[0].Kind === "excluded code") {
+            tags = [line.length];
+            getAtomStyleForToken(tags, highlights[0], 0, tags.length - 1, line);
+            baseResult.ruleStack = [baseResult.ruleStack[0]]
+        } else {
+            tags = this.getCsTokensForLine(highlights, line, row, ruleStack, firstLine, baseResult.tags);
+        }
         baseResult.tags = tags;
     }
     return baseResult;
@@ -301,9 +321,9 @@ Grammar.prototype.getCsTokensForLine = function(highlights: OmniSharp.Models.Hig
         var start = highlight.StartColumn - 1;
         var end = highlight.EndColumn - 1;
 
-        if (highlight.EndLine > highlight.StartLine/* && highlight.EndLine !== row*/) {
-            start = 0;
-            end = line.length;
+        if (highlight.EndLine > highlight.StartLine && highlight.StartColumn === 0 && highlight.EndColumn === 0) {
+            getAtomStyleForToken(tags, highlight, 0, tags.length - 1, line);
+            return;
         }
 
         var distance = -1;
