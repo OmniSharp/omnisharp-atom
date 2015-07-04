@@ -1,7 +1,7 @@
 import Omni = require('../../omni-sharp-server/omni');
 import {DriverState} from "omnisharp-client";
 import OmniSharpAtom = require('../omnisharp-atom');
-import {each, indexOf, extend, has, map, flatten, contains, any, range, remove, pull, find, defer, startsWith, trim, isArray, chain, unique} from "lodash";
+import {each, indexOf, extend, has, map, flatten, contains, any, range, remove, pull, find, defer, startsWith, trim, isArray, chain, unique, set} from "lodash";
 import {Observable, Subject, ReplaySubject, Scheduler, CompositeDisposable, Disposable} from "rx";
 var AtomGrammar = require((<any> atom).config.resourcePath + "/node_modules/first-mate/lib/grammar.js");
 var Range: typeof TextBuffer.Range = <any>require('atom').Range;
@@ -51,31 +51,32 @@ class Highlight implements OmniSharp.IFeature {
         this.disposable.add(
             Omni.activeEditor.take(1)
                 .where(x => !!x)
-                .flatMap(editor => Omni.listener.responses
-                    .where(z => z.command === "highlight")
+                .flatMap(editor => Omni.listener.observeHighlight
                     .where(z => z.request.FileName == editor.getPath())
                     .map(z => ({ editor, request: z.request, response: z.response }))
                     .take(1))
-            //.flatMap(z => (<Observable<boolean>>(<any>z.editor.getGrammar()).isObserveRetokenizing).where(z => !!z).take(1).map(x => z))
-                .subscribe(({editor, request, response}: { editor: Atom.TextEditor; request: HighlightRequest; response: HighlightResponse }) => {
+                .where(z => !!(<Observable<boolean>>(<any>z.editor.getGrammar()).isObserveRetokenizing))
+                .flatMap(z => (<Observable<boolean>>(<any>z.editor.getGrammar()).isObserveRetokenizing).where(z => !!z).take(1).map(x => z))
+                .subscribe(({editor, request, response}) => {
                     (<any>editor.getGrammar()).setResponses(response.Highlights);
                     editor.displayBuffer.tokenizedBuffer.retokenizeLines();
                 }));
 
         this.disposable.add(
-            Omni.listener.responses
-                .where(z => z.command === "highlight")
+            Omni.listener.observeHighlight
                 .map(z => ({ editor: find(this.editors, editor => editor.getPath() === z.request.FileName), request: z.request, response: z.response }))
-            //.flatMap(z => (<Observable<boolean>>(<any>z.editor.getGrammar()).isObserveRetokenizing).where(z => !!z).take(1).map(x => z))
-                .subscribe(({editor, request, response}: { editor: Atom.TextEditor; request: HighlightRequest; response: HighlightResponse }) => {
+                .where(z => !!(<Observable<boolean>>(<any>z.editor.getGrammar()).isObserveRetokenizing))
+                .flatMap(z => (<Observable<boolean>>(<any>z.editor.getGrammar()).isObserveRetokenizing).where(z => !!z).take(1).map(x => z))
+                .subscribe(({editor, request, response}) => {
                     (<any>editor.getGrammar()).setResponses(response.Highlights);
                 }));
 
         this.disposable.add(
-            Observable.combineLatest(Omni.listener.responses, Omni.activeEditor.where(z => !!z),
-                (ctx, editor) => ({ command: ctx.command, response: <HighlightResponse>ctx.response, request: <HighlightRequest>ctx.request, editor, path: editor.getPath() }))
-                .where(z => z.command === "highlight" && z.request.FileName === z.path)
-            //.flatMap(z => (<Observable<boolean>>(<any>z.editor.getGrammar()).isObserveRetokenizing).where(z => !!z).take(1).map(x => z))
+            Observable.combineLatest(Omni.listener.observeHighlight, Omni.activeEditor.where(z => !!z),
+                (ctx, editor) => ({ response: ctx.response, request: ctx.request, editor, path: editor.getPath() }))
+                .where(z => z.request.FileName === z.path)
+                .where(z => !!(<Observable<boolean>>(<any>z.editor.getGrammar()).isObserveRetokenizing))
+                .flatMap(z => (<Observable<boolean>>(<any>z.editor.getGrammar()).isObserveRetokenizing).where(z => !!z).take(1).map(x => z))
                 .debounce(400)
                 .subscribe(({request, response, editor}) => {
                     editor.displayBuffer.tokenizedBuffer['silentRetokenizeLines']();
@@ -83,7 +84,8 @@ class Highlight implements OmniSharp.IFeature {
 
         this.disposable.add(Omni.activeEditor
             .where(z => !!z)
-        //.flatMap(z => (<Observable<boolean>>(<any>z.getGrammar()).isObserveRetokenizing).where(z => !!z).take(1).map(x => z))
+            .where(z => !!(<Observable<boolean>>(<any>z.getGrammar()).isObserveRetokenizing))
+            .flatMap(z => (<Observable<boolean>>(<any>z.getGrammar()).isObserveRetokenizing).where(z => !!z).take(1).map(x => z))
             .subscribe(editor => {
                 editor.displayBuffer.tokenizedBuffer.retokenizeLines();
             }));
@@ -121,7 +123,8 @@ class Highlight implements OmniSharp.IFeature {
 
         if (!(<any>editor.displayBuffer.tokenizedBuffer).silentRetokenizeLines) {
             (<any>editor.displayBuffer.tokenizedBuffer).silentRetokenizeLines = function() {
-                (<any>editor.getGrammar()).isObserveRetokenizing.onNext(false);
+                if ((<any>editor.getGrammar()).isObserveRetokenizing)
+                    (<any>editor.getGrammar()).isObserveRetokenizing.onNext(false);
                 var event, lastRow;
                 lastRow = this.buffer.getLastRow();
                 this.tokenizedLines = this.buildPlaceholderTokenizedLinesForRows(0, lastRow);
@@ -132,20 +135,22 @@ class Highlight implements OmniSharp.IFeature {
         }
 
         (<any>editor.displayBuffer.tokenizedBuffer).markTokenizationComplete = function() {
-            (<any>editor.getGrammar()).isObserveRetokenizing.onNext(true);
+            if ((<any>editor.getGrammar()).isObserveRetokenizing)
+                (<any>editor.getGrammar()).isObserveRetokenizing.onNext(true);
             return editor.displayBuffer.tokenizedBuffer['_markTokenizationComplete'].apply(this, arguments);
         };
 
         (<any>editor.displayBuffer.tokenizedBuffer).retokenizeLines = function() {
-            (<any>editor.getGrammar()).isObserveRetokenizing.onNext(false);
+            if ((<any>editor.getGrammar()).isObserveRetokenizing)
+                (<any>editor.getGrammar()).isObserveRetokenizing.onNext(false);
             return editor.displayBuffer.tokenizedBuffer['_retokenizeLines'].apply(this, arguments);
         };
-
-        editor.displayBuffer.tokenizedBuffer.markTokenizationComplete
 
         disposable.add(Disposable.create(() => defer(() => {
             editor.setGrammar = editor['_setGrammar'];
             editor.displayBuffer.tokenizedBuffer.buildTokenizedLineForRowWithText = editor.displayBuffer.tokenizedBuffer['_buildTokenizedLineForRowWithText'];
+            editor.displayBuffer.tokenizedBuffer.markTokenizationComplete = editor.displayBuffer.tokenizedBuffer['_markTokenizationComplete'];
+            editor.displayBuffer.tokenizedBuffer.retokenizeLines = editor.displayBuffer.tokenizedBuffer['_retokenizeLines'];
             editor.setGrammar(editor['_oldGrammar']);
         })));
 
@@ -161,23 +166,21 @@ class Highlight implements OmniSharp.IFeature {
         issueRequest
             .debounce(400)
             .subscribe(() => {
-                var linesToFetch = unique<any>((<any>editor.getGrammar()).linesToFetch);
+                var linesToFetch = unique<number>((<any>editor.getGrammar()).linesToFetch) || [];
                 (<any>editor.getGrammar()).linesToFetch = [];
 
-                Omni.request(editor, client => client
-                    .request<HighlightRequest, HighlightResponse>(
-                        "highlight",
-                        client.makeDataRequest<HighlightRequest>({
-                            FileName: editor.getPath(),
-                            Lines: linesToFetch || [],
-                            ExcludeClassifications: [
-                                HighlightClassification.Comment,
-                                HighlightClassification.String,
-                                HighlightClassification.Punctuation,
-                                HighlightClassification.Operator,
-                                HighlightClassification.Keyword
-                            ]
-                        }, editor)));
+                Omni.request(editor, client => client.highlight(
+                    client.makeDataRequest<OmniSharp.Models.HighlightRequest>({
+                        FileName: editor.getPath(),
+                        Lines: <any>linesToFetch,
+                        ExcludeClassifications: [
+                            OmniSharp.Models.HighlightClassification.Comment,
+                            OmniSharp.Models.HighlightClassification.String,
+                            OmniSharp.Models.HighlightClassification.Punctuation,
+                            OmniSharp.Models.HighlightClassification.Operator,
+                            OmniSharp.Models.HighlightClassification.Keyword
+                        ]
+                    }, editor)));
             });
 
         disposable.add(this.retokenizeAll.subscribe(() => {
@@ -195,25 +198,6 @@ class Highlight implements OmniSharp.IFeature {
     }
 }
 
-interface HighlightRequest {
-    FileName: string;
-    Lines?: number[];
-    Classifications?: HighlightClassification[];
-    ExcludeClassifications?: HighlightClassification[];
-}
-
-interface HighlightResponse {
-    Highlights: HighlightSpan[];
-}
-
-interface HighlightSpan {
-    StartLine: number;
-    StartColumn: number;
-    EndLine: number;
-    EndColumn: number;
-    Kind: string;
-}
-
 enum HighlightClassification {
     Name = 1,
     Comment = 2,
@@ -227,11 +211,13 @@ enum HighlightClassification {
     ExcludedCode = 10
 }
 
+set(global, 'OmniSharp.Models.HighlightClassification', HighlightClassification)
+
 function Grammar(editor: Atom.TextEditor, base: FirstMate.Grammar) {
     var isObserveRetokenizing = this.isObserveRetokenizing = new ReplaySubject<boolean>(1);
 
     this.editor = editor;
-    var responses = new Map<number, HighlightSpan[]>();
+    var responses = new Map<number, OmniSharp.Models.HighlightSpan[]>();
     this.linesToFetch = [];
 
     Object.defineProperty(this, 'responses', {
@@ -273,16 +259,16 @@ function Grammar(editor: Atom.TextEditor, base: FirstMate.Grammar) {
         }
     });
 
-    this.setResponses = (value: HighlightSpan[]) => {
+    this.setResponses = (value: OmniSharp.Models.HighlightSpan[]) => {
         var results = chain(value).chain();
 
         var groupedItems = <any>results.map(highlight => range(highlight.StartLine, highlight.EndLine + 1)
             .map(line => ({ line, highlight })))
-            .flatten<{ line: number; highlight: HighlightSpan }>()
+            .flatten<{ line: number; highlight: OmniSharp.Models.HighlightSpan }>()
             .groupBy(z => z.line)
             .value();
 
-        each(groupedItems, (item: { highlight: HighlightSpan }[], key: number) => {
+        each(groupedItems, (item: { highlight: OmniSharp.Models.HighlightSpan }[], key: number) => {
             if (!responses.has(+key)) {
                 responses.set(+key, item.map(x => x.highlight));
             }
@@ -307,7 +293,7 @@ Grammar.prototype.tokenizeLine = function(line: string, ruleStack: any[], firstL
     return baseResult;
 }
 
-Grammar.prototype.getCsTokensForLine = function(highlights: HighlightSpan[], line: string, row: number, ruleStack: any[], firstLine, tags: number[]) {
+Grammar.prototype.getCsTokensForLine = function(highlights: OmniSharp.Models.HighlightSpan[], line: string, row: number, ruleStack: any[], firstLine, tags: number[]) {
     ruleStack = [{ rule: this.getInitialRule() }];
 
     var originalTags = tags.slice();
@@ -362,7 +348,7 @@ Grammar.prototype.getCsTokensForLine = function(highlights: HighlightSpan[], lin
                     backtrackDistance += tags[i];
                 } else if (tags[i] % 2 === 0) {
                     if (backtrackDistance >= size) {
-                        backtrackIndex = i - 1;
+                        backtrackIndex = i + 1;
                         break;
                     }
                 }
@@ -373,16 +359,10 @@ Grammar.prototype.getCsTokensForLine = function(highlights: HighlightSpan[], lin
             }
 
             var forwardtrackIndex = index;
-            var forwardtrackDistance = 0;
-            for (var i = index; i < tags.length; i++) {
-                if (tags[i] > 0) {
-                    if (tags[i] % 2 === 0) {
-                        if (forwardtrackDistance >= size) {
-                            forwardtrackIndex = i - 1;
-                            break;
-                        }
-                    }
-                    forwardtrackDistance += tags[i];
+            for (var i = index + 1; i < tags.length; i++) {
+                if (tags[i] > 0 || tags[i] % 2 === -1) {
+                    forwardtrackIndex = i - 1;
+                    break;
                 }
             }
 
@@ -416,14 +396,14 @@ var getIdForScope = (function() {
 
 /// NOTE: best way I have found for these is to just look at theme "less" files
 // Alternatively just inspect the token for a .js file
-function getAtomStyleForToken(tags: number[], token: HighlightSpan, index: number, indexEnd: number, str: string) {
+function getAtomStyleForToken(tags: number[], token: OmniSharp.Models.HighlightSpan, index: number, indexEnd: number, str: string) {
     var previousScopes = [];
 
     for (var i = index - 1; i >= 0; i--) {
         if (tags[i] > 0)
             break;
         //if (tags[i] % 2 === -1)
-            previousScopes.push(tags[i]);
+        previousScopes.push(tags[i]);
     }
 
     var replacement = tags.slice(index, indexEnd + 1);

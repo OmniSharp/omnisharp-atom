@@ -31,7 +31,7 @@ class SolutionManager {
     public get combinationClient() { return this._combination; }
 
     private _activeSolution = new ReplaySubject<Solution>(1);
-    private _activeSolutionObserable = this._activeSolution.distinctUntilChanged();
+    private _activeSolutionObserable = this._activeSolution.distinctUntilChanged().where(z => !!z);
     public get activeClient(): Observable<Solution> { return this._activeSolutionObserable; }
 
     public activate(activeEditor: Observable<Atom.TextEditor>) {
