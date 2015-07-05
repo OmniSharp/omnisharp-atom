@@ -39,6 +39,15 @@
   'shift-f8,': 'omnisharp-atom:go-to-previous-usage'
   'ctrl-n': 'advanced-new-file:toggle'
   'cmd-n': 'advanced-new-file:toggle'
+  'cmd-r cmd-a': 'omnisharp-atom:run-all-tests'
+  'cmd-r cmd-f': 'omnisharp-atom:run-fixture-tests'
+  'cmd-r cmd-t': 'omnisharp-atom:run-single-test'
+  'cmd-r cmd-l': 'omnisharp-atom:run-last-test'
+  'ctrl-r ctrl-a': 'omnisharp-atom:run-all-tests'
+  'ctrl-r ctrl-f': 'omnisharp-atom:run-fixture-tests'
+  'ctrl-r ctrl-t': 'omnisharp-atom:run-single-test'
+  'ctrl-r ctrl-l': 'omnisharp-atom:run-last-test'
+
 
 '.platform-darwin atom-text-editor:not([mini])[data-grammar~="cs"], atom-text-editor:not([mini])[data-grammar~="csx"]':
   'cmd-d': 'omnisharp-atom:go-to-definition'
