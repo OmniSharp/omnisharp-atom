@@ -1,7 +1,7 @@
 import Omni = require('../../omni-sharp-server/omni');
 import {DriverState} from "omnisharp-client";
 import OmniSharpAtom = require('../omnisharp-atom');
-import {each, indexOf, extend, has, map, flatten, contains, any, range, remove, pull, find, defer, startsWith, trim, isArray, chain, unique, set, findIndex} from "lodash";
+import {each, indexOf, extend, has, map, flatten, contains, any, range, remove, pull, find, defer, startsWith, trim, isArray, chain, unique, set, findIndex, delay, filter, all} from "lodash";
 import {Observable, Subject, ReplaySubject, Scheduler, CompositeDisposable, Disposable} from "rx";
 var AtomGrammar = require((<any> atom).config.resourcePath + "/node_modules/first-mate/lib/grammar.js");
 var Range: typeof TextBuffer.Range = <any>require('atom').Range;
@@ -278,6 +278,9 @@ function Grammar(editor: Atom.TextEditor, base: FirstMate.Grammar) {
                         responses.set(k, [excludedCode.highlight]);
                         return;
                     }
+                    if (all(item, i => i.highlight.Kind === "excluded code" || i.highlight.Kind === 'preprocessor keyword')) {
+                        item = item.filter(z => z.highlight.Kind !== "excluded code");
+                    }
                 }
 
                 responses.set(k, item.map(x => x.highlight));
@@ -397,9 +400,22 @@ Grammar.prototype.getCsTokensForLine = function(highlights: OmniSharp.Models.Hig
 }
 
 var getIdForScope = (function() {
-    var csharpGrammar = find(atom.grammars.getGrammars(), grammar => grammar.name === 'C#');
     var ids: { [key: string]: number } = {};
-    each(csharpGrammar.registry.scopesById, (value: string, key: any) => { ids[value] = +key; });
+    var csharpGrammar: FirstMate.Grammar;
+
+    var cb = () => {
+        csharpGrammar = find(atom.grammars.getGrammars(), grammar => grammar.name === 'C#');
+        each(csharpGrammar.registry.scopesById, (value: string, key: any) => { ids[value] = +key; });
+    };
+    cb();
+
+    if (!csharpGrammar) {
+        var sub = atom.grammars.onDidAddGrammar(() => {
+            cb();
+            if (csharpGrammar)
+                sub.dispose();
+        });
+    }
 
     var method = (scope: string) => {
         if (!ids[scope])
