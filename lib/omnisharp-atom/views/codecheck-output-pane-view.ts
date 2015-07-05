@@ -109,6 +109,9 @@ export class CodeCheckOutputWindow<T extends ICodeCheckOutputWindowProps> extend
                     className: `codecheck ${error.LogLevel}` + (index === this.state.selectedIndex ? ' selected' : ''),
                     onClick: (e) => this.goToLine(error, index)
                 },
+                    React.DOM.span({
+                        className: error.LogLevel === 'Error' ? 'fa fa-times-circle' : 'fa fa-exclamation-triangle'
+                    }),
                     React.DOM.pre({
                         className: "text-highlight"
                     }, error.Text),

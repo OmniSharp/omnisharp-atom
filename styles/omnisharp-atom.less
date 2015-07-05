@@ -33,6 +33,25 @@
             }
         }
     }
+    .font-size (@index) when (@index > 0) {
+        .font-size-@{index} {
+            &,
+            pre {
+                font-size: ~"@{index}px" !important;
+            }
+            .codecheck {
+                background-position: 2px (@index * 1.25px);
+            }
+            .omnisharp-atom-output .fa {
+                font-size: (@index + 4px);
+            }
+        }
+        .font-size(@index - 1);
+    }
+    .font-size(0) {
+
+    }
+    .font-size(40);
 }
 .error-output-pane {
 
@@ -105,13 +124,15 @@
     top: 0 !important;
 }
 .messages-container {
+
     //height: 150px;
     overflow-y: scroll;
 }
 .omnisharp-atom-output {
     overflow-y: scroll;
     flex: 1;
-    font-size: 12px;
+
+    //font-size: 12px;
     position: relative;
     .error-table {
         width: 100%;
@@ -142,7 +163,8 @@
     }
     pre {
         background: @base-background-color;
-        font-size: 10px;
+
+        //font-size: 10px;
         margin: 0;
         padding: 0;
         border: none;
@@ -184,18 +206,20 @@
     }
 }
 .codecheck {
+    position: relative;
     padding-left: 20px !important;
     background-color: @base-background-color;
-    &.Hidden,
-    &.Warning {
-        background-image: url("atom://omnisharp-atom/styles/icons/codecheck-warning.png");
-        background-repeat: no-repeat;
-        background-position: 2px 14px;
+    .fa {
+        position: absolute;
+        left: 4px;
+        vertical-align: middle;
+        line-height: 270%;
     }
-    &.Error {
-        background-image: url("atom://omnisharp-atom/styles/icons/codecheck-error.png");
-        background-repeat: no-repeat;
-        background-position: 2px 14px;
+    .fa-times-circle {
+        color: @text-color-error;
+    }
+    .fa-exclamation-triangle {
+        color: @text-color-warning;
     }
     pre {
         padding: 2px 0;
@@ -303,14 +327,11 @@ li.selected span.filename {
     text-shadow: none;
     color: #aaa;
 }
-
-
 .gutter .line-number {
-    background-size: 0px;
-    transition: background-size .5s;
-    &.quickfix
-    {
-        background-image: url('atom://omnisharp-atom/styles/light-bulb.png');
+    background-size: 0;
+    transition: background-size 0.5s;
+    &.quickfix {
+        background-image: url("atom://omnisharp-atom/styles/light-bulb.png");
         background-size: 3px;
         background-repeat: no-repeat;
         background-position: right center;

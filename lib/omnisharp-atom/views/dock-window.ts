@@ -8,7 +8,8 @@ import {findUsages} from "../features/find-usages";
 import {world} from "../world";
 
 interface IDockWindowState {
-    selected: string;
+    selected?: string;
+    fontSize?: number;
 }
 
 export interface IDockWindowProps {
@@ -108,7 +109,7 @@ export class DockWindow<T extends IDockWindowProps> extends ReactClientComponent
 
     constructor(props?: T, context?: any) {
         super(props, context);
-        this.state = { selected: 'output' };
+        this.state = { selected: 'output', fontSize: atom.config.get<number>('editor.fontSize') };
     }
 
     public componentWillMount() {
@@ -120,6 +121,10 @@ export class DockWindow<T extends IDockWindowProps> extends ReactClientComponent
 
         var node = React.findDOMNode(this);
         this.height = node.clientHeight;
+
+        atom.config.observe('editor.fontSize', (size: number) => {
+            this.setState({ fontSize: size });
+        });
     }
 
     private updateState(cb?: () => void) {
@@ -219,8 +224,12 @@ export class DockWindow<T extends IDockWindowProps> extends ReactClientComponent
             });
         }
 
+        var fontSize = this.state.fontSize - 1;
+        if (fontSize <= 0)
+            fontSize = 1;
+
         var insetProps = <any> {
-            className: "inset-panel"
+            className: "inset-panel font-size-" + fontSize
         };
 
         if (this.height || this.tempHeight) {
