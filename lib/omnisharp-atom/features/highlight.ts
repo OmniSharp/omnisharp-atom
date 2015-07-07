@@ -176,7 +176,7 @@ class Highlight implements OmniSharp.IFeature {
 
         disposable.add(issueRequest
             .debounce(200)
-            .flatMap(z => Omni.getProject(editor).map(z => z.name + '+' + z.activeFramework.ShortName).timeout(200, Observable.just('')))
+            .flatMap(z => Omni.getProject(editor).map(z => z.activeFramework.Name === 'all' ? '' : (z.name + '+' + z.activeFramework.ShortName)).timeout(200, Observable.just('')))
             .subscribe((framework) => {
                 var projects = [];
                 if (framework)
@@ -266,7 +266,7 @@ function Grammar(editor: Atom.TextEditor, base: FirstMate.Grammar) {
         value: responses
     });
 
-    var disposable = editor.getBuffer().onDidChange((e) => {
+    var disposable = editor.getBuffer().preemptDidChange((e) => {
         var {oldRange, newRange} = e,
             start: number = oldRange.start.row,
             end: number = oldRange.end.row,
@@ -286,35 +286,20 @@ function Grammar(editor: Atom.TextEditor, base: FirstMate.Grammar) {
                     newTo = newRange.end.column,
                     oldDistance = oldTo - oldFrom,
                     newDistance = newTo - newFrom;
-                responses.delete(lines[0]);
-                //remove(responseLine, (span: OmniSharp.Models.HighlightSpan) => {
-                //    if (span.StartLine < lines[0])
-                //        return true;
-                //    if (span.StartColumn <= oldFrom/* && span.EndColumn >= oldTo*/) {
-                //        return true;
-                //    }
-                //    if (span.StartColumn <= newFrom/* && span.EndColumn >= newTo*/) {
-                //        return true;
-                //    }
-                //    return false;
-                //});
 
-                /*each(responseLine, (line, index) => {
-                    if (oldDistance > 0) {
-                        if (line.StartLine === lines[0] && line.EndLine === lines[0] && line.StartColumn >= oldTo) {
-                            responseLine[index] = <any>extend({}, line, { StartColumn: line.StartColumn - oldDistance, EndColumn: line.EndColumn - oldDistance });
-                        } else if (line.StartLine === lines[0] && line.StartColumn >= oldTo) {
-                            responseLine[index] = <any>extend({}, line, { StartColumn: line.StartColumn - oldDistance });
-                        }
+                //responses.delete(lines[0]);
+                remove(responseLine, (span: OmniSharp.Models.HighlightSpan) => {
+                    if (span.StartLine < lines[0]) {
+                        return true;
                     }
-                    if (newDistance > 0) {
-                        if (line.StartLine === lines[0] && line.EndLine === lines[0] && line.StartColumn >= newTo) {
-                            responseLine[index] = <any>extend({}, line, { StartColumn: line.StartColumn + newDistance, EndColumn: line.EndColumn + newDistance });
-                        } else if (line.StartLine === lines[0] && line.StartColumn >= newTo) {
-                            responseLine[index] = <any>extend({}, line, { StartColumn: line.StartColumn + newDistance });
+                        if (span.StartColumn >= oldFrom || span.EndColumn >= oldFrom) {
+                            return true;
                         }
-                    }
-                });*/
+                        if (span.StartColumn >= newFrom || span.EndColumn >= newFrom) {
+                            return true;
+                        }
+                    return false;
+                });
             }
         } else {
             each(lines, line => responses.delete(line));
@@ -354,16 +339,17 @@ function Grammar(editor: Atom.TextEditor, base: FirstMate.Grammar) {
         each(groupedItems, (item: { highlight: OmniSharp.Models.HighlightSpan }[], key: number) => {
             var k = +key, mappedItem = item.map(x => x.highlight);
 
-            var excludedCode = find(item, i => i.highlight.Kind === "excluded code");
+            if (any(mappedItem, i => i.Kind === 'preprocessor keyword') && all(mappedItem, i => i.Kind === "excluded code" || i.Kind === 'preprocessor keyword')) {
+                mappedItem = mappedItem.filter(z => z.Kind !== "excluded code");
+            }
+
+            var excludedCode = find(mappedItem, i => i.Kind === "excluded code");
             if (excludedCode) {
-                var h = excludedCode.highlight;
+                var h = excludedCode;
                 if (!(h.EndColumn === 0 && h.EndLine === k)) {
-                    responses.set(k, [excludedCode.highlight]);
+                    responses.set(k, [excludedCode]);
                     this.linesToTokenize.push(k);
                     return;
-                }
-                if (all(item, i => i.highlight.Kind === "excluded code" || i.highlight.Kind === 'preprocessor keyword')) {
-                    item = item.filter(z => z.highlight.Kind !== "excluded code");
                 }
             }
 

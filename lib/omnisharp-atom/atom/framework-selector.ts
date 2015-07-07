@@ -28,7 +28,8 @@ class FrameworkSelector implements OmniSharp.IAtomFeature {
     public attach() {
         this.view = document.createElement("span");
         this.view.classList.add('inline-block');
-        this.view.classList.add('framework-selector')
+        this.view.classList.add('framework-selector');
+        this.view.style.display = 'none';
         if (this.statusBar) { this._attach(); }
         this._active = true;
     }
@@ -52,16 +53,13 @@ class FrameworkSelector implements OmniSharp.IAtomFeature {
             .where(z => !z)
             .subscribe(() => this.view.style.display = 'none'));
 
-        this.disposable.add(Omni.activeEditor
-            .where(z => !!z)
-            .subscribe(() => this.view.style.display = ''));
-
         this.disposable.add(Omni.activeProject
-            .where(z => !z.frameworks.length)
+            .where(z => z.frameworks.length === 1)
             .subscribe(() => this.view.style.display = 'none'));
 
         this.disposable.add(Omni.activeProject
             .subscribe(project => {
+                this.view.style.display = '';
                 this.project = project;
                 var {frameworks, activeFramework} = project;
                 this._component.setState({ frameworks: frameworks, activeFramework });

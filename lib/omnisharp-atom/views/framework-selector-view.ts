@@ -73,22 +73,24 @@ class FrameworkSelectorSelectListView extends SpacePen.SelectListView {
     show() {
         this.storeFocusedElement();
         setTimeout(() => this.focusFilterEditor(), 100);
+        var width = 180;
         var node = this[0];
-        var offset = $(document.querySelectorAll(this.options.attachTo)).offset();
+        var attachTo = $(document.querySelectorAll(this.options.attachTo));
+        var offset = attachTo.offset();
         if (offset) {
             if (this.options.alignLeft) {
                 $(node).css({
                     position: 'fixed',
                     top: offset.top - node.clientHeight - 18,
-                    left: offset.left - 300,
-                    width: 300
+                    left: offset.left,
+                    width: width
                 });
             } else {
                 $(node).css({
                     position: 'fixed',
                     top: offset.top - node.clientHeight - 18,
-                    left: offset.left,
-                    width: 300
+                    left: offset.left - width + attachTo[0].clientWidth,
+                    width: width
                 });
             }
         }
