@@ -24,7 +24,8 @@ class Dock implements OmniSharp.IAtomFeature {
     public attach() {
         var p = this.panel = atom.workspace.addBottomPanel({
             item: document.createElement('span'),
-            visible: false
+            visible: false,
+            priority: 1000
         });
 
         this.view = p.item.parentElement;

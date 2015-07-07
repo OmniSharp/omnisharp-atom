@@ -31,7 +31,7 @@ class StatusBar implements OmniSharp.IAtomFeature {
     private _attach() {
         this.statusBar.addLeftTile({
             item: this.view,
-            priority: -1000
+            priority: -10000
         });
         React.render(React.createElement(StatusBarComponent, {}), this.view);
     }

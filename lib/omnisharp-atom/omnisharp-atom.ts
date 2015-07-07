@@ -182,8 +182,10 @@ class OmniSharpAtom {
     }
 
     public consumeStatusBar(statusBar) {
-        var feature = require('./atom/status-bar');
-        feature.statusBar.setup(statusBar);
+        var f = require('./atom/status-bar');
+        f.statusBar.setup(statusBar);
+        var f = require('./atom/framework-selector');
+        f.frameworkSelector.setup(statusBar);
     }
 
     public consumeYeomanEnvironment(generatorService: { run(generator: string, path: string): void; start(prefix: string, path: string): void; }) {

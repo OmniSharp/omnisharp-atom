@@ -31,15 +31,6 @@ function truncateStringReverse(str: string, maxLength: number = 55) {
     return _.toArray(_.trunc(reversedString, maxLength)).reverse().join('');
 }
 
-function getFrameworkDisplayText(framework: string) {
-    if (framework.indexOf("Version=") > -1) {
-        var s = framework.split(',Version=');
-        if (s.length === 2)
-            return `${s[0]} (${s[1]})`;
-    }
-    return framework;
-}
-
 export class SolutionStatusCard<T extends ICardProps> extends ReactClientComponent<T, ICardState> {
     public displayName = 'Card';
     private updatesDisposable: Rx.Disposable;
@@ -127,7 +118,7 @@ export class SolutionStatusCard<T extends ICardProps> extends ReactClientCompone
         return this.state.model.projects.map(
             project => {
                 var path = truncateStringReverse(project.path.replace(this.state.model.path, ''), 24);
-                return React.DOM.div({ className: 'project name', title: `${path} [${project.frameworks.map(getFrameworkDisplayText) }]` }, project.name);
+                return React.DOM.div({ className: 'project name', title: `${path} [${project.frameworks.filter(z => z.Name !== 'all').map(x => x.FriendlyName) }]` }, project.name);
             });
     }
 
