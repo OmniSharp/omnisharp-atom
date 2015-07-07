@@ -52,7 +52,6 @@ export class ViewModel {
     public get path() { return this._client.path; }
     public output: OmniSharp.OutputMessage[] = [];
     public diagnostics: OmniSharp.Models.DiagnosticLocation[] = [];
-    public status: OmnisharpClientStatus;
     public get state() { return this._client.currentState };
 
     // Project information
@@ -240,8 +239,6 @@ export class ViewModel {
         var status = _client.status
             .startWith(<any>{})
             .share();
-
-        _client.status.subscribe(z => this.status = z);
 
         return status;
     }

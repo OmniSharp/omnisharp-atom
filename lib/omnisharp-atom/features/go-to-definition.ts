@@ -43,7 +43,7 @@ class GoToDefinition implements OmniSharp.IFeature {
                     .map(event => {
                         var pixelPt = this.pixelPositionFromMouseEvent(editor, view, event);
                         var screenPt = editor.screenPositionForPixelPosition(pixelPt);
-                        return { event, bufferPt: <TextBuffer.Point>editor.bufferPositionForScreenPosition(screenPt) };
+                        return { event, bufferPt: editor.bufferPositionForScreenPosition(screenPt) };
                     })
                     .distinctUntilChanged(e => e.bufferPt, (current, next) => current.isEqual(<any>next)));
 

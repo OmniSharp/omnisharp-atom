@@ -67,8 +67,8 @@ class StatusBarComponent extends ReactClientComponent<{}, StatusBarState> {
             .subscribe(projects => this.setState({ projects })));
 
         this.disposable.add(server.observe.status
-            .subscribe(status => this.setState({ status })));
-            
+            .subscribe(status => window.requestAnimationFrame(() => this.setState({ status }))));
+
         this.disposable.add(server.observe.model
             .subscribe(status => this.setState({})));
 

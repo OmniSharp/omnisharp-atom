@@ -15,17 +15,25 @@ class TypeLookup implements OmniSharp.IFeature {
 
     public activate() {
         this.disposable = new CompositeDisposable();
-        this.disposable.add(Omni.editors.subscribe((editor: Atom.TextEditor) => _.defer(() => {
+        this.disposable.add(Omni.activeEditor.subscribe(editor => {
+            var cd = new CompositeDisposable();
+
+            cd.add(Omni.activeEditor.where(active => active !== editor).subscribe(() => {
+                cd.dispose();
+                this.disposable.remove(cd);
+            }));
+
             // subscribe for tooltips
             // inspiration : https://github.com/chaika2013/ide-haskell
             var editorView = $(atom.views.getView(editor));
             var tooltip = editor['__omniTooltip'] = new Tooltip(editorView, editor);
+            cd.add(tooltip);
 
             editor.onDidDestroy(() => {
                 editor['__omniTooltip'] = null;
-                tooltip.dispose();
+                cd.dispose();
             });
-        })));
+        }));
 
         this.disposable.add(Omni.addTextEditorCommand("omnisharp-atom:type-lookup", () => {
             Omni.activeEditor.first().subscribe(editor => {
@@ -44,8 +52,10 @@ class Tooltip implements Rx.Disposable {
 
     private exprTypeTimeout = null;
     private exprTypeTooltip: TooltipView = null;
+    private keydown: Rx.Observable<KeyboardEvent>;
+    private keydownSubscription: Rx.IDisposable;
     private rawView: any;
-    private disposable: Rx.Disposable;
+    private disposable: Rx.CompositeDisposable;
 
     constructor(private editorView: JQuery, private editor: Atom.TextEditor) {
         this.rawView = editorView[0];
@@ -57,28 +67,39 @@ class Tooltip implements Rx.Disposable {
 
         var mousemove = Observable.fromEvent<MouseEvent>(scroll[0], 'mousemove');
         var mouseout = Observable.fromEvent<MouseEvent>(scroll[0], 'mouseout');
-        var keydown = Observable.fromEvent<KeyboardEvent>(scroll[0], 'keydown');
+        this.keydown = Observable.fromEvent<KeyboardEvent>(scroll[0], 'keydown');
 
         var cd = this.disposable = new CompositeDisposable();
 
-        cd.add(mousemove.subscribe((e) => {
-            var pixelPt = this.pixelPositionFromMouseEvent(editorView, e)
-            var screenPt = editor.screenPositionForPixelPosition(pixelPt)
-            var bufferPt = editor.bufferPositionForScreenPosition(screenPt)
+        cd.add(mousemove.map(event => {
+            var pixelPt = this.pixelPositionFromMouseEvent(editorView, event);
+            var screenPt = editor.screenPositionForPixelPosition(pixelPt);
+            var bufferPt = editor.bufferPositionForScreenPosition(screenPt);
             if (lastExprTypeBufferPt && lastExprTypeBufferPt.isEqual(bufferPt) && this.exprTypeTooltip)
-                return;
+                return null;
 
             lastExprTypeBufferPt = bufferPt;
+            return { bufferPt, event };
+        })
+            .where(z => !!z)
+            .tapOnNext(() => this.hideExpressionType())
+            .debounce(200)
+            .where(x => this.checkPosition(x.bufferPt))
+            .tapOnNext(() => this.subcribeKeyDown())
+            .subscribe(({bufferPt, event}) => {
+                this.showExpressionTypeOnMouseOver(event, bufferPt);
+            }));
 
-            this.clearExprTypeTimeout();
-            this.exprTypeTimeout = setTimeout(() => this.showExpressionTypeOnMouseOver(e), 100);
-        }));
-        cd.add(mouseout.subscribe((e) => this.clearExprTypeTimeout()));
-        cd.add(keydown.subscribe((e) => this.clearExprTypeTimeout()));
+        cd.add(mouseout.subscribe((e) => this.hideExpressionType()));
 
         cd.add(Omni.activeEditor.subscribe((activeItem) => {
             this.hideExpressionType();
         }));
+    }
+
+    private subcribeKeyDown() {
+        this.keydownSubscription = this.keydown.subscribe((e) => this.hideExpressionType());
+        this.disposable.add(this.keydownSubscription);
     }
 
     public showExpressionTypeOnCommand() {
@@ -100,23 +121,18 @@ class Tooltip implements Rx.Disposable {
             bottom: rect.bottom
         };
 
+        this.hideExpressionType();
+        this.subcribeKeyDown();
         this.showToolTip(bufferPt, tooltipRect);
     }
 
-    private showExpressionTypeOnMouseOver(e: MouseEvent) {
+    private showExpressionTypeOnMouseOver(e: MouseEvent, bufferPt: TextBuffer.Point) {
         if (!Omni.isOn) {
             return;
         }
 
         // If we are already showing we should wait for that to clear
         if (this.exprTypeTooltip) return;
-
-        var pixelPt = this.pixelPositionFromMouseEvent(this.editorView, e);
-        // TODO: Update typings
-        var screenPt = this.editor.screenPositionForPixelPosition(pixelPt);
-        var bufferPt = this.editor.bufferPositionForScreenPosition(screenPt);
-
-        if (!this.checkPosition(bufferPt)) return;
 
         // find out show position
         var offset = (<any>this.editor).getLineHeightInPixels() * 0.7;
@@ -169,21 +185,19 @@ class Tooltip implements Rx.Disposable {
 
     public dispose() {
         this.disposable.dispose();
-        this.clearExprTypeTimeout();
-    }
-
-    /** clears the timeout && the tooltip */
-    private clearExprTypeTimeout() {
-        if (this.exprTypeTimeout) {
-            clearTimeout(this.exprTypeTimeout);
-            this.exprTypeTimeout = null;
-        }
         this.hideExpressionType();
     }
+
     private hideExpressionType() {
         if (!this.exprTypeTooltip) return;
         this.exprTypeTooltip.remove();
         this.exprTypeTooltip = null;
+
+        if (this.keydownSubscription) {
+            this.disposable.remove(this.keydownSubscription);
+            this.keydownSubscription.dispose();
+            this.keydownSubscription = null;
+        }
     }
 
     private getFromShadowDom(element: JQuery, selector: string): JQuery {

@@ -117,6 +117,8 @@ class Highlight implements OmniSharp.IFeature {
             editor.displayBuffer.tokenizedBuffer['_markTokenizationComplete'] = editor.displayBuffer.tokenizedBuffer.markTokenizationComplete;
         if (!editor.displayBuffer.tokenizedBuffer['_retokenizeLines'])
             editor.displayBuffer.tokenizedBuffer['_retokenizeLines'] = editor.displayBuffer.tokenizedBuffer.retokenizeLines;
+        if (!editor.displayBuffer.tokenizedBuffer['_chunkSize'])
+            editor.displayBuffer.tokenizedBuffer['chunkSize'] = 20;
 
         editor.setGrammar = setGrammar;
         editor.setGrammar(editor.getGrammar());
@@ -162,6 +164,7 @@ class Highlight implements OmniSharp.IFeature {
             editor.displayBuffer.tokenizedBuffer.buildTokenizedLineForRowWithText = editor.displayBuffer.tokenizedBuffer['_buildTokenizedLineForRowWithText'];
             editor.displayBuffer.tokenizedBuffer.markTokenizationComplete = editor.displayBuffer.tokenizedBuffer['_markTokenizationComplete'];
             editor.displayBuffer.tokenizedBuffer.retokenizeLines = editor.displayBuffer.tokenizedBuffer['_retokenizeLines'];
+            editor.displayBuffer.tokenizedBuffer.chunkSize = editor.displayBuffer.tokenizedBuffer['_chunkSize'];
             editor.setGrammar(editor['_oldGrammar']);
         })));
 
@@ -292,17 +295,17 @@ function Grammar(editor: Atom.TextEditor, base: FirstMate.Grammar) {
                     if (span.StartLine < lines[0]) {
                         return true;
                     }
-                        if (span.StartColumn >= oldFrom || span.EndColumn >= oldFrom) {
-                            return true;
-                        }
-                        if (span.StartColumn >= newFrom || span.EndColumn >= newFrom) {
-                            return true;
-                        }
+                    if (span.StartColumn >= oldFrom || span.EndColumn >= oldFrom) {
+                        return true;
+                    }
+                    if (span.StartColumn >= newFrom || span.EndColumn >= newFrom) {
+                        return true;
+                    }
                     return false;
                 });
             }
         } else {
-            each(lines, line => responses.delete(line));
+            each(lines, line => { responses.delete(line) });
         }
 
         if (delta > 0) {
