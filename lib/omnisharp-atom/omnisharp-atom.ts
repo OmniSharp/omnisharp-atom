@@ -305,7 +305,7 @@ class OmniSharpAtom {
             title: 'Enhanced Highlighting',
             description: "Enables server based highlighting, which includes support for string interpolation, class names and more.",
             type: 'boolean',
-            default: true
+            default: false
         }
     }
 }
