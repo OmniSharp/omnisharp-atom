@@ -57,7 +57,7 @@ class Highlight implements OmniSharp.IFeature {
                         .take(1))
                 )
                 .subscribe(({editor, request, response}) => {
-                    (<any>editor.getGrammar()).setResponses(response.Highlights);
+                    (<any>editor.getGrammar()).setResponses(response.Highlights, request.ProjectNames.length > 0);
                     editor.displayBuffer.tokenizedBuffer.retokenizeLines();
                 }));
 
@@ -67,7 +67,7 @@ class Highlight implements OmniSharp.IFeature {
                     .map(z => ({ editor: find(this.editors, editor => editor.getPath() === z.request.FileName), request: z.request, response: z.response }))
                 )
                 .subscribe(({editor, request, response}) => {
-                    (<any>editor.getGrammar()).setResponses(response.Highlights);
+                    (<any>editor.getGrammar()).setResponses(response.Highlights, request.ProjectNames.length > 0);
                 }));
 
         this.disposable.add(isObserveRetokenizing(
@@ -262,7 +262,7 @@ function Grammar(editor: Atom.TextEditor, base: FirstMate.Grammar) {
     var responses = new Map<number, OmniSharp.Models.HighlightSpan[]>();
     this.linesToFetch = [];
     this.linesToTokenize = [];
-    this.activeFramework = '';
+    this.activeFramework = {};
 
     Object.defineProperty(this, 'responses', {
         writable: false,
@@ -330,7 +330,7 @@ function Grammar(editor: Atom.TextEditor, base: FirstMate.Grammar) {
         }
     });
 
-    this.setResponses = (value: OmniSharp.Models.HighlightSpan[]) => {
+    this.setResponses = (value: OmniSharp.Models.HighlightSpan[], enableExcludeCode: boolean) => {
         var results = chain(value).chain();
 
         var groupedItems = <any>results.map(highlight => range(highlight.StartLine, highlight.EndLine + 1)
@@ -342,18 +342,8 @@ function Grammar(editor: Atom.TextEditor, base: FirstMate.Grammar) {
         each(groupedItems, (item: { highlight: OmniSharp.Models.HighlightSpan }[], key: number) => {
             var k = +key, mappedItem = item.map(x => x.highlight);
 
-            if (any(mappedItem, i => i.Kind === 'preprocessor keyword') && all(mappedItem, i => i.Kind === "excluded code" || i.Kind === 'preprocessor keyword')) {
+            if (!enableExcludeCode || any(mappedItem, i => i.Kind === 'preprocessor keyword') && all(mappedItem, i => i.Kind === "excluded code" || i.Kind === 'preprocessor keyword')) {
                 mappedItem = mappedItem.filter(z => z.Kind !== "excluded code");
-            }
-
-            var excludedCode = find(mappedItem, i => i.Kind === "excluded code");
-            if (excludedCode) {
-                var h = excludedCode;
-                if (!(h.EndColumn === 0 && h.EndLine === k)) {
-                    responses.set(k, [excludedCode]);
-                    this.linesToTokenize.push(k);
-                    return;
-                }
             }
 
             if (!responses.has(k)) {
