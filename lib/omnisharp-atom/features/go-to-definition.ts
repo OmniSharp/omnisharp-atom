@@ -89,9 +89,17 @@ class GoToDefinition implements OmniSharp.IFeature {
         if (editor) {
             var word = <any>editor.getWordUnderCursor();
             Omni.request(editor, client => client.gotodefinition(client.makeRequest()))
-                .subscribe((data) => {
+                .subscribe((data: OmniSharp.Models.GotoDefinitionResponse) => {
                     if (data.FileName != null) {
-                        Omni.navigateTo(data);
+                        if (data.FileName)
+                            Omni.navigateTo(data);
+                    } else if (data['MetadataSource']) {
+                        var {AssemblyName, TypeName}: { AssemblyName: string; TypeName: string } = data['MetadataSource'];
+                        atom.workspace.open(`omnisharp://metadata/${AssemblyName}/${TypeName}`, <any>{
+                            initialLine: data.Line,
+                            initialColumn: data.Column,
+                            searchAllPanes: true
+                        });
                     } else {
                         atom.emitter.emit("omnisharp-atom:error",
                             "Can't navigate to '" + word + "'");

@@ -12492,6 +12492,7 @@ declare module "atom" {
     class GitRepository extends Atom.GitRepository {}
     class Range extends Atom.Range {}
     class Notification extends Atom.Notification {}
+    class TextEditor extends Atom.TextEditor {}
     var Point : typeof TextBuffer.Point;
     var File : typeof Pathwatcher.File;
     var Directory : typeof Pathwatcher.Directory;
