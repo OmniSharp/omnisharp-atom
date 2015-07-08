@@ -132,8 +132,7 @@ class GoToDefinition implements OmniSharp.IFeature {
 
         var addMark = () => {
             this.removeMarker();
-            if (highlight.enabled && highlight.active)
-                this.marker = editor.markBufferRange(wordRange);
+            this.marker = editor.markBufferRange(wordRange);
             var decoration = editor.decorateMarker(this.marker, { type: 'highlight', class: 'gotodefinition-underline' });
         };
 

@@ -84,7 +84,7 @@ class Highlight implements OmniSharp.IFeature {
             Observable.merge(Omni.activeEditor,
                 Omni.activeFramework
                     .flatMap(z => Omni.listener.observeHighlight
-                        .where(x => contains(x.request.ProjectNames, z))
+                        .where(x => contains(x.request.ProjectNames, `${z.project.name}+${z.framework.ShortName}`))
                         .map(z => ({ editor: find(this.editors, editor => editor.getPath() === z.request.FileName), request: z.request, response: z.response }))
                         .take(1))
                     .flatMap(z => Omni.activeEditor))

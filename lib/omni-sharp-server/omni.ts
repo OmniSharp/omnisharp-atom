@@ -23,7 +23,7 @@ class Omni {
     private _activeFramework = this._activeEditorSubject.asObservable()
         .flatMapLatest(editor => manager.getClientForEditor(editor)
             .flatMapLatest(z => z.model.getProjectForEditor(editor)))
-        .flatMapLatest(z => z.observe.activeFramework)
+        .flatMapLatest(project => project.observe.activeFramework.map(framework => ({ project, framework })))
         .shareReplay(1);
 
     private _isOff = true;

@@ -35,7 +35,8 @@ declare module OmniSharp {
     interface IProjectViewModel {
         name: string;
         path: string;
-        frameworks: string[];
+        activeFramework: OmniSharp.Models.DnxFramework;
+        frameworks: OmniSharp.Models.DnxFramework[];
         configurations: string[];
         commands: { [key: string]: string };
     }

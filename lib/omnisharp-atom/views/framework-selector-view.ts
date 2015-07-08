@@ -16,8 +16,8 @@ export class FrameworkSelectorComponent extends ReactClientComponent<{ alignLeft
     constructor(props?: { alignLeft: boolean }, context?: any) {
         super(props, context);
         this.state = {
-            frameworks: [],
-            activeFramework: {}
+            frameworks: <OmniSharp.Models.DnxFramework[]>[],
+            activeFramework: <OmniSharp.Models.DnxFramework>{}
         };
     }
 

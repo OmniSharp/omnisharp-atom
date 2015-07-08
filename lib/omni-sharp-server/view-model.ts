@@ -24,7 +24,8 @@ export class ProjectViewModel implements OmniSharp.IProjectViewModel {
 
         this.frameworks = [{
             FriendlyName: 'All',
-            Name: 'all'
+            Name: 'all',
+            ShortName: 'all'
         }].concat(frameworks);
         this.activeFramework = this.frameworks[0];
 
@@ -131,7 +132,7 @@ export class ViewModel {
 
         _client.state.where(z => z === DriverState.Connected)
             .subscribe(() => {
-                _client.projects();
+                _client.projects({ ExcludeSourceFiles: false });
             });
 
         _client.observeProjects.first().subscribe(() => {
@@ -142,7 +143,11 @@ export class ViewModel {
                 .subscribe(project => {
                     this.msbuild.Projects.push(project);
                     this._projectAddedStream.onNext(
-                        new ProjectViewModel(project.AssemblyName, project.Path, _client.path, [project.TargetFramework]));
+                        new ProjectViewModel(project.AssemblyName, project.Path, _client.path, [{
+                            FriendlyName: project.TargetFramework,
+                            Name: project.TargetFramework,
+                            ShortName: project.TargetFramework
+                        }]));
                 });
 
             _client.projectRemoved
@@ -158,7 +163,11 @@ export class ViewModel {
                 .map(z => z.MsBuildProject)
                 .subscribe(project => {
                     _.assign(_.find(this.msbuild.Projects, z => { Path: project.Path }), project);
-                    this._projectChangedStream.onNext(new ProjectViewModel(project.AssemblyName, project.Path, _client.path, [project.TargetFramework]));
+                    this._projectChangedStream.onNext(new ProjectViewModel(project.AssemblyName, project.Path, _client.path, [{
+                        FriendlyName: project.TargetFramework,
+                        Name: project.TargetFramework,
+                        ShortName: project.TargetFramework
+                    }]));
                 });
 
             _client.projectAdded
@@ -254,7 +263,11 @@ export class ViewModel {
 
             _.each(this.msbuild.Projects
                 .map(p => new ProjectViewModel(p.AssemblyName,
-                    p.Path, _client.path, [p.TargetFramework])),
+                    p.Path, _client.path, [{
+                        FriendlyName: p.TargetFramework,
+                        Name: p.TargetFramework,
+                        ShortName: p.TargetFramework
+                    }])),
                 project => this._projectAddedStream.onNext(project));
         });
 
