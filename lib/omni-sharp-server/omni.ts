@@ -32,6 +32,7 @@ class Omni {
     public get isOn() { return !this.isOff; }
 
     public activate() {
+        var openerDisposable = makeOpener();
         this.disposable = new CompositeDisposable;
         manager.activate(this._activeEditor);
 
@@ -203,6 +204,10 @@ class Omni {
             editor = null;
         }
 
+        if (!editor) {
+            editor = atom.workspace.getActiveTextEditor();
+        }
+
         var clientCallback = (client: Client) => {
             var r = callback(client);
             if (helpers.isPromise(r)) {
@@ -219,7 +224,7 @@ class Omni {
                 .where(z => !!z)
                 .flatMap(clientCallback).share();
         } else {
-            result = manager.activeClient.first()
+            result = manager.activeClient.take(1)
                 .where(z => !!z)
                 .flatMap(clientCallback).share();
         }
@@ -234,7 +239,7 @@ class Omni {
     public getProject(editor: Atom.TextEditor) {
         return manager.getClientForEditor(editor)
             .flatMap(z => z.model.getProjectForEditor(editor))
-            .first();
+            .take(1);
     }
 
     /**
@@ -269,4 +274,47 @@ class Omni {
     }
 }
 
-export = new Omni
+var instance = new Omni;
+
+export = instance;
+
+import {TextEditor} from "atom";
+var metadataUri = 'omnisharp://metadata/';
+function makeOpener(): Rx.IDisposable {
+    function createEditorView(assemblyName: string, typeName: string) {
+        function issueRequest(solution: Client) {
+            return solution.request<any, { Source: string; SourceName: string }>("metadata", { AssemblyName: assemblyName, TypeName: typeName })
+                .map(response => ({ source: response.Source, path: response.SourceName, solution }));
+        }
+
+        function setupEditor({solution, path, source}: { solution: Client; source: string; path: string }) {
+            var editor = new TextEditor({});
+            editor.setText(source);
+            editor.onWillInsertText((e) => e.cancel());
+            editor.getBuffer().setPath(path);
+
+            (<any>editor).omniProject = (<any>solution).path;
+            (<any>editor).__omniClient__ = solution;
+            editor.save = function() { };
+            editor.saveAs = function() { };
+
+            return editor;
+        }
+
+        return manager.activeClient
+            .take(1)
+            .flatMap(issueRequest)
+            //.concat(..._.map(manager.activeClients, issueRequest))
+            //.take(1)
+            .map(setupEditor)
+            .toPromise();
+    }
+
+    return <any>atom.workspace.addOpener((uri: string) => {
+        if (_.startsWith(uri, metadataUri)) {
+            var url = uri.substr(metadataUri.length);
+            var [assemblyName, typeName] = url.split('/');
+            return createEditorView(assemblyName, typeName);
+        }
+    });
+}

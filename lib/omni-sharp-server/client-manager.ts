@@ -220,7 +220,7 @@ class SolutionManager {
             var solutionValue = this._solutions.get(p);
             // If the solution has disconnected, reconnect it
             if (solutionValue.currentState === DriverState.Disconnected)
-            solutionValue.connect();
+                solutionValue.connect();
 
             // Client is in an invalid state
             if (solutionValue.currentState === DriverState.Error) {
@@ -244,6 +244,7 @@ class SolutionManager {
 
         var [intersect, solutionValue] = this.getSolutionForUnderlyingPath(location, isCsx);
         p = (<any>editor).omniProject = intersect;
+        (<any>editor).__omniClient__ = solutionValue;
 
         if (solutionValue && this._temporarySolutions.has(solutionValue)) {
             this.setupDisposableForTemporaryClient(solutionValue, editor);
@@ -256,6 +257,7 @@ class SolutionManager {
             .map(z => {
                 var [p, solution, temporary] = z;
                 (<any>editor).omniProject = p;
+                (<any>editor).__omniClient__ = solution;
                 if (temporary) {
                     this.setupDisposableForTemporaryClient(solution, editor);
                 }
