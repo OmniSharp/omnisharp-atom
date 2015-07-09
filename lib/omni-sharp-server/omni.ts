@@ -4,6 +4,7 @@ import Client = require("./client");
 import _ = require('lodash');
 import {basename} from "path";
 import {DriverState} from "omnisharp-client";
+import {ProjectViewModel} from "./view-model";
 
 class Omni {
     private disposable: CompositeDisposable;
@@ -13,6 +14,17 @@ class Omni {
 
     private _activeEditorSubject = new BehaviorSubject<Atom.TextEditor>(null);
     private _activeEditor = this._activeEditorSubject.shareReplay(1).asObservable();
+
+    private _activeProject = this._activeEditorSubject.asObservable()
+        .flatMap(editor => manager.getClientForEditor(editor)
+            .flatMap(z => z.model.getProjectForEditor(editor)))
+        .shareReplay(1);
+
+    private _activeFramework = this._activeEditorSubject.asObservable()
+        .flatMapLatest(editor => manager.getClientForEditor(editor)
+            .flatMapLatest(z => z.model.getProjectForEditor(editor)))
+        .flatMapLatest(project => project.observe.activeFramework.map(framework => ({ project, framework })))
+        .shareReplay(1);
 
     private _isOff = true;
 
@@ -219,6 +231,12 @@ class Omni {
         return result;
     }
 
+    public getProject(editor: Atom.TextEditor) {
+        return manager.getClientForEditor(editor)
+            .flatMap(z => z.model.getProjectForEditor(editor))
+            .first();
+    }
+
     /**
     * Allows for views to observe the active model as it changes between editors
     */
@@ -228,6 +246,14 @@ class Omni {
 
     public get activeEditor() {
         return this._activeEditor;
+    }
+
+    public get activeProject() {
+        return this._activeProject;
+    }
+
+    public get activeFramework() {
+        return this._activeFramework;
     }
 
     public get editors() {

@@ -6,16 +6,35 @@ import {basename, dirname} from "path";
 
 export class ProjectViewModel implements OmniSharp.IProjectViewModel {
     public path: string;
+    public activeFramework: OmniSharp.Models.DnxFramework;
+    public frameworks: OmniSharp.Models.DnxFramework[];
+    public observe: {
+        activeFramework: Observable<OmniSharp.Models.DnxFramework>;
+    };
 
     constructor(
         public name: string,
         path: string,
         public solutionPath: string,
-        public frameworks: string[] = [],
+        frameworks: OmniSharp.Models.DnxFramework[] = [],
         public configurations: string[] = [],
         public commands: { [key: string]: string } = <any>{}
         ) {
         this.path = dirname(path);
+
+        this.frameworks = [{
+            FriendlyName: 'All',
+            Name: 'all',
+            ShortName: 'all'
+        }].concat(frameworks);
+        this.activeFramework = this.frameworks[0];
+
+        this.observe = {
+            activeFramework: Observable.ofObjectChanges(this)
+                .where(z => z.name === "activeFramework")
+                .map(z => this.activeFramework)
+                .shareReplay(1)
+        };
     }
 }
 
@@ -34,7 +53,6 @@ export class ViewModel {
     public get path() { return this._client.path; }
     public output: OmniSharp.OutputMessage[] = [];
     public diagnostics: OmniSharp.Models.DiagnosticLocation[] = [];
-    public status: OmnisharpClientStatus;
     public get state() { return this._client.currentState };
 
     // Project information
@@ -75,7 +93,7 @@ export class ViewModel {
             _.each(this.projects.slice(), project => this._projectRemovedStream.onNext(project));
             this.projects = [];
             this.diagnostics = [];
-        })
+        });
 
         var codecheck = this.setupCodecheck(_client);
         var status = this.setupStatus(_client);
@@ -92,9 +110,14 @@ export class ViewModel {
         var projects = Observable.merge(_projectAddedStream, _projectRemovedStream, _projectChangedStream)
             .map(z => this.projects);
 
+        var outputObservable = _client.logs
+            .window(_client.logs.throttleFirst(100), () => Observable.timer(100))
+            .flatMap(x => x.last())
+            .map(() => output);
+
         this.observe = {
             get codecheck() { return codecheck; },
-            get output() { return _client.logs.map(() => output); },
+            get output() { return outputObservable; },
             get status() { return status; },
             get updates() { return updates; },
             get projects() { return projects; },
@@ -109,7 +132,7 @@ export class ViewModel {
 
         _client.state.where(z => z === DriverState.Connected)
             .subscribe(() => {
-                _client.projects();
+                _client.projects({ ExcludeSourceFiles: false });
             });
 
         _client.observeProjects.first().subscribe(() => {
@@ -120,7 +143,11 @@ export class ViewModel {
                 .subscribe(project => {
                     this.msbuild.Projects.push(project);
                     this._projectAddedStream.onNext(
-                        new ProjectViewModel(project.AssemblyName, project.Path, _client.path, [project.TargetFramework]));
+                        new ProjectViewModel(project.AssemblyName, project.Path, _client.path, [{
+                            FriendlyName: project.TargetFramework,
+                            Name: project.TargetFramework,
+                            ShortName: project.TargetFramework
+                        }]));
                 });
 
             _client.projectRemoved
@@ -136,7 +163,11 @@ export class ViewModel {
                 .map(z => z.MsBuildProject)
                 .subscribe(project => {
                     _.assign(_.find(this.msbuild.Projects, z => { Path: project.Path }), project);
-                    this._projectChangedStream.onNext(new ProjectViewModel(project.AssemblyName, project.Path, _client.path, [project.TargetFramework]));
+                    this._projectChangedStream.onNext(new ProjectViewModel(project.AssemblyName, project.Path, _client.path, [{
+                        FriendlyName: project.TargetFramework,
+                        Name: project.TargetFramework,
+                        ShortName: project.TargetFramework
+                    }]));
                 });
 
             _client.projectAdded
@@ -146,7 +177,7 @@ export class ViewModel {
                 .subscribe(project => {
                     this.dnx.Projects.push(project);
                     this._projectAddedStream.onNext(
-                        new ProjectViewModel(project.Name, project.Path, _client.path, project.Frameworks, project.Configurations, project.Commands));
+                        new ProjectViewModel(project.Name, project.Path, _client.path, project.DnxFrameworks, project.Configurations, project.Commands));
                 });
 
             _client.projectRemoved
@@ -163,9 +194,20 @@ export class ViewModel {
                 .subscribe(project => {
                     _.assign(_.find(this.dnx.Projects, z => { Path: project.Path }), project);
                     this._projectChangedStream.onNext(
-                        new ProjectViewModel(project.Name, project.Path, _client.path, project.Frameworks, project.Configurations, project.Commands));
+                        new ProjectViewModel(project.Name, project.Path, _client.path, project.DnxFrameworks, project.Configurations, project.Commands));
                 });
         });
+    }
+
+    public getProjectForEditor(editor: Atom.TextEditor) {
+        var o: Observable<ProjectViewModel>;
+        if (this.isOn && this.projects.length)
+            o = Observable.just<ProjectViewModel>(_.find(this.projects, x => _.startsWith(editor.getPath(), x.path))).where(z => !!z);
+        else
+            o = this._projectAddedStream
+                .where(x => _.startsWith(editor.getPath(), x.path));
+
+        return o;
     }
 
     private _updateState(state) {
@@ -207,8 +249,6 @@ export class ViewModel {
             .startWith(<any>{})
             .share();
 
-        _client.status.subscribe(z => this.status = z);
-
         return status;
     }
 
@@ -223,7 +263,11 @@ export class ViewModel {
 
             _.each(this.msbuild.Projects
                 .map(p => new ProjectViewModel(p.AssemblyName,
-                    p.Path, _client.path, [p.TargetFramework])),
+                    p.Path, _client.path, [{
+                        FriendlyName: p.TargetFramework,
+                        Name: p.TargetFramework,
+                        ShortName: p.TargetFramework
+                    }])),
                 project => this._projectAddedStream.onNext(project));
         });
 
@@ -241,7 +285,7 @@ export class ViewModel {
             this.runtime = basename(project.RuntimePath);
 
             _.each(this.dnx.Projects
-                .map(p => new ProjectViewModel(p.Name, p.Path, _client.path, p.Frameworks, p.Configurations, p.Commands)),
+                .map(p => new ProjectViewModel(p.Name, p.Path, _client.path, p.DnxFrameworks, p.Configurations, p.Commands)),
                 project => this._projectAddedStream.onNext(project));
         });
 
