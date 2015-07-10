@@ -165,12 +165,14 @@ class Highlight implements OmniSharp.IFeature {
         };
 
         disposable.add(Disposable.create(() => defer(() => {
+            grammar.linesToFetch = [];
+            grammar.responses.clear();
             editor.setGrammar = editor['_setGrammar'];
             editor.displayBuffer.tokenizedBuffer.buildTokenizedLineForRowWithText = editor.displayBuffer.tokenizedBuffer['_buildTokenizedLineForRowWithText'];
             editor.displayBuffer.tokenizedBuffer.markTokenizationComplete = editor.displayBuffer.tokenizedBuffer['_markTokenizationComplete'];
             editor.displayBuffer.tokenizedBuffer.retokenizeLines = editor.displayBuffer.tokenizedBuffer['_retokenizeLines'];
             editor.displayBuffer.tokenizedBuffer.chunkSize = editor.displayBuffer.tokenizedBuffer['_chunkSize'];
-            editor.setGrammar(editor['_oldGrammar']);
+            //editor.setGrammar(editor['_oldGrammar']);
             editor.displayBuffer.tokenizedBuffer.retokenizeLines();
         })));
 
