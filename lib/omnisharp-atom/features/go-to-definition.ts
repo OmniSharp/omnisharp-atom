@@ -44,16 +44,11 @@ class GoToDefinition implements OmniSharp.IFeature {
                         var screenPt = editor.screenPositionForPixelPosition(pixelPt);
                         return editor.bufferPositionForScreenPosition(screenPt);
                     })
-                //.distinctUntilChanged(bufferPt => bufferPt, (current, next) => current.isEqual(<any>next))
                     .startWith(editor.getCursorBufferPosition())
                     .map(bufferPt => ({ bufferPt, range: this.getWordRange(editor, bufferPt) }))
                     .where(z => !!z.range)
                     .distinctUntilChanged(x => x, (current, next) => current.range.isEqual(<any>next.range)));
 
-            // to debounce mousemove event's firing for some reason on some machines
-            var lastExprTypeBufferPt: any;
-
-            //cd.add(mousemove.subscribe(() => { }));
             editor.onDidDestroy(() => cd.dispose());
 
             var eventDisposable: Rx.Disposable;
