@@ -27,8 +27,14 @@ class GoToDefinition implements OmniSharp.IFeature {
 
             var mousemove = Observable.fromEvent<MouseEvent>(scroll[0], 'mousemove');
 
-            var keyup = Observable.fromEvent<KeyboardEvent>(view[0], 'keyup')
-                .where(x => x.which === 17 || x.which === 224 || x.which === 93 || x.which === 91)
+            var keyup = Observable.merge(
+                Observable.fromEvent<any>(view[0], 'focus'),
+                Observable.fromEvent<any>(view[0], 'blur'),
+                Observable.fromEventPattern(x => { (<any>atom.getCurrentWindow()).on('focus', x) }, x => { (<any>atom.getCurrentWindow()).removeListener('focus', x) }),
+                Observable.fromEventPattern(x => { (<any>atom.getCurrentWindow()).on('blur', x) }, x => { (<any>atom.getCurrentWindow()).removeListener('blur', x) }),
+                Observable.fromEvent<KeyboardEvent>(view[0], 'keyup')
+                    .where(x => x.which === 17 || x.which === 224 || x.which === 93 || x.which === 91)
+                )
                 .throttleFirst(100);
 
             var keydown = Observable.fromEvent<KeyboardEvent>(view[0], 'keydown')
