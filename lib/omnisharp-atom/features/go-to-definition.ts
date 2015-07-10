@@ -25,8 +25,7 @@ class GoToDefinition implements OmniSharp.IFeature {
             var scroll = this.getFromShadowDom(view, '.scroll-view');
             var click = Observable.fromEvent<MouseEvent>(scroll[0], 'click');
 
-            var mousemove = Observable.fromEvent<MouseEvent>(scroll[0], 'mousemove')
-                .shareReplay(1);
+            var mousemove = Observable.fromEvent<MouseEvent>(scroll[0], 'mousemove');
 
             var keyup = Observable.fromEvent<KeyboardEvent>(view[0], 'keyup')
                 .where(x => x.which === 17 || x.which === 224 || x.which === 93)
@@ -43,14 +42,15 @@ class GoToDefinition implements OmniSharp.IFeature {
                     .map(event => {
                         var pixelPt = this.pixelPositionFromMouseEvent(editor, view, event);
                         var screenPt = editor.screenPositionForPixelPosition(pixelPt);
-                        return { event, bufferPt: editor.bufferPositionForScreenPosition(screenPt) };
+                        return editor.bufferPositionForScreenPosition(screenPt);
                     })
-                    .distinctUntilChanged(e => e.bufferPt, (current, next) => current.isEqual(<any>next)));
+                    .distinctUntilChanged(bufferPt => bufferPt, (current, next) => current.isEqual(<any>next))
+                    .startWith(editor.getCursorBufferPosition()));
 
             // to debounce mousemove event's firing for some reason on some machines
             var lastExprTypeBufferPt: any;
 
-            cd.add(mousemove.subscribe(() => { }));
+            //cd.add(mousemove.subscribe(() => { }));
             editor.onDidDestroy(() => cd.dispose());
 
             var eventDisposable: Rx.Disposable;
@@ -60,7 +60,15 @@ class GoToDefinition implements OmniSharp.IFeature {
                     cd.remove(eventDisposable);
                 }
 
-                eventDisposable = specialKeyDown.subscribe((e) => this.underlineIfNavigable(editor, e));
+                var observable = specialKeyDown;
+
+                if (!enabled) {
+                    observable = observable.throttleFirst(200);
+                }
+
+                eventDisposable = observable
+                    .subscribe((bufferPt) => this.underlineIfNavigable(editor, bufferPt));
+
                 cd.add(eventDisposable);
             }));
 
@@ -70,6 +78,7 @@ class GoToDefinition implements OmniSharp.IFeature {
                 if (!e.ctrlKey && !e.metaKey) {
                     return;
                 }
+
                 this.removeMarker();
                 this.goToDefinition();
             }));
@@ -115,7 +124,7 @@ class GoToDefinition implements OmniSharp.IFeature {
         }
     }
 
-    private underlineIfNavigable(editor: Atom.TextEditor, { event, bufferPt }: { event: MouseEvent, bufferPt: TextBuffer.Point }) {
+    private underlineIfNavigable(editor: Atom.TextEditor, bufferPt: TextBuffer.Point) {
         var buffer = editor.getBuffer();
         var startColumn = bufferPt.column;
         var endColumn = bufferPt.column;
@@ -144,16 +153,7 @@ class GoToDefinition implements OmniSharp.IFeature {
             var decoration = editor.decorateMarker(this.marker, { type: 'highlight', class: 'gotodefinition-underline' });
         };
 
-        // TODO: Remove this and uncomment below code
-        //       once we have metadata information.
-        Omni.request(editor, client => client.gotodefinition({
-            Line: bufferPt.row,
-            Column: bufferPt.column,
-            FileName: editor.getURI()
-        })).where(data => !!data.FileName)
-            .subscribe(data => addMark());
-
-        /*if (highlight.enabled && highlight.active) {
+        if (highlight.enabled) {
             var scopes: string[] = (<any>editor.scopeDescriptorForBufferPosition(bufferPt)).scopes;
             if (identifierRegex.test(_.last(scopes))) {
                 addMark();
@@ -166,7 +166,7 @@ class GoToDefinition implements OmniSharp.IFeature {
                 FileName: editor.getURI()
             })).where(data => !!data.FileName)
                 .subscribe(data => addMark());
-        }*/
+        }
     }
 
     private pixelPositionFromMouseEvent(editor: Atom.TextEditor, editorView, event: MouseEvent) {

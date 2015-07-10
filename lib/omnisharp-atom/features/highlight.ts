@@ -12,29 +12,33 @@ class Highlight implements OmniSharp.IFeature {
 
     constructor() {
         var subject = new ReplaySubject<boolean>(1);
+        var loaded = false;
         atom.config.observe("omnisharp-atom.enhancedHighlighting", (enabled: boolean) => {
-            var currentlyEnabled = this.enabled;
             this.enabled = enabled;
-            if (!currentlyEnabled && enabled) {
-                this.activate(true);
-            } else if (currentlyEnabled && !enabled) {
-                this.dispose();
-            }
             subject.onNext(enabled);
+
+            if (loaded) {
+                if (enabled) {
+                    this.activate();
+                } else {
+                    this.dispose();
+                }
+            }
+            if (!loaded) {
+                loaded = true;
+            }
         });
 
         this.observe = { enabled: subject.asObservable() };
     }
 
     public active = false;
-    private beenActivatedByPlugin = false;
     public enabled: boolean;
 
     public observe: { enabled: Observable<boolean> };
 
-    public activate(enabledByConfig = false) {
-        if (!enabledByConfig) this.beenActivatedByPlugin = true;
-        if (this.active || !this.beenActivatedByPlugin) return;
+    public activate() {
+        if (!this.enabled || this.active) return;
 
         this.disposable = new CompositeDisposable();
         this.editors = [];
@@ -106,6 +110,7 @@ class Highlight implements OmniSharp.IFeature {
         this.editors.push(editor);
 
         var disposable = new CompositeDisposable();
+        this.disposable.add(disposable);
 
         if (!editor['_oldGrammar'])
             editor['_oldGrammar'] = editor.getGrammar();
@@ -166,6 +171,7 @@ class Highlight implements OmniSharp.IFeature {
             editor.displayBuffer.tokenizedBuffer.retokenizeLines = editor.displayBuffer.tokenizedBuffer['_retokenizeLines'];
             editor.displayBuffer.tokenizedBuffer.chunkSize = editor.displayBuffer.tokenizedBuffer['_chunkSize'];
             editor.setGrammar(editor['_oldGrammar']);
+            editor.displayBuffer.tokenizedBuffer.retokenizeLines();
         })));
 
         this.disposable.add(editor.onDidDestroy(() => {
@@ -173,7 +179,6 @@ class Highlight implements OmniSharp.IFeature {
             this.disposable.remove(disposable);
             pull(this.editors, editor);
         }));
-        this.disposable.add(disposable);
 
         var issueRequest = new Subject<boolean>();
 
