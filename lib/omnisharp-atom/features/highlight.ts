@@ -481,6 +481,7 @@ var getIdForScope = (function() {
 
     var cb = () => {
         csharpGrammar = find(atom.grammars.getGrammars(), grammar => grammar.name === 'C#');
+        if (!csharpGrammar) return;
         each(csharpGrammar.registry.scopesById, (value: string, key: any) => { ids[value] = +key; });
     };
     cb();
