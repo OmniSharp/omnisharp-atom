@@ -307,9 +307,14 @@ class SolutionManager {
 
     private findSolutionForUnderlyingPath(location: string, isCsx: boolean): Observable<[string, Solution, boolean]> {
         var directory = path.dirname(location);
-        var project = intersectPath(directory, this._atomProjects.paths);
         var subject = new AsyncSubject<[string, Solution, boolean]>();
 
+        if (this._atomProjects == null) {
+            subject.onError("Trying to get a solution while the atom project has not fully loaded yet");
+            return subject;
+        }
+        
+        var project = intersectPath(directory, this._atomProjects.paths);
         var cb = (candidates: string[]) => {
             // We only want to search for solutions after the main solutions have been processed.
             // We can get into this race condition if the user has windows that were opened previously.
