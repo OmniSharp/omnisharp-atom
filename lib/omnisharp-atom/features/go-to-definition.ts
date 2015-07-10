@@ -2,7 +2,7 @@ import _ = require('lodash');
 import {CompositeDisposable, Observable} from "rx";
 import Omni = require('../../omni-sharp-server/omni');
 import $ = require('jquery');
-var Range = require('atom').Range;
+var Range: typeof TextBuffer.Range = require('atom').Range;
 import {highlight} from "./highlight";
 
 var identifierRegex = /^identifier|identifier$|\.identifier\./;
@@ -44,8 +44,11 @@ class GoToDefinition implements OmniSharp.IFeature {
                         var screenPt = editor.screenPositionForPixelPosition(pixelPt);
                         return editor.bufferPositionForScreenPosition(screenPt);
                     })
-                    .distinctUntilChanged(bufferPt => bufferPt, (current, next) => current.isEqual(<any>next))
-                    .startWith(editor.getCursorBufferPosition()));
+                //.distinctUntilChanged(bufferPt => bufferPt, (current, next) => current.isEqual(<any>next))
+                    .startWith(editor.getCursorBufferPosition())
+                    .map(bufferPt => ({ bufferPt, range: this.getWordRange(editor, bufferPt) }))
+                    .where(z => !!z.range)
+                    .distinctUntilChanged(x => x, (current, next) => current.range.isEqual(<any>next.range)));
 
             // to debounce mousemove event's firing for some reason on some machines
             var lastExprTypeBufferPt: any;
@@ -61,13 +64,12 @@ class GoToDefinition implements OmniSharp.IFeature {
                 }
 
                 var observable = specialKeyDown;
-
                 if (!enabled) {
-                    observable = observable.throttleFirst(200);
+                    observable = observable.debounce(200);
                 }
 
                 eventDisposable = observable
-                    .subscribe((bufferPt) => this.underlineIfNavigable(editor, bufferPt));
+                    .subscribe(({bufferPt, range}) => this.underlineIfNavigable(editor, bufferPt, range));
 
                 cd.add(eventDisposable);
             }));
@@ -124,7 +126,7 @@ class GoToDefinition implements OmniSharp.IFeature {
         }
     }
 
-    private underlineIfNavigable(editor: Atom.TextEditor, bufferPt: TextBuffer.Point) {
+    private getWordRange(editor: Atom.TextEditor, bufferPt: TextBuffer.Point): TextBuffer.Range {
         var buffer = editor.getBuffer();
         var startColumn = bufferPt.column;
         var endColumn = bufferPt.column;
@@ -141,7 +143,10 @@ class GoToDefinition implements OmniSharp.IFeature {
         while (endColumn < line.length && /[A-Z_0-9]/i.test(line[++endColumn])) {
         }
 
-        var wordRange = new Range([bufferPt.row, startColumn + 1], [bufferPt.row, endColumn]);
+        return new Range([bufferPt.row, startColumn + 1], [bufferPt.row, endColumn]);
+    }
+
+    private underlineIfNavigable(editor: Atom.TextEditor, bufferPt: TextBuffer.Point, wordRange: TextBuffer.Range) {
         if (this.marker &&
             this.marker.bufferMarker.range &&
             this.marker.bufferMarker.range.compare(wordRange) === 0)
@@ -164,7 +169,7 @@ class GoToDefinition implements OmniSharp.IFeature {
                 Line: bufferPt.row,
                 Column: bufferPt.column,
                 FileName: editor.getURI()
-            })).where(data => !!data.FileName)
+            })).where(data => !!data.FileName || !!data['MetadataSource'])
                 .subscribe(data => addMark());
         }
     }
