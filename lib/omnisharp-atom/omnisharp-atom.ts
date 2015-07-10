@@ -1,6 +1,6 @@
 require('./configure-rx');
 import _ = require('lodash');
-import {Observable, BehaviorSubject, Subject, CompositeDisposable} from "rx";
+import {Observable, BehaviorSubject, Subject, CompositeDisposable, Disposable} from "rx";
 import path = require('path');
 import fs = require('fs');
 import a = require("atom");
@@ -16,6 +16,7 @@ class OmniSharpAtom {
     private emitter: EventKit.Emitter;
     private disposable: Rx.CompositeDisposable;
     private autoCompleteProvider;
+    private linters;
     private generator: { run(generator: string, path?: string, options?: any): void; start(prefix: string, path?: string, options?: any): void; };
     private menu: EventKit.Disposable;
 
@@ -28,7 +29,7 @@ class OmniSharpAtom {
             this.configureKeybindings();
 
             this.disposable.add(atom.commands.add('atom-workspace', 'omnisharp-atom:toggle', () => this.toggle()));
-            this.disposable.add(atom.commands.add('atom-workspace', 'omnisharp-atom:new-application', () => this.generator.run("aspnet:app", undefined, {promptOnZeroDirectories: true})));
+            this.disposable.add(atom.commands.add('atom-workspace', 'omnisharp-atom:new-application', () => this.generator.run("aspnet:app", undefined, { promptOnZeroDirectories: true })));
             this.disposable.add(atom.commands.add('atom-workspace', 'omnisharp-atom:new-class', () => this.generator.run("aspnet:Class", undefined, { promptOnZeroDirectories: true })));
             this.disposable.add(this.emitter);
 
@@ -198,6 +199,20 @@ class OmniSharpAtom {
         return this.autoCompleteProvider;
     }
 
+    public provideLinter(linter) {
+        var LinterProvider = require("./features/lib/linter-provider");
+        var linters = this.linters = LinterProvider.provider;
+
+        this.disposable.add(Disposable.create(() => {
+            _.each(linters, l => {
+                linter.deleteLinter(l);
+            });
+        }));
+
+        this.disposable.add(LinterProvider.disposable);
+        return this.linters;
+    }
+
     private configureKeybindings() {
         var omnisharpFileNew = this.getPackageDir() + "/omnisharp-atom/keymaps/omnisharp-file-new.cson";
         this.disposable.add(atom.config.observe("omnisharp-atom.enableAdvancedFileNew", (enabled) => {
@@ -298,6 +313,11 @@ class OmniSharpAtom {
         },
         nagAddExternalProjects: {
             title: 'Show the notifications to add or remove external projects',
+            type: 'boolean',
+            default: true
+        },
+        hideLinterInterface: {
+            title: 'Hide the linter interface when using omnisharp-atom editors',
             type: 'boolean',
             default: true
         },
