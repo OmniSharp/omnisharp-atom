@@ -1,12 +1,11 @@
 {
-    "version": "1.4.1",
+    "version": "1.5.0-beta",
     "compilerOptions": {
         "target": "es5",
         "module": "commonjs",
         "declaration": false,
         "noImplicitAny": false,
-        "removeComments": true,
-        "noLib": false
+        "removeComments": false
     },
     "formatCodeOptions": {
         "indentSize": 4,
@@ -22,7 +21,7 @@
         "placeOpenBraceOnNewLineForFunctions": false,
         "placeOpenBraceOnNewLineForControlBlocks": false
     },
-    "compileOnSave": false,
+    "compileOnSave": true,
     "filesGlob": [
         "./**/*.ts",
         "!./typings/**/*.d.ts",

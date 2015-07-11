@@ -246,6 +246,12 @@ class Omni {
             .take(1);
     }
 
+    public getClientForProject(project: ProjectViewModel) {
+        return Observable.from(manager.activeClients)
+            .where(solution => _.any(solution.model.projects, p => p === project))
+            .take(1);
+    }
+
     /**
     * Allows for views to observe the active model as it changes between editors
     */
