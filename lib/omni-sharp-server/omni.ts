@@ -44,16 +44,19 @@ class Omni {
 
         this.disposable.add(atom.workspace.observeActivePaneItem((pane: any) => {
             if (pane && pane.getGrammar) {
-                var grammarName = pane.getGrammar().name;
-                if (grammarName === 'C#' || grammarName === 'C# Script File') {
-                    this._activeEditorSubject.onNext(pane);
-                    return;
-                }
+                var grammar = pane.getGrammar();
+                if (grammar) {
+                    var grammarName = grammar.name;
+                    if (grammarName === 'C#' || grammarName === 'C# Script File') {
+                        this._activeEditorSubject.onNext(pane);
+                        return;
+                    }
 
-                var filename = basename(pane.getPath());
-                if (filename === 'project.json') {
-                    this._activeEditorSubject.onNext(pane);
-                    return;
+                    var filename = basename(pane.getPath());
+                    if (filename === 'project.json') {
+                        this._activeEditorSubject.onNext(pane);
+                        return;
+                    }
                 }
             }
 
