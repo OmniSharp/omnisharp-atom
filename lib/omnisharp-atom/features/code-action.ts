@@ -15,21 +15,18 @@ class CodeAction implements OmniSharp.IFeature {
 
         this.disposable.add(Omni.addTextEditorCommand("omnisharp-atom:get-code-actions", () => {
             //store the editor that this was triggered by.
-            Omni.activeEditor
-                .first()
-                .subscribe(editor => {
-                    Omni.request(client => client.getcodeactions(this.getRequest(client)))
-                        .subscribe(response => {
-                            //pop ui to user.
-                            this.view = codeActionsView({
-                                items: response.CodeActions,
-                                confirmed: (item) => {
-                                    var range = editor.getSelectedBufferRange();
-                                    Omni.request(editor, client => client.runcodeaction(this.getRequest(client, item.Identifier)))
-                                        .subscribe((response) => this.applyAllChanges(response.Changes));
-                                }
-                            }, editor);
-                        });
+            var editor = atom.workspace.getActiveTextEditor();
+            Omni.request(editor, client => client.getcodeactions(this.getRequest(client)))
+                .subscribe(response => {
+                    //pop ui to user.
+                    this.view = codeActionsView({
+                        items: response.CodeActions,
+                        confirmed: (item) => {
+                            var range = editor.getSelectedBufferRange();
+                            Omni.request(editor, client => client.runcodeaction(this.getRequest(client, item.Identifier)))
+                                .subscribe((response) => this.applyAllChanges(response.Changes));
+                        }
+                    }, editor);
                 });
         }));
 

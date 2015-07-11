@@ -164,17 +164,17 @@ class Highlight implements OmniSharp.IFeature {
             return editor.displayBuffer.tokenizedBuffer['_retokenizeLines'].apply(this, arguments);
         };
 
-        disposable.add(Disposable.create(() => defer(() => {
+        disposable.add(Disposable.create(() => {
             grammar.linesToFetch = [];
             grammar.responses.clear();
-            editor.setGrammar = editor['_setGrammar'];
-            editor.displayBuffer.tokenizedBuffer.buildTokenizedLineForRowWithText = editor.displayBuffer.tokenizedBuffer['_buildTokenizedLineForRowWithText'];
-            editor.displayBuffer.tokenizedBuffer.markTokenizationComplete = editor.displayBuffer.tokenizedBuffer['_markTokenizationComplete'];
-            editor.displayBuffer.tokenizedBuffer.retokenizeLines = editor.displayBuffer.tokenizedBuffer['_retokenizeLines'];
-            editor.displayBuffer.tokenizedBuffer.chunkSize = editor.displayBuffer.tokenizedBuffer['_chunkSize'];
-            //editor.setGrammar(editor['_oldGrammar']);
             editor.displayBuffer.tokenizedBuffer.retokenizeLines();
-        })));
+            //editor.setGrammar = editor['_setGrammar'];
+            //editor.displayBuffer.tokenizedBuffer.buildTokenizedLineForRowWithText = editor.displayBuffer.tokenizedBuffer['_buildTokenizedLineForRowWithText'];
+            //editor.displayBuffer.tokenizedBuffer.markTokenizationComplete = editor.displayBuffer.tokenizedBuffer['_markTokenizationComplete'];
+            //editor.displayBuffer.tokenizedBuffer.retokenizeLines = editor.displayBuffer.tokenizedBuffer['_retokenizeLines'];
+            //editor.displayBuffer.tokenizedBuffer.chunkSize = editor.displayBuffer.tokenizedBuffer['_chunkSize'];
+            //editor.setGrammar(editor['_oldGrammar']);
+        }));
 
         this.disposable.add(editor.onDidDestroy(() => {
             disposable.dispose();

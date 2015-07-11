@@ -1,4 +1,4 @@
-import {helpers, Observable, ReplaySubject, Subject, CompositeDisposable, BehaviorSubject} from 'rx';
+import {helpers, Observable, ReplaySubject, Subject, CompositeDisposable, BehaviorSubject, Disposable} from 'rx';
 import manager = require("./client-manager");
 import Client = require("./client");
 import _ = require('lodash');
@@ -60,6 +60,8 @@ class Omni {
             // This will tell us when the editor is no longer an appropriate editor
             this._activeEditorSubject.onNext(null);
         }));
+
+        this.disposable.add(Disposable.create(() => this._activeEditorSubject.onNext(null)));
     }
 
     public deactivate() {
@@ -117,7 +119,7 @@ class Omni {
         disposable.add(atom.workspace.observeActivePaneItem((pane: any) => editorSubject.onNext(pane)));
         var editorObservable = editorSubject.where(z => z && !!z.getGrammar);
 
-        Observable.zip(editorObservable, editorObservable.skip(1), (editor, nextEditor) => ({ editor, nextEditor }))
+        disposable.add(Observable.zip(editorObservable, editorObservable.skip(1), (editor, nextEditor) => ({ editor, nextEditor }))
             .debounce(50)
             .subscribe(function({editor, nextEditor}) {
                 var path = nextEditor.getPath();
@@ -127,7 +129,7 @@ class Omni {
                         atom.notifications.addInfo("OmniSharp", { detail: "Functionality will limited until the file has been saved." });
                     }
                 }
-            });
+            }));
 
         disposable.add(atom.workspace.observeTextEditors((editor: Atom.TextEditor) => {
             function cb() {
@@ -304,8 +306,8 @@ function makeOpener(): Rx.IDisposable {
         return manager.activeClient
             .take(1)
             .flatMap(issueRequest)
-            //.concat(..._.map(manager.activeClients, issueRequest))
-            //.take(1)
+        //.concat(..._.map(manager.activeClients, issueRequest))
+        //.take(1)
             .map(setupEditor)
             .toPromise();
     }

@@ -15,13 +15,8 @@ class TypeLookup implements OmniSharp.IFeature {
 
     public activate() {
         this.disposable = new CompositeDisposable();
-        this.disposable.add(Omni.activeEditor.subscribe(editor => {
+        this.disposable.add(Omni.activeEditor.where(z => !!z).subscribe(editor => {
             var cd = new CompositeDisposable();
-
-            cd.add(Omni.activeEditor.where(active => active !== editor).subscribe(() => {
-                cd.dispose();
-                this.disposable.remove(cd);
-            }));
 
             // subscribe for tooltips
             // inspiration : https://github.com/chaika2013/ide-haskell
@@ -33,6 +28,11 @@ class TypeLookup implements OmniSharp.IFeature {
                 editor['__omniTooltip'] = null;
                 cd.dispose();
             });
+
+            cd.add(Omni.activeEditor.where(active => active !== editor).subscribe(() => {
+                cd.dispose();
+                this.disposable.remove(cd);
+            }));
         }));
 
         this.disposable.add(Omni.addTextEditorCommand("omnisharp-atom:type-lookup", () => {
@@ -185,7 +185,6 @@ class Tooltip implements Rx.Disposable {
 
     public dispose() {
         this.disposable.dispose();
-        this.hideExpressionType();
     }
 
     private hideExpressionType() {

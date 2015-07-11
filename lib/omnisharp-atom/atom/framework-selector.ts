@@ -1,4 +1,4 @@
-import {CompositeDisposable, Observable} from "rx";
+import {CompositeDisposable, Observable, Disposable} from "rx";
 import {ProjectViewModel} from "../../omni-sharp-server/view-model";
 import Omni = require('../../omni-sharp-server/omni')
 import {FrameworkSelectorComponent} from '../views/framework-selector-view';
@@ -26,28 +26,34 @@ class FrameworkSelector implements OmniSharp.IAtomFeature {
     }
 
     public attach() {
-        this.view = document.createElement("span");
-        this.view.classList.add('inline-block');
-        this.view.classList.add('framework-selector');
-        this.view.style.display = 'none';
         if (this.statusBar) { this._attach(); }
         this._active = true;
     }
 
     private _attach() {
+        this.view = document.createElement("span");
+        this.view.classList.add('inline-block');
+        this.view.classList.add('framework-selector');
+        this.view.style.display = 'none';
         if (atom.config.get('grammar-selector.showOnRightSideOfStatusBar')) {
-            this.statusBar.addRightTile({
+            var tile = this.statusBar.addRightTile({
                 item: this.view,
                 priority: 9
             });
         } else {
-            this.statusBar.addLeftTile({
+            var tile = this.statusBar.addLeftTile({
                 item: this.view,
                 priority: 11
             });
         }
 
         this._component = <any>React.render(React.createElement(FrameworkSelectorComponent, { alignLeft: !atom.config.get('grammar-selector.showOnRightSideOfStatusBar') }), this.view);
+
+        this.disposable.add(Disposable.create(() => {
+            React.unmountComponentAtNode(this.view);
+            tile.destroy();
+            this.view.remove();
+        }));
 
         this.disposable.add(Omni.activeEditor
             .where(z => !z)
@@ -67,8 +73,6 @@ class FrameworkSelector implements OmniSharp.IAtomFeature {
     }
 
     public dispose() {
-        React.unmountComponentAtNode(this.view);
-        this.tile.destroy();
         this.disposable.dispose();
     }
 

@@ -65,11 +65,11 @@ let _cacheClearOnForce = new Subject<RequestOptions>();
 
 // Only issue new requests when ever a cache change event occurs.
 let _requestStream = Observable.merge(_clearCacheOnDot, _clearCacheOnBufferMovement, _cacheClearOnForce)
-    // This covers us incase both return the same value.
+// This covers us incase both return the same value.
     .distinctUntilChanged()
-    // Make the request
+// Make the request
     .flatMapLatest(options => Omni.request(client => client.autocomplete(client.makeDataRequest(autoCompleteOptions))))
-    // Ensure the array is not null;
+// Ensure the array is not null;
     .map(completions => completions || [])
     .share();
 
@@ -216,7 +216,8 @@ function onDidInsertSuggestion(editor: Atom.TextEditor, triggerPosition: TextBuf
 }
 
 function dispose() {
-    _disposable.dispose();
+    if (_disposable)
+        _disposable.dispose();
     _disposable = null;
     _initialized = false;
 }
