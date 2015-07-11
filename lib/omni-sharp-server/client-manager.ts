@@ -225,7 +225,7 @@ class SolutionManager {
         if (p && this._solutions.has(p)) {
             var solutionValue = this._solutions.get(p);
             // If the solution has disconnected, reconnect it
-            if (solutionValue.currentState === DriverState.Disconnected)
+            if (solutionValue.currentState === DriverState.Disconnected && atom.config.get('omnisharp-atom.autoStartOnCompatibleFile'))
                 solutionValue.connect();
 
             // Client is in an invalid state

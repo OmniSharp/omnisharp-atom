@@ -36,6 +36,7 @@ class Client extends OmnisharpClient {
     }
 
     public connect(options?) {
+        if (this.currentState === DriverState.Connected || this.currentState === DriverState.Connecting || this.currentState === DriverState.Error) return;
         super.connect(options);
 
         this.log("Starting OmniSharp server (pid:" + this.id + ")");
