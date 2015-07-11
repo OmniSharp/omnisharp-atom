@@ -59,7 +59,6 @@ class Omni {
                     }
                 }
             }
-
             // This will tell us when the editor is no longer an appropriate editor
             this._activeEditorSubject.onNext(null);
         }));
