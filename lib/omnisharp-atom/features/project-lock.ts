@@ -14,11 +14,16 @@ function projectLock(solution: Client, project: ProjectViewModel, filePath: stri
         onDidChange = file.onDidChange(() => subject.onNext(filePath)),
         onWillThrowWatchError = file.onWillThrowWatchError(() => {
             subject.onNext(filePath);
+            disposable.remove(onDidChange);
             onDidChange.dispose();
             _.delay(() => {
                 onDidChange = file.onDidChange(() => subject.onNext(filePath))
+                disposable.add(onDidChange);
             }, 1000);
         });
+
+    disposable.add(onDidChange);
+    disposable.add(onWillThrowWatchError);
 
     return {
         observable: subject.throttleFirst(2000).asObservable(),

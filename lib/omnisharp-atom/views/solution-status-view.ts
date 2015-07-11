@@ -58,7 +58,6 @@ export class SolutionStatusCard<T extends ICardProps> extends ReactClientCompone
         this.updatesDisposable = this.state.model.observe.updates.debounce(500).subscribe(() => this.setState(<any>{}));
         this.disposable.add(this.updatesDisposable);
         this.verifyPosition();
-        //this.disposable.add(Observable.interval(100).subscribe(() => this.verifyPosition()));
     }
 
     public componentDidUpdate() {
