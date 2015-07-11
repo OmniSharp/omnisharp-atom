@@ -3,8 +3,6 @@ import _ = require('lodash');
 import {Observable, BehaviorSubject, Subject, CompositeDisposable, Disposable} from "rx";
 import path = require('path');
 import fs = require('fs');
-import a = require("atom");
-var Emitter = (<any>a).Emitter
 
 // TODO: Remove these at some point to stream line startup.
 import Omni = require('../omni-sharp-server/omni');
@@ -13,25 +11,25 @@ import {world} from './world';
 
 class OmniSharpAtom {
     private features: OmniSharp.IFeature[] = [];
-    private emitter: EventKit.Emitter;
     private disposable: Rx.CompositeDisposable;
-    private autoCompleteProvider;
-    private linters;
     private generator: { run(generator: string, path?: string, options?: any): void; start(prefix: string, path?: string, options?: any): void; };
     private menu: EventKit.Disposable;
+
+    private restartLinter: () => void = () => { };
 
     public activate(state) {
         this.disposable = new CompositeDisposable;
 
         if (dependencyChecker.findAllDeps(this.getPackageDir())) {
-            this.emitter = new Emitter;
-
             this.configureKeybindings();
 
             this.disposable.add(atom.commands.add('atom-workspace', 'omnisharp-atom:toggle', () => this.toggle()));
             this.disposable.add(atom.commands.add('atom-workspace', 'omnisharp-atom:new-application', () => this.generator.run("aspnet:app", undefined, { promptOnZeroDirectories: true })));
             this.disposable.add(atom.commands.add('atom-workspace', 'omnisharp-atom:new-class', () => this.generator.run("aspnet:Class", undefined, { promptOnZeroDirectories: true })));
-            this.disposable.add(this.emitter);
+            this.disposable.add(Disposable.create(() => {
+                this.features = [];
+                Omni.deactivate();
+            }));
 
             this.loadAtomFeatures(state).toPromise()
                 .then(() => this.loadFeatures(state).toPromise())
@@ -177,9 +175,7 @@ class OmniSharpAtom {
     }
 
     public deactivate() {
-        this.features = null;
-        this.autoCompleteProvider && this.autoCompleteProvider.destroy();
-        Omni.deactivate();
+        this.disposable.dispose();
     }
 
     public consumeStatusBar(statusBar) {
@@ -195,13 +191,18 @@ class OmniSharpAtom {
 
     public provideAutocomplete() {
         var {CompletionProvider} = require("./features/lib/completion-provider");
-        this.autoCompleteProvider = CompletionProvider;
-        return this.autoCompleteProvider;
+        this.disposable.add(CompletionProvider);
+        return CompletionProvider;
     }
 
     public provideLinter(linter) {
         var LinterProvider = require("./features/lib/linter-provider");
-        var linters = this.linters = LinterProvider.provider;
+        return LinterProvider.provider;
+    }
+
+    public consumeLinter(linter) {
+        var LinterProvider = require("./features/lib/linter-provider");
+        var linters = LinterProvider;
 
         this.disposable.add(Disposable.create(() => {
             _.each(linters, l => {
@@ -209,8 +210,7 @@ class OmniSharpAtom {
             });
         }));
 
-        this.disposable.add(LinterProvider.disposable);
-        return this.linters;
+        this.disposable.add(LinterProvider.init());
     }
 
     private configureKeybindings() {

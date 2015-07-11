@@ -3,8 +3,6 @@ var Range = require('atom').Range;
 import _ = require('lodash');
 import {Observable, CompositeDisposable} from "rx";
 
-export var disposable = new CompositeDisposable();
-
 interface LinterError {
     type: string; // 'error' | 'warning'
     text?: string;
@@ -69,7 +67,8 @@ function hideLinter() {
         panel.style.display = 'none';
 }
 
-_.delay(() => {
+export function init() {
+    var disposable = new CompositeDisposable();
     var cd: CompositeDisposable;
     disposable.add(atom.config.observe('omnisharp-atom.hideLinterInterface', hidden => {
         if (hidden) {
@@ -93,7 +92,9 @@ _.delay(() => {
             showLinter();
         }
     }));
-}, 1000);
+
+    return disposable;
+}
 
 export var provider = [
     {

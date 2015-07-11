@@ -47,12 +47,15 @@ class SolutionManager {
         // create another observable that chnages when we get a new solution.
         this._disposable.add(activeEditor
             .where(z => !!z)
-            .doOnNext(x => console.log('activeEditor', x))
             .flatMap(z => this.getClientForEditor(z))
             .subscribe(x => this._activeSolution.onNext(x)));
 
         this._atomProjects.activate();
         this._activated = true;
+
+        this._disposable.add(Disposable.create(() => {
+            this.disconnect();
+        }))
     }
 
     public connect() {
@@ -60,7 +63,7 @@ class SolutionManager {
     }
 
     public disconnect() {
-        this._solutions.forEach(solution => solution.connect());
+        this._solutions.forEach(solution => solution.disconnect());
     }
 
     public deactivate() {
@@ -313,7 +316,7 @@ class SolutionManager {
             subject.onError("Trying to get a solution while the atom project has not fully loaded yet");
             return subject;
         }
-        
+
         var project = intersectPath(directory, this._atomProjects.paths);
         var cb = (candidates: string[]) => {
             // We only want to search for solutions after the main solutions have been processed.

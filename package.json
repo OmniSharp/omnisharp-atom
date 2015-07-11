@@ -92,6 +92,11 @@
       "versions": {
         "^1.0.0": "consumeYeomanEnvironment"
       }
+    },
+    "linter-plus-self": {
+      "versions": {
+        "0.1.0": "consumeLinter"
+      }
     }
   },
   "providedServices": {

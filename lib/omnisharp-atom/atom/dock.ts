@@ -7,7 +7,6 @@ import React = require('react');
 class Dock implements OmniSharp.IAtomFeature {
     private disposable: Rx.CompositeDisposable;
     private view: Element;
-    private panel: Atom.Panel;
     private dock: DockWindow<IDockWindowProps>;
     private _panes: DockPane<any, any>[] = [];
 
@@ -22,7 +21,7 @@ class Dock implements OmniSharp.IAtomFeature {
     }
 
     public attach() {
-        var p = this.panel = atom.workspace.addBottomPanel({
+        var p = atom.workspace.addBottomPanel({
             item: document.createElement('span'),
             visible: false,
             priority: 1000
@@ -34,11 +33,14 @@ class Dock implements OmniSharp.IAtomFeature {
             panes: this._panes,
             panel: p
         }), this.view);
+        this.disposable.add(Disposable.create(() => {
+            React.unmountComponentAtNode(this.view);
+            p.destroy()
+            this.view.remove();
+        }));
     }
 
     public dispose() {
-        React.unmountComponentAtNode(this.view);
-        this.panel.destroy();
         this.disposable.dispose();
     }
 
