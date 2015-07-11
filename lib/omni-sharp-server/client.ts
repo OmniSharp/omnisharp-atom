@@ -1,9 +1,10 @@
 import _ = require('lodash');
-import {Observable} from 'rx';
+import {Observable, Subject} from 'rx';
 import {OmnisharpClientV2 as OmnisharpClient, DriverState, OmnisharpClientOptions} from "omnisharp-client";
 
 interface ClientOptions extends OmnisharpClientOptions {
     temporary: boolean;
+    repository: Atom.GitRepository;
 }
 
 import {ViewModel} from "./view-model";
@@ -14,6 +15,7 @@ class Client extends OmnisharpClient {
     public path: string;
     public index: number;
     public temporary: boolean = false;
+    private repository: Atom.GitRepository;
 
     constructor(options: ClientOptions) {
         super(options);
@@ -22,6 +24,8 @@ class Client extends OmnisharpClient {
         this.model = new ViewModel(this);
         this.path = options.projectPath;
         this.index = options['index'];
+        this.repository = options.repository;
+        this.setupRepository();
     }
 
     public toggle() {
@@ -111,6 +115,20 @@ class Client extends OmnisharpClient {
             return Observable.empty<TResponse>();
         }
         return OmnisharpClient.prototype.request.call(this, action, request, options);
+    }
+
+    private setupRepository() {
+        if (this.repository) {
+            var branchSubject = new Subject<string>();
+
+            branchSubject
+                .distinctUntilChanged()
+                .subscribe(() => atom.commands.dispatch(atom.views.getView(atom.workspace), 'omnisharp-atom:restart-server'));
+
+            this.repository.onDidChangeStatuses(() => {
+                branchSubject.onNext(this.repository['branch']);
+            });
+        }
     }
 }
 
