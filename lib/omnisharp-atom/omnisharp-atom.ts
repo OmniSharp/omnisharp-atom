@@ -326,6 +326,48 @@ class OmniSharpAtom {
             description: "Enables server based highlighting, which includes support for string interpolation, class names and more.",
             type: 'boolean',
             default: false
+        },
+        dnxAlias: {
+            title: 'Dnx: Alias',
+            description: "The alias to pick for running Dnx.",
+            type: 'string',
+            default: 'default'
+        },
+        //dnxProjects: {
+        //    title: 'Dnx: Projects',
+        //    description: "The Project pattern when running dnx.",
+        //    type: 'string',
+        //    default: '**/project.json'
+        //},
+        dnxEnablePackageRestore: {
+            title: 'Dnx: Enable Package Restore',
+            description: "Enable package restore to run automatically",
+            type: 'boolean',
+            default: true
+        },
+        dnxPackageRestoreTimeout: {
+            title: 'Dnx: Package Restore Timeout',
+            description: "Timeout for package restore",
+            type: 'number',
+            default: 180
+        },
+        //formattingOptionsNewLine: {
+        //    title: 'Formatting Options: New Line',
+        //    description: "The newline character to use",
+        //    type: 'string',
+        //    default: '\n'
+        //},
+        formattingOptionsUseTabs: {
+            title: 'Formatting Options: Use Tabs',
+            description: "Use tabs over spaces",
+            type: 'boolean',
+            default: false
+        },
+        formattingOptionsTabSize: {
+            title: 'Formatting Options: Tab Size',
+            description: "The size of tabs",
+            type: 'number',
+            default: 4
         }
     }
 }

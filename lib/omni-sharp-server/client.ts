@@ -1,6 +1,7 @@
 import _ = require('lodash');
 import {Observable, Subject} from 'rx';
 import {OmnisharpClientV2 as OmnisharpClient, DriverState, OmnisharpClientOptions} from "omnisharp-client";
+import {config} from "./omnisharp-configuration";
 
 interface ClientOptions extends OmnisharpClientOptions {
     temporary: boolean;
@@ -14,11 +15,13 @@ class Client extends OmnisharpClient {
     public logs: Observable<OmniSharp.OutputMessage>;
     public path: string;
     public index: number;
-    public temporary: boolean = false;
+    public temporary: boolean;
     private repository: Atom.GitRepository;
 
     constructor(options: ClientOptions) {
+        options.omnisharp = <any>config.value;
         super(options);
+        this.temporary = false;
         this.configureClient();
         this.temporary = options.temporary;
         this.model = new ViewModel(this);
@@ -26,6 +29,7 @@ class Client extends OmnisharpClient {
         this.index = options['index'];
         this.repository = options.repository;
         this.setupRepository();
+        this.setupConfig(options);
     }
 
     public toggle() {
@@ -40,6 +44,11 @@ class Client extends OmnisharpClient {
     }
 
     public connect(options?) {
+        if (!options) {
+            options = {};
+        }
+        options.omnisharp = config.value;
+
         super.connect(options);
 
         this.log("Starting OmniSharp server (pid:" + this.id + ")");
@@ -129,6 +138,14 @@ class Client extends OmnisharpClient {
                 branchSubject.onNext(this.repository['branch']);
             });
         }
+    }
+
+    private setupConfig(options) {
+        config.changed
+            .subscribe(config => {
+                atom.commands.dispatch(atom.views.getView(atom.workspace), 'omnisharp-atom:restart-server');
+                options.omnisharp = <any>config;
+            });
     }
 }
 
