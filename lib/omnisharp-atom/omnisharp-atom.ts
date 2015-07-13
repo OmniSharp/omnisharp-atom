@@ -80,10 +80,9 @@ class OmniSharpAtom {
             .map(feature => {
                 var path = "./features/" + feature;
                 return <OmniSharp.IFeature[]>_.values(require(path))
-            });
-
+            })
         var result = features.toArray()
-            .map(features => _.flatten<OmniSharp.IFeature>(features));
+            .map(features => _.flatten<OmniSharp.IFeature>(features).filter(feature => !_.isFunction(feature)));
         result.subscribe(features => {
             this.features = this.features.concat(features);
         });
@@ -107,7 +106,7 @@ class OmniSharpAtom {
             });
 
         var result = atomFeatures.toArray()
-            .map(features => _.flatten<OmniSharp.IFeature>(features));
+            .map(features => _.flatten<OmniSharp.IFeature>(features).filter(feature => !_.isFunction(feature)));
         result.subscribe(features => {
             this.features = this.features.concat(features);
         });

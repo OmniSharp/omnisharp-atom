@@ -155,19 +155,23 @@ export class ViewModel {
                 .map(z => z.MsBuildProject)
                 .subscribe(project => {
                     _.pull(this.msbuild.Projects, _.find(this.msbuild.Projects, { Path: project.Path }));
-                    this._projectRemovedStream.onNext(_.find(this.projects, { Path: project.Path }));
+                    this._projectRemovedStream.onNext(_.find(this.projects, { path: project.Path }));
                 });
 
             _client.projectChanged
                 .where(z => z.MsBuildProject != null)
                 .map(z => z.MsBuildProject)
                 .subscribe(project => {
-                    _.assign(_.find(this.msbuild.Projects, z => { Path: project.Path }), project);
-                    this._projectChangedStream.onNext(new ProjectViewModel(project.AssemblyName, project.Path, _client.path, [{
-                        FriendlyName: project.TargetFramework,
-                        Name: project.TargetFramework,
-                        ShortName: project.TargetFramework
-                    }]));
+                    var current = _.find(this.projects, { path: project.Path });
+                    if (current) {
+                        var changed = new ProjectViewModel(project.AssemblyName, project.Path, _client.path, [{
+                            FriendlyName: project.TargetFramework,
+                            Name: project.TargetFramework,
+                            ShortName: project.TargetFramework
+                        }]);
+                        _.assign(current, changed);
+                        this._projectChangedStream.onNext(current);
+                    }
                 });
 
             _client.projectAdded
@@ -185,16 +189,19 @@ export class ViewModel {
                 .map(z => z.DnxProject)
                 .subscribe(project => {
                     _.pull(this.dnx.Projects, _.find(this.dnx.Projects, { Path: project.Path }));
-                    this._projectRemovedStream.onNext(_.find(this.projects, { Path: project.Path }));
+                    this._projectRemovedStream.onNext(_.find(this.projects, { path: project.Path }));
                 });
 
             _client.projectChanged
                 .where(z => z.DnxProject != null)
                 .map(z => z.DnxProject)
                 .subscribe(project => {
-                    _.assign(_.find(this.dnx.Projects, z => { Path: project.Path }), project);
-                    this._projectChangedStream.onNext(
-                        new ProjectViewModel(project.Name, project.Path, _client.path, project.DnxFrameworks, project.Configurations, project.Commands));
+                    var current = _.find(this.projects, { path: project.Path });
+                    if (current) {
+                        var changed = new ProjectViewModel(project.Name, project.Path, _client.path, project.DnxFrameworks, project.Configurations, project.Commands);
+                        _.assign(current, changed);
+                        this._projectChangedStream.onNext(current);
+                    }
                 });
         });
     }
