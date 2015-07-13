@@ -7,18 +7,19 @@ import {world} from '../world';
 
 
 interface ICommandOutputWindowState {
-    output: { id: number; message: string }[];
+    output: { message: string }[];
 }
 
-export class CommandOutputWindow extends ReactClientComponent<{ update: Observable<{ id: number; message: string }[]> }, ICommandOutputWindowState>  {
+export class CommandOutputWindow extends ReactClientComponent<{ update: Observable<{ message: string }[]>; output: { message: string }[] }, ICommandOutputWindowState>  {
     public displayName = "CommandOutputWindow";
 
     private _convert;
 
-    constructor(props?: { update: Observable<{ id: number; message: string }[]> }, context?: any) {
+    constructor(props?: { update: Observable<{ id: number; message: string }[]>; output: { message: string }[] }, context?: any) {
         super(props, context);
-        this.state = { output: [] };
-        this.disposable.add(this.props.update.subscribe(output => this.setState({ output })));
+        this.state = { output: props.output };
+        this.disposable.add(this.props.update.subscribe(output =>
+            this.setState({ output })));
     }
 
     private scrollToBottom() {

@@ -6,9 +6,12 @@ import {spawn, ChildProcess} from "child_process";
 import {CommandOutputWindow} from '../views/command-output-window';
 import * as readline from "readline";
 import {dock} from "../atom/dock";
+import {normalize} from "path";
+
+var win32 = process.platform === "win32";
 
 var daemonFlags = ['--server Kestrel', '--server Microsoft.AspNet.Server.WebListener'];
-if (process.platform === "win32") {
+if (win32) {
     var inactiveCommands = ['--server Kestrel'];
     var env = <typeof process.env>{};
 } else {
@@ -62,80 +65,25 @@ class CommandRunner implements OmniSharp.IFeature {
     }
 
     private addCommand(project: ProjectViewModel, command: string, content: string) {
-        var names = project.name.split('.');
-        var name = names[names.length - 1];
-
         //--server Kestrel
         //--server Microsoft.AspNet.Server.WebListener
         var daemon = any(daemonFlags, cnt => contains(content, cnt));
         if (daemon) {
-            return atom.commands.add('atom-workspace', `omnisharp-atom:${name}-watch-${command}`, () => this.daemonProcess(project, command));
+            return atom.commands.add('atom-workspace', `dnx:${project.name}-[${command}]-(watch)`, () => this.daemonProcess(project, command));
         } else {
-            return atom.commands.add('atom-workspace', `omnisharp-atom:${name}-${command}`, () => this.runProcess(project, command));
+            return atom.commands.add('atom-workspace', `dnx:${project.name}-[${command}]`, () => this.runProcess(project, command));
         }
     }
 
     private daemonProcess(project: ProjectViewModel, command: string) {
-        var process = new DaemonProcess(project, command);
+        var process = new RunProcess(project, command, true);
         process.start();
     }
 
     private runProcess(project: ProjectViewModel, command: string) {
-        var process = new DaemonProcess(project, command);
+        var process = new RunProcess(project, command);
         process.start();
 
-    }
-
-    public dispose() {
-        this.disposable.dispose();
-    }
-}
-
-export class DaemonProcess implements Rx.IDisposable {
-    private disposable = new CompositeDisposable();
-    constructor(private project: ProjectViewModel, private command: string) { }
-
-    public output: { message: string }[];
-
-    public start() {
-        var names = this.project.name.split('.');
-        var name = names[names.length - 1];
-        var subject = new Subject<{ message: string }[]>();
-
-        this.disposable.add(dock.addWindow(`${this.project.name}${this.command}`, `${name} --watch ${this.command}`, CommandOutputWindow, { update: subject }, { closeable: true }, this.disposable));
-
-        var solution = Omni.getClientForProject(this.project)
-            .map(solution => solution.model.dnx.RuntimePath)
-            .subscribe(runtime => {
-                var process = spawn(runtime, ['--watch', this.project.path, this.command], {
-                    env, stdio: 'pipe'
-                });
-
-                var rl = readline.createInterface({
-                    input: process.stdout,
-                    output: undefined
-                });
-
-                rl.on('line', (data) => {
-                    this.output.push({ message: data });
-                    subject.onNext(this.output);
-                });
-
-                var disposable = Disposable.create(() => {
-                    process.removeAllListeners();
-                    try { process.kill(); } catch (e) { }
-                });
-                this.disposable.add(disposable);
-
-                var cb = () => {
-                    disposable.dispose();
-                    this.start();
-                }
-
-                process.on('close', cb);
-                process.on('exit', cb);
-                process.on('disconnect', cb);
-            });
     }
 
     public dispose() {
@@ -145,34 +93,77 @@ export class DaemonProcess implements Rx.IDisposable {
 
 export class RunProcess {
     private disposable = new CompositeDisposable();
-    constructor(private project: ProjectViewModel, private command: string) { }
+    public update = new Subject<{ message: string }[]>();
+    public output: { message: string }[] = [];
+    private id: string;
 
-    public output: string[];
+    constructor(private project: ProjectViewModel, private command: string, private watch: boolean = false) {
+        this.id = `${this.project.name}${this.command}`;
+        this.disposable.add(dock.addWindow(this.id, `${this.project.name} ${this.watch ? '--watch' : ''} ${this.command}`, CommandOutputWindow, this, {
+            closeable: true
+        }, this.disposable));
+    }
 
     public start() {
-        var names = this.project.name.split('.');
-        var name = names[names.length - 1];
-        this.disposable.add(dock.addWindow(`${this.project.name}${this.command}`, `${name} --watch ${this.command}`, CommandOutputWindow, {}, { closeable: true }, this.disposable));
 
         var solution = Omni.getClientForProject(this.project)
-            .map(solution => solution.model.dnx.RuntimePath)
-            .subscribe(runtime => {
-                var process = spawn(runtime, ['--watch', this.project.path, this.command], {
-                    env, stdio: 'pipe'
-                });
+            .map(solution => solution.model.dnx.RuntimePath + (win32 ? '/bin/dnx.exe' : '/bin/dnx'))
+            .map(normalize)
+            .tapOnNext(() => dock.selectWindow(this.id))
+            .subscribe((runtime) => this.bootRuntime(runtime));
+    }
 
-                var rl = readline.createInterface({
-                    input: process.stdout,
-                    output: undefined
-                });
+    public bootRuntime(runtime: string) {
+        var args = [this.project.path, this.command];
+        var failed = false;
+        if (this.watch) {
+            args.unshift('--watch');
+        }
+        var process = spawn(runtime, args, {
+            env, stdio: 'pipe'
+        });
 
-                rl.on('line', (data) => this.output.push(data));
+        var out = readline.createInterface({
+            input: process.stdout,
+            output: undefined
+        });
 
-                var disposable = Disposable.create(() => {
-                    try { process.kill(); } catch (e) { }
-                });
-                this.disposable.add(disposable);
-            });
+        out.on('line', (data) => {
+            this.output.push({ message: data });
+            this.update.onNext(this.output);
+        });
+
+        var error = readline.createInterface({
+            input: process.stderr,
+            output: undefined
+        });
+
+        error.on('line', (data) => {
+            this.output.push({ message: data });
+            this.update.onNext(this.output);
+        });
+
+        var disposable = Disposable.create(() => {
+            process.removeAllListeners();
+            try { process.kill(); } catch (e) { }
+        });
+        this.disposable.add(disposable);
+
+        var cb = () => {
+            disposable.dispose();
+            if (this.watch && !failed)
+                this.bootRuntime(runtime);
+        };
+
+        if (this.watch) {
+            process.on('close', cb);
+            process.on('exit', cb);
+            process.on('disconnect', cb);
+        }
+    }
+
+    public dispose() {
+        this.disposable.dispose();
     }
 }
 
