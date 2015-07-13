@@ -5,6 +5,7 @@ import {dock} from "../atom/dock";
 import {SolutionStatusCard, ICardProps} from '../views/solution-status-view';
 import {ViewModel} from "../../omni-sharp-server/view-model";
 import manager = require("../../omni-sharp-server/client-manager");
+import {DriverState} from "omnisharp-client";
 import React = require('react');
 import $ = require('jquery');
 
@@ -56,8 +57,12 @@ class SolutionInformation implements OmniSharp.IFeature {
         }));
 
         this.disposable.add(atom.commands.add("atom-workspace", 'omnisharp-atom:restart-server', () => {
-            manager.activeClients[this.selectedIndex].disconnect();
-            manager.activeClients[this.selectedIndex].connect();
+            var client = manager.activeClients[this.selectedIndex];
+            client.state.where(z => z == DriverState.Disconnected)
+                .take(1).delay(500)
+                .subscribe(() =>
+                    client.connect());
+            client.disconnect();
         }));
     }
 

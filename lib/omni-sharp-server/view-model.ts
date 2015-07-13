@@ -200,12 +200,16 @@ export class ViewModel {
     }
 
     public getProjectForEditor(editor: Atom.TextEditor) {
+        return this.getProjectForPath(editor.getPath());
+    }
+
+    public getProjectForPath(path: string) {
         var o: Observable<ProjectViewModel>;
-        if (this.isOn && this.projects.length)
-            o = Observable.just<ProjectViewModel>(_.find(this.projects, x => _.startsWith(editor.getPath(), x.path))).where(z => !!z);
-        else
-            o = this._projectAddedStream
-                .where(x => _.startsWith(editor.getPath(), x.path));
+        if (this.isOn && this.projects.length) {
+            o = Observable.just<ProjectViewModel>(_.find(this.projects, x => _.startsWith(path, x.path))).where(z => !!z);
+        } else {
+            o = this._projectAddedStream.where(x => _.startsWith(path, x.path));
+        }
 
         return o;
     }

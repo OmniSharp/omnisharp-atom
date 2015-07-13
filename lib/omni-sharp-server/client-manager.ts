@@ -1,6 +1,6 @@
 import _ = require('lodash')
 import path = require('path');
-import {Observable, AsyncSubject, RefCountDisposable, Disposable, CompositeDisposable, ReplaySubject, Scheduler} from "rx";
+import {Observable, AsyncSubject, RefCountDisposable, Disposable, CompositeDisposable, ReplaySubject, Scheduler, Subject} from "rx";
 import Solution = require('./client');
 import {AtomProjectTracker} from "./atom-projects";
 import {ObservationClient, CombinationClient} from './composite-client';
@@ -34,6 +34,8 @@ class SolutionManager {
     private _activeSolutionObserable = this._activeSolution.distinctUntilChanged().where(z => !!z);
     public get activeClient(): Observable<Solution> { return this._activeSolutionObserable; }
 
+    private _activatedSubject = new Subject<boolean>();
+
     public activate(activeEditor: Observable<Atom.TextEditor>) {
         this._disposable = new CompositeDisposable();
         this._atomProjects = new AtomProjectTracker();
@@ -52,6 +54,7 @@ class SolutionManager {
 
         this._atomProjects.activate();
         this._activated = true;
+        this._activatedSubject.onNext(true);
 
         this._disposable.add(Disposable.create(() => {
             this.disconnect();
@@ -226,7 +229,7 @@ class SolutionManager {
         if (p && this._solutions.has(p)) {
             var solutionValue = this._solutions.get(p);
             // If the solution has disconnected, reconnect it
-            if (solutionValue.currentState === DriverState.Disconnected)
+            if (solutionValue.currentState === DriverState.Disconnected && atom.config.get('omnisharp-atom.autoStartOnCompatibleFile'))
                 solutionValue.connect();
 
             // Client is in an invalid state
@@ -316,9 +319,9 @@ class SolutionManager {
         var directory = path.dirname(location);
         var subject = new AsyncSubject<[string, Solution, boolean]>();
 
-        if (this._atomProjects == null) {
-            subject.onError("Trying to get a solution while the atom project has not fully loaded yet");
-            return subject;
+        if (!this._activated) {
+            return this._activatedSubject.take(1)
+                .flatMap(() => this.findSolutionForUnderlyingPath(location, isCsx));
         }
 
         var project = intersectPath(directory, this._atomProjects.paths);
