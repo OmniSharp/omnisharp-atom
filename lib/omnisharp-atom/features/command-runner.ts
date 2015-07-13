@@ -100,12 +100,12 @@ export class RunProcess {
     constructor(private project: ProjectViewModel, private command: string, private watch: boolean = false) {
         this.id = `${this.project.name}${this.command}`;
         this.disposable.add(dock.addWindow(this.id, `${this.project.name} ${this.watch ? '--watch' : ''} ${this.command}`, CommandOutputWindow, this, {
-            closeable: true
+            closeable: true,
+            priority: 1001
         }, this.disposable));
     }
 
     public start() {
-
         var solution = Omni.getClientForProject(this.project)
             .map(solution => solution.model.dnx.RuntimePath + (win32 ? '/bin/dnx.exe' : '/bin/dnx'))
             .map(normalize)

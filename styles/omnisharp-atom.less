@@ -201,13 +201,14 @@
     }
 }
 .codecheck {
+    position: relative;
     padding-left: 20px !important;
     background-color: @base-background-color;
-    &.Hidden,
-    &.Warning {
-        background-image: url("atom://omnisharp-atom/styles/icons/codecheck-warning.png");
-        background-repeat: no-repeat;
-        background-position: 2px 14px;
+    .fa {
+        position: absolute;
+        left: 4px;
+        vertical-align: middle;
+        line-height: 270%;
     }
     .fa-times-circle {
         color: @text-color-error;
