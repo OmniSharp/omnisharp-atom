@@ -33,6 +33,25 @@
             }
         }
     }
+    .font-size (@index) when (@index > 0) {
+        .font-size-@{index} {
+            &,
+            pre {
+                font-size: ~"@{index}px" !important;
+            }
+            .codecheck {
+                background-position: 2px (@index * 1.25px);
+            }
+            .omnisharp-atom-output .fa {
+                font-size: (@index + 4px);
+            }
+        }
+        .font-size(@index - 1);
+    }
+    .font-size(0) {
+
+    }
+    .font-size(40);
 }
 .error-output-pane {
 
@@ -111,7 +130,6 @@
 .omnisharp-atom-output {
     overflow-y: scroll;
     flex: 1;
-    font-size: 12px;
     position: relative;
     .error-table {
         width: 100%;
@@ -142,7 +160,6 @@
     }
     pre {
         background: @base-background-color;
-        font-size: 10px;
         margin: 0;
         padding: 0;
         border: none;

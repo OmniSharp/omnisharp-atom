@@ -19,7 +19,8 @@ export class CommandOutputWindow extends ReactClientComponent<{ update: Observab
         super(props, context);
         this.state = { output: props.output };
         this.disposable.add(this.props.update.subscribe(output =>
-            this.setState({ output })));
+            this.setState({ output }, () => this.scrollToBottom())));
+        _.defer(_.bind(this.scrollToBottom, this));
     }
 
     private scrollToBottom() {
