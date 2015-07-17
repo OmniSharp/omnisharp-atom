@@ -110,6 +110,11 @@
       "versions": {
         "1.0.0": "provideLinter"
       }
+    },
+    "jsonschema.provider": {
+      "versions": {
+        "0.1.0": "provideProjectJson"
+      }
     }
   },
   "package-dependencies": {

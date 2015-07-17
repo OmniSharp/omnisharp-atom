@@ -57,6 +57,7 @@
         "./lib/omnisharp-atom/features/lib/completion-provider.ts",
         "./lib/omnisharp-atom/features/lib/linter-provider.ts",
         "./lib/omnisharp-atom/features/lib/omni-select-list-view.ts",
+        "./lib/omnisharp-atom/features/lib/project-provider.ts",
         "./lib/omnisharp-atom/features/log.ts",
         "./lib/omnisharp-atom/features/lookup.ts",
         "./lib/omnisharp-atom/features/navigate-up-down.ts",

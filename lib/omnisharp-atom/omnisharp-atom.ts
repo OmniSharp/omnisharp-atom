@@ -194,9 +194,13 @@ class OmniSharpAtom {
         return CompletionProvider;
     }
 
-    public provideLinter(linter) {
+    public provideLinter() {
         var LinterProvider = require("./features/lib/linter-provider");
         return LinterProvider.provider;
+    }
+
+    public provideProjectJson() {
+        return require("./features/lib/project-provider");
     }
 
     public consumeLinter(linter) {
