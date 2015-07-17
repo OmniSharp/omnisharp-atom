@@ -116,8 +116,11 @@ class Omni {
     private static createTextEditorObservable(grammars: string[], disposable: CompositeDisposable) {
         var editors: Atom.TextEditor[] = [];
         var subject = new Subject<Atom.TextEditor>();
+        disposable.add(subject);
 
         var editorSubject = new Subject<Atom.TextEditor>();
+        disposable.add(editorSubject);
+
         disposable.add(atom.workspace.observeActivePaneItem((pane: any) => editorSubject.onNext(pane)));
         var editorObservable = editorSubject.where(z => z && !!z.getGrammar);
 
