@@ -4,6 +4,7 @@ import _ = require('lodash');
 import React = require('react');
 import {ReactClientComponent} from "./react-client-component";
 import {frameworkSelector} from "../atom/framework-selector";
+import $ = require('jquery');
 
 interface FrameworkSelectorState {
     frameworks?: OmniSharp.Models.DnxFramework[];

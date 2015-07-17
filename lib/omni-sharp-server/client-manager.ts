@@ -98,7 +98,10 @@ class SolutionManager {
             }));
     }
 
-    private subscribeToInternalEvents() {
+    private subscribeToInternalEvents() { }
+
+    private findRepositoryForPath(workingPath: string) {
+        return _.find(atom.project.getRepositories(), (repo: any) => repo && path.normalize(repo.getWorkingDirectory()) === path.normalize(workingPath));
     }
 
     private addSolution(candidate: string, {delay = 1200, temporary = false, project}: { delay?: number; temporary?: boolean; project?: string; }) {
@@ -112,7 +115,8 @@ class SolutionManager {
         var solution = new Solution({
             projectPath: candidate,
             index: ++this._nextIndex,
-            temporary: temporary
+            temporary: temporary,
+            repository: this.findRepositoryForPath(candidate)
         });
 
         this._configurations.forEach(config => config(solution));
