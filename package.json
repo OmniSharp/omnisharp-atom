@@ -75,6 +75,9 @@
     "lodash": "^3.9.3",
     "merge-stream": "^0.1.7",
     "omnisharp-client": "^1.6.25",
+=======
+    "omnisharp-client": "^1.6.21",
+>>>>>>> Updated package.json
     "react": "^0.13.3",
     "rx": "^2.5.3",
     "semver": "^4.2.0",
