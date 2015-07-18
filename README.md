@@ -8,8 +8,7 @@
 
 Please ensure you've got [Mono](http://www.mono-project.com/) 4.0.1 or later installed if you're on OS X/Linux. Or .NET 4.5.1 on Windows.
 
-You will also need dnx version 1.0.0-beta4 to be installed.
-Please refer to the instructions detailed in the [aspnet/home](https://github.com/aspnet/home/#minimum-requirements) repository. 
+If you want to work on a DNX application then you will also need to have dnvm installed. Please refer to the instructions detailed in the [aspnet/home](https://github.com/aspnet/home/#minimum-requirements) repository. 
 ## Installation
 From the packages settings inside Atom:
 
@@ -44,7 +43,7 @@ When the flame icon in the bottom left corner turns green, the server has starte
 - Completions appear as you type. To select an item, press Return or the TAB key.
 - Type lookup on mouse over or from cursor (`f1`).
 - Editor adornments (squigglies) appear for errors and code hints as you type.
-- Automatic Package restore in vNext when you save `project.json` files
+- Automatic Package restore for DNX applications when you save `project.json` files
 - Enjoy!
 
 ## Test Runner
