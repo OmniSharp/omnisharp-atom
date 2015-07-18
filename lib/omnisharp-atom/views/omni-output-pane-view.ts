@@ -48,7 +48,7 @@ export class OutputWindow<T> extends ReactClientComponent<T, IOutputWindowState>
             tabIndex: -1
         },
             React.DOM.div({
-                className: 'messages-container',
+                className: 'messages-container'
             }, _.map(this.state.output, (item, index) => this.createItem(item, index))));
     }
 }
