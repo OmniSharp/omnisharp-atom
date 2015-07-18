@@ -40,10 +40,12 @@ When the flame icon in the bottom left corner turns green, the server has starte
 - `f2` Rename
 - `ctrl-alt-down` Navigate downwards through methods
 - `ctrl-alt-up` Navigate upwards through methods
+- `alt-enter` or `ctrl-.` Run code action / refactoring
 - Completions appear as you type. To select an item, press Return or the TAB key.
 - Type lookup on mouse over or from cursor (`f1`).
 - Editor adornments (squigglies) appear for errors and code hints as you type.
 - Automatic Package restore for DNX applications when you save `project.json` files
+- DNX command runner via command palette
 - Enjoy!
 
 ## Test Runner
