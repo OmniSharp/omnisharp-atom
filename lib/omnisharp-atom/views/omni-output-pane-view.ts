@@ -37,8 +37,9 @@ export class OutputWindow<T> extends ReactClientComponent<T, IOutputWindowState>
     private createItem(item: OmniSharp.OutputMessage, index: number) {
         return React.DOM.pre({
             key: `output-${index}`,
-            className: item.logLevel
-        }, this._convert.toHtml(item.message).trim());
+            className: item.logLevel,
+            dangerouslySetInnerHTML: { __html: this._convert.toHtml(item.message).trim() }
+        });
     }
 
     public render() {
