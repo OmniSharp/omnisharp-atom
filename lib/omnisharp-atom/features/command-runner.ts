@@ -135,18 +135,20 @@ export class RunProcess {
     }
 
     private bootRuntime(runtime: string) {
-        var args = [this.project.path, this.command];
+        var args = ['.', this.command];
         var failed = false;
         if (this.watch) {
             args.unshift('--watch');
         }
 
-        this.output.push({ message: `Starting ${runtime} ${args.join(' ') }`});
+        this.output.push({ message: `Starting ${runtime} ${args.join(' ') }` });
 
         this.started = true;
 
         var process = spawn(runtime, args, {
-            env, stdio: 'pipe'
+            cwd: this.project.path,
+            env,
+            stdio: 'pipe'
         });
 
         var out = readline.createInterface({
