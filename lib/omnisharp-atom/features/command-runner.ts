@@ -1,7 +1,7 @@
 import {CompositeDisposable, Disposable, Observable, Subject} from "rx";
 import Omni = require('../../omni-sharp-server/omni');
 import {ProjectViewModel} from "../../omni-sharp-server/view-model";
-import {any, each, contains} from "lodash";
+import {any, each, contains, pull} from "lodash";
 import {spawn, ChildProcess} from "child_process";
 import {CommandOutputWindow} from '../views/command-output-window';
 import * as readline from "readline";
@@ -22,6 +22,13 @@ if (win32) {
 class CommandRunner implements OmniSharp.IFeature {
     private disposable: Rx.CompositeDisposable;
     private _projectMap = new WeakMap<ProjectViewModel, Rx.CompositeDisposable>();
+
+    private _watchProcesses: RunProcess[] = [];
+    public get processes() { return this._watchProcesses; }
+
+    public observe: { processes: Observable<RunProcess[]> };
+
+    private _processesChanged: Subject<RunProcess[]>;
 
     public activate() {
         this.disposable = new CompositeDisposable();
@@ -48,6 +55,9 @@ class CommandRunner implements OmniSharp.IFeature {
                     this._projectMap.delete(project);
                 }
             }));
+
+        var processes = this._processesChanged = new Subject<RunProcess[]>();
+        this.observe = { processes };
     }
 
     private addCommands(project: ProjectViewModel) {
@@ -77,13 +87,23 @@ class CommandRunner implements OmniSharp.IFeature {
 
     private daemonProcess(project: ProjectViewModel, command: string) {
         var process = new RunProcess(project, command, true);
+        this._watchProcesses.push(process);
+        this._processesChanged.onNext(this.processes);
+        process.disposable.add(Disposable.create(() => {
+            pull(this._watchProcesses, process);
+            this._processesChanged.onNext(this.processes);
+        }));
+
+        var objectChanges = Observable.ofObjectChanges(process).where(z => z.name === 'started');
+        process.disposable.add(objectChanges.where(z => z.object.started).delay(1000).subscribe(() => this._processesChanged.onNext(this.processes)));
+        process.disposable.add(objectChanges.where(z => !z.object.started).subscribe(() => this._processesChanged.onNext(this.processes)));
+
         process.start();
     }
 
     private runProcess(project: ProjectViewModel, command: string) {
         var process = new RunProcess(project, command);
         process.start();
-
     }
 
     public dispose() {
@@ -92,9 +112,10 @@ class CommandRunner implements OmniSharp.IFeature {
 }
 
 export class RunProcess {
-    private disposable = new CompositeDisposable();
+    public disposable = new CompositeDisposable();
     public update = new Subject<{ message: string }[]>();
     public output: { message: string }[] = [];
+    public started = false;
     private id: string;
 
     constructor(private project: ProjectViewModel, private command: string, private watch: boolean = false) {
@@ -113,12 +134,15 @@ export class RunProcess {
             .subscribe((runtime) => this.bootRuntime(runtime));
     }
 
-    public bootRuntime(runtime: string) {
+    private bootRuntime(runtime: string) {
         var args = [this.project.path, this.command];
         var failed = false;
         if (this.watch) {
             args.unshift('--watch');
         }
+
+        this.started = true;
+
         var process = spawn(runtime, args, {
             env, stdio: 'pipe'
         });
@@ -144,12 +168,14 @@ export class RunProcess {
         });
 
         var disposable = Disposable.create(() => {
+            this.started = false;
             process.removeAllListeners();
             try { process.kill(); } catch (e) { }
         });
         this.disposable.add(disposable);
 
         var cb = () => {
+            this.started = false;
             disposable.dispose();
             if (this.watch && !failed)
                 this.bootRuntime(runtime);
