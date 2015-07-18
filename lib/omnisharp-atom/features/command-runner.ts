@@ -79,9 +79,9 @@ class CommandRunner implements OmniSharp.IFeature {
         //--server Microsoft.AspNet.Server.WebListener
         var daemon = any(daemonFlags, cnt => contains(content, cnt));
         if (daemon) {
-            return atom.commands.add('atom-workspace', `dnx:${project.name}-[${command}]-(watch)`, () => this.daemonProcess(project, command));
+            return atom.commands.add('atom-workspace', `omnisharp-dnx:${project.name}-[${command}]-(watch)`, () => this.daemonProcess(project, command));
         } else {
-            return atom.commands.add('atom-workspace', `dnx:${project.name}-[${command}]`, () => this.runProcess(project, command));
+            return atom.commands.add('atom-workspace', `omnisharp-dnx:${project.name}-[${command}]`, () => this.runProcess(project, command));
         }
     }
 
