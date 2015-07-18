@@ -6,6 +6,7 @@ import React = require('react');
 import {ReactClientComponent} from "./react-client-component";
 import {world, server, solutionInformation} from '../world';
 import {OmnisharpClientStatus} from "omnisharp-client";
+import {commandRunner, RunProcess} from "../features/command-runner";
 
 interface StatusBarState {
     errorCount?: number;
@@ -72,6 +73,9 @@ class StatusBarComponent extends ReactClientComponent<{}, StatusBarState> {
         this.disposable.add(server.observe.model
             .subscribe(status => this.setState({})));
 
+        this.disposable.add(commandRunner.observe.processes
+            .subscribe(status => this.setState({})));
+
         this.disposable.add(solutionInformation.observe.solutions
             .subscribe(solutions => this.setState({})));
     }
@@ -92,6 +96,17 @@ class StatusBarComponent extends ReactClientComponent<{}, StatusBarState> {
             cls.push('icon-flame-loading')
         else if (this.state.status.hasOutgoingRequests)
             cls.push('icon-flame-processing')
+
+        return cls.join(' ');
+    }
+
+    private getProcessClassName(processes: RunProcess[]) {
+        var cls = ["icon", "icon-clock"];
+
+        if (_.all(processes, process => process.started))
+            cls.push('text-info');
+        else
+            cls.push('text-subtle icon-flame-loading');
 
         return cls.join(' ');
     }
@@ -126,6 +141,18 @@ class StatusBarComponent extends ReactClientComponent<{}, StatusBarState> {
                     className: 'outgoing-requests' + (!this.state.status.hasOutgoingRequests ? ' fade' : '')
                 }, this.state.status.outgoingRequests || '0'))
             );
+
+        if (commandRunner.processes.length) {
+            children.push(
+                React.DOM.a({
+                    href: '#',
+                    className: "omnisharp-atom-button",
+                },
+                    React.DOM.span({
+                        className: this.getProcessClassName(commandRunner.processes)
+                    }))
+                );
+        }
 
         if (hasClientAndIsOn) {
             var solutionNumber = solutionInformation.solutions.length > 1 ? _.trim(server.model && (<any>server.model).index, 'client') : '';

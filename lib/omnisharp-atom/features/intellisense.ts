@@ -30,7 +30,7 @@ class Intellisense implements OmniSharp.IFeature {
         if (editor) {
             var view = atom.views.getView(editor);
             atom.commands.dispatch(atom.views.getView(editor), 'autocomplete-plus:confirm');
-            defer(() => editor.insertText(char));
+            editor.insertText(char);
 
             event.preventDefault();
             event.stopImmediatePropagation();

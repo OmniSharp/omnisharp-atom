@@ -78,7 +78,10 @@ class CodeAction implements OmniSharp.IFeature {
             }, 400);
 
             var onDidChangeCursorPosition = new Subject<{ oldBufferPosition: TextBuffer.Point; oldScreenPosition: TextBuffer.Point; newBufferPosition: TextBuffer.Point; newScreenPosition: TextBuffer.Point; textChanged: boolean; cursor: Atom.Cursor; }>();
+            cd.add(onDidChangeCursorPosition);
+
             var onDidStopChanging = new Subject<any>();
+            cd.add(onDidStopChanging);
 
             cd.add(Observable.combineLatest(onDidChangeCursorPosition.debounce(100), onDidStopChanging.debounce(100), (cursor, changing) => cursor)
                 .debounce(200)

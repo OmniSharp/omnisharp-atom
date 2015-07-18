@@ -1,8 +1,5 @@
-import {CompositeDisposable, Disposable, Scheduler} from "rx";
-import _ = require('lodash')
-import Omni = require('../../omni-sharp-server/omni');
+import {CompositeDisposable} from "rx";
 import React = require('react');
-import {world} from '../world';
 
 export class ReactClientComponent<P, S> extends React.Component<P, S> {
     protected disposable = new CompositeDisposable();

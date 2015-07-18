@@ -115,6 +115,11 @@ class Client extends OmnisharpClient {
         if (request['abort']) {
             return Observable.empty<TResponse>();
         }
+
+        var tempR: OmniSharp.Models.Request = request;
+        if (tempR && _.endsWith(tempR.FileName, '.json')) {
+            tempR.Buffer = null;
+        }
         return OmnisharpClient.prototype.request.call(this, action, request, options);
     }
 
