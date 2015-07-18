@@ -141,6 +141,8 @@ export class RunProcess {
             args.unshift('--watch');
         }
 
+        this.output.push({ message: `Starting ${runtime} ${args.join(' ') }`});
+
         this.started = true;
 
         var process = spawn(runtime, args, {
