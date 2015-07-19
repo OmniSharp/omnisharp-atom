@@ -74,7 +74,7 @@
     "jquery": "^2.1.1",
     "lodash": "^3.9.3",
     "merge-stream": "^0.1.7",
-    "omnisharp-client": "^1.6.14",
+    "omnisharp-client": "^1.6.24",
     "react": "^0.13.3",
     "rx": "^2.5.3",
     "semver": "^4.2.0",
