@@ -2,20 +2,27 @@ import * as _ from "lodash";
 import {Observable} from "rx";
 import Omni = require('../../../omni-sharp-server/omni');
 import Manager = require("../../../omni-sharp-server/client-manager");
-var fetch: (url: string) => Rx.IPromise<IResult> = require('node-fetch');
-interface IResult {
-    json<T>(): T;
-    text(): string;
-}
+import {ajax} from "jquery";
+
+var cache = new Map<string, string[]>();
 
 function fetchFromGithub(source: string, prefix: string) {
     source = _.trim(source, '/').replace('www.', '').replace('https://', '').replace('http://', '').replace(/\/|\:/g, '-');
-    var $get = fetch(`https://raw.githubusercontent.com/OmniSharp/omnisharp-nuget/master/resources/${source}/${prefix}.json`);
+
+    if (prefix === "_keys" && cache.has(source)) {
+        return Observable.just(cache.get(source));
+    }
+
+    var result = ajax(`https://raw.githubusercontent.com/OmniSharp/omnisharp-nuget/master/resources/${source}/${prefix}.json`)
+        .then(res => JSON.parse(res));
+
+    if (prefix === "_keys") {
+        result.then((r) => cache.set(source, r), () => cache.set(source, null));
+    }
 
     return Observable
-        .fromPromise<string[]>(
-            $get.then(res => res.json<string[]>()))
-        .catch(null);
+        .fromPromise<string[]>(result)
+        .catch(() => Observable.just(cache.has(source) && [] || null));
 }
 
 interface IAutocompleteProviderOptions {
@@ -84,24 +91,23 @@ var nugetName: IAutocompleteProvider = {
                                 ProjectPath: solution.path,
                                 Sources: [source],
                             }))
-                                .flatMap(z => Observable.from(z.Packages))
-                                .map(item => item.Id);
+                                .map(z => z.Packages.map(item => item.Id));
                         } else {
-                            var o = Observable.from(z);
-                            if (packagePrefix) {
-                                o = o.map(z => z + '.');
+                            if (!packagePrefix) {
+                                z = z.map(z => z + '.');
                             }
-                            return o;
+                            return Observable.just(z);
                         }
                     });
             })
-            .distinct()
-            .map(makeSuggestion)
             .toArray()
+            .map(z => _.flatten<string>(z).map(makeSuggestion))
             .toPromise();
     },
     fileMatchs: ['project.json'],
-    pathMatch(path) { return !!path.match(nameRegex); },
+    pathMatch(path) {
+        return !!path.match(nameRegex);
+    },
     dispose() { }
 }
 
@@ -122,7 +128,9 @@ var nugetVersion: IAutocompleteProvider = {
             .toPromise();
     },
     fileMatchs: ['project.json'],
-    pathMatch(path) { return !!path.match(versionRegex); },
+    pathMatch(path) {
+        return !!path.match(versionRegex);
+    },
     dispose() { }
 }
 
