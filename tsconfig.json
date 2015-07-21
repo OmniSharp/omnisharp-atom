@@ -35,6 +35,7 @@
         "./lib/omni-sharp-server/client.ts",
         "./lib/omni-sharp-server/composite-client.ts",
         "./lib/omni-sharp-server/omni.ts",
+        "./lib/omni-sharp-server/omnisharp-configuration.ts",
         "./lib/omni-sharp-server/view-model.ts",
         "./lib/omnisharp-atom/atom/dock.ts",
         "./lib/omnisharp-atom/atom/framework-selector.ts",

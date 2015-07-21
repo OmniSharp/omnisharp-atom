@@ -3,26 +3,82 @@ import {Observable} from "rx";
 import Omni = require('../../../omni-sharp-server/omni');
 import Manager = require("../../../omni-sharp-server/client-manager");
 import {ajax} from "jquery";
+var filter = require('fuzzaldrin').filter;
 
-var cache = new Map<string, string[]>();
+var cache = new Map<string, { prefix?: string; results: string[] }>();
+Omni.listener.responses
+    .where(z => z.command === "packagesource")
+    .map(z => z.response.Sources)
+    .subscribe((sources: string[]) => {
+        _.each(sources, source => {
+            if (!cache.get(source))
+                fetchFromGithub(source, "_keys", "").subscribe(result => {
+                    cache.set(source, result);
+                });
+        });
+    });
 
-function fetchFromGithub(source: string, prefix: string) {
-    source = _.trim(source, '/').replace('www.', '').replace('https://', '').replace('http://', '').replace(/\/|\:/g, '-');
+// TODO: Disposale
+atom.commands.add("atom-text-editor", 'omnisharp-atom:project-json-intellisense-dot', (event) => {
+    var editor = atom.workspace.getActiveTextEditor();
+    if (editor && _.endsWith(editor.getPath(), "project.json")) {
+        var view = atom.views.getView(editor);
+        atom.commands.dispatch(atom.views.getView(editor), 'autocomplete-plus:confirm');
+        return false;
+    }
+});
 
+
+function fetchFromGithub(source: string, prefix: string, searchPrefix: string): Rx.Observable<{ prefix?: string; results: string[] }> {
+    // We precache the keys to make this speedy
     if (prefix === "_keys" && cache.has(source)) {
         return Observable.just(cache.get(source));
     }
 
-    var result = ajax(`https://raw.githubusercontent.com/OmniSharp/omnisharp-nuget/master/resources/${source}/${prefix}.json`)
-        .then(res => JSON.parse(res));
+    // If we have a value in the cache, see if the key exists or not.
+    if (cache.has(source)) {
+        var c = cache.get(source);
+        if (!c) {
+            return Observable.just(c);
+        }
 
-    if (prefix === "_keys") {
-        result.then((r) => cache.set(source, r), () => cache.set(source, null));
+        if (!_.any(c.results, x => x.toLowerCase() === prefix.toLowerCase() + '.')) {
+            return Observable.just({ results: [] });
+        }
     }
 
-    return Observable
-        .fromPromise<string[]>(result)
-        .catch(() => Observable.just(cache.has(source) && [] || null));
+    // If we have a cached value then the failed value is empty (no need to fall back to the server)
+    var failedValue = cache.has(source) && !!cache.get(source) ? { prefix: null, results: [] } : { prefix: null, results: null };
+
+    var realSource = source;
+
+    // This is the same convention used by omnisharp-nuget build tool
+    source = _.trim(source, '/').replace('www.', '').replace('https://', '').replace('http://', '').replace(/\/|\:/g, '-');
+
+    // Get the file from github
+    var result = ajax(`https://raw.githubusercontent.com/OmniSharp/omnisharp-nuget/resources/resources/${source}/${prefix.toLowerCase() }.json`).then(res => JSON.parse(res));
+
+    // The non key files have an object layout
+    if (prefix !== "_keys") {
+        var sp = searchPrefix.split('.');
+        var filePrefix = sp.slice(1, sp.length - 1).join('.').toLowerCase();
+        result = result.then((value: { _keys: string[];[key: string]: string[] }) => {
+            var k = _.find(cache.get(realSource).results, x => x.toLowerCase() === prefix.toLowerCase());
+            if (!filePrefix) {
+                return { prefix: k, results: value._keys };
+            } else {
+                var v = (<any>_).findKey(value, (x: any, key: string) => key.toLowerCase() === filePrefix),
+                    p = `${k}.${v}`;
+
+                return { prefix: k && v && p, results: value[v] || [] };
+            }
+        });
+    } else {
+        result = result.then((results) => ({ prefix: '', results }));
+    }
+
+    // Return the result
+    return Observable.fromPromise<{ prefix: string; results: string[] }>(result).catch(() => Observable.just(failedValue));
 }
 
 interface IAutocompleteProviderOptions {
@@ -32,6 +88,7 @@ interface IAutocompleteProviderOptions {
     scopeDescriptor: { scopes: string[] };
     activatedManually: boolean;
     path: string;
+    replacementPrefix: string;
 }
 
 interface IAutocompleteProvider {
@@ -41,15 +98,21 @@ interface IAutocompleteProvider {
     dispose(): void;
 }
 
-function makeSuggestion(item: string) {
+function makeSuggestion(item: string, path: string, replacementPrefix: string) {
     var type = 'package';
+
+    var r = replacementPrefix.split('.');
+    var rs = r.slice(0, r.length - 1).join('.');
+    if (rs.length) rs += '.';
+    if (path.length) path += '.';
 
     return {
         _search: item,
-        text: item,
-        snippet: item,
+        text: `${path}${item}`,
+        snippet: `${path}${item}`,
         type: type,
         displayText: item,
+        replacementPrefix,//: `${rs}${item}`,
         className: 'autocomplete-project-json',
     }
 }
@@ -72,36 +135,48 @@ var versionRegex = /\/?dependencies\/([a-zA-Z0-9\._]*?)(?:\/version)?$/;
 
 var nugetName: IAutocompleteProvider = {
     getSuggestions(options: IAutocompleteProviderOptions) {
-        if (options.prefix.indexOf('.') > -1) {
-            var packagePrefix = options.prefix.split('.')[0].toLowerCase();
+
+        var searchTokens = options.replacementPrefix.split('.');
+        if (options.replacementPrefix.indexOf('.') > -1) {
+            var packagePrefix = options.replacementPrefix.split('.')[0];
         }
+        var replacement = searchTokens.slice(0, searchTokens.length - 1).join('.');
+
         return Manager.getClientForEditor(options.editor)
         // Get all sources
             .flatMap(z => Observable.from(z.model.packageSources))
             .flatMap(source => {
                 // Attempt to get the source from github
-                return fetchFromGithub(source, packagePrefix || "_keys")
+                return fetchFromGithub(source, packagePrefix || "_keys", options.replacementPrefix)
                     .flatMap(z => {
                         if (!z) {
                             // fall back to the server if source isn't found
                             console.info(`Falling back to server package search for ${source}.`);
                             return Omni.request(solution => solution.packagesearch({
-                                Search: options.prefix,
+                                Search: options.replacementPrefix,
                                 IncludePrerelease: true,
                                 ProjectPath: solution.path,
                                 Sources: [source],
-                            }))
-                                .map(z => z.Packages.map(item => item.Id));
+                            })).map(z => ({ prefix: '', results: z.Packages.map(item => item.Id) }));
                         } else {
-                            if (!packagePrefix) {
-                                z = z.map(z => z + '.');
-                            }
                             return Observable.just(z);
                         }
                     });
             })
             .toArray()
-            .map(z => _.flatten<string>(z).map(makeSuggestion))
+            .map(z => {
+                var prefix = _.find(z, z => !!z.prefix);
+                var p = prefix ? prefix.prefix : '';
+                return _(z.map(z => z.results))
+                    .flatten<string>()
+                    .sortBy()
+                    .unique()
+                    .map(z =>
+                        makeSuggestion(z, p, options.replacementPrefix))
+                    .value();
+            })
+            .map(s =>
+                filter(s, searchTokens[searchTokens.length - 1], { key: '_search' }))
             .toPromise();
     },
     fileMatchs: ['project.json'],
@@ -117,14 +192,26 @@ var nugetVersion: IAutocompleteProvider = {
         if (!match) return Promise.resolve([]);
         var name = match[1];
 
-        return Omni.request(solution => solution.packageversion({
-            Id: name,
-            IncludePrerelease: true,
-            ProjectPath: solution.path
-        }))
-            .flatMap(z => Observable.from(z.Versions))
-            .map(makeSuggestion2)
+        return Manager.getClientForEditor(options.editor)
+        // Get all sources
+            .flatMap(z => Observable.from(z.model.packageSources))
+            .filter(z => {
+                if (cache.has(z)) {
+                    // Short out early if the source doesn't even have the given prefix
+                    return _.any(cache.get(z).results, x => _.startsWith(name, x));
+                }
+                return true;
+            })
             .toArray()
+            .flatMap(sources => Omni.request(solution => solution.packageversion({
+                Id: name,
+                IncludePrerelease: true,
+                ProjectPath: solution.path,
+                Sources: sources,
+            }))
+                .flatMap(z => Observable.from(z.Versions))
+                .map(z => makeSuggestion2(z))
+                .toArray())
             .toPromise();
     },
     fileMatchs: ['project.json'],
