@@ -1,6 +1,22 @@
 import * as _ from "lodash";
 import {Observable} from "rx";
 import Omni = require('../../../omni-sharp-server/omni');
+import Manager = require("../../../omni-sharp-server/client-manager");
+var fetch: (url: string) => Rx.IPromise<IResult> = require('node-fetch');
+interface IResult {
+    json<T>(): T;
+    text(): string;
+}
+
+function fetchFromGithub(source: string, prefix: string) {
+    source = _.trim(source, '/').replace('www.', '').replace('https://', '').replace('http://', '').replace(/\/|\:/g, '-');
+    var $get = fetch(`https://raw.githubusercontent.com/OmniSharp/omnisharp-nuget/master/resources/${source}/${prefix}.json`);
+
+    return Observable
+        .fromPromise<string[]>(
+            $get.then(res => res.json<string[]>()))
+        .catch(null);
+}
 
 interface IAutocompleteProviderOptions {
     editor: Atom.TextEditor;
@@ -18,15 +34,15 @@ interface IAutocompleteProvider {
     dispose(): void;
 }
 
-function makeSuggestion(item: OmniSharp.Models.PackageSearchItem) {
+function makeSuggestion(item: string) {
     var type = 'package';
 
     return {
-        _search: item.Id,
-        text: item.Id,
-        snippet: item.Id,
+        _search: item,
+        text: item,
+        snippet: item,
         type: type,
-        displayText: item.Id,
+        displayText: item,
         className: 'autocomplete-project-json',
     }
 }
@@ -49,12 +65,37 @@ var versionRegex = /\/?dependencies\/([a-zA-Z0-9\._]*?)(?:\/version)?$/;
 
 var nugetName: IAutocompleteProvider = {
     getSuggestions(options: IAutocompleteProviderOptions) {
-        return Omni.request(solution => solution.packagesearch({
-            Search: options.prefix,
-            IncludePrerelease: true,
-            ProjectPath: solution.path
-        }))
-            .flatMap(z => Observable.from(z.Packages))
+        if (options.prefix.indexOf('.') > -1) {
+            var packagePrefix = options.prefix.split('.')[0].toLowerCase();
+        }
+        return Manager.getClientForEditor(options.editor)
+        // Get all sources
+            .flatMap(z => Observable.from(z.model.packageSources))
+            .flatMap(source => {
+                // Attempt to get the source from github
+                return fetchFromGithub(source, packagePrefix || "_keys")
+                    .flatMap(z => {
+                        if (!z) {
+                            // fall back to the server if source isn't found
+                            console.info(`Falling back to server package search for ${source}.`);
+                            return Omni.request(solution => solution.packagesearch({
+                                Search: options.prefix,
+                                IncludePrerelease: true,
+                                ProjectPath: solution.path,
+                                Sources: [source],
+                            }))
+                                .flatMap(z => Observable.from(z.Packages))
+                                .map(item => item.Id);
+                        } else {
+                            var o = Observable.from(z);
+                            if (packagePrefix) {
+                                o = o.map(z => z + '.');
+                            }
+                            return o;
+                        }
+                    });
+            })
+            .distinct()
             .map(makeSuggestion)
             .toArray()
             .toPromise();
