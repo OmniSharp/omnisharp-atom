@@ -61,7 +61,7 @@ class Highlight implements OmniSharp.IFeature {
                         .take(1))
                 )
                 .subscribe(({editor, request, response}) => {
-                    (<any>editor.getGrammar()).setResponses(response.Highlights, request.ProjectNames.length > 0);
+                    editor.getGrammar && (<any>editor.getGrammar()).setResponses(response.Highlights, request.ProjectNames.length > 0);
                     editor.displayBuffer.tokenizedBuffer.retokenizeLines();
                 }));
 
@@ -71,7 +71,7 @@ class Highlight implements OmniSharp.IFeature {
                     .map(z => ({ editor: find(this.editors, editor => editor.getPath() === z.request.FileName), request: z.request, response: z.response }))
                 )
                 .subscribe(({editor, request, response}) => {
-                    (<any>editor.getGrammar()).setResponses(response.Highlights, request.ProjectNames.length > 0);
+                    editor.getGrammar && (<any>editor.getGrammar()).setResponses(response.Highlights, request.ProjectNames.length > 0);
                 }));
 
         this.disposable.add(isObserveRetokenizing(
@@ -105,7 +105,7 @@ class Highlight implements OmniSharp.IFeature {
     }
 
     private setupEditor(editor: Atom.TextEditor) {
-        if (editor['_oldGrammar']) return;
+        if (editor['_oldGrammar'] || !editor.getGrammar) return;
 
         this.editors.push(editor);
 
@@ -230,12 +230,12 @@ class Highlight implements OmniSharp.IFeature {
 }
 
 function isObserveRetokenizing(observable: Rx.Observable<{ editor: Atom.TextEditor; request: OmniSharp.Models.HighlightRequest; response: OmniSharp.Models.HighlightResponse }>) {
-    return observable.where(z => !!(<Observable<boolean>>(<any>z.editor.getGrammar()).isObserveRetokenizing))
+    return observable.where(z => !!z.editor.getGrammar).where(z => !!(<Observable<boolean>>(<any>z.editor.getGrammar()).isObserveRetokenizing))
         .flatMap(z => (<Observable<boolean>>(<any>z.editor.getGrammar()).isObserveRetokenizing).where(z => !!z).take(1).map(x => z));
 }
 
 function isEditorObserveRetokenizing(observable: Rx.Observable<Atom.TextEditor>) {
-    return observable.where(z => !!(<Observable<boolean>>(<any>z.getGrammar()).isObserveRetokenizing))
+    return observable.where(z => !!z.getGrammar).where(z => !!(<Observable<boolean>>(<any>z.getGrammar()).isObserveRetokenizing))
         .flatMap(z => (<Observable<boolean>>(<any>z.getGrammar()).isObserveRetokenizing).where(z => !!z).take(1).map(x => z))
 }
 
