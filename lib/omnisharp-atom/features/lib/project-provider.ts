@@ -183,7 +183,7 @@ var nugetVersion: IAutocompleteProvider = {
         if (!match) return Promise.resolve([]);
         var name = match[1];
 
-        var o: Rx.Observable<any>;
+        var o: Rx.Observable<string[]>;
 
         if (versionCache.has(name)) {
             o = versionCache.get(name);
@@ -206,7 +206,6 @@ var nugetVersion: IAutocompleteProvider = {
                     Sources: sources,
                 }))
                     .flatMap(z => Observable.from(z.Versions))
-                    .map(z => makeSuggestion2(z, options.replacementPrefix))
                     .toArray())
                 .shareReplay(1);
 
@@ -214,6 +213,8 @@ var nugetVersion: IAutocompleteProvider = {
         }
 
         return o.take(1)
+            .map(z => z.map(x =>
+                makeSuggestion2(x, options.replacementPrefix)))
             .map(s =>
                 filter(s, options.prefix, { key: '_search' }))
             .toPromise();
