@@ -6,6 +6,7 @@ import {ajax} from "jquery";
 var filter = require('fuzzaldrin').filter;
 
 var cache = new Map<string, { prefix?: string; results: string[] }>();
+var versionCache = new Map<string, any>();
 Omni.listener.responses
     .where(z => z.command === "packagesource")
     .map(z => z.response.Sources)
@@ -106,7 +107,7 @@ function makeSuggestion(item: string, path: string, replacementPrefix: string) {
     }
 }
 
-function makeSuggestion2(item: string) {
+function makeSuggestion2(item: string, replacementPrefix: string) {
     var type = 'version';
 
     return {
@@ -115,6 +116,7 @@ function makeSuggestion2(item: string) {
         snippet: item,
         type: type,
         displayText: item,
+        replacementPrefix,
         className: 'autocomplete-project-json',
     }
 }
@@ -181,26 +183,39 @@ var nugetVersion: IAutocompleteProvider = {
         if (!match) return Promise.resolve([]);
         var name = match[1];
 
-        return Manager.getClientForEditor(options.editor)
-        // Get all sources
-            .flatMap(z => Observable.from(z.model.packageSources))
-            .filter(z => {
-                if (cache.has(z)) {
-                    // Short out early if the source doesn't even have the given prefix
-                    return _.any(cache.get(z).results, x => _.startsWith(name, x));
-                }
-                return true;
-            })
-            .toArray()
-            .flatMap(sources => Omni.request(solution => solution.packageversion({
-                Id: name,
-                IncludePrerelease: true,
-                ProjectPath: solution.path,
-                Sources: sources,
-            }))
-                .flatMap(z => Observable.from(z.Versions))
-                .map(z => makeSuggestion2(z))
-                .toArray())
+        var o: Rx.Observable<any>;
+
+        if (versionCache.has(name)) {
+            o = versionCache.get(name);
+        } else {
+            o = Manager.getClientForEditor(options.editor)
+            // Get all sources
+                .flatMap(z => Observable.from(z.model.packageSources))
+                .filter(z => {
+                    if (cache.has(z)) {
+                        // Short out early if the source doesn't even have the given prefix
+                        return _.any(cache.get(z).results, x => _.startsWith(name, x));
+                    }
+                    return true;
+                })
+                .toArray()
+                .flatMap(sources => Omni.request(solution => solution.packageversion({
+                    Id: name,
+                    IncludePrerelease: true,
+                    ProjectPath: solution.path,
+                    Sources: sources,
+                }))
+                    .flatMap(z => Observable.from(z.Versions))
+                    .map(z => makeSuggestion2(z, options.replacementPrefix))
+                    .toArray())
+                .shareReplay(1);
+
+            versionCache.set(name, o);
+        }
+
+        return o.take(1)
+            .map(s =>
+                filter(s, options.prefix, { key: '_search' }))
             .toPromise();
     },
     fileMatchs: ['project.json'],
