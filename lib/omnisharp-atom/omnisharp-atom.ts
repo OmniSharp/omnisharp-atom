@@ -200,7 +200,7 @@ class OmniSharpAtom {
     }
 
     public provideProjectJson() {
-        return require("./features/lib/project-provider");
+        return require("./features/lib/project-provider").concat(require('./features/lib/framework-provider'));
     }
 
     public consumeLinter(linter) {

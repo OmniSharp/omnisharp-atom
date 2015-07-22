@@ -15,12 +15,19 @@ class Omni {
     private _activeEditorSubject = new BehaviorSubject<Atom.TextEditor>(null);
     private _activeEditor = this._activeEditorSubject.shareReplay(1).asObservable();
 
-    private _activeProject = this._activeEditorSubject.asObservable()
+    private _activeConfigEditorSubject = new BehaviorSubject<Atom.TextEditor>(null);
+    private _activeConfigEditor = this._activeConfigEditorSubject.shareReplay(1).asObservable();
+
+    private _activeProject = Observable.combineLatest(this._activeEditorSubject, this._activeConfigEditorSubject, (editor, config) => editor || config || null)
+        .debounce(10)
+        .asObservable()
         .flatMap(editor => manager.getClientForEditor(editor)
             .flatMap(z => z.model.getProjectForEditor(editor)))
         .shareReplay(1);
 
-    private _activeFramework = this._activeEditorSubject.asObservable()
+    private _activeFramework = Observable.combineLatest(this._activeEditorSubject, this._activeConfigEditorSubject, (editor, config) => editor || config || null)
+        .debounce(10)
+        .asObservable()
         .flatMapLatest(editor => manager.getClientForEditor(editor)
             .flatMapLatest(z => z.model.getProjectForEditor(editor)))
         .flatMapLatest(project => project.observe.activeFramework.map(framework => ({ project, framework })))
@@ -48,22 +55,28 @@ class Omni {
                 if (grammar) {
                     var grammarName = grammar.name;
                     if (grammarName === 'C#' || grammarName === 'C# Script File') {
+                        this._activeConfigEditorSubject.onNext(null);
                         this._activeEditorSubject.onNext(pane);
                         return;
                     }
 
                     var filename = basename(pane.getPath());
                     if (filename === 'project.json') {
-                        this._activeEditorSubject.onNext(pane);
+                        this._activeEditorSubject.onNext(null);
+                        this._activeConfigEditorSubject.onNext(pane);
                         return;
                     }
                 }
             }
             // This will tell us when the editor is no longer an appropriate editor
             this._activeEditorSubject.onNext(null);
+            this._activeConfigEditorSubject.onNext(null);
         }));
 
-        this.disposable.add(Disposable.create(() => this._activeEditorSubject.onNext(null)));
+        this.disposable.add(Disposable.create(() => {
+            this._activeEditorSubject.onNext(null);
+            this._activeConfigEditorSubject.onNext(null);
+        }));
     }
 
     public deactivate() {
@@ -264,6 +277,10 @@ class Omni {
 
     public get activeEditor() {
         return this._activeEditor;
+    }
+
+    public get activeConfigEditor() {
+        return this._activeConfigEditor;
     }
 
     public get activeProject() {
