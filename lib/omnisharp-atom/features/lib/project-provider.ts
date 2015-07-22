@@ -19,14 +19,15 @@ Omni.listener.responses
     });
 
 // TODO: Disposale
-atom.commands.add("atom-text-editor", 'omnisharp-atom:project-json-intellisense-dot', (event) => {
+/*atom.commands.add("atom-text-editor", 'omnisharp-atom:project-json-intellisense-dot', (event) => {
     var editor = atom.workspace.getActiveTextEditor();
     if (editor && _.endsWith(editor.getPath(), "project.json")) {
         var view = atom.views.getView(editor);
+        editor.insertText('.');
         atom.commands.dispatch(atom.views.getView(editor), 'autocomplete-plus:confirm');
         return false;
     }
-});
+});*/
 
 
 function fetchFromGithub(source: string, prefix: string, searchPrefix: string): Rx.Observable<{ prefix?: string; results: string[] }> {

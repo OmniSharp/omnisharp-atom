@@ -57,6 +57,3 @@
   '.': 'omnisharp-atom:intellisense-dot'
   ';': 'omnisharp-atom:intellisense-semicolon'
   'enter': 'autocomplete-plus:confirm'
-
-'.autocomplete-active:not([mini])[data-grammar~="json"]':
-  '.': 'omnisharp-atom:project-json-intellisense-dot'
