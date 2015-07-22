@@ -181,7 +181,7 @@ export class ViewModel {
                 .subscribe(project => {
                     this.dnx.Projects.push(project);
                     this._projectAddedStream.onNext(
-                        new ProjectViewModel(project.Name, project.Path, _client.path, project.DnxFrameworks, project.Configurations, project.Commands));
+                        new ProjectViewModel(project.Name, project.Path, _client.path, project.Frameworks, project.Configurations, project.Commands));
                 });
 
             _client.projectRemoved
@@ -198,7 +198,7 @@ export class ViewModel {
                 .subscribe(project => {
                     var current = _.find(this.projects, { path: project.Path });
                     if (current) {
-                        var changed = new ProjectViewModel(project.Name, project.Path, _client.path, project.DnxFrameworks, project.Configurations, project.Commands);
+                        var changed = new ProjectViewModel(project.Name, project.Path, _client.path, project.Frameworks, project.Configurations, project.Commands);
                         _.assign(current, changed);
                         this._projectChangedStream.onNext(current);
                     }
@@ -305,7 +305,7 @@ export class ViewModel {
             this.runtime = basename(project.RuntimePath);
 
             _.each(this.dnx.Projects
-                .map(p => new ProjectViewModel(p.Name, p.Path, _client.path, p.DnxFrameworks, p.Configurations, p.Commands)),
+                .map(p => new ProjectViewModel(p.Name, p.Path, _client.path, p.Frameworks, p.Configurations, p.Commands)),
                 project => this._projectAddedStream.onNext(project));
         });
         return workspace;
