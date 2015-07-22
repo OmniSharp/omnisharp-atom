@@ -89,6 +89,7 @@
         "./lib/omnisharp-atom/world.ts",
         "./lib/typings.d.ts",
         "./spec/omnisharp-atom-spec.ts",
+        "./spec/test-helpers.ts",
         "./spec/tsd.d.ts",
         "./tsd.d.ts"
     ]
