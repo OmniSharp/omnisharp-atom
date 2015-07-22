@@ -135,8 +135,8 @@ export class ViewModel {
             .subscribe(() => {
                 _client.projects({ ExcludeSourceFiles: false });
 
-                _client.request("packagesource", { ProjectPath: _client.path })
-                    .subscribe((response: any) => {
+                _client.packagesource({ ProjectPath: _client.path })
+                    .subscribe(response => {
                         this.packageSources = response.Sources;
                     });
             });
