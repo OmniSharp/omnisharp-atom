@@ -6,7 +6,7 @@ import {basename} from "path";
 import {DriverState} from "omnisharp-client";
 import {ProjectViewModel} from "./view-model";
 
-class Omni {
+class Omni implements Rx.IDisposable {
     private disposable: CompositeDisposable;
 
     private _editors: Observable<Atom.TextEditor>;
@@ -79,7 +79,8 @@ class Omni {
         }));
     }
 
-    public deactivate() {
+    public dispose() {
+        if (manager._unitTestMode_) return;
         this.disposable.dispose();
         manager.deactivate();
     }

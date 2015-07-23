@@ -10,7 +10,7 @@ class CodeCheck implements OmniSharp.IFeature {
     public observe: {
         diagnostics: Observable<OmniSharp.Models.DiagnosticLocation[]>;
         updated: Observable<Rx.ObjectObserveChange<CodeCheck>>;
-    }
+    };
 
     private diagnostics: OmniSharp.Models.DiagnosticLocation[] = [];
     public displayDiagnostics: OmniSharp.Models.DiagnosticLocation[] = [];

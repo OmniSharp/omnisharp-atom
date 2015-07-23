@@ -4,7 +4,10 @@ import Omni = require('../../omni-sharp-server/omni')
 import Client = require('../../omni-sharp-server/client');
 import React = require('react');
 import {ReactClientComponent} from "./react-client-component";
-import {world, server, solutionInformation} from '../world';
+import {server} from "../features/server-information";
+import {solutionInformation} from "../features/solution-information";
+import {world} from '../world';
+import {codeCheck} from "../features/code-check";
 import {OmnisharpClientStatus} from "omnisharp-client";
 import {commandRunner, RunProcess} from "../features/command-runner";
 
@@ -40,7 +43,7 @@ class StatusBarComponent extends ReactClientComponent<{}, StatusBarState> {
     public componentWillMount() {
         super.componentWillMount();
 
-        this.disposable.add(world.observe.diagnostics.subscribe(diagnostics => {
+        this.disposable.add(codeCheck.observe.diagnostics.subscribe(diagnostics => {
             var counts = _.countBy(diagnostics, quickFix => quickFix.LogLevel);
             this.setState({
                 errorCount: counts['Error'] || 0,

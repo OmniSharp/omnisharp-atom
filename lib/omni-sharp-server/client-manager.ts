@@ -1,49 +1,67 @@
 import _ = require('lodash')
 import path = require('path');
-import {Observable, AsyncSubject, RefCountDisposable, Disposable, CompositeDisposable, ReplaySubject, Scheduler, Subject} from "rx";
+import {Observable, AsyncSubject, RefCountDisposable, Disposable, CompositeDisposable, BehaviorSubject, Scheduler, Subject} from "rx";
 import Solution = require('./client');
 import {AtomProjectTracker} from "./atom-projects";
 import {ObservationClient, CombinationClient} from './composite-client';
 import {findCandidates, DriverState} from "omnisharp-client";
 
 class SolutionManager {
+    public _unitTestMode_ = false;
     private _disposable: CompositeDisposable;
-    private _configurations = new Set<(solution: Solution) => void>();
+    private _solutionDisposable: CompositeDisposable;
     private _atomProjects: AtomProjectTracker;
 
+    private _configurations = new Set<(solution: Solution) => void>();
     private _solutions = new Map<string, Solution>();
     private _solutionProjects = new Map<string, Solution>();
     private _temporarySolutions = new WeakMap<Solution, RefCountDisposable>();
+    private _disposableSolutionMap = new WeakMap<Solution, Disposable>();
 
     private _activated = false;
     private _nextIndex = 0;
-    private _activeSearch: Rx.IPromise<any> = Promise.resolve(undefined);
+    private _activeSearch: Rx.IPromise<any>;
 
     private _activeSolutions: Solution[] = [];
-    public get activeClients() { return this._activeSolutions }
+    public get activeClients() {
+        return this._activeSolutions;
+    }
 
     // this solution can be used to observe behavior across all solution.
     private _observation = new ObservationClient();
-    public get observationClient() { return this._observation; }
+    public get observationClient() {
+        return this._observation;
+    }
 
     // this solution can be used to aggregate behavior across all solutions
     private _combination = new CombinationClient();
-    public get combinationClient() { return this._combination; }
+    public get combinationClient() {
+        return this._combination;
+    }
 
-    private _activeSolution = new ReplaySubject<Solution>(1);
-    private _activeSolutionObserable = this._activeSolution.distinctUntilChanged().where(z => !!z);
-    public get activeClient(): Observable<Solution> { return this._activeSolutionObserable; }
+    private _activeSolution = new BehaviorSubject<Solution>(null);
+    private _activeSolutionObserable = this._activeSolution.shareReplay(1).distinctUntilChanged().where(z => !!z);
+    public get activeClient() {
+        return this._activeSolutionObserable;
+    }
 
     private _activatedSubject = new Subject<boolean>();
+    private get activatedSubject() {
+        return this._activatedSubject;
+    }
 
     public activate(activeEditor: Observable<Atom.TextEditor>) {
+        if (this._activated) return;
+
         this._disposable = new CompositeDisposable();
+        this._solutionDisposable = new CompositeDisposable();
         this._atomProjects = new AtomProjectTracker();
         this._disposable.add(this._atomProjects);
 
+        this._activeSearch = Promise.resolve(undefined);
+
         // monitor atom project paths
         this.subscribeToAtomProjectTracker();
-        this.subscribeToInternalEvents();
 
         // We use the active editor on omnisharpAtom to
         // create another observable that chnages when we get a new solution.
@@ -54,11 +72,8 @@ class SolutionManager {
 
         this._atomProjects.activate();
         this._activated = true;
-        this._activatedSubject.onNext(true);
-
-        this._disposable.add(Disposable.create(() => {
-            this.disconnect();
-        }))
+        this.activatedSubject.onNext(true);
+        this._disposable.add(this._solutionDisposable);
     }
 
     public connect() {
@@ -70,8 +85,15 @@ class SolutionManager {
     }
 
     public deactivate() {
+        if (this._unitTestMode_) return;
         this._activated = false;
         this._disposable.dispose();
+
+        this._solutions.clear();
+        this._solutionProjects.clear();
+        this.disconnect();
+        //this._temporarySolutions.clear();
+        //this._disposableSolutionMap.clear();
     }
 
     public get connected() {
@@ -80,6 +102,7 @@ class SolutionManager {
         while (!result.done)
             if (result.value.currentState === DriverState.Connected)
                 return true;
+        return false;
     }
 
     private subscribeToAtomProjectTracker() {
@@ -98,13 +121,11 @@ class SolutionManager {
             }));
     }
 
-    private subscribeToInternalEvents() { }
-
     private findRepositoryForPath(workingPath: string) {
-        return _.find(atom.project.getRepositories(), (repo: any) => repo && path.normalize(repo.getWorkingDirectory()) === path.normalize(workingPath));
+        if (atom.project) return _.find(atom.project.getRepositories(), (repo: any) => repo && path.normalize(repo.getWorkingDirectory()) === path.normalize(workingPath));
     }
 
-    private addSolution(candidate: string, {delay = 1200, temporary = false, project}: { delay?: number; temporary?: boolean; project?: string; }) {
+    private addSolution(candidate: string, {temporary = false, project}: { delay?: number; temporary?: boolean; project?: string; }) {
         if (this._solutions.has(candidate))
             return Observable.just(this._solutions.get(candidate));
 
@@ -119,12 +140,30 @@ class SolutionManager {
             repository: this.findRepositoryForPath(candidate)
         });
 
-        this._configurations.forEach(config => config(solution));
-        this._solutions.set(candidate, solution);
+        var cd = new CompositeDisposable();
 
         // keep track of the active solutions
-        this._observation.add(solution);
-        this._combination.add(solution);
+        cd.add(this.observationClient.add(solution));
+        cd.add(this.combinationClient.add(solution));
+
+        this._solutionDisposable.add(cd);
+        this._disposableSolutionMap.set(solution, cd);
+        cd.add(Disposable.create(() => {
+            _.pull(this.activeClients, solution);
+            this._solutions.delete(candidate);
+
+            if (this._temporarySolutions.has(solution)) {
+                this._temporarySolutions.delete(solution);
+            }
+
+            if (this._activeSolution.getValue() === solution) {
+                this._activeSolution.onNext(this.activeClients.length ? this.activeClients[0] : null);
+            }
+        }));
+        cd.add(solution);
+
+        this._configurations.forEach(config => config(solution));
+        this._solutions.set(candidate, solution);
 
         if (temporary) {
             var tempD = Disposable.create(() => { });
@@ -132,33 +171,32 @@ class SolutionManager {
             this._temporarySolutions.set(solution, new RefCountDisposable(tempD));
         }
 
-        this._activeSolutions.push(solution);
-        if (this._activeSolutions.length === 1)
+        this.activeClients.push(solution);
+        if (this.activeClients.length === 1)
             this._activeSolution.onNext(solution);
 
         // Auto start, with a little delay
         if (atom.config.get('omnisharp-atom.autoStartOnCompatibleFile')) {
-            _.delay(() => solution.connect(), delay);
+            solution.connect();
         }
 
-        return this.addSolutionSubscriptions(solution);
+        return this.addSolutionSubscriptions(solution, cd);
     }
 
-    private addSolutionSubscriptions(solution: Solution) {
+    private addSolutionSubscriptions(solution: Solution, cd: CompositeDisposable) {
         var result = new AsyncSubject<Solution>();
         var errorResult = solution.state
             .where(z => z === DriverState.Error)
             .delay(100)
             .take(1);
 
-        errorResult.subscribe(state => this.evictClient(solution));
-        errorResult.subscribe(() => result.onCompleted()); // If this solution errors move on to the next
+        cd.add(errorResult.subscribe(() => result.onCompleted())); // If this solution errors move on to the next
 
-        solution.model.observe.projectAdded.subscribe(project => this._solutionProjects.set(project.path, solution))
-        solution.model.observe.projectRemoved.subscribe(project => this._solutionProjects.delete(project.path));
+        cd.add(solution.model.observe.projectAdded.subscribe(project => this._solutionProjects.set(project.path, solution)))
+        cd.add(solution.model.observe.projectRemoved.subscribe(project => this._solutionProjects.delete(project.path)));
 
         // Wait for the projects to return from the solution
-        solution.model.observe.projects
+        cd.add(solution.model.observe.projects
             .debounce(100)
             .take(1)
             .map(() => solution)
@@ -170,12 +208,13 @@ class SolutionManager {
             }, () => {
                 // Move along.
                 result.onCompleted()
-            });
+            }));
 
         return result;
     }
 
     private removeSolution(candidate: string) {
+        if (this._unitTestMode_) return;
         var solution = this._solutions.get(candidate);
 
         var refCountDisposable = this._temporarySolutions.has(solution) && this._temporarySolutions.get(solution);
@@ -184,24 +223,12 @@ class SolutionManager {
             if (!refCountDisposable.isDisposed) {
                 return;
             }
-
-            this.evictClient(solution);
         }
 
         // keep track of the removed solutions
         solution.disconnect();
-    }
-
-    public evictClient(solution: Solution) {
-        if (solution.currentState === DriverState.Connected || solution.currentState === DriverState.Connecting) {
-            solution.disconnect();
-        }
-
-        this._temporarySolutions.has(solution) && this._temporarySolutions.delete(solution);
-        this._solutions.has(solution.path) && this._solutions.delete(solution.path);
-        _.pull(this._activeSolutions, solution);
-        this._observation.remove(solution);
-        this._combination.remove(solution);
+        var disposable = this._disposableSolutionMap.get(solution);
+        if (disposable) disposable.dispose();
     }
 
     private getSolutionForActiveEditor() {
@@ -276,7 +303,7 @@ class SolutionManager {
     }
 
     private _isPartOfSolution<T>(location: string, cb: (intersect: string, solution: Solution) => T) {
-        for (var solution of this._activeSolutions) {
+        for (var solution of this.activeClients) {
             var paths = solution.model.projects.map(z => z.path);
             var intersect = intersectPath(location, paths);
             if (intersect) {
@@ -320,7 +347,7 @@ class SolutionManager {
         var subject = new AsyncSubject<[string, Solution, boolean]>();
 
         if (!this._activated) {
-            return this._activatedSubject.take(1)
+            return this.activatedSubject.take(1)
                 .flatMap(() => this.findSolutionForUnderlyingPath(location, isCsx));
         }
 
@@ -344,7 +371,7 @@ class SolutionManager {
             }
 
             var newCandidates = _.difference(candidates, fromIterator(this._solutions.keys()));
-            this._activeSearch.then(() => addCandidatesInOrder(newCandidates, candidate => this.addSolution(candidate, { delay: 0, temporary: !project }))
+            this._activeSearch.then(() => addCandidatesInOrder(newCandidates, candidate => this.addSolution(candidate, { temporary: !project }))
                 .subscribeOnCompleted(() => {
                     if (!isCsx) {
                         // Attempt to see if this file is part a solution
