@@ -51,14 +51,17 @@ class OmniSharpAtom {
                     this.features = features;
 
                     Omni.activate();
-                    world.activate();
-
                     this.disposable.add(Omni);
+
+                    world.activate();
                     this.disposable.add(world);
 
                     _.each(this.features, f => {
                         f.activate();
                         this.disposable.add(f);
+                    });
+
+                    _.each(this.features, f => {
                         if (_.isFunction(f['attach'])) {
                             f['attach']();
                         }
