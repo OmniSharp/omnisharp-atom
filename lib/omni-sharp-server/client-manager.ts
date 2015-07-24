@@ -142,10 +142,6 @@ class SolutionManager {
 
         var cd = new CompositeDisposable();
 
-        // keep track of the active solutions
-        cd.add(this.observationClient.add(solution));
-        cd.add(this.combinationClient.add(solution));
-
         this._solutionDisposable.add(cd);
         this._disposableSolutionMap.set(solution, cd);
         cd.add(Disposable.create(() => {
@@ -165,6 +161,10 @@ class SolutionManager {
         this._configurations.forEach(config => config(solution));
         this._solutions.set(candidate, solution);
 
+        // keep track of the active solutions
+        cd.add(this._observation.add(solution));
+        cd.add(this._combination.add(solution));
+
         if (temporary) {
             var tempD = Disposable.create(() => { });
             tempD.dispose();
@@ -177,7 +177,7 @@ class SolutionManager {
 
         // Auto start, with a little delay
         if (atom.config.get('omnisharp-atom.autoStartOnCompatibleFile')) {
-            solution.connect();
+            _.delay(() => solution.connect(), 0);
         }
 
         return this.addSolutionSubscriptions(solution, cd);
