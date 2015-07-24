@@ -1,0 +1,39 @@
+{
+  "version": "v4",
+  "repo": "borisyankov/DefinitelyTyped",
+  "ref": "master",
+  "path": "typings",
+  "bundle": "tsd.d.ts",
+  "installed": {
+    "q/Q.d.ts": {
+      "commit": "ac3a1f059f655059484d6aa5ba1f0f85908ae06c"
+    },
+    "jquery/jquery.d.ts": {
+      "commit": "ac3a1f059f655059484d6aa5ba1f0f85908ae06c"
+    },
+    "bluebird/bluebird.d.ts": {
+      "commit": "ac3a1f059f655059484d6aa5ba1f0f85908ae06c"
+    },
+    "lodash/lodash.d.ts": {
+      "commit": "ac3a1f059f655059484d6aa5ba1f0f85908ae06c"
+    },
+    "node/node.d.ts": {
+      "commit": "ac3a1f059f655059484d6aa5ba1f0f85908ae06c"
+    },
+    "mixto/mixto.d.ts": {
+      "commit": "ac3a1f059f655059484d6aa5ba1f0f85908ae06c"
+    },
+    "semver/semver.d.ts": {
+      "commit": "ac3a1f059f655059484d6aa5ba1f0f85908ae06c"
+    },
+    "jasmine/jasmine.d.ts": {
+      "commit": "ac3a1f059f655059484d6aa5ba1f0f85908ae06c"
+    },
+    "chai/chai.d.ts": {
+      "commit": "ac3a1f059f655059484d6aa5ba1f0f85908ae06c"
+    },
+    "react/react.d.ts": {
+      "commit": "ac3a1f059f655059484d6aa5ba1f0f85908ae06c"
+    }
+  }
+}

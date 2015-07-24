@@ -1,0 +1,15 @@
+{
+  "menu": [{
+    "label": "&OmniSharp",
+    "submenu": [
+      { "label": "Toggle", "command": "omnisharp-atom:toggle" },
+      { "label": "Find Usages", "command": "omnisharp-atom:find-usages" },
+      { "label": "Go to Definition", "command": "omnisharp-atom:go-to-definition" },
+      { "label": "Go to Implementation", "command": "omnisharp-atom:go-to-implementation" },
+      { "label": "Rename", "command": "omnisharp-atom:rename"},
+      { "label": "Code Format", "command": "omnisharp-atom:code-format" },
+      { "label": "Lookup Type", "command": "omnisharp-atom:type-lookup" },
+      { "label": "Find Symbols", "command": "omnisharp-atom:find-symbols" }
+    ]
+  }]
+}

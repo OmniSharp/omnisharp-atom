@@ -1,35 +1,121 @@
 {
   "name": "omnisharp-atom",
   "main": "./lib/omnisharp-atom/omnisharp-atom",
-  "version": "0.1.6",
-  "description": "Brings the wonderful omnisharp server to powercharge atom's C# development experience",
-  "activationEvents": [],
+  "version": "0.22.5",
+  "description": "Brings the wonderful OmniSharp server to powercharge Atom's C# development experience",
+  "keywords": [
+    "c#",
+    ".net",
+    "asp.net",
+    "omnisharp"
+  ],
   "repository": "https://github.com/OmniSharp/omnisharp-atom",
+  "author": {
+    "name": "Omnisharp Atom Team",
+    "url": "https://github.com/OmniSharp/omnisharp-atom/graphs/contributors"
+  },
+  "contributors": [
+    {
+      "name": "Martijn Laarman",
+      "url": "http://localghost.io"
+    },
+    {
+      "name": "Stephen James",
+      "url": "http://stephenjamescode.blogspot.co.uk/"
+    },
+    {
+      "name": "Chad Tolkien",
+      "url": "http://chad.tolkien.id.au/"
+    },
+    {
+      "name": "David Driscoll",
+      "url": "https://twitter.com/david_blacklite"
+    },
+    {
+      "name": "Sam Williamson",
+      "url": "https://twitter.com/sgwill"
+    },
+    {
+      "name": "William Luu",
+      "url": "https://twitter.com/willl"
+    },
+    {
+      "name": "Jason Imison",
+      "url": "https://twitter.com/jasonimison"
+    }
+  ],
   "license": "MIT",
   "engines": {
-    "atom": ">0.50.0"
+    "atom": ">=0.199.0 <2.0.0"
+  },
+  "activationCommands": [],
+  "menus": [
+    "atom-sharper.cson"
+  ],
+  "scripts": {
+    "postinstall": "./node_modules/.bin/gulp npm-postinstall",
+    "prepublish": "./node_modules/.bin/gulp npm-prepublish"
   },
   "dependencies": {
-    "ansi-to-html": "~0.1.0",
-    "bluebird": "~2.3.2",
-    "event-kit": "0.7.2",
-    "freeport": "^1.0.4",
+    "ansi-to-html": "^0.3.0",
+    "atom-package-dependencies": "https://github.com/basarat/atom-package-dependencies/archive/cb1.tar.gz",
+    "atom-space-pen-views": "^2.0.5",
+    "bluebird": "^2.9.30",
+    "del": "^1.1.1",
+    "escape-html": "^1.0.1",
+    "event-kit": "^1.2.0",
+    "font-awesome": "^4.3.0",
     "fs-plus": "^2.3.1",
+    "fuzzaldrin": "^2.1.0",
+    "generator-aspnet": "0.0.35",
+    "glob": "^5.0.5",
+    "gulp": "^3.8.11",
+    "gulp-util": "^3.0.6",
     "jquery": "^2.1.1",
-    "omnisharp-server-binaries": "latest",
-    "request-promise": "~0.1.2",
+    "lodash": "^3.9.3",
+    "merge-stream": "^0.1.7",
+    "omnisharp-client": "^1.6.25",
+    "react": "^0.13.3",
+    "rx": "^2.5.3",
     "semver": "^4.2.0",
-    "underscore": "~1.7.0",
-    "vue": "~0.10.6"
+    "through2": "^2.0.0",
+    "tsd": "^0.6.3",
+    "typescript": "^1.5.0-beta"
   },
-  "devDependencies": {
-    "coffeelint": "^1.6.0",
-    "grunt": "^0.4.5",
-    "grunt-coffeelint": "0.0.13",
-    "grunt-contrib-watch": "^0.6.1"
+  "consumedServices": {
+    "status-bar": {
+      "versions": {
+        "^1.0.0": "consumeStatusBar"
+      }
+    },
+    "yeoman-environment": {
+      "versions": {
+        "^1.0.0": "consumeYeomanEnvironment"
+      }
+    },
+    "linter-plus-self": {
+      "versions": {
+        "0.1.0": "consumeLinter"
+      }
+    }
   },
-  "apmPackageDependencies": {
-    "autocomplete-plus": ">=2.0.2",
-    "language-csharp": ">=0.3.0"
+  "providedServices": {
+    "autocomplete.provider": {
+      "description": "A C# Roslyn powered autocomplete-plus provider.",
+      "versions": {
+        "2.0.0": "provideAutocomplete"
+      }
+    },
+    "linter": {
+      "versions": {
+        "1.0.0": "provideLinter"
+      }
+    }
+  },
+  "package-dependencies": {
+    "language-csharp": ">=0.3.0",
+    "atom-yeoman": ">=0.3.0",
+    "linter": ">=1.0.0",
+    "advanced-new-file": ">=0.4.3"
   }
 }

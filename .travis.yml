@@ -1,0 +1,11 @@
+language: objective-c
+
+notifications:
+  email:
+    on_success: never
+    on_failure: change
+
+script: ./build-package.sh 
+
+git:
+  depth: 10

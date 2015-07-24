@@ -7,15 +7,53 @@
 #
 # For more detailed documentation see
 # https://atom.io/docs/latest/advanced/keymaps
-'.workspace':
+'atom-workspace':
   'esc': 'omnisharp-atom:hide'
   'ctrl-alt-o': 'omnisharp-atom:toggle'
   'ctrl-alt-x': 'omnisharp-atom:show-omni'
   'ctrl-alt-e': 'omnisharp-atom:show-errors'
   'ctrl-alt-b': 'omnisharp-atom:show-build'
-  'alt-F12': 'omnisharp-atom:go-to-definition'
-  'shift-F12': 'omnisharp-atom:find-usages'
-  'ctrl-alt-u': 'omnisharp-atom:fix-usings'
-  'ctrl-alt-m': 'omnisharp-atom:code-format'
-  'alt-r': 'omnisharp-atom:rename'
   'ctrl-shift-b': 'omnisharp-atom:build'
+
+'atom-text-editor:not([mini])[data-grammar~="cs"], atom-text-editor:not([mini])[data-grammar~="csx"]':
+  'f12': 'omnisharp-atom:go-to-definition'
+  'shift-f12': 'omnisharp-atom:find-usages'
+  'ctrl-alt-u': 'omnisharp-atom:fix-usings'
+  'ctrl-k ctrl-d': 'omnisharp-atom:code-format'
+  'ctrl-k ctrl-c': 'editor:toggle-line-comments'
+  'ctrl-k ctrl-u': 'editor:toggle-line-comments'
+  ';': 'omnisharp-atom:code-format-on-semicolon'
+  '}': 'omnisharp-atom:code-format-on-curly-brace'
+  'alt-r': 'omnisharp-atom:rename'
+  'f2': 'omnisharp-atom:rename'
+  'ctrl-r ctrl-r': 'omnisharp-atom:rename'
+  'ctrl-f12': 'omnisharp-atom:go-to-implementation'
+  'f1': 'omnisharp-atom:type-lookup'
+  'ctrl-alt-up': 'omnisharp-atom:navigate-up'
+  'ctrl-alt-down': 'omnisharp-atom:navigate-down'
+  'ctrl-.': 'omnisharp-atom:get-code-actions'
+  'alt-enter': 'omnisharp-atom:get-code-actions'
+  'alt-shift-t': 'omnisharp-atom:find-symbols'
+  'ctrl-,': 'omnisharp-atom:find-symbols'
+  'f8': 'omnisharp-atom:go-to-next-usage'
+  'shift-f8,': 'omnisharp-atom:go-to-previous-usage'
+  'ctrl-n': 'advanced-new-file:toggle'
+  'cmd-n': 'advanced-new-file:toggle'
+  'cmd-r cmd-a': 'omnisharp-atom:run-all-tests'
+  'cmd-r cmd-f': 'omnisharp-atom:run-fixture-tests'
+  'cmd-r cmd-t': 'omnisharp-atom:run-single-test'
+  'cmd-r cmd-l': 'omnisharp-atom:run-last-test'
+  'ctrl-r ctrl-a': 'omnisharp-atom:run-all-tests'
+  'ctrl-r ctrl-f': 'omnisharp-atom:run-fixture-tests'
+  'ctrl-r ctrl-t': 'omnisharp-atom:run-single-test'
+  'ctrl-r ctrl-l': 'omnisharp-atom:run-last-test'
+
+
+'.platform-darwin atom-text-editor:not([mini])[data-grammar~="cs"], atom-text-editor:not([mini])[data-grammar~="csx"]':
+  'cmd-d': 'omnisharp-atom:go-to-definition'
+
+'.autocomplete-active:not([mini])[data-grammar~="cs"], .autocomplete-active:not([mini])[data-grammar~="csx"]':
+  'space': 'omnisharp-atom:intellisense-space'
+  '.': 'omnisharp-atom:intellisense-dot'
+  ';': 'omnisharp-atom:intellisense-semicolon'
+  'enter': 'autocomplete-plus:confirm'
