@@ -84,7 +84,7 @@ class Omni {
     }
 
     public navigateTo(response: { FileName: string; Line: number; Column: number; }) {
-        atom.workspace.open(response.FileName, undefined)
+        atom.workspace.open(response.FileName, {initialLine: response.Line, initialColumn: response.Column})
             .then((editor) => {
                 editor.setCursorBufferPosition([response.Line && response.Line, response.Column && response.Column])
             });
