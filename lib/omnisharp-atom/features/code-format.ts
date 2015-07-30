@@ -8,24 +8,7 @@ class CodeFormat implements OmniSharp.IFeature {
     public activate() {
         this.disposable = new CompositeDisposable();
         this.disposable.add(Omni.addTextEditorCommand('omnisharp-atom:code-format',
-            () => {
-                var editor = atom.workspace.getActiveTextEditor();
-                if (editor) {
-                    var buffer = editor.getBuffer();
-                    Omni.request(editor, client => {
-                        var request = <OmniSharp.Models.FormatRangeRequest>client.makeRequest();
-                        request.Line = 0;
-                        request.Column = 0;
-                        request.EndLine = buffer.getLineCount() - 1;
-                        request.EndColumn = 0;
-
-                        return client
-                            .formatRangePromise(request)
-                            .then((data) => Changes.applyChanges(editor, data));
-                    });
-                }
-            }));
-
+            () => this.format()));
         this.disposable.add(Omni.addTextEditorCommand('omnisharp-atom:code-format-on-semicolon',
             (event) => this.formatOnKeystroke(event, ';')));
         this.disposable.add(Omni.addTextEditorCommand('omnisharp-atom:code-format-on-curly-brace',
@@ -36,7 +19,25 @@ class CodeFormat implements OmniSharp.IFeature {
         this.disposable.dispose();
     }
 
-    private formatOnKeystroke(event: Event, char: string): any {
+    public format() {
+        var editor = atom.workspace.getActiveTextEditor();
+        if (editor) {
+            var buffer = editor.getBuffer();
+            Omni.request(editor, client => {
+                var request = <OmniSharp.Models.FormatRangeRequest>client.makeRequest();
+                request.Line = 0;
+                request.Column = 0;
+                request.EndLine = buffer.getLineCount() - 1;
+                request.EndColumn = 0;
+
+                return client
+                    .formatRangePromise(request)
+                    .then((data) => Changes.applyChanges(editor, data));
+            });
+        }
+    }
+
+    public formatOnKeystroke(event: Event, char: string): any {
         var editor = atom.workspace.getActiveTextEditor();
         if (editor) {
             editor.insertText(char);

@@ -176,11 +176,13 @@ class SolutionManager {
             this._activeSolution.onNext(solution);
 
         // Auto start, with a little delay
-        if (atom.config.get('omnisharp-atom.autoStartOnCompatibleFile')) {
-            _.delay(() => solution.connect(), 0);
-        }
+        /*if (atom.config.get('omnisharp-atom.autoStartOnCompatibleFile')) {
+            _.defer(() => solution.connect());
+        }*/
 
-        return this.addSolutionSubscriptions(solution, cd);
+        var result = this.addSolutionSubscriptions(solution, cd);
+        solution.connect();
+        return result;
     }
 
     private addSolutionSubscriptions(solution: Solution, cd: CompositeDisposable) {
@@ -240,6 +242,32 @@ class SolutionManager {
         if (solution) return solution;
         // No active text editor
         return Observable.empty<Solution>();
+    }
+
+    public getClientForPath(path: string) {
+        var solution: Observable<Solution>;
+        if (!path)
+            // No text editor found
+            return Observable.empty<Solution>();
+
+        var isCsx = _.endsWith(path, '.csx');
+
+        var location = path;
+        if (!location) {
+            // Text editor not saved yet?
+            return Observable.empty<Solution>();
+        }
+
+        var [intersect, solutionValue] = this.getSolutionForUnderlyingPath(location, isCsx);
+
+        if (solutionValue)
+            return Observable.just(solutionValue);
+
+        return this.findSolutionForUnderlyingPath(location, isCsx)
+            .map(z => {
+                var [p, solution, temporary] = z;
+                return solution;
+            });
     }
 
     public getClientForEditor(editor: Atom.TextEditor) {
