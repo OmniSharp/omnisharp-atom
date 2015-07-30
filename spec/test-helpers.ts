@@ -2,6 +2,7 @@ import ClientManager = require('../lib/omni-sharp-server/client-manager');
 import {CompositeDisposable, Disposable, Observable} from "rx";
 
 if ((<any>jasmine.getEnv()).defaultTimeoutInterval < 30000) (<any>jasmine.getEnv()).defaultTimeoutInterval = 30000;
+if ((<any>jasmine.getEnv()).defaultTimeoutInterval === 60000) (<any>jasmine.getEnv()).defaultTimeoutInterval = 60000 * 3;
 
 export function setupFeature(features: string[], unitTestMode = true) {
     beforeEach(function() {
