@@ -38,7 +38,13 @@ describe('Code Format', () => {
 
         runs(() => {
             expect(e.getPath()).toEqual(request.FileName);
-            expect(response.Changes.length).toBe(1);
+            var expected = `public class UnformattedClass
+{
+    public const int TheAnswer = 42;
+}
+`.replace(/\r|\n/g, '');
+            var result = e.getText().replace(/\r|\n/g, '');
+            expect(result).toContain(expected);
             disposable.dispose();
         });
     });
