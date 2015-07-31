@@ -19,14 +19,14 @@ function projectLock(solution: Client, project: ProjectViewModel, filePath: stri
             _.delay(() => {
                 onDidChange = file.onDidChange(() => subject.onNext(filePath))
                 disposable.add(onDidChange);
-            }, 1000);
+            }, 5000);
         });
 
     disposable.add(onDidChange);
     disposable.add(onWillThrowWatchError);
 
     return {
-        observable: subject.throttleFirst(2000).asObservable(),
+        observable: subject.throttleFirst(30000).asObservable(),
         dispose: () => disposable.dispose()
     };
 }
@@ -37,17 +37,40 @@ class FileMonitor implements OmniSharp.IFeature {
 
     public activate() {
         this.disposable = new CompositeDisposable();
-        var changes = Omni.listener.model.projectAdded
+
+        var projectJsonEditors = Omni.configEditors
+            .where(z => _.endsWith(z.getPath(), 'project.json'))
+            .flatMap(editor => {
+                var s = new Subject<boolean>();
+                editor.onDidSave(() => {
+                    s.onNext(false);
+                });
+                return s.asObservable();
+            });
+
+        var pauser = Observable.merge(
+                projectJsonEditors.throttleFirst(10000),
+                Omni.listener.packageRestoreFinished.debounce(1000).map(z => true)
+            ).startWith(true);
+
+        var changes = Observable.merge(Omni.listener.model.projectAdded, Omni.listener.model.projectChanged)
             .map(project => ({ project, filePath: path.join(project.path, "project.lock.json") }))
             .where(({ project, filePath}) => fs.existsSync(filePath))
             .flatMap(({ project, filePath}) =>
                 Omni.getClientForProject(project).map(client => ({ client, project, filePath })))
             .flatMap(({ client, project, filePath }) => {
+                if (this.filesMap.has(project)) {
+                    var v = this.filesMap.get(project);
+                    v.dispose();
+                }
+
                 var lock = projectLock(client, project, filePath);
                 this.disposable.add(lock);
                 this.filesMap.set(project, lock);
                 return lock.observable.map(path => ({ client, filePath }));
-            });
+            })
+            .share()
+            .pausable(pauser);
 
         this.disposable.add(changes
             .buffer(changes.throttleFirst(1000), () => Observable.timer(1000))

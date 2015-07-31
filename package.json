@@ -74,7 +74,7 @@
     "jquery": "^2.1.1",
     "lodash": "^3.9.3",
     "merge-stream": "^0.1.7",
-    "omnisharp-client": "^1.6.25",
+    "omnisharp-client": "^1.6.26",
     "react": "^0.13.3",
     "rx": "^2.5.3",
     "semver": "^4.2.0",
@@ -110,12 +110,17 @@
       "versions": {
         "1.0.0": "provideLinter"
       }
+    },
+    "jsonschema.provider": {
+      "versions": {
+        "0.1.0": "provideProjectJson"
+      }
     }
   },
   "package-dependencies": {
-    "language-csharp": ">=0.3.0",
     "atom-yeoman": ">=0.3.0",
     "linter": ">=1.0.0",
+    "json-schema": ">=0.1.11",
     "advanced-new-file": ">=0.4.3"
   }
 }

@@ -30,6 +30,7 @@ declare module OmniSharp {
         makeDataRequest<T>(data: T, editor?: Atom.TextEditor, buffer?: TextBuffer.TextBuffer): T;
         v1: OmniSharp.Api.V1;
         request<TRequest, TResponse>(path: string, request: TRequest): Rx.Observable<TResponse>;
+        path: string;
     }
 
     interface IProjectViewModel {

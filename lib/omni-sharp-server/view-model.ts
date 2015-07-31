@@ -54,6 +54,7 @@ export class ViewModel {
     public output: OmniSharp.OutputMessage[] = [];
     public diagnostics: OmniSharp.Models.DiagnosticLocation[] = [];
     public get state() { return this._client.currentState };
+    public packageSources: string[] = [];
 
     // Project information
     public msbuild: OmniSharp.Models.MsBuildWorkspaceInformation;
@@ -133,6 +134,11 @@ export class ViewModel {
         _client.state.where(z => z === DriverState.Connected)
             .subscribe(() => {
                 _client.projects({ ExcludeSourceFiles: false });
+
+                _client.packagesource({ ProjectPath: _client.path })
+                    .subscribe(response => {
+                        this.packageSources = response.Sources;
+                    });
             });
 
         _client.observeProjects.first().subscribe(() => {
