@@ -11,21 +11,10 @@ export function findAllDeps(packageDir) {
     dependencyErrors = [];
     var missingDepencies = [];
 
-    console.info(packageDir + "/omnisharp-atom/package.json");
     var packageFilePath = packageDir + "/omnisharp-atom/package.json";
-    console.info('packageFilePath', packageFilePath);
-    
-    console.info(JSON.parse(fs.readFileSync(packageFilePath, 'utf8')));
     var packageConfig = JSON.parse(fs.readFileSync(packageFilePath, 'utf8'));
-    console.info('packageConfig', packageConfig);
-
-    console.info(packageConfig['package-dependencies']);
     var packageDependencies = packageConfig['package-dependencies'];
-    console.info('packageDependencies', packageDependencies);
-
-    console.info(atom.packages.getAvailablePackageMetadata());
     var availablePackageMetaData = atom.packages.getAvailablePackageMetadata();
-    console.info('availablePackageMetaData', availablePackageMetaData);
 
     _.each(packageDependencies, (version: string, packageName: string) => {
         var matchingPackage: any = _.find(availablePackageMetaData, (availablePackage: any) => availablePackage.name == packageName);

@@ -4,9 +4,17 @@ import {CompositeDisposable, Disposable, Observable} from "rx";
 if ((<any>jasmine.getEnv()).defaultTimeoutInterval < 30000) (<any>jasmine.getEnv()).defaultTimeoutInterval = 30000;
 if ((<any>jasmine.getEnv()).defaultTimeoutInterval === 60000) (<any>jasmine.getEnv()).defaultTimeoutInterval = 60000 * 3;
 
+ClientManager.observationClient.errors.subscribe(error => console.error(JSON.stringify(error)));
+ClientManager.observationClient.events.subscribe(event => console.info(`server event: ${JSON.stringify(event)}`));
+ClientManager.observationClient.requests.subscribe(r => console.info(`request: ${JSON.stringify(r)}`));
+ClientManager.observationClient.responses.subscribe(r => console.info(`request: ${JSON.stringify(r)}`));
+
 export function setupFeature(features: string[], unitTestMode = true) {
+    var cd : CompositeDisposable;
     beforeEach(function() {
+        cd = new CompositeDisposable();
         ClientManager._unitTestMode_ = unitTestMode;
+
         atom.config.set('omnisharp-atom:feature-white-list', true);
         atom.config.set('omnisharp-atom:feature-list', features);
 
@@ -16,6 +24,7 @@ export function setupFeature(features: string[], unitTestMode = true) {
     afterEach(() => {
         atom.config.set('omnisharp-atom:feature-white-list', undefined);
         atom.config.set('omnisharp-atom:feature-list', undefined);
+        cd.dispose();
     });
 }
 
