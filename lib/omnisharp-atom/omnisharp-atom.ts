@@ -86,7 +86,9 @@ class OmniSharpAtom {
     private _packageDir: string;
     public getPackageDir() {
         if (!this._packageDir) {
+            console.info('getPackageDirPaths', atom.packages.getPackageDirPaths());
             this._packageDir = _.find(atom.packages.getPackageDirPaths(), function(packagePath) {
+                console.info('packagePath', packagePath, fs.existsSync(path.join(packagePath, "omnisharp-atom")));
                 return fs.existsSync(path.join(packagePath, "omnisharp-atom"));
             });
         }
