@@ -21,9 +21,7 @@ class OmniSharpAtom {
         this.disposable = new CompositeDisposable;
 
         console.info("Starting omnisharp-atom...");
-
         if (dependencyChecker.findAllDeps(this.getPackageDir())) {
-
             console.info("Dependencies installed...");
 
             this.configureKeybindings();

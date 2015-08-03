@@ -15,14 +15,18 @@ export function findAllDeps(packageDir) {
     var packageDependencies = packageConfig['package-dependencies'];
     var availablePackageMetaData = atom.packages.getAvailablePackageMetadata();
 
-    _.each(packageDependencies, (version:string, packageName:string) => {
-        var matchingPackage : any = _.find(availablePackageMetaData, (availablePackage: any) => availablePackage.name == packageName);
+    _.each(packageDependencies, (version: string, packageName: string) => {
+        var matchingPackage: any = _.find(availablePackageMetaData, (availablePackage: any) => availablePackage.name == packageName);
 
         if (matchingPackage) {
             if (!semver.satisfies(matchingPackage.version, version)) {
-                dependencyErrors.push("Omnisharp Atom needs the package `"+packageName+"` (version "+version+") to be installed. You have an older version "+ matchingPackage.version +".");
+                var error = `Omnisharp Atom needs the package ${packageName} (version ${version}) to be installed. You have an older version ${matchingPackage.version}.`
+                console.warn(error);
+                dependencyErrors.push(error);
             }
         } else {
+            var error = `Loading ${packageName}...`
+            console.warn(error);
             apd.require(packageName);
             missingDepencies.push(packageName);
         }
@@ -30,13 +34,17 @@ export function findAllDeps(packageDir) {
 
     // Cribbed from atom-typescript
     if (missingDepencies.length > 0) {
-        var notification = atom.notifications.addInfo('OmniSharp: Some dependencies not found. Running "apm install" on these for you. Please wait for a success confirmation!', { dismissable: true });
+        var msg = 'OmniSharp: Some dependencies not found. Running "apm install" on these for you. Please wait for a success confirmation!'
+        console.info(msg);
+        var notification = atom.notifications.addInfo(msg, { dismissable: true });
         apd.install(function() {
-            atom.notifications.addSuccess("OmniSharp: Dependencies installed correctly. Enjoy OmniSharp", { dismissable: true });
+            var msg = "OmniSharp: Dependencies installed correctly. Enjoy OmniSharp";
+            console.info(msg);
+            atom.notifications.addSuccess(msg, { dismissable: true });
             notification.dismiss();
 
             // Packages don't get loaded automatically as a result of an install
-            _.each(missingDepencies, (packageName:string) => {
+            _.each(missingDepencies, (packageName: string) => {
                 if (!apd.require(packageName)) atom.packages.loadPackage(packageName);
                 atom.packages.activatePackage(packageName);
             });
