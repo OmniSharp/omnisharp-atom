@@ -9,3 +9,6 @@ script: 'curl -s https://raw.githubusercontent.com/atom/ci/master/build-package.
 
 git:
   depth: 10
+
+env:
+  - APM_TEST_PACKAGES='atom-yeoman linter json-schema advanced-new-file'
