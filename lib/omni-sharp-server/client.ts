@@ -49,11 +49,6 @@ class Client extends OmnisharpClient {
         this.log("OmniSharp Path: " + this.projectPath);
     }
 
-    public log(message: string, logLevel?: string) {
-        super.log(message, logLevel);
-        console.info(message);
-    }
-
     public disconnect() {
         super.disconnect();
 

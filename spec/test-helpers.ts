@@ -7,7 +7,7 @@ if ((<any>jasmine.getEnv()).defaultTimeoutInterval === 60000) (<any>jasmine.getE
 ClientManager.observationClient.errors.subscribe(error => console.error(JSON.stringify(error)));
 ClientManager.observationClient.events.subscribe(event => console.info(`server event: ${JSON.stringify(event)}`));
 ClientManager.observationClient.requests.subscribe(r => console.info(`request: ${JSON.stringify(r)}`));
-ClientManager.observationClient.responses.subscribe(r => console.info(`request: ${JSON.stringify(r)}`));
+ClientManager.observationClient.responses.subscribe(r => console.info(`response: ${JSON.stringify(r)}`));
 
 export function setupFeature(features: string[], unitTestMode = true) {
     var cd : CompositeDisposable;
