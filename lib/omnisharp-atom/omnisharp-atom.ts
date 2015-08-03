@@ -20,7 +20,12 @@ class OmniSharpAtom {
     public activate(state) {
         this.disposable = new CompositeDisposable;
 
+        console.info("Starting omnisharp-atom...");
+
         if (dependencyChecker.findAllDeps(this.getPackageDir())) {
+
+            console.info("Dependencies installed...");
+
             this.configureKeybindings();
 
             this.disposable.add(atom.commands.add('atom-workspace', 'omnisharp-atom:toggle', () => this.toggle()));
@@ -48,6 +53,8 @@ class OmniSharpAtom {
                 .flatMap(z => z.load())
                 .toArray()
                 .subscribe(features => {
+                    console.info("Activating omnisharp-atom...");
+
                     this.features = features;
 
                     Omni.activate();
@@ -72,6 +79,7 @@ class OmniSharpAtom {
                     }));
                 }));
         } else {
+            console.info(`omnisharp-atom not started missing depedencies ${dependencyChecker.errors()}...`);
             _.map(dependencyChecker.errors() || [], missingDependency => console.error(missingDependency))
         }
     }
@@ -87,11 +95,14 @@ class OmniSharpAtom {
     }
 
     public getFeatures(folder: string) {
+        console.info(`Getting features for '${folder}'...`);
+
         var packageDir = this.getPackageDir();
         var featureDir = `${packageDir}/omnisharp-atom/lib/omnisharp-atom/${folder}`;
 
         function loadFeature(file: string) {
             var result = require(`./${folder}/${file}`);
+            console.info(`Loading feature '${folder}/${file}'...`);
             return _.values(result).filter(feature => !_.isFunction(feature));
         }
 
