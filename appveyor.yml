@@ -1,7 +1,6 @@
 version: "{build}"
 os: Windows Server 2012 R2
-evironment:
-  APM_TEST_PACKAGES: atom-yeoman linter json-schema advanced-new-file
+
 test: off
 deploy: off
 
@@ -13,6 +12,10 @@ install:
   - cinst atom -y
   - cd %APPVEYOR_BUILD_FOLDER%
   - "%LOCALAPPDATA%/atom/bin/apm install"
+  - "%LOCALAPPDATA%/atom/bin/apm install atom-yeoman"
+  - "%LOCALAPPDATA%/atom/bin/apm install linter"
+  - "%LOCALAPPDATA%/atom/bin/apm install json-schema"
+  - "%LOCALAPPDATA%/atom/bin/apm install advanced-new-file"
 
 build_script:
   - cd %APPVEYOR_BUILD_FOLDER%
