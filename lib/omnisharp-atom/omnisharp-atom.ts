@@ -91,6 +91,11 @@ class OmniSharpAtom {
                 console.info(`packagePath ${packagePath} exists: ${fs.existsSync(path.join(packagePath, "omnisharp-atom"))}`);
                 return fs.existsSync(path.join(packagePath, "omnisharp-atom"));
             });
+
+            // Fallback, this is for unit testing on travis mainly
+            if (!this._packageDir) {
+                this._packageDir = path.resolve(__dirname, '../../..');
+            }
         }
         return this._packageDir;
     }
