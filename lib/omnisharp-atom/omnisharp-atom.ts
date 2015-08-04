@@ -1,6 +1,6 @@
 require('./configure-rx');
 import _ = require('lodash');
-import {Observable, BehaviorSubject, Subject, CompositeDisposable, Disposable} from "rx";
+import {Observable, BehaviorSubject, Subject, AsyncSubject, CompositeDisposable, Disposable} from "rx";
 import path = require('path');
 import fs = require('fs');
 
@@ -15,10 +15,14 @@ class OmniSharpAtom {
     private generator: { run(generator: string, path?: string, options?: any): void; start(prefix: string, path?: string, options?: any): void; };
     private menu: EventKit.Disposable;
 
+    // Internal: Used by unit testing to make sure the plugin is completely activated.
+    private _started: AsyncSubject<boolean>;
+
     private restartLinter: () => void = () => { };
 
     public activate(state) {
         this.disposable = new CompositeDisposable;
+        this._started = new AsyncSubject<boolean>();
 
         console.info("Starting omnisharp-atom...");
         if (dependencyChecker.findAllDeps(this.getPackageDir())) {
@@ -36,7 +40,7 @@ class OmniSharpAtom {
             var whiteList = atom.config.get<boolean>("omnisharp-atom:feature-white-list") || undefined;
             var featureList = atom.config.get<string[]>('omnisharp-atom:feature-list') || [];
 
-            this.disposable.add(Observable.merge(this.getFeatures("atom"), this.getFeatures("features"))
+            var started = Observable.merge(this.getFeatures("atom"), this.getFeatures("features"))
                 .filter(l => {
                     if (typeof whiteList === 'undefined') {
                         return true;
@@ -50,34 +54,41 @@ class OmniSharpAtom {
                 })
                 .flatMap(z => z.load())
                 .toArray()
-                .subscribe(features => {
-                    console.info("Activating omnisharp-atom...");
+                .share();
 
-                    this.features = features;
+            started.subscribe(() => {
+                this._started.onNext(true);
+                this._started.onCompleted();
+            });
 
-                    Omni.activate();
-                    this.disposable.add(Omni);
+            this.disposable.add(started.subscribe(features => {
+                console.info("Activating omnisharp-atom...");
 
-                    world.activate();
-                    this.disposable.add(world);
+                this.features = features;
 
-                    _.each(this.features, f => {
-                        f.activate();
-                        this.disposable.add(f);
-                    });
+                Omni.activate();
+                this.disposable.add(Omni);
 
-                    _.each(this.features, f => {
-                        if (_.isFunction(f['attach'])) {
-                            f['attach']();
-                        }
-                    });
+                world.activate();
+                this.disposable.add(world);
 
-                    this.disposable.add(atom.workspace.observeTextEditors((editor: Atom.TextEditor) => {
-                        this.detectAutoToggleGrammar(editor);
-                    }));
+                _.each(this.features, f => {
+                    f.activate();
+                    this.disposable.add(f);
+                });
+
+                _.each(this.features, f => {
+                    if (_.isFunction(f['attach'])) {
+                        f['attach']();
+                    }
+                });
+
+                this.disposable.add(atom.workspace.observeTextEditors((editor: Atom.TextEditor) => {
+                    this.detectAutoToggleGrammar(editor);
                 }));
+            }));
         } else {
-            console.info(`omnisharp-atom not started missing depedencies ${dependencyChecker.errors()}...`);
+            console.info(`omnisharp-atom not started missing depedencies ${dependencyChecker.errors() }...`);
             _.map(dependencyChecker.errors() || [], missingDependency => console.error(missingDependency))
         }
     }
@@ -85,9 +96,9 @@ class OmniSharpAtom {
     private _packageDir: string;
     public getPackageDir() {
         if (!this._packageDir) {
-            console.info(`getPackageDirPaths: ${atom.packages.getPackageDirPaths()}`);
+            console.info(`getPackageDirPaths: ${atom.packages.getPackageDirPaths() }`);
             this._packageDir = _.find(atom.packages.getPackageDirPaths(), function(packagePath) {
-                console.info(`packagePath ${packagePath} exists: ${fs.existsSync(path.join(packagePath, "omnisharp-atom"))}`);
+                console.info(`packagePath ${packagePath} exists: ${fs.existsSync(path.join(packagePath, "omnisharp-atom")) }`);
                 return fs.existsSync(path.join(packagePath, "omnisharp-atom"));
             });
 
@@ -116,7 +127,7 @@ class OmniSharpAtom {
             .where(file => /\.js$/.test(file))
             .flatMap(file => Observable.fromNodeCallback(fs.stat)(`${featureDir}/${file}`).map(stat => ({ file, stat })))
             .where(z => !z.stat.isDirectory())
-            .map(z => ({ file: `${folder}/${path.basename(z.file)}`.replace(/\.js$/, ''), load: () => Observable.from<OmniSharp.IFeature>(loadFeature(z.file)) }));
+            .map(z => ({ file: `${folder}/${path.basename(z.file) }`.replace(/\.js$/, ''), load: () => Observable.from<OmniSharp.IFeature>(loadFeature(z.file)) }));
     }
 
     private detectAutoToggleGrammar(editor: Atom.TextEditor) {

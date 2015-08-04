@@ -19,7 +19,9 @@ export function setupFeature(features: string[], unitTestMode = true) {
         atom.config.set('omnisharp-atom:feature-white-list', true);
         atom.config.set('omnisharp-atom:feature-list', features);
 
-        waitsForPromise(() => atom.packages.activatePackage('omnisharp-atom'))
+        waitsForPromise(() => atom.packages.activatePackage('omnisharp-atom')
+            .then((pack: Atom.Package) => pack.mainModule._started.toPromise())
+        );
     });
 
     afterEach(() => {

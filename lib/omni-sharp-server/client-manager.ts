@@ -219,7 +219,7 @@ class SolutionManager {
         if (this._unitTestMode_) return;
         var solution = this._solutions.get(candidate);
 
-        var refCountDisposable = this._temporarySolutions.has(solution) && this._temporarySolutions.get(solution);
+        var refCountDisposable = solution && this._temporarySolutions.has(solution) && this._temporarySolutions.get(solution);
         if (refCountDisposable) {
             refCountDisposable.dispose();
             if (!refCountDisposable.isDisposed) {
@@ -228,9 +228,11 @@ class SolutionManager {
         }
 
         // keep track of the removed solutions
-        solution.disconnect();
-        var disposable = this._disposableSolutionMap.get(solution);
-        if (disposable) disposable.dispose();
+        if (solution) {
+            solution.disconnect();
+            var disposable = this._disposableSolutionMap.get(solution);
+            if (disposable) disposable.dispose();
+        }
     }
 
     private getSolutionForActiveEditor() {

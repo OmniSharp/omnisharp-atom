@@ -11,7 +11,6 @@ describe('Code Format', () => {
 
         runs(() => {
             var commands: any = atom.commands;
-            console.log(Object.keys(commands.registeredCommands));
 
             expect(commands.registeredCommands['omnisharp-atom:code-format']).toBeTruthy();
             expect(commands.registeredCommands['omnisharp-atom:code-format-on-semicolon']).toBeTruthy();
