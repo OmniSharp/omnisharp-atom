@@ -33,7 +33,7 @@ interface Suggestion {
 }
 
 function calcuateMovement(previous: RequestOptions, current: RequestOptions) {
-    if (!current) return { reset: true, current: current };
+    if (!current) return { reset: true, current: current, previous: null };
     // If the row changes we moved lines, we should refetch the completions
     // (Is it possible it will be the same set?)
     var row = Math.abs(current.bufferPosition.row - previous.bufferPosition.row) > 0;

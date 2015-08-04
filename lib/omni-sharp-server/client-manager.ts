@@ -145,7 +145,7 @@ class SolutionManager {
         this._solutionDisposable.add(cd);
         this._disposableSolutionMap.set(solution, cd);
         cd.add(Disposable.create(() => {
-            _.pull(this.activeClients, solution);
+            _.pull(this._activeSolutions, solution);
             this._solutions.delete(candidate);
 
             if (this._temporarySolutions.has(solution)) {
@@ -153,7 +153,7 @@ class SolutionManager {
             }
 
             if (this._activeSolution.getValue() === solution) {
-                this._activeSolution.onNext(this.activeClients.length ? this.activeClients[0] : null);
+                this._activeSolution.onNext(this._activeSolutions.length ? this._activeSolutions[0] : null);
             }
         }));
         cd.add(solution);
@@ -171,8 +171,8 @@ class SolutionManager {
             this._temporarySolutions.set(solution, new RefCountDisposable(tempD));
         }
 
-        this.activeClients.push(solution);
-        if (this.activeClients.length === 1)
+        this._activeSolutions.push(solution);
+        if (this._activeSolutions.length === 1)
             this._activeSolution.onNext(solution);
 
         // Auto start, with a little delay
@@ -331,7 +331,7 @@ class SolutionManager {
     }
 
     private _isPartOfSolution<T>(location: string, cb: (intersect: string, solution: Solution) => T) {
-        for (var solution of this.activeClients) {
+        for (var solution of this._activeSolutions) {
             var paths = solution.model.projects.map(z => z.path);
             var intersect = intersectPath(location, paths);
             if (intersect) {

@@ -102,7 +102,7 @@ export class CodeCheckOutputWindow<T extends ICodeCheckOutputWindowProps> extend
             tabIndex: -1,
         },
             React.DOM.ol({
-                style: { cursor: "pointer" },
+                style: <any>{ cursor: "pointer" },
             }, _.map(this.state.diagnostics, (error, index) =>
                 React.DOM.li({
                     key: `code-check-${error.LogLevel}-${error.FileName}-(${error.Line}-${error.Column})-(${error.EndLine}-${error.EndColumn})-(${error.Projects.join('-')})`,

@@ -98,7 +98,7 @@ class Omni implements Rx.IDisposable {
     }
 
     public navigateTo(response: { FileName: string; Line: number; Column: number; }) {
-        atom.workspace.open(response.FileName, {initialLine: response.Line, initialColumn: response.Column})
+        atom.workspace.open(response.FileName, <any>{initialLine: response.Line, initialColumn: response.Column})
             .then((editor) => {
                 editor.setCursorBufferPosition([response.Line && response.Line, response.Column && response.Column])
             });
@@ -208,6 +208,14 @@ class Omni implements Rx.IDisposable {
     */
     public get combination() {
         return manager.combinationClient;
+    }
+
+    /**
+    * This property gets a list of clients as an observable.
+    * NOTE: This property will not emit additions or removals of clients.
+    */
+    public get clients() {
+        return Observable.defer(() => Observable.from(manager.activeClients));
     }
 
     /**

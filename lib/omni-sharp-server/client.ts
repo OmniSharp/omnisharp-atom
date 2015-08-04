@@ -5,6 +5,7 @@ import {OmnisharpClientV2 as OmnisharpClient, DriverState, OmnisharpClientOption
 interface ClientOptions extends OmnisharpClientOptions {
     temporary: boolean;
     repository: Atom.GitRepository;
+    index: number;
 }
 
 import {ViewModel} from "./view-model";

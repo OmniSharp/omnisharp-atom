@@ -116,7 +116,7 @@ class OmniSharpAtom {
             .where(file => /\.js$/.test(file))
             .flatMap(file => Observable.fromNodeCallback(fs.stat)(`${featureDir}/${file}`).map(stat => ({ file, stat })))
             .where(z => !z.stat.isDirectory())
-            .map(z => ({ file: `${folder}/${path.basename(z.file)}`, load: () => Observable.from<OmniSharp.IFeature>(loadFeature(z.file)) }));
+            .map(z => ({ file: `${folder}/${path.basename(z.file)}`.replace(/\.js$/, ''), load: () => Observable.from<OmniSharp.IFeature>(loadFeature(z.file)) }));
     }
 
     private detectAutoToggleGrammar(editor: Atom.TextEditor) {

@@ -1,7 +1,5 @@
 import Omni = require('../../lib/omni-sharp-server/omni');
-import ClientManager = require('../../lib/omni-sharp-server/client-manager');
-import {DriverState} from "omnisharp-client";
-import {Observable, CompositeDisposable, AsyncSubject} from "rx";
+import {CompositeDisposable} from "rx";
 import {setupFeature, restoreBuffers} from "../test-helpers";
 import {codeFormat} from "../../lib/omnisharp-atom/features/code-format";
 

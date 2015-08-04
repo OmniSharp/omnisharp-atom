@@ -7,8 +7,9 @@ interface LinterError {
     type: string; // 'error' | 'warning'
     text?: string;
     html?: string;
-    filePath?: string,
-    range?: Range
+    filePath?: string;
+    range?: Range;
+    [key: string]: any;
 }
 
 function getWordAt(str: string, pos: number) {

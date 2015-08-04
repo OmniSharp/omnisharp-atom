@@ -1,16 +1,17 @@
 import ClientManager = require('../lib/omni-sharp-server/client-manager');
 import {CompositeDisposable, Disposable, Observable} from "rx";
+import {DriverState} from "omnisharp-client";
 
 if ((<any>jasmine.getEnv()).defaultTimeoutInterval < 30000) (<any>jasmine.getEnv()).defaultTimeoutInterval = 30000;
 if ((<any>jasmine.getEnv()).defaultTimeoutInterval === 60000) (<any>jasmine.getEnv()).defaultTimeoutInterval = 60000 * 3;
 
 ClientManager.observationClient.errors.subscribe(error => console.error(JSON.stringify(error)));
-ClientManager.observationClient.events.subscribe(event => console.info(`server event: ${JSON.stringify(event)}`));
-ClientManager.observationClient.requests.subscribe(r => console.info(`request: ${JSON.stringify(r)}`));
-ClientManager.observationClient.responses.subscribe(r => console.info(`response: ${JSON.stringify(r)}`));
+ClientManager.observationClient.events.subscribe(event => console.info(`server event: ${JSON.stringify(event) }`));
+ClientManager.observationClient.requests.subscribe(r => console.info(`request: ${JSON.stringify(r) }`));
+ClientManager.observationClient.responses.subscribe(r => console.info(`response: ${JSON.stringify(r) }`));
 
 export function setupFeature(features: string[], unitTestMode = true) {
-    var cd : CompositeDisposable;
+    var cd: CompositeDisposable;
     beforeEach(function() {
         cd = new CompositeDisposable();
         ClientManager._unitTestMode_ = unitTestMode;
@@ -63,10 +64,24 @@ export function restoreBuffers() {
                             Buffer: buffer,
                             FileName: path
                         }))
-                    );
+                );
 
                 iteratee = iterator.next();
             }
         }
     });
+}
+
+export function openEditor(file: string) {
+    return Observable.fromPromise(atom.workspace.open(file))
+        .flatMap(editor =>
+            ClientManager.getClientForEditor(editor).map(client => ({
+                editor,
+                client: client
+            }))
+        )
+        .flatMap(({editor, client}) => client.state.startWith(client.currentState).map(state=> ({ editor, client, state: state })))
+        .where(z => z.state === DriverState.Connected)
+        .take(1)
+        .toPromise();
 }
