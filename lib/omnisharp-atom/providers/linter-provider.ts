@@ -1,4 +1,4 @@
-import Omni = require('../../../omni-sharp-server/omni')
+import Omni = require('../../omni-sharp-server/omni')
 var Range = require('atom').Range;
 import _ = require('lodash');
 import {Observable, CompositeDisposable} from "rx";

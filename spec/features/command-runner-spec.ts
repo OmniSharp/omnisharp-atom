@@ -16,13 +16,17 @@ describe('Command Runner', () => {
         runs(() => {
             var commands: any = atom.commands;
             console.log(Object.keys(commands.registeredCommands));
+
             if (win32) {
                 expect(commands.registeredCommands['omnisharp-dnx:commands-[web]-(watch)']).toBeTruthy();
             } else {
                 expect(commands.registeredCommands['omnisharp-dnx:commands-[kestrel]-(watch)']).toBeTruthy();
             }
+
             expect(commands.registeredCommands['omnisharp-dnx:commands-[run]']).toBeTruthy();
             disposable.dispose();
         });
     });
+
+    // TODO: Add Tests for the daemon
 });

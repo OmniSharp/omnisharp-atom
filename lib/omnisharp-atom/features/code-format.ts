@@ -1,6 +1,6 @@
 import {CompositeDisposable} from "rx";
 import Omni = require('../../omni-sharp-server/omni')
-import Changes = require('./lib/apply-changes');
+import Changes = require('../providers/apply-changes');
 
 class CodeFormat implements OmniSharp.IFeature {
     private disposable: Rx.CompositeDisposable;

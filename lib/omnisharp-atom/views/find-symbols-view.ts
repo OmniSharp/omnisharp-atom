@@ -1,4 +1,4 @@
-import OmniSelectListView = require('../features/lib/omni-select-list-view');
+import OmniSelectListView = require('../providers/omni-select-list-view');
 import Omni = require('../../omni-sharp-server/omni');
 
 class FindSymbolsView extends OmniSelectListView {

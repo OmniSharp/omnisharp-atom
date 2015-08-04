@@ -1,5 +1,5 @@
-import Omni = require('../../../omni-sharp-server/omni')
-import OmniSharpAtom = require('../../omnisharp-atom');
+import Omni = require('../../omni-sharp-server/omni')
+import OmniSharpAtom = require('../omnisharp-atom');
 
 import _ = require('lodash')
 import {Subject, BehaviorSubject, Observable, CompositeDisposable} from 'rx';

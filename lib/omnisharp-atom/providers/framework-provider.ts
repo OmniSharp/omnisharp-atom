@@ -1,7 +1,7 @@
 import * as _ from "lodash";
 import {Observable} from "rx";
-import Omni = require('../../../omni-sharp-server/omni');
-import Manager = require("../../../omni-sharp-server/client-manager");
+import Omni = require('../../omni-sharp-server/omni');
+import Manager = require("../../omni-sharp-server/client-manager");
 import {ajax} from "jquery";
 var filter = require('fuzzaldrin').filter;
 

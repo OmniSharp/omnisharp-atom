@@ -2,7 +2,7 @@ import _ = require('lodash')
 import {CompositeDisposable} from "rx";
 import RenameView = require('../views/rename-view')
 import Omni = require('../../omni-sharp-server/omni');
-import Changes = require('./lib/apply-changes')
+import Changes = require('../providers/apply-changes')
 
 class Rename implements OmniSharp.IFeature {
     private disposable: Rx.CompositeDisposable;

@@ -1,10 +1,25 @@
 import Omni = require('../../lib/omni-sharp-server/omni');
 import {CompositeDisposable} from "rx";
-import {setupFeature, restoreBuffers} from "../test-helpers";
+import {setupFeature, restoreBuffers, openEditor} from "../test-helpers";
 import {codeFormat} from "../../lib/omnisharp-atom/features/code-format";
 
 describe('Code Format', () => {
     setupFeature(['features/code-format']);
+
+    it('adds commands', () => {
+        var disposable = new CompositeDisposable();
+
+        runs(() => {
+            var commands: any = atom.commands;
+            console.log(Object.keys(commands.registeredCommands));
+
+            expect(commands.registeredCommands['omnisharp-atom:code-format']).toBeTruthy();
+            expect(commands.registeredCommands['omnisharp-atom:code-format-on-semicolon']).toBeTruthy();
+            expect(commands.registeredCommands['omnisharp-atom:code-format-on-curly-brace']).toBeTruthy();
+
+            disposable.dispose();
+        });
+    });
 
     it('formats code', () => {
         var d = restoreBuffers();

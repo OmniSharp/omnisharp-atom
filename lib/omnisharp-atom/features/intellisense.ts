@@ -1,7 +1,7 @@
 import {CompositeDisposable} from "rx";
 import {defer} from "lodash";
 import Omni = require('../../omni-sharp-server/omni')
-import {CompletionProvider} from "./lib/completion-provider";
+import {CompletionProvider} from "../providers/completion-provider";
 
 class Intellisense implements OmniSharp.IFeature {
     private disposable: Rx.CompositeDisposable;
