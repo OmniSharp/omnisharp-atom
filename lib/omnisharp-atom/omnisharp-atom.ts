@@ -205,22 +205,22 @@ class OmniSharpAtom {
     }
 
     public provideAutocomplete() {
-        var {CompletionProvider} = require("./features/lib/completion-provider");
+            var {CompletionProvider} = require("./services/completion-provider");
         this.disposable.add(CompletionProvider);
         return CompletionProvider;
     }
 
     public provideLinter() {
-        var LinterProvider = require("./features/lib/linter-provider");
+        var LinterProvider = require("./services/linter-provider");
         return LinterProvider.provider;
     }
 
     public provideProjectJson() {
-        return require("./features/lib/project-provider").concat(require('./features/lib/framework-provider'));
+        return require("./services/project-provider").concat(require('./services/framework-provider'));
     }
 
     public consumeLinter(linter) {
-        var LinterProvider = require("./features/lib/linter-provider");
+        var LinterProvider = require("./services/linter-provider");
         var linters = LinterProvider;
 
         this.disposable.add(Disposable.create(() => {
