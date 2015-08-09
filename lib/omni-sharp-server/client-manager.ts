@@ -5,6 +5,36 @@ import Solution = require('./client');
 import {AtomProjectTracker} from "./atom-projects";
 import {ObservationClient, CombinationClient} from './composite-client';
 import {findCandidates, DriverState} from "omnisharp-client";
+import {GenericSelectListView} from "../omnisharp-atom/views/generic-list-view";
+
+function candidateFinder(directory: string, console: any) {
+    return findCandidates(directory, console)
+        .flatMap(candidates => {
+            var slns = _.filter(candidates, x => _.endsWith(x, '.sln'));
+            if (slns.length > 1) {
+                var items = _.difference(candidates, slns);
+                var asyncResult = new AsyncSubject<string[]>();
+                asyncResult.onNext(items);
+                // handle multiple solutions.
+                var listView = new GenericSelectListView(
+                    "Please select a solution to load?",
+                    slns.map(x => ({ displayName: x, name: x })),
+                    (result: any) => {
+                        items.unshift(result);
+                        asyncResult.onCompleted();
+                    },
+                    () => {
+                        asyncResult.onCompleted();
+                    }
+                );
+                _.defer(() => listView.toggle());
+
+                return asyncResult;
+            } else {
+                return Observable.just(candidates);
+            }
+        });
+}
 
 class SolutionManager {
     public _unitTestMode_ = false;
@@ -113,7 +143,7 @@ class SolutionManager {
         this._disposable.add(this._atomProjects.added
             .where(project => !this._solutionProjects.has(project))
             .map(project => {
-                return findCandidates(project, console)
+                return candidateFinder(project, console)
                     .flatMap(candidates => addCandidatesInOrder(candidates, candidate => this.addSolution(candidate, { project })));
             })
             .subscribe(candidateObservable => {
@@ -202,14 +232,14 @@ class SolutionManager {
             .debounce(100)
             .take(1)
             .map(() => solution)
-            .timeout(10000) // Wait 10 seconds for the project to load.
+            .timeout(15000) // Wait 30 seconds for the project to load.
             .subscribe(() => {
                 // We loaded successfully return the solution
                 result.onNext(solution);
-                result.onCompleted()
+                result.onCompleted();
             }, () => {
                 // Move along.
-                result.onCompleted()
+                result.onCompleted();
             }));
 
         return result;
@@ -423,7 +453,7 @@ class SolutionManager {
                 }));
         }
 
-        var foundCandidates = findCandidates(directory, console)
+        var foundCandidates = candidateFinder(directory, console)
             .subscribe(cb);
 
         return subject;
