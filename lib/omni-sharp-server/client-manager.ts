@@ -7,6 +7,7 @@ import {ObservationClient, CombinationClient} from './composite-client';
 import {findCandidates, DriverState} from "omnisharp-client";
 import {GenericSelectListView} from "../omnisharp-atom/views/generic-list-view";
 
+var openSelectList: GenericSelectListView;
 function candidateFinder(directory: string, console: any) {
     return findCandidates(directory, console)
         .flatMap(candidates => {
@@ -15,6 +16,7 @@ function candidateFinder(directory: string, console: any) {
                 var items = _.difference(candidates, slns);
                 var asyncResult = new AsyncSubject<string[]>();
                 asyncResult.onNext(items);
+
                 // handle multiple solutions.
                 var listView = new GenericSelectListView(
                     "Please select a solution to load?",
@@ -27,7 +29,18 @@ function candidateFinder(directory: string, console: any) {
                         asyncResult.onCompleted();
                     }
                 );
-                _.defer(() => listView.toggle());
+
+                // Show the view
+                if (openSelectList) {
+                    openSelectList.onClosed.subscribe(() => {
+                        _.defer(() => listView.toggle());
+                    });
+                } else {
+                    _.defer(() => listView.toggle());
+                }
+
+                asyncResult.doOnCompleted(() => openSelectList = null);
+                openSelectList = listView;
 
                 return asyncResult;
             } else {
@@ -47,6 +60,7 @@ class SolutionManager {
     private _solutionProjects = new Map<string, Solution>();
     private _temporarySolutions = new WeakMap<Solution, RefCountDisposable>();
     private _disposableSolutionMap = new WeakMap<Solution, Disposable>();
+    private _findSolutionCache = new Map<string, Observable<[string, Solution, boolean]>>();
 
     private _activated = false;
     private _nextIndex = 0;
@@ -122,6 +136,7 @@ class SolutionManager {
         this._solutions.clear();
         this._solutionProjects.clear();
         this.disconnect();
+        this._findSolutionCache.clear();
         //this._temporarySolutions.clear();
         //this._disposableSolutionMap.clear();
     }
@@ -410,6 +425,13 @@ class SolutionManager {
             return this.activatedSubject.take(1)
                 .flatMap(() => this.findSolutionForUnderlyingPath(location, isCsx));
         }
+
+        if (this._findSolutionCache.has(location)) {
+            return this._findSolutionCache.get(location);
+        }
+
+        this._findSolutionCache.set(location, subject);
+        subject.tapOnCompleted(() => this._findSolutionCache.delete(location));
 
         var project = intersectPath(directory, this._atomProjects.paths);
         var cb = (candidates: string[]) => {

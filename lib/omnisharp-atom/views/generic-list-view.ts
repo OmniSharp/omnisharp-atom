@@ -1,10 +1,14 @@
 import spacePen = require("atom-space-pen-views");
 import _ = require('lodash');
+import {AsyncSubject} from "rx";
 
 export class GenericSelectListView extends spacePen.SelectListView {
     private panel: Atom.Panel;
     private previouslyFocusedElement: Node;
     private eventElement: any;
+    private _onClosed = new AsyncSubject<boolean>();
+    public get onClosed() : Rx.Observable<boolean> { return this._onClosed; };
+
     public message: JQuery;
 
     constructor(private messageText: string, public _items: { displayName: string; name: string; }[], public onConfirm: (result: any) => void, public onCancel: () => void) {
@@ -72,6 +76,9 @@ export class GenericSelectListView extends spacePen.SelectListView {
     }
 
     public hide() {
+        this._onClosed.onNext(true);
+        this._onClosed.onCompleted();
+
         this.panel && this.panel.hide();
         this.panel.destroy();
         this.panel = null;
@@ -92,8 +99,8 @@ export class GenericSelectListView extends spacePen.SelectListView {
     }
 
     public confirmed(item?: any): spacePen.View {
-        this.hide();
         this.onConfirm(item.name);
+        this.cancel();
 
         return null;
     }
