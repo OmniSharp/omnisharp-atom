@@ -461,8 +461,7 @@ class SolutionManager {
                     asyncResult.onNext(items);
 
                     // handle multiple solutions.
-                    var listView = new GenericSelectListView(
-                        "Please select a solution to load.",
+                    var listView = new GenericSelectListView('',
                         slns.map(x => ({ displayName: x, name: x })),
                         (result: any) => {
                             items.unshift(result);
@@ -474,6 +473,8 @@ class SolutionManager {
                             asyncResult.onCompleted();
                         }
                     );
+
+                    listView.message.text('Please select a solution to load.');
 
                     // Show the view
                     if (openSelectList) {
