@@ -8,47 +8,6 @@ import {findCandidates, DriverState} from "omnisharp-client";
 import {GenericSelectListView} from "../omnisharp-atom/views/generic-list-view";
 
 var openSelectList: GenericSelectListView;
-function candidateFinder(directory: string, console: any) {
-    return findCandidates(directory, console)
-        .flatMap(candidates => {
-            var slns = _.filter(candidates, x => _.endsWith(x, '.sln'));
-            if (slns.length > 1) {
-                var items = _.difference(candidates, slns);
-                var asyncResult = new AsyncSubject<string[]>();
-                asyncResult.onNext(items);
-
-                // handle multiple solutions.
-                var listView = new GenericSelectListView(
-                    "Please select a solution to load?",
-                    slns.map(x => ({ displayName: x, name: x })),
-                    (result: any) => {
-                        items.unshift(result);
-                        asyncResult.onCompleted();
-                    },
-                    () => {
-                        asyncResult.onCompleted();
-                    }
-                );
-
-                // Show the view
-                if (openSelectList) {
-                    openSelectList.onClosed.subscribe(() => {
-                        _.defer(() => listView.toggle());
-                    });
-                } else {
-                    _.defer(() => listView.toggle());
-                }
-
-                asyncResult.doOnCompleted(() => openSelectList = null);
-                openSelectList = listView;
-
-                return asyncResult;
-            } else {
-                return Observable.just(candidates);
-            }
-        });
-}
-
 class SolutionManager {
     public _unitTestMode_ = false;
     private _disposable: CompositeDisposable;
@@ -61,6 +20,7 @@ class SolutionManager {
     private _temporarySolutions = new WeakMap<Solution, RefCountDisposable>();
     private _disposableSolutionMap = new WeakMap<Solution, Disposable>();
     private _findSolutionCache = new Map<string, Observable<[string, Solution, boolean]>>();
+    private _candidateFinderCache = new Set<string>();
 
     private _activated = false;
     private _nextIndex = 0;
@@ -158,7 +118,7 @@ class SolutionManager {
         this._disposable.add(this._atomProjects.added
             .where(project => !this._solutionProjects.has(project))
             .map(project => {
-                return candidateFinder(project, console)
+                return this.candidateFinder(project, console)
                     .flatMap(candidates => addCandidatesInOrder(candidates, candidate => this.addSolution(candidate, { project })));
             })
             .subscribe(candidateObservable => {
@@ -171,6 +131,11 @@ class SolutionManager {
     }
 
     private addSolution(candidate: string, {temporary = false, project}: { delay?: number; temporary?: boolean; project?: string; }) {
+        var projectPath = candidate;
+        if (_.endsWith(candidate, '.sln')) {
+            candidate = path.dirname(candidate);
+        }
+
         if (this._solutions.has(candidate))
             return Observable.just(this._solutions.get(candidate));
 
@@ -179,7 +144,7 @@ class SolutionManager {
         }
 
         var solution = new Solution({
-            projectPath: candidate,
+            projectPath: projectPath,
             index: ++this._nextIndex,
             temporary: temporary,
             repository: this.findRepositoryForPath(candidate)
@@ -262,6 +227,11 @@ class SolutionManager {
 
     private removeSolution(candidate: string) {
         if (this._unitTestMode_) return;
+
+        if (_.endsWith(candidate, '.sln')) {
+            candidate = path.dirname(candidate);
+        }
+
         var solution = this._solutions.get(candidate);
 
         var refCountDisposable = solution && this._temporarySolutions.has(solution) && this._temporarySolutions.get(solution);
@@ -475,10 +445,56 @@ class SolutionManager {
                 }));
         }
 
-        var foundCandidates = candidateFinder(directory, console)
+        var foundCandidates = this.candidateFinder(directory, console)
             .subscribe(cb);
 
         return subject;
+    }
+
+    private candidateFinder(directory: string, console: any) {
+        return findCandidates(directory, console)
+            .flatMap(candidates => {
+                var slns = _.filter(candidates, x => _.endsWith(x, '.sln'));
+                if (slns.length > 1) {
+                    var items = _.difference(candidates, slns);
+                    var asyncResult = new AsyncSubject<string[]>();
+                    asyncResult.onNext(items);
+
+                    // handle multiple solutions.
+                    var listView = new GenericSelectListView(
+                        "Please select a solution to load.",
+                        slns.map(x => ({ displayName: x, name: x })),
+                        (result: any) => {
+                            items.unshift(result);
+                            _.each(candidates, x => this._candidateFinderCache.add(x));
+
+                            asyncResult.onCompleted();
+                        },
+                        () => {
+                            asyncResult.onCompleted();
+                        }
+                    );
+
+                    // Show the view
+                    if (openSelectList) {
+                        openSelectList.onClosed.subscribe(() => {
+                            if (!_.any(slns, x => this._candidateFinderCache.has(x)))
+                                _.defer(() => listView.toggle());
+                            else
+                                asyncResult.onCompleted();
+                        });
+                    } else {
+                        _.defer(() => listView.toggle());
+                    }
+
+                    asyncResult.doOnCompleted(() => openSelectList = null);
+                    openSelectList = listView;
+
+                    return asyncResult;
+                } else {
+                    return Observable.just(candidates);
+                }
+            });
     }
 
     private setupDisposableForTemporaryClient(solution: Solution, editor: Atom.TextEditor) {

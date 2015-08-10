@@ -12,7 +12,6 @@ import {world} from './world';
 class OmniSharpAtom {
     private features: OmniSharp.IFeature[] = [];
     private disposable: Rx.CompositeDisposable;
-    private generator: { run(generator: string, path?: string, options?: any): void; start(prefix: string, path?: string, options?: any): void; };
     private menu: EventKit.Disposable;
 
     // Internal: Used by unit testing to make sure the plugin is completely activated.
@@ -31,8 +30,6 @@ class OmniSharpAtom {
             this.configureKeybindings();
 
             this.disposable.add(atom.commands.add('atom-workspace', 'omnisharp-atom:toggle', () => this.toggle()));
-            this.disposable.add(atom.commands.add('atom-workspace', 'omnisharp-atom:new-application', () => this.generator.run("aspnet:app", undefined, { promptOnZeroDirectories: true })));
-            this.disposable.add(atom.commands.add('atom-workspace', 'omnisharp-atom:new-class', () => this.generator.run("aspnet:Class", undefined, { promptOnZeroDirectories: true })));
             this.disposable.add(Disposable.create(() => {
                 this.features = [];
             }));
@@ -200,12 +197,13 @@ class OmniSharpAtom {
         f.frameworkSelector.setup(statusBar);
     }
 
-    public consumeYeomanEnvironment(generatorService: { run(generator: string, path: string): void; start(prefix: string, path: string): void; }) {
-        this.generator = generatorService;
+    public consumeYeomanEnvironment(generatorService) {
+        var {generatorAspnet} = require("./atom/generator-aspnet");
+        generatorAspnet.setup(generatorService);
     }
 
     public provideAutocomplete() {
-            var {CompletionProvider} = require("./services/completion-provider");
+        var {CompletionProvider} = require("./services/completion-provider");
         this.disposable.add(CompletionProvider);
         return CompletionProvider;
     }
