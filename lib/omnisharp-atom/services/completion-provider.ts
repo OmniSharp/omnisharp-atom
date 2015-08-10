@@ -4,7 +4,6 @@ import OmniSharpAtom = require('../omnisharp-atom');
 import _ = require('lodash')
 import {Subject, BehaviorSubject, Observable, CompositeDisposable} from 'rx';
 import Promise = require('bluebird');
-var escape = require("escape-html");
 var filter = require('fuzzaldrin').filter;
 
 interface RequestOptions {
@@ -166,7 +165,7 @@ function makeSuggestion(item: OmniSharp.Models.AutoCompleteResponse) {
         snippet: item.Snippet,
         type: type,
         iconHTML: iconHTML,
-        displayText: escape(item.DisplayText),
+        displayText: item.DisplayText,
         className: 'autocomplete-omnisharp-atom',
         description: description,
         leftLabel: leftLabel,
