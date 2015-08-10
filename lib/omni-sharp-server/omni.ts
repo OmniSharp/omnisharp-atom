@@ -38,6 +38,9 @@ class Omni implements Rx.IDisposable {
     public get isOff() { return this._isOff; }
     public get isOn() { return !this.isOff; }
 
+    private _validGammarNames = ['C#', 'C# Script File'];
+    public get validGammarNames() { return this._validGammarNames.slice(); };
+
     public activate() {
         var openerDisposable = makeOpener();
         this.disposable = new CompositeDisposable;
@@ -46,7 +49,7 @@ class Omni implements Rx.IDisposable {
         // we are only off if all our clients are disconncted or erroed.
         this.disposable.add(manager.combinationClient.state.subscribe(z => this._isOff = _.all(z, x => x.value === DriverState.Disconnected || x.value === DriverState.Error)));
 
-        this._editors = Omni.createTextEditorObservable(['C#', 'C# Script File'], this.disposable);
+        this._editors = Omni.createTextEditorObservable(this.validGammarNames, this.disposable);
         this._configEditors = Omni.createTextEditorObservable(['JSON'], this.disposable);
 
         this.disposable.add(atom.workspace.observeActivePaneItem((pane: any) => {
