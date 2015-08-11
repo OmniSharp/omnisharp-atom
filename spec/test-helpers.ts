@@ -2,13 +2,6 @@ import ClientManager = require('../lib/omni-sharp-server/client-manager');
 import {CompositeDisposable, Disposable, Observable} from "rx";
 import {DriverState} from "omnisharp-client";
 
-
-
-
-
-
-
-
 if ((<any>jasmine.getEnv()).defaultTimeoutInterval < 30000) (<any>jasmine.getEnv()).defaultTimeoutInterval = 30000;
 if ((<any>jasmine.getEnv()).defaultTimeoutInterval === 60000) (<any>jasmine.getEnv()).defaultTimeoutInterval = 60000 * 3;
 
