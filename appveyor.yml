@@ -6,6 +6,9 @@ install:
   - appveyor DownloadFile https://atom.io/download/windows -FileName AtomSetup.exe
   - AtomSetup.exe /silent
   - set PATH=%LOCALAPPDATA%\atom\bin;%GOPATH%\bin;c:\go\bin;%PATH%
+  - ps: &{$Branch='dev';iex ((new-object net.webclient).DownloadString('https://raw.githubusercontent.com/aspnet/Home/dev/dnvminstall.ps1'))}
+  - dnvm install 1.0.0-beta4
+  - dnvm upgrade
   - apm install atom-yeoman
   - apm install linter
   - apm install json-schema
