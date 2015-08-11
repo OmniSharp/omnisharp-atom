@@ -64,11 +64,11 @@ let _cacheClearOnForce = new Subject<RequestOptions>();
 
 // Only issue new requests when ever a cache change event occurs.
 let _requestStream = Observable.merge(_clearCacheOnDot, _clearCacheOnBufferMovement, _cacheClearOnForce)
-// This covers us incase both return the same value.
+    // This covers us incase both return the same value.
     .distinctUntilChanged()
-// Make the request
+    // Make the request
     .flatMapLatest(options => Omni.request(client => client.autocomplete(client.makeDataRequest(autoCompleteOptions))))
-// Ensure the array is not null;
+    // Ensure the array is not null;
     .map(completions => completions || [])
     .share();
 
@@ -108,11 +108,12 @@ let setupSubscriptions = () => {
     // TODO: Update atom typings
     disposable.add(atom.commands.onWillDispatch(function(event: Event) {
         if (event.type === "autocomplete-plus:activate" || event.type === "autocomplete-plus:confirm" || event.type === "autocomplete-plus:cancel") {
+            _cacheClearOnForce.onNext(_currentOptions);
             clearCacheValue();
         }
 
         if (event.type === "autocomplete-plus:activate" && _currentOptions) {
-            _cacheClearOnForce.onNext(_currentOptions);
+            //_cacheClearOnForce.onNext(_currentOptions);
         }
     }));
 
@@ -223,10 +224,10 @@ function dispose() {
 export var CompletionProvider = {
     selector: '.source.cs, .source.csx',
     disableForSelector: 'source.cs .comment',
-    inclusionPriority: 3,
-    excludeLowerPriority: false,
+    inclusionPriority: 1,
+    suggestionPriority: 10,
+    excludeLowerPriority: true,
     getSuggestions,
-    //getSuggestions: _.throttle(getSuggestions, 0),
     onDidInsertSuggestion,
     dispose
 }
