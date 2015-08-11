@@ -2,6 +2,13 @@ import ClientManager = require('../lib/omni-sharp-server/client-manager');
 import {CompositeDisposable, Disposable, Observable} from "rx";
 import {DriverState} from "omnisharp-client";
 
+
+
+
+
+
+
+
 if ((<any>jasmine.getEnv()).defaultTimeoutInterval < 30000) (<any>jasmine.getEnv()).defaultTimeoutInterval = 30000;
 if ((<any>jasmine.getEnv()).defaultTimeoutInterval === 60000) (<any>jasmine.getEnv()).defaultTimeoutInterval = 60000 * 3;
 
@@ -19,7 +26,8 @@ export function setupFeature(features: string[], unitTestMode = true) {
         atom.config.set('omnisharp-atom:feature-white-list', true);
         atom.config.set('omnisharp-atom:feature-list', features);
 
-        waitsForPromise(() => atom.packages.activatePackage('omnisharp-atom')
+        waitsForPromise(() => atom.packages.activatePackage('language-csharp')
+            .then(() => atom.packages.activatePackage('omnisharp-atom'))
             .then((pack: Atom.Package) => pack.mainModule._started.toPromise())
         );
     });
