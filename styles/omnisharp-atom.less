@@ -124,6 +124,7 @@
     top: 0 !important;
 }
 .messages-container {
+
     //height: 150px;
     overflow-y: scroll;
 }
@@ -315,23 +316,38 @@ li.autocomplete-omnisharp-atom {
         color: @text-color-warning;
     }
 }
+
 span.filename {
     color: #666;
 }
+
 li.selected span.filename {
     text-shadow: none;
     color: #aaa;
 }
 
-
 .gutter .line-number {
-    background-size: 0px;
-    transition: background-size .5s;
-    &.quickfix
-    {
-        background-image: url('atom://omnisharp-atom/styles/light-bulb.png');
+    background-size: 0;
+    transition: background-size 0.5s;
+    &.quickfix {
+        background-image: url("atom://omnisharp-atom/styles/light-bulb.png");
         background-size: 3px;
         background-repeat: no-repeat;
         background-position: right center;
+    }
+}
+
+.codelens {
+    pointer-events: none;
+    .badge {
+        pointer-events: auto;
+        //background-color: darken(spin(@ui-site-color-1, 10), 10%);
+        border-radius: 20px;
+        cursor: pointer;
+        min-width: 0;
+        &:hover {
+            color: darken(@text-color-info, 14%);
+            background-color: lighten(@background-color-info, 14%);
+        }
     }
 }

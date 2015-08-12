@@ -14,13 +14,7 @@ class GoToDefinition implements OmniSharp.IFeature {
 
     public activate() {
         this.disposable = new CompositeDisposable();
-        this.disposable.add(Omni.activeEditor.where(z => !!z).subscribe((editor: Atom.TextEditor) => {
-            var cd = new CompositeDisposable();
-            cd.add(Omni.activeEditor.where(e => e !== editor).subscribe(() => {
-                cd.dispose();
-                this.disposable.add(cd);
-            }));
-
+        this.disposable.add(Omni.switchActiveEditor((editor, cd) => {
             var view = $(atom.views.getView(editor));
             var scroll = this.getFromShadowDom(view, '.scroll-view');
             var click = Observable.fromEvent<MouseEvent>(scroll[0], 'click');

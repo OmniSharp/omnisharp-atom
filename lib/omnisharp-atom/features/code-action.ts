@@ -30,7 +30,7 @@ class CodeAction implements OmniSharp.IFeature {
                 });
         }));
 
-        this.disposable.add(Omni.activeEditor.where(editor => !!editor).subscribe(editor => {
+        this.disposable.add(Omni.switchActiveEditor((editor, cd) => {
             var cd = new CompositeDisposable();
             cd.add(Omni.listener.observeGetcodeactions
                 .where(z => z.request.FileName === editor.getPath())
@@ -45,11 +45,6 @@ class CodeAction implements OmniSharp.IFeature {
                     marker = editor.markBufferRange(range);
                     editor.decorateMarker(marker, { type: "line-number", class: "quickfix" });
                 }));
-
-            cd.add(Omni.activeEditor.where(active => active !== editor).subscribe(() => {
-                cd.dispose();
-                this.disposable.remove(cd);
-            }));
 
             var word, marker: Atom.Marker, subscription: Rx.Disposable;
             var makeLightbulbRequest = (position: TextBuffer.Point) => {

@@ -48,6 +48,7 @@
         "./lib/omnisharp-atom/features/code-action.ts",
         "./lib/omnisharp-atom/features/code-check.ts",
         "./lib/omnisharp-atom/features/code-format.ts",
+        "./lib/omnisharp-atom/features/code-lens.ts",
         "./lib/omnisharp-atom/features/command-runner.ts",
         "./lib/omnisharp-atom/features/find-symbols.ts",
         "./lib/omnisharp-atom/features/find-usages.ts",

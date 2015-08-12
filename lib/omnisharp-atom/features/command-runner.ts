@@ -145,7 +145,7 @@ export class RunProcess {
     public output: { message: string }[] = [];
     public started = false;
     private id: string;
-    private process: NodeJS.ChildProcess;
+    private process: any;
 
     constructor(public project: ProjectViewModel, private command: string, private watch: boolean = false) {
         this.id = `${this.project.name}${this.command}`;
