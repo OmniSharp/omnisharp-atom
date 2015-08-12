@@ -32,7 +32,6 @@ class CommandRunner implements OmniSharp.IFeature {
 
     public activate() {
         this.disposable = new CompositeDisposable();
-
         this.disposable.add(
             Observable.merge(
                 // Get all currently defined projects
@@ -59,8 +58,34 @@ class CommandRunner implements OmniSharp.IFeature {
                 }
             }));
 
+        this.disposable.add(Omni.editors.subscribe(editor => {
+            var cd = new CompositeDisposable();
+
+            cd.add(editor.onDidSave(() => restart.onNext(editor)));
+            cd.add(editor.getBuffer().onDidReload(() => restart.onNext(editor)));
+        }));
+
         var processes = this._processesChanged = new Subject<RunProcess[]>();
         this.observe = { processes };
+
+        // Auto restart the process if a file changes for a project that applies
+        var restart = new Subject<Atom.TextEditor>();
+        this.disposable.add(restart);
+
+        this.disposable.add(restart
+            .where(z => !!this._watchProcesses.length)
+            .flatMap(editor =>
+                Omni.activeModel
+                    .concatMap(model => model.getProjectContainingEditor(editor))
+                    .take(1)
+                    .where(project => !!project))
+            .throttleFirst(1000)
+            .subscribe(project => {
+                each(this._watchProcesses, process => {
+                    if (project.solutionPath === process.project.solutionPath)
+                        process.stop();
+                });
+            }));
     }
 
     private addCommands(project: ProjectViewModel) {
@@ -120,8 +145,9 @@ export class RunProcess {
     public output: { message: string }[] = [];
     public started = false;
     private id: string;
+    private process: NodeJS.ChildProcess;
 
-    constructor(private project: ProjectViewModel, private command: string, private watch: boolean = false) {
+    constructor(public project: ProjectViewModel, private command: string, private watch: boolean = false) {
         this.id = `${this.project.name}${this.command}`;
         this.disposable.add(dock.addWindow(this.id, `${this.project.name} ${this.watch ? '--watch' : ''} ${this.command}`, CommandOutputWindow, this, {
             closeable: true,
@@ -139,9 +165,12 @@ export class RunProcess {
         this.disposable.add(solution);
     }
 
+    public stop() {
+        try { this.process.kill(); } catch (e) { }
+    }
+
     private bootRuntime(runtime: string) {
         var args = ['.', this.command];
-        var failed = false;
         if (this.watch) {
             args.unshift('--watch');
         }
@@ -150,7 +179,7 @@ export class RunProcess {
 
         this.started = true;
 
-        var process = spawn(runtime, args, {
+        var process = this.process = spawn(runtime, args, {
             cwd: this.project.path,
             env,
             stdio: 'pipe'
@@ -178,15 +207,16 @@ export class RunProcess {
 
         var disposable = Disposable.create(() => {
             this.started = false;
-            process.removeAllListeners();
-            try { process.kill(); } catch (e) { }
+            this.process.removeAllListeners();
+            this.stop();
+            this.disposable.remove(disposable);
         });
         this.disposable.add(disposable);
 
         var cb = () => {
             this.started = false;
             disposable.dispose();
-            if (this.watch && !failed)
+            if (this.watch)
                 this.bootRuntime(runtime);
         };
 

@@ -2,7 +2,7 @@ import * as _ from "lodash";
 import Client = require('./client');
 import {DriverState, OmnisharpClientStatus} from "omnisharp-client";
 import {Observable, Subject} from "rx";
-import {basename, dirname} from "path";
+import {basename, dirname, normalize} from "path";
 
 export class ProjectViewModel implements OmniSharp.IProjectViewModel {
     public path: string;
@@ -18,9 +18,11 @@ export class ProjectViewModel implements OmniSharp.IProjectViewModel {
         public solutionPath: string,
         frameworks: OmniSharp.Models.DnxFramework[] = [],
         public configurations: string[] = [],
-        public commands: { [key: string]: string } = <any>{}
-        ) {
+        public commands: { [key: string]: string } = <any>{},
+        public sourceFiles?: string[]
+    ) {
         this.path = dirname(path);
+        this.sourceFiles = (sourceFiles || []).map(normalize);
 
         this.frameworks = [{
             FriendlyName: 'All',
@@ -33,7 +35,7 @@ export class ProjectViewModel implements OmniSharp.IProjectViewModel {
             activeFramework: Observable.ofObjectChanges(this)
                 .where(z => z.name === "activeFramework")
                 .map(z => this.activeFramework)
-                .shareReplay(1)
+                .shareReplay(1);
         };
     }
 }
@@ -150,10 +152,8 @@ export class ViewModel {
                     this.msbuild.Projects.push(project);
                     this._projectAddedStream.onNext(
                         new ProjectViewModel(project.AssemblyName, project.Path, _client.path, [{
-                            FriendlyName: project.TargetFramework,
-                            Name: project.TargetFramework,
-                            ShortName: project.TargetFramework
-                        }]));
+                            FriendlyName: project.TargetFramework, Name: project.TargetFramework, ShortName: project.TargetFramework
+                        }], project.SourceFiles));
                 });
 
             _client.projectRemoved
@@ -171,10 +171,8 @@ export class ViewModel {
                     var current = _.find(this.projects, { path: project.Path });
                     if (current) {
                         var changed = new ProjectViewModel(project.AssemblyName, project.Path, _client.path, [{
-                            FriendlyName: project.TargetFramework,
-                            Name: project.TargetFramework,
-                            ShortName: project.TargetFramework
-                        }]);
+                            FriendlyName: project.TargetFramework, Name: project.TargetFramework, ShortName: project.TargetFramework
+                        }], project.SourceFiles);
                         _.assign(current, changed);
                         this._projectChangedStream.onNext(current);
                     }
@@ -187,7 +185,7 @@ export class ViewModel {
                 .subscribe(project => {
                     this.dnx.Projects.push(project);
                     this._projectAddedStream.onNext(
-                        new ProjectViewModel(project.Name, project.Path, _client.path, project.Frameworks, project.Configurations, project.Commands));
+                        new ProjectViewModel(project.Name, project.Path, _client.path, project.Frameworks, project.Configurations, project.Commands, project.SourceFiles));
                 });
 
             _client.projectRemoved
@@ -204,7 +202,7 @@ export class ViewModel {
                 .subscribe(project => {
                     var current = _.find(this.projects, { path: project.Path });
                     if (current) {
-                        var changed = new ProjectViewModel(project.Name, project.Path, _client.path, project.Frameworks, project.Configurations, project.Commands);
+                        var changed = new ProjectViewModel(project.Name, project.Path, _client.path, project.Frameworks, project.Configurations, project.Commands, project.SourceFiles);
                         _.assign(current, changed);
                         this._projectChangedStream.onNext(current);
                     }
@@ -221,9 +219,29 @@ export class ViewModel {
         if (this.isOn && this.projects.length) {
             o = Observable.just<ProjectViewModel>(_.find(this.projects, x => _.startsWith(path, x.path))).where(z => !!z);
         } else {
-            o = this._projectAddedStream.where(x => _.startsWith(path, x.path));
+            o = this._projectAddedStream.where(x => _.startsWith(path, x.path)).take(1);
         }
 
+        return o;
+    }
+
+    public getProjectContainingEditor(editor: Atom.TextEditor) {
+        return this.getProjectContainingFile(editor.getPath());
+    }
+
+    public getProjectContainingFile(path: string) {
+        var o: Observable<ProjectViewModel>;
+        if (this.isOn && this.projects.length) {
+            o = Observable.just<ProjectViewModel>(_.find(this.projects, x =>
+                _.contains(x.sourceFiles, normalize(path))))
+                .take(1)
+                .defaultIfEmpty(null);
+        } else {
+            o = this._projectAddedStream
+                .where(x => _.contains(x.sourceFiles, normalize(path)))
+                .take(1)
+                .defaultIfEmpty(null);
+        }
         return o;
     }
 
@@ -289,13 +307,12 @@ export class ViewModel {
             this.msbuild = project;
 
             _.each(this.msbuild.Projects
-                .map(p => new ProjectViewModel(p.AssemblyName,
-                    p.Path, _client.path, [{
-                        FriendlyName: p.TargetFramework,
-                        Name: p.TargetFramework,
-                        ShortName: p.TargetFramework
-                    }])),
-                project => this._projectAddedStream.onNext(project));
+                .map(p => {
+                    var project = ProjectViewModel(p.AssemblyName, p.Path, _client.path, [{
+                        FriendlyName: p.TargetFramework, Name: p.TargetFramework, ShortName: p.TargetFramework
+                    }], p.SourceFiles);
+                    this._projectAddedStream.onNext(project);
+                }));
         });
         return workspace;
     }
@@ -311,8 +328,10 @@ export class ViewModel {
             this.runtime = basename(project.RuntimePath);
 
             _.each(this.dnx.Projects
-                .map(p => new ProjectViewModel(p.Name, p.Path, _client.path, p.Frameworks, p.Configurations, p.Commands)),
-                project => this._projectAddedStream.onNext(project));
+                .map(p => {
+                    var project = new ProjectViewModel(p.Name, p.Path, _client.path, p.Frameworks, p.Configurations, p.Commands, p.SourceFiles);
+                    this._projectAddedStream.onNext(project);
+                }));
         });
         return workspace;
     }
