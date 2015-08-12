@@ -3,6 +3,7 @@
 
 declare function waitsForPromise<T>(callback: () => Promise<T>);
 declare function waitsForPromise<T>(callback: () => Q.Promise<T>);
+declare function waitsForPromise<T>(callback: () => Rx.IPromise<T>);
 
 declare module  jasmine {
     function attachToDOM(element:any);

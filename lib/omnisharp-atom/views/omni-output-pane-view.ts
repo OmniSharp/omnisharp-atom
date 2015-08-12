@@ -4,7 +4,7 @@ import _ = require('lodash')
 import Omni = require('../../omni-sharp-server/omni')
 import React = require('react');
 import {ReactClientComponent} from "./react-client-component";
-import {world} from '../world';
+import {server} from '../features/server-information';
 
 interface IOutputWindowState {
     output: OmniSharp.OutputMessage[];
@@ -24,7 +24,7 @@ export class OutputWindow<T> extends ReactClientComponent<T, IOutputWindowState>
     public componentDidMount() {
         super.componentDidMount();
 
-        this.disposable.add(world.observe.output
+        this.disposable.add(server.observe.output
             .subscribe(z => this.setState({ output: z }, () => this.scrollToBottom())));
         _.defer(_.bind(this.scrollToBottom, this));
     }

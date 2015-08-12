@@ -1,43 +1,51 @@
-/// <reference path="tsd.d.ts" />
-import Omni = require('../lib/omni-sharp-server/omni')
+import Omni = require('../lib/omni-sharp-server/omni');
+import ClientManager = require('../lib/omni-sharp-server/client-manager');
+import {DriverState} from "omnisharp-client";
+import {Observable} from "rx";
+import {setupFeature} from "./test-helpers";
 
 describe('OmniSharp Atom', () => {
-    var statusBar = null, workspaceView;
-    beforeEach(() => {
-        workspaceView = atom.views.getView(atom.workspace);
-        jasmine.attachToDOM(workspaceView);
-        waitsForPromise(() => {
-            return atom.workspace.open();
-        });
-        waitsForPromise(() => {
-            return atom.packages.activatePackage('status-bar');
-        });
-        return waitsForPromise(() => {
-            return atom.packages.activatePackage('omnisharp-atom');
-        });
-    });
+    setupFeature([], false);
+
     describe('when the package is activated', () => {
-        // TODO: Figure out the best way to test this without workspaceView
-        //it('should display the atom sharper button in the status bar', () => {
-        //    return expect(statusBar.find('.omnisharp-atom-button')).toExist();
-        //});
-        it('should not display the atom sharper pane', () => {
-            return expect(workspaceView.find('.omnisharp-atom-pane')).not.toExist();
+        it('connect', () => {
+            waitsForPromise(() =>
+                Observable.fromPromise(atom.workspace.open('simple/project.json'))
+                    .flatMap(editor =>
+                        ClientManager.getClientForEditor(editor))
+                    .flatMap(x =>
+                        x.state.startWith(x.currentState))
+                    .where(z =>
+                        z === DriverState.Connected)
+                    .take(1)
+                    .toPromise());
+
+            runs(() => {
+                expect(ClientManager.connected).toBeTruthy();
+            });
         });
-        return describe('when the atom sharper button is clicked', () => {
-            beforeEach(() => {
-                if (workspaceView.find('.omnisharp-atom-pane').length === 0) {
-                    return statusBar.find('.omnisharp-atom-button')[0].click();
-                }
-            });
-            it('should display the atom sharper pane', () => {
-                return expect(workspaceView.find('.omnisharp-atom-pane')).toExist();
-            });
-            return it('should display the omnisharp server status', () => {
-                var message, messageSelector;
-                messageSelector = '.omni-output-pane-view ul>li:first-child>span';
-                message = workspaceView.find(messageSelector)[0];
-                return expect(message.innerText).toBe("Omnisharp server is turned off");
+
+        it('connect-simple2', () => {
+            waitsForPromise(() =>
+                Observable.fromPromise(
+                    Promise.all([
+                        atom.workspace.open('simple/project.json'),
+                        atom.workspace.open('simple2/project.json')
+                    ])
+                    )
+                    .flatMap(x => Observable.from(x))
+                    .flatMap(editor =>
+                        ClientManager.getClientForEditor(editor))
+                    .flatMap(x =>
+                        x.state.startWith(x.currentState))
+                    .where(z =>
+                        z === DriverState.Connected)
+                    .take(2)
+                    .toPromise());
+
+            runs(() => {
+                expect(ClientManager.connected).toBeTruthy();
+                expect(ClientManager.activeClients.length).toBe(2);
             });
         });
     });

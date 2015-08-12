@@ -6,7 +6,7 @@ import {basename} from "path";
 import {DriverState} from "omnisharp-client";
 import {ProjectViewModel} from "./view-model";
 
-class Omni {
+class Omni implements Rx.IDisposable {
     private disposable: CompositeDisposable;
 
     private _editors: Observable<Atom.TextEditor>;
@@ -38,6 +38,9 @@ class Omni {
     public get isOff() { return this._isOff; }
     public get isOn() { return !this.isOff; }
 
+    private _validGammarNames = ['C#', 'C# Script File'];
+    public get validGammarNames() { return this._validGammarNames.slice(); };
+
     public activate() {
         var openerDisposable = makeOpener();
         this.disposable = new CompositeDisposable;
@@ -46,7 +49,7 @@ class Omni {
         // we are only off if all our clients are disconncted or erroed.
         this.disposable.add(manager.combinationClient.state.subscribe(z => this._isOff = _.all(z, x => x.value === DriverState.Disconnected || x.value === DriverState.Error)));
 
-        this._editors = Omni.createTextEditorObservable(['C#', 'C# Script File'], this.disposable);
+        this._editors = Omni.createTextEditorObservable(this.validGammarNames, this.disposable);
         this._configEditors = Omni.createTextEditorObservable(['JSON'], this.disposable);
 
         this.disposable.add(atom.workspace.observeActivePaneItem((pane: any) => {
@@ -79,7 +82,8 @@ class Omni {
         }));
     }
 
-    public deactivate() {
+    public dispose() {
+        if (manager._unitTestMode_) return;
         this.disposable.dispose();
         manager.deactivate();
     }
@@ -97,7 +101,7 @@ class Omni {
     }
 
     public navigateTo(response: { FileName: string; Line: number; Column: number; }) {
-        atom.workspace.open(response.FileName, {initialLine: response.Line, initialColumn: response.Column})
+        atom.workspace.open(response.FileName, <any>{initialLine: response.Line, initialColumn: response.Column})
             .then((editor) => {
                 editor.setCursorBufferPosition([response.Line && response.Line, response.Column && response.Column])
             });
@@ -207,6 +211,14 @@ class Omni {
     */
     public get combination() {
         return manager.combinationClient;
+    }
+
+    /**
+    * This property gets a list of clients as an observable.
+    * NOTE: This property will not emit additions or removals of clients.
+    */
+    public get clients() {
+        return Observable.defer(() => Observable.from(manager.activeClients));
     }
 
     /**

@@ -5,7 +5,19 @@ notifications:
     on_success: never
     on_failure: change
 
-script: ./build-package.sh 
+before_install:
+  - brew tap aspnet/dnx
+  - brew update
+  - brew install dnvm
+  - source dnvm.sh
+  - dnvm install 1.0.0-beta4
+  - dnvm upgrade
+
+script:
+  - 'curl -s https://raw.githubusercontent.com/atom/ci/master/build-package.sh | sh'
 
 git:
   depth: 10
+
+env:
+  - APM_TEST_PACKAGES='atom-yeoman linter json-schema advanced-new-file'

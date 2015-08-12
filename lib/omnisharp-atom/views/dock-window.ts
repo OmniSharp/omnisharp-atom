@@ -40,6 +40,7 @@ export interface DockPane<P, S> {
     props: P;
     view: typeof React.Component;
     options: DocPaneOptions;
+    disposable: Rx.IDisposable;
 }
 export interface DisposableDockPane<P, S> {
     id: string;
@@ -218,7 +219,7 @@ export class DockWindow<T extends IDockWindowProps> extends ReactClientComponent
     public render() {
         if (!this.visible) {
             return React.DOM.span({
-                style: {
+                style: <any>{
                     display: 'none'
                 }
             });

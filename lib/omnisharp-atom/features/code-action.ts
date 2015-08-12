@@ -2,7 +2,7 @@ import _ = require('lodash');
 import {CompositeDisposable, Subject, Observable} from "rx";
 import Omni = require('../../omni-sharp-server/omni')
 import SpacePen = require('atom-space-pen-views');
-import Changes = require('./lib/apply-changes');
+import Changes = require('../services/apply-changes');
 import codeActionsView from "../views/code-actions-view";
 
 class CodeAction implements OmniSharp.IFeature {

@@ -102,7 +102,7 @@ export class FindWindow extends ReactClientComponent<FindWindowProps, FindWindow
             tabIndex: -1,
         },
             React.DOM.ol({
-                style: { cursor: "pointer" },
+                style: <any>{ cursor: "pointer" },
             }, _.map(this.state.usages, (usage: OmniSharp.Models.QuickFix, index) =>
                 React.DOM.li({
                     key: `quick-fix-${usage.FileName}-(${usage.Line}-${usage.Column})-(${usage.EndLine}-${usage.EndColumn})-(${usage.Projects.join('-') })`,

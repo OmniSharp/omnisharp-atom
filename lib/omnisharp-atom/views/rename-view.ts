@@ -6,7 +6,7 @@ import Omni = require('../../omni-sharp-server/omni')
 
 class RenameView extends spacePenViews.View {
     private wordToRename = null;
-    private miniEditor: spacePenViews.TextEditorView;
+    public miniEditor: spacePenViews.TextEditorView;
 
     public static content() {
         return this.div({

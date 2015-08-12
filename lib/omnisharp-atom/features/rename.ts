@@ -2,7 +2,7 @@ import _ = require('lodash')
 import {CompositeDisposable} from "rx";
 import RenameView = require('../views/rename-view')
 import Omni = require('../../omni-sharp-server/omni');
-import Changes = require('./lib/apply-changes')
+import Changes = require('../services/apply-changes')
 
 class Rename implements OmniSharp.IFeature {
     private disposable: Rx.CompositeDisposable;
@@ -31,7 +31,9 @@ class Rename implements OmniSharp.IFeature {
     public rename() {
         var editor = atom.workspace.getActiveTextEditor();
         if (editor) {
-            var wordToRename = editor.getWordUnderCursor();
+            var wordToRename: string = <any>editor.getWordUnderCursor();
+            // Word under cursor can sometimes return the open bracket if the word is selected.
+            wordToRename = _.trimRight(wordToRename, '(');
             atom.workspace.addTopPanel({
                 item: this.renameView
             });

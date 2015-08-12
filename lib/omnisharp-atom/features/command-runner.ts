@@ -33,9 +33,12 @@ class CommandRunner implements OmniSharp.IFeature {
     public activate() {
         this.disposable = new CompositeDisposable();
 
-        this.disposable.add(Disposable.create(() => this._projectMap.clear()));
-        this.disposable.add(Omni.listener.model.projectAdded
-            .subscribe(project => this.addCommands(project)));
+        this.disposable.add(
+            Observable.merge(
+                // Get all currently defined projects
+                Omni.clients.flatMap(z => Observable.from(z.model.projects)),
+                Omni.listener.model.projectAdded
+            ).subscribe(project => this.addCommands(project)));
 
         this.disposable.add(Omni.listener.model.projectChanged
             .subscribe(project => {
@@ -132,6 +135,8 @@ export class RunProcess {
             .map(normalize)
             .tapOnNext(() => dock.selectWindow(this.id))
             .subscribe((runtime) => this.bootRuntime(runtime));
+
+        this.disposable.add(solution);
     }
 
     private bootRuntime(runtime: string) {

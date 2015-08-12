@@ -1,10 +1,9 @@
-import Omni = require('../../../omni-sharp-server/omni')
-import OmniSharpAtom = require('../../omnisharp-atom');
+import Omni = require('../../omni-sharp-server/omni')
+import OmniSharpAtom = require('../omnisharp-atom');
 
 import _ = require('lodash')
 import {Subject, BehaviorSubject, Observable, CompositeDisposable} from 'rx';
 import Promise = require('bluebird');
-var escape = require("escape-html");
 var filter = require('fuzzaldrin').filter;
 
 interface RequestOptions {
@@ -33,7 +32,7 @@ interface Suggestion {
 }
 
 function calcuateMovement(previous: RequestOptions, current: RequestOptions) {
-    if (!current) return { reset: true, current: current };
+    if (!current) return { reset: true, current: current, previous: null };
     // If the row changes we moved lines, we should refetch the completions
     // (Is it possible it will be the same set?)
     var row = Math.abs(current.bufferPosition.row - previous.bufferPosition.row) > 0;
@@ -65,11 +64,11 @@ let _cacheClearOnForce = new Subject<RequestOptions>();
 
 // Only issue new requests when ever a cache change event occurs.
 let _requestStream = Observable.merge(_clearCacheOnDot, _clearCacheOnBufferMovement, _cacheClearOnForce)
-// This covers us incase both return the same value.
+    // This covers us incase both return the same value.
     .distinctUntilChanged()
-// Make the request
+    // Make the request
     .flatMapLatest(options => Omni.request(client => client.autocomplete(client.makeDataRequest(autoCompleteOptions))))
-// Ensure the array is not null;
+    // Ensure the array is not null;
     .map(completions => completions || [])
     .share();
 
@@ -109,11 +108,12 @@ let setupSubscriptions = () => {
     // TODO: Update atom typings
     disposable.add(atom.commands.onWillDispatch(function(event: Event) {
         if (event.type === "autocomplete-plus:activate" || event.type === "autocomplete-plus:confirm" || event.type === "autocomplete-plus:cancel") {
+            _cacheClearOnForce.onNext(_currentOptions);
             clearCacheValue();
         }
 
         if (event.type === "autocomplete-plus:activate" && _currentOptions) {
-            _cacheClearOnForce.onNext(_currentOptions);
+            //_cacheClearOnForce.onNext(_currentOptions);
         }
     }));
 
@@ -166,7 +166,7 @@ function makeSuggestion(item: OmniSharp.Models.AutoCompleteResponse) {
         snippet: item.Snippet,
         type: type,
         iconHTML: iconHTML,
-        displayText: escape(item.DisplayText),
+        displayText: item.DisplayText,
         className: 'autocomplete-omnisharp-atom',
         description: description,
         leftLabel: leftLabel,
@@ -224,10 +224,10 @@ function dispose() {
 export var CompletionProvider = {
     selector: '.source.cs, .source.csx',
     disableForSelector: 'source.cs .comment',
-    inclusionPriority: 3,
-    excludeLowerPriority: false,
+    inclusionPriority: 1,
+    suggestionPriority: 10,
+    excludeLowerPriority: true,
     getSuggestions,
-    //getSuggestions: _.throttle(getSuggestions, 0),
     onDidInsertSuggestion,
     dispose
 }

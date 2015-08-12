@@ -1,6 +1,6 @@
 require('./configure-rx');
 import _ = require('lodash');
-import {Observable, BehaviorSubject, Subject, CompositeDisposable, Disposable} from "rx";
+import {Observable, BehaviorSubject, Subject, AsyncSubject, CompositeDisposable, Disposable} from "rx";
 import path = require('path');
 import fs = require('fs');
 
@@ -12,47 +12,80 @@ import {world} from './world';
 class OmniSharpAtom {
     private features: OmniSharp.IFeature[] = [];
     private disposable: Rx.CompositeDisposable;
-    private generator: { run(generator: string, path?: string, options?: any): void; start(prefix: string, path?: string, options?: any): void; };
     private menu: EventKit.Disposable;
+
+    // Internal: Used by unit testing to make sure the plugin is completely activated.
+    private _started: AsyncSubject<boolean>;
 
     private restartLinter: () => void = () => { };
 
     public activate(state) {
         this.disposable = new CompositeDisposable;
+        this._started = new AsyncSubject<boolean>();
 
+        console.info("Starting omnisharp-atom...");
         if (dependencyChecker.findAllDeps(this.getPackageDir())) {
+            console.info("Dependencies installed...");
+
             this.configureKeybindings();
 
             this.disposable.add(atom.commands.add('atom-workspace', 'omnisharp-atom:toggle', () => this.toggle()));
-            this.disposable.add(atom.commands.add('atom-workspace', 'omnisharp-atom:new-application', () => this.generator.run("aspnet:app", undefined, { promptOnZeroDirectories: true })));
-            this.disposable.add(atom.commands.add('atom-workspace', 'omnisharp-atom:new-class', () => this.generator.run("aspnet:Class", undefined, { promptOnZeroDirectories: true })));
             this.disposable.add(Disposable.create(() => {
                 this.features = [];
-                Omni.deactivate();
             }));
 
-            this.loadAtomFeatures(state).toPromise()
-                .then(() => this.loadFeatures(state).toPromise())
-                .then(() => {
-                    Omni.activate();
+            var whiteList = atom.config.get<boolean>("omnisharp-atom:feature-white-list") || undefined;
+            var featureList = atom.config.get<string[]>('omnisharp-atom:feature-list') || [];
 
-                    world.activate();
-                    _.each(this.features, f => {
-                        f.activate();
-                        this.disposable.add(f);
-                    });
+            var started = Observable.merge(this.getFeatures("atom"), this.getFeatures("features"))
+                .filter(l => {
+                    if (typeof whiteList === 'undefined') {
+                        return true;
+                    }
 
-                    this.disposable.add(atom.workspace.observeTextEditors((editor: Atom.TextEditor) => {
-                        this.detectAutoToggleGrammar(editor);
-                    }));
+                    if (whiteList) {
+                        return _.contains(featureList, l.file);
+                    } else {
+                        return !_.contains(featureList, l.file);
+                    }
+                })
+                .flatMap(z => z.load())
+                .toArray()
+                .share();
 
-                    _.each(this.features, f => {
-                        if (_.isFunction(f['attach'])) {
-                            f['attach']()
-                        }
-                    });
+            started.subscribe(() => {
+                this._started.onNext(true);
+                this._started.onCompleted();
+            });
+
+            this.disposable.add(started.subscribe(features => {
+                console.info("Activating omnisharp-atom...");
+
+                this.features = features;
+
+                Omni.activate();
+                this.disposable.add(Omni);
+
+                world.activate();
+                this.disposable.add(world);
+
+                _.each(this.features, f => {
+                    f.activate();
+                    this.disposable.add(f);
                 });
+
+                _.each(this.features, f => {
+                    if (_.isFunction(f['attach'])) {
+                        f['attach']();
+                    }
+                });
+
+                this.disposable.add(atom.workspace.observeTextEditors((editor: Atom.TextEditor) => {
+                    this.detectAutoToggleGrammar(editor);
+                }));
+            }));
         } else {
+            console.info(`omnisharp-atom not started missing depedencies ${dependencyChecker.errors() }...`);
             _.map(dependencyChecker.errors() || [], missingDependency => console.error(missingDependency))
         }
     }
@@ -60,58 +93,38 @@ class OmniSharpAtom {
     private _packageDir: string;
     public getPackageDir() {
         if (!this._packageDir) {
+            console.info(`getPackageDirPaths: ${atom.packages.getPackageDirPaths() }`);
             this._packageDir = _.find(atom.packages.getPackageDirPaths(), function(packagePath) {
-                return fs.existsSync(packagePath + "/omnisharp-atom");
+                console.info(`packagePath ${packagePath} exists: ${fs.existsSync(path.join(packagePath, "omnisharp-atom")) }`);
+                return fs.existsSync(path.join(packagePath, "omnisharp-atom"));
             });
+
+            // Fallback, this is for unit testing on travis mainly
+            if (!this._packageDir) {
+                this._packageDir = path.resolve(__dirname, '../../..');
+            }
         }
         return this._packageDir;
     }
 
-    public loadFeatures(state) {
-        var packageDir = this.getPackageDir();
-        var featureDir = packageDir + "/omnisharp-atom/lib/omnisharp-atom/features";
+    public getFeatures(folder: string) {
+        console.info(`Getting features for '${folder}'...`);
 
-        var features = Observable.fromNodeCallback(fs.readdir)(featureDir)
+        var packageDir = this.getPackageDir();
+        var featureDir = `${packageDir}/omnisharp-atom/lib/omnisharp-atom/${folder}`;
+
+        function loadFeature(file: string) {
+            var result = require(`./${folder}/${file}`);
+            console.info(`Loading feature '${folder}/${file}'...`);
+            return _.values(result).filter(feature => !_.isFunction(feature));
+        }
+
+        return Observable.fromNodeCallback(fs.readdir)(featureDir)
             .flatMap(files => Observable.from(files))
             .where(file => /\.js$/.test(file))
-            .flatMap(file => Observable.fromNodeCallback(fs.stat)(featureDir + "/" + file).map(stat => ({ file, stat })))
+            .flatMap(file => Observable.fromNodeCallback(fs.stat)(`${featureDir}/${file}`).map(stat => ({ file, stat })))
             .where(z => !z.stat.isDirectory())
-            .map(z => z.file)
-            .map(feature => {
-                var path = "./features/" + feature;
-                return <OmniSharp.IFeature[]>_.values(require(path))
-            })
-        var result = features.toArray()
-            .map(features => _.flatten<OmniSharp.IFeature>(features).filter(feature => !_.isFunction(feature)));
-        result.subscribe(features => {
-            this.features = this.features.concat(features);
-        });
-
-        return result;
-    }
-
-    public loadAtomFeatures(state) {
-        var packageDir = this.getPackageDir();
-        var atomFeatureDir = packageDir + "/omnisharp-atom/lib/omnisharp-atom/atom";
-
-        var atomFeatures = Observable.fromNodeCallback(fs.readdir)(atomFeatureDir)
-            .flatMap(files => Observable.from(files))
-            .where(file => /\.js$/.test(file))
-            .flatMap(file => Observable.fromNodeCallback(fs.stat)(atomFeatureDir + "/" + file).map(stat => ({ file, stat })))
-            .where(z => !z.stat.isDirectory())
-            .map(z => z.file)
-            .map(feature => {
-                var path = "./atom/" + feature;
-                return <OmniSharp.IFeature[]>_.values(require(path))
-            });
-
-        var result = atomFeatures.toArray()
-            .map(features => _.flatten<OmniSharp.IFeature>(features).filter(feature => !_.isFunction(feature)));
-        result.subscribe(features => {
-            this.features = this.features.concat(features);
-        });
-
-        return result;
+            .map(z => ({ file: `${folder}/${path.basename(z.file) }`.replace(/\.js$/, ''), load: () => Observable.from<OmniSharp.IFeature>(loadFeature(z.file)) }));
     }
 
     private detectAutoToggleGrammar(editor: Atom.TextEditor) {
@@ -184,27 +197,28 @@ class OmniSharpAtom {
         f.frameworkSelector.setup(statusBar);
     }
 
-    public consumeYeomanEnvironment(generatorService: { run(generator: string, path: string): void; start(prefix: string, path: string): void; }) {
-        this.generator = generatorService;
+    public consumeYeomanEnvironment(generatorService) {
+        var {generatorAspnet} = require("./atom/generator-aspnet");
+        generatorAspnet.setup(generatorService);
     }
 
     public provideAutocomplete() {
-        var {CompletionProvider} = require("./features/lib/completion-provider");
+        var {CompletionProvider} = require("./services/completion-provider");
         this.disposable.add(CompletionProvider);
         return CompletionProvider;
     }
 
     public provideLinter() {
-        var LinterProvider = require("./features/lib/linter-provider");
+        var LinterProvider = require("./services/linter-provider");
         return LinterProvider.provider;
     }
 
     public provideProjectJson() {
-        return require("./features/lib/project-provider").concat(require('./features/lib/framework-provider'));
+        return require("./services/project-provider").concat(require('./services/framework-provider'));
     }
 
     public consumeLinter(linter) {
-        var LinterProvider = require("./features/lib/linter-provider");
+        var LinterProvider = require("./services/linter-provider");
         var linters = LinterProvider;
 
         this.disposable.add(Disposable.create(() => {

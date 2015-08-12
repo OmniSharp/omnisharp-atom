@@ -1,0 +1,9 @@
+{
+  "version": "1.0.0-*",
+  "compilationOptions": {
+    "warningsAsErrors": true
+  },
+  "frameworks": {
+    "dnx451": {}
+  }
+}

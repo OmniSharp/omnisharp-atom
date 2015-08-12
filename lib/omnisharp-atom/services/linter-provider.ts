@@ -1,4 +1,4 @@
-import Omni = require('../../../omni-sharp-server/omni')
+import Omni = require('../../omni-sharp-server/omni')
 var Range = require('atom').Range;
 import _ = require('lodash');
 import {Observable, CompositeDisposable} from "rx";
@@ -7,8 +7,9 @@ interface LinterError {
     type: string; // 'error' | 'warning'
     text?: string;
     html?: string;
-    filePath?: string,
-    range?: Range
+    filePath?: string;
+    range?: Range;
+    [key: string]: any;
 }
 
 function getWordAt(str: string, pos: number) {
@@ -101,23 +102,29 @@ export var provider = [
         grammarScopes: ['source.cs'],
         scope: 'file',
         lintOnFly: true,
-        lint: (editor: Atom.TextEditor) =>
-            Omni.request(editor, client => client.codecheck(client.makeRequest(editor)))
-                .flatMap(x => Observable.from<OmniSharp.Models.DiagnosticLocation>(x.QuickFixes))
+        lint: (editor: Atom.TextEditor) => {
+            if (!_.contains(Omni.validGammarNames, editor.getGrammar().name)) return Promise.resolve([]);
+
+            return Omni.request(editor, client => client.codecheck(client.makeRequest(editor)))
+                .flatMap(x => Observable.from(<OmniSharp.Models.DiagnosticLocation[]>x.QuickFixes))
                 .where(z => z.LogLevel !== "Hidden")
                 .map(error => mapValues(editor, error))
                 .toArray()
-                .toPromise()
+                .toPromise();
+        }
     }, {
         grammarScopes: ['source.cs'],
         scope: 'project',
         lintOnFly: false,
-        lint: (editor: Atom.TextEditor) =>
-            Omni.activeModel
-                .flatMap(x => Observable.from<OmniSharp.Models.DiagnosticLocation>(x.diagnostics))
+        lint: (editor: Atom.TextEditor) => {
+            if (!_.contains(Omni.validGammarNames, editor.getGrammar().name)) return Promise.resolve([]);
+
+            return Omni.activeModel
+                .flatMap(x => Observable.from(<OmniSharp.Models.DiagnosticLocation[]>x.diagnostics))
                 .where(z => z.LogLevel != "Hidden")
                 .map(error => mapValues(editor, error))
                 .toArray()
-                .toPromise()
+                .toPromise();
+        }
     }
 ];

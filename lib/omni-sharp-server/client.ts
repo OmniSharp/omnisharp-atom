@@ -5,6 +5,7 @@ import {OmnisharpClientV2 as OmnisharpClient, DriverState, OmnisharpClientOption
 interface ClientOptions extends OmnisharpClientOptions {
     temporary: boolean;
     repository: Atom.GitRepository;
+    index: number;
 }
 
 import {ViewModel} from "./view-model";
@@ -144,4 +145,5 @@ export = Client;
 (function(Client: any) {
     Client.connect = Client.prototype.connect;
     Client.disconnect = Client.prototype.disconnect;
+    Client.log = Client.prototype.log;
 })(OmnisharpClient);
