@@ -101,7 +101,7 @@ class Omni implements Rx.IDisposable {
     }
 
     public navigateTo(response: { FileName: string; Line: number; Column: number; }) {
-        atom.workspace.open(response.FileName, <any>{initialLine: response.Line, initialColumn: response.Column})
+        atom.workspace.open(response.FileName, <any>{ initialLine: response.Line, initialColumn: response.Column })
             .then((editor) => {
                 editor.setCursorBufferPosition([response.Line && response.Line, response.Column && response.Column])
             });
@@ -289,6 +289,23 @@ class Omni implements Rx.IDisposable {
 
     public get activeEditor() {
         return this._activeEditor;
+    }
+
+    public switchActiveEditor(callback: (editor: Atom.TextEditor, cd: CompositeDisposable) => void): Rx.IDisposable {
+        var outerCd = new CompositeDisposable();
+        outerCd.add(this.activeEditor.where(z => !!z).subscribe(editor => {
+            var cd = new CompositeDisposable();
+            outerCd.add(cd);
+
+            cd.add(this.activeEditor.where(active => active !== editor).subscribe(() => {
+                outerCd.remove(cd);
+                cd.dispose();
+            }));
+
+            callback(editor, cd);
+        }));
+
+        return outerCd;
     }
 
     public get activeConfigEditor() {

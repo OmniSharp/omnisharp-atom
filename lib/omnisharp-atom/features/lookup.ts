@@ -15,23 +15,16 @@ class TypeLookup implements OmniSharp.IFeature {
 
     public activate() {
         this.disposable = new CompositeDisposable();
-        this.disposable.add(Omni.activeEditor.where(z => !!z).subscribe(editor => {
-            var cd = new CompositeDisposable();
-
+        this.disposable.add(Omni.switchActiveEditor((editor, cd) => {
             // subscribe for tooltips
             // inspiration : https://github.com/chaika2013/ide-haskell
             var editorView = $(atom.views.getView(editor));
             var tooltip = editor['__omniTooltip'] = new Tooltip(editorView, editor);
             cd.add(tooltip);
 
-            editor.onDidDestroy(() => {
+            cd.add(editor.onDidDestroy(() => {
                 editor['__omniTooltip'] = null;
                 cd.dispose();
-            });
-
-            cd.add(Omni.activeEditor.where(active => active !== editor).subscribe(() => {
-                cd.dispose();
-                this.disposable.remove(cd);
             }));
         }));
 
