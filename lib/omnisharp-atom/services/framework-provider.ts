@@ -9,7 +9,7 @@ var frameworkCache = new Map<string, { [key: string]: string }>();
 
 function fetchFrameworkFromGithub(framework: string) {
     if (frameworkCache.has(framework)) {
-        return Observable.from<{ [key: string]: string }>(frameworkCache.get(framework));
+        return Observable.just<{ [key: string]: string }>(frameworkCache.get(framework));
     }
 
     // Get the file from github

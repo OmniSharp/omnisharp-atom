@@ -35,7 +35,7 @@ export class ProjectViewModel implements OmniSharp.IProjectViewModel {
             activeFramework: Observable.ofObjectChanges(this)
                 .where(z => z.name === "activeFramework")
                 .map(z => this.activeFramework)
-                .shareReplay(1);
+                .shareReplay(1)
         };
     }
 }
@@ -306,13 +306,12 @@ export class ViewModel {
         workspace.subscribe(project => {
             this.msbuild = project;
 
-            _.each(this.msbuild.Projects
-                .map(p => {
-                    var project = ProjectViewModel(p.AssemblyName, p.Path, _client.path, [{
-                        FriendlyName: p.TargetFramework, Name: p.TargetFramework, ShortName: p.TargetFramework
-                    }], p.SourceFiles);
-                    this._projectAddedStream.onNext(project);
-                }));
+            _.each(this.msbuild.Projects, p => {
+                var project = new ProjectViewModel(p.AssemblyName, p.Path, _client.path, [{
+                    FriendlyName: p.TargetFramework, Name: p.TargetFramework, ShortName: p.TargetFramework
+                }], p.SourceFiles);
+                this._projectAddedStream.onNext(project);
+            });
         });
         return workspace;
     }
@@ -327,11 +326,10 @@ export class ViewModel {
             this.dnx = project;
             this.runtime = basename(project.RuntimePath);
 
-            _.each(this.dnx.Projects
-                .map(p => {
-                    var project = new ProjectViewModel(p.Name, p.Path, _client.path, p.Frameworks, p.Configurations, p.Commands, p.SourceFiles);
-                    this._projectAddedStream.onNext(project);
-                }));
+            _.each(this.dnx.Projects, p => {
+                var project = new ProjectViewModel(p.Name, p.Path, _client.path, p.Frameworks, p.Configurations, p.Commands, p.SourceFiles);
+                this._projectAddedStream.onNext(project);
+            });
         });
         return workspace;
     }

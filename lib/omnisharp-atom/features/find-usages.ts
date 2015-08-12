@@ -37,8 +37,8 @@ class FindUsages implements OmniSharp.IFeature {
             find: observable,
             // NOTE: We cannot do the same for find implementations because find implementation
             //      just goes to the item if only one comes back.
-            open: Omni.listener.requests.where(z => z.command === "findusages").map(() => true),
-            reset: Omni.listener.requests.where(z => z.command === "findimplementations" || z.command === "findusages").map(() => true),
+            open: Omni.listener.requests.where(z => !z.silent && z.command === "findusages").map(() => true),
+            reset: Omni.listener.requests.where(z => !z.silent && z.command === "findimplementations" || z.command === "findusages").map(() => true),
             updated: updated,
         };
 

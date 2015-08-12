@@ -1,4 +1,4 @@
-import {helpers, Observable, ReplaySubject, Subject, CompositeDisposable, BehaviorSubject, Disposable} from 'rx';
+import {helpers, Observable, ReplaySubject, Subject, CompositeDisposable, BehaviorSubject, Disposable, Scheduler} from 'rx';
 import manager = require("./client-manager");
 import Client = require("./client");
 import _ = require('lodash');
@@ -13,10 +13,10 @@ class Omni implements Rx.IDisposable {
     private _configEditors: Observable<Atom.TextEditor>;
 
     private _activeEditorSubject = new BehaviorSubject<Atom.TextEditor>(null);
-    private _activeEditor = this._activeEditorSubject.shareReplay(1).asObservable();
+    private _activeEditor = this._activeEditorSubject.asObservable().delay(50).shareReplay(1);
 
     private _activeConfigEditorSubject = new BehaviorSubject<Atom.TextEditor>(null);
-    private _activeConfigEditor = this._activeConfigEditorSubject.shareReplay(1).asObservable();
+    private _activeConfigEditor = this._activeConfigEditorSubject.asObservable().delay(50).shareReplay(1);
 
     private _activeProject = Observable.combineLatest(this._activeEditorSubject, this._activeConfigEditorSubject, (editor, config) => editor || config || null)
         .debounce(10)
@@ -193,7 +193,7 @@ class Omni implements Rx.IDisposable {
             }
         }));
 
-        return Observable.merge(subject, Observable.defer(() => Observable.from(editors)));
+        return Observable.merge(subject, Observable.defer(() => Observable.from(editors))).delay(50);
     }
 
     /**
@@ -297,15 +297,24 @@ class Omni implements Rx.IDisposable {
             var cd = new CompositeDisposable();
             outerCd.add(cd);
 
-            cd.add(this.activeEditor.where(active => active !== editor).subscribe(() => {
-                outerCd.remove(cd);
-                cd.dispose();
-            }));
+            cd.add(this.activeEditor.where(active => active !== editor)
+                .subscribe(() => {
+                    outerCd.remove(cd);
+                    cd.dispose();
+                }));
 
             callback(editor, cd);
         }));
 
         return outerCd;
+    }
+
+    public whenEditorConnected(editor: Atom.TextEditor) {
+        return manager.getClientForEditor(editor)
+            .flatMap(solution => solution.state.startWith(solution.currentState))
+            .where(x => x === DriverState.Connected)
+            .take(1)
+            .map(z => editor);
     }
 
     public get activeConfigEditor() {
