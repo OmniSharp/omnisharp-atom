@@ -10,8 +10,6 @@ Invoke-WebRequest 'https://github.com/stormtek/unity-rts-demo/archive/590d533bbc
 7z x unity-rts-demo.zip -ospec\fixtures\thirdparty\
 remove-item unity-rts-demo.zip
 
-
-
 pushd spec\fixtures\thirdparty\
 gci dualsolutions-* | Copy-Item -Destination dualsolutions -Recurse
 gci dualsolutions-* | Remove-Item -Recurse -Force

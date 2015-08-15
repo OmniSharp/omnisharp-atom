@@ -16,6 +16,6 @@ rm -rf DualSolutions-37052446b7a7179dfee1557d4c39db5e682f91ed
 popd
 
 pushd spec/fixtures/thirdparty/
-cp -r DualSolutions-37052446b7a7179dfee1557d4c39db5e682f91ed unity-rts-demo
+cp -r unity-rts-demo-590d533bbc3e16f26b025478af07320d30e59278 unity-rts-demo
 rm -rf unity-rts-demo-590d533bbc3e16f26b025478af07320d30e59278
 popd
