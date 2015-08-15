@@ -122,6 +122,7 @@
     "atom-yeoman": ">=0.3.0",
     "linter": ">=1.0.0",
     "json-schema": ">=0.1.11",
-    "advanced-new-file": ">=0.4.3"
+    "advanced-new-file": ">=0.4.3",
+    "language-cshtml": ">=0.1.0"
   }
 }

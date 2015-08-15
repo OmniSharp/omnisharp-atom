@@ -5,3 +5,4 @@ server
 typings
 lib/**/*.js
 spec/**/*.js
+spec/fixtures/thirdparty/**/*

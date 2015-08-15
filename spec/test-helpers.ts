@@ -2,7 +2,7 @@ import ClientManager = require('../lib/omni-sharp-server/client-manager');
 import {CompositeDisposable, Disposable, Observable} from "rx";
 import {DriverState} from "omnisharp-client";
 
-if ((<any>jasmine.getEnv()).defaultTimeoutInterval < 30000) (<any>jasmine.getEnv()).defaultTimeoutInterval = 30000;
+if ((<any>jasmine.getEnv()).defaultTimeoutInterval < 30000) (<any>jasmine.getEnv()).defaultTimeoutInterval = 60000;
 if ((<any>jasmine.getEnv()).defaultTimeoutInterval === 60000) (<any>jasmine.getEnv()).defaultTimeoutInterval = 60000 * 3;
 
 ClientManager.observationClient.errors.subscribe(error => console.error(JSON.stringify(error)));
@@ -10,13 +10,13 @@ ClientManager.observationClient.events.subscribe(event => console.info(`server e
 ClientManager.observationClient.requests.subscribe(r => console.info(`request: ${JSON.stringify(r) }`));
 ClientManager.observationClient.responses.subscribe(r => console.info(`response: ${JSON.stringify(r) }`));
 
-export function setupFeature(features: string[], unitTestMode = true) {
+export function setupFeature(features: string[], unitTestMode = true, whitelist = true) {
     var cd: CompositeDisposable;
     beforeEach(function() {
         cd = new CompositeDisposable();
         ClientManager._unitTestMode_ = unitTestMode;
 
-        atom.config.set('omnisharp-atom:feature-white-list', true);
+        atom.config.set('omnisharp-atom:feature-white-list', whitelist);
         atom.config.set('omnisharp-atom:feature-list', features);
 
         waitsForPromise(() => atom.packages.activatePackage('language-csharp')

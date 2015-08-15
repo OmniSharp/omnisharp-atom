@@ -112,6 +112,8 @@
         "./spec/features/solution-information-spec.ts",
         "./spec/omnisharp-atom-spec.ts",
         "./spec/test-helpers.ts",
+        "./spec/thirdparty/dualsolutions/projects-load-spec.ts",
+        "./spec/thirdparty/unity-rts-demo/projects-load-spec.ts",
         "./spec/tsd.d.ts",
         "./tsd.d.ts"
     ]
