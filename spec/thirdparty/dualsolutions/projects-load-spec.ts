@@ -10,11 +10,11 @@ describe('Dual Solutions', () => {
     it('loads solution 1 projects', () => {
         var p1: Rx.IPromise<any>, p2: Rx.IPromise<any>, p3: Rx.IPromise<any>;
         runs(() => {
-            // Init the editor, and start connecting.
-            p1 = Observable.fromPromise(atom.workspace.open('thirdparty/dualsolutions/ClassLib1/Class1.cs'))
+            var o = Observable.fromPromise(atom.workspace.open('thirdparty/dualsolutions/ClassLib1/Class1.cs'))
                 .flatMap(editor =>
-                    ClientManager.getClientForEditor(editor))
-                .flatMap(x =>
+                    ClientManager.getClientForEditor(editor));
+            // Init the editor, and start connecting.
+            p1 = o.flatMap(x =>
                     x.state.startWith(x.currentState))
                 .where(z =>
                     z === DriverState.Connected)
@@ -22,18 +22,21 @@ describe('Dual Solutions', () => {
                 .toPromise();
 
             // Should call out to projects
-            p2 = Omni.listener
-                .observeProjects
+            p2 = o.flatMap(z => z.observeProjects)
                 .take(1)
                 .toPromise();
 
             // Shoud produce a list of projects
             // Two are included in this sln
-            p3 = Omni.listener
-                .model.projectAdded
+            p3 = o.flatMap(z => z.model.observe.projectAdded)
                 .take(1)
                 .toArray()
                 .toPromise();
+
+
+            p1.then(() => console.log('p1 - loads solution 1 projects'));
+            p2.then(() => console.log('p2 - loads solution 1 projects'));
+            p3.then(() => console.log('p3 - loads solution 1 projects'));
         });
 
         waitsFor(() => {
@@ -58,11 +61,11 @@ describe('Dual Solutions', () => {
     it('loads solution 2 projects', () => {
         var p1: Rx.IPromise<any>, p2: Rx.IPromise<any>, p3: Rx.IPromise<any>;
         runs(() => {
-            // Init the editor, and start connecting.
-            p1 = Observable.fromPromise(atom.workspace.open('thirdparty/dualsolutions/ClassLib1/Class1.cs'))
+            var o = Observable.fromPromise(atom.workspace.open('thirdparty/dualsolutions/ClassLib1/Class1.cs'))
                 .flatMap(editor =>
-                    ClientManager.getClientForEditor(editor))
-                .flatMap(x =>
+                    ClientManager.getClientForEditor(editor));
+            // Init the editor, and start connecting.
+            p1 = o.flatMap(x =>
                     x.state.startWith(x.currentState))
                 .where(z =>
                     z === DriverState.Connected)
@@ -70,18 +73,21 @@ describe('Dual Solutions', () => {
                 .toPromise();
 
             // Should call out to projects
-            p2 = Omni.listener
-                .observeProjects
+            p2 = o.flatMap(x => x.observeProjects)
                 .take(1)
                 .toPromise();
 
             // Shoud produce a list of projects
             // Two are included in this sln
-            p3 = Omni.listener
-                .model.projectAdded
+            p3 = o.flatMap(x => x.model.observe.projectAdded)
                 .take(2)
                 .toArray()
                 .toPromise();
+
+
+            p1.then(() => console.log('p1 - loads solution 2 projects'));
+            p2.then(() => console.log('p2 - loads solution 2 projects'));
+            p3.then(() => console.log('p3 - loads solution 2 projects'));
         });
 
         waitsFor(() => {

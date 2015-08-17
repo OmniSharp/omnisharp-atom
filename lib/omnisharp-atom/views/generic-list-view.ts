@@ -7,7 +7,8 @@ export class GenericSelectListView extends spacePen.SelectListView {
     private previouslyFocusedElement: Node;
     private eventElement: any;
     private _onClosed = new AsyncSubject<boolean>();
-    public get onClosed() : Rx.Observable<boolean> { return this._onClosed; };
+    private _onClosedObservable = this._onClosed.shareReplay(1);
+    public get onClosed() : Rx.Observable<boolean> { return this._onClosedObservable; };
 
     public message: JQuery;
 
