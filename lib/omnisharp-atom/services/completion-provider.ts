@@ -2,7 +2,7 @@ import Omni = require('../../omni-sharp-server/omni')
 import OmniSharpAtom = require('../omnisharp-atom');
 
 import _ = require('lodash')
-import {Subject, BehaviorSubject, Observable, CompositeDisposable} from 'rx';
+import {Subject, BehaviorSubject, Observable, CompositeDisposable, Scheduler} from 'rx';
 import Promise = require('bluebird');
 var filter = require('fuzzaldrin').filter;
 
@@ -55,65 +55,19 @@ let _initialized = false;
 let _useIcons: boolean;
 let _useLeftLabelColumnForSuggestions: boolean;
 
-let _currentOptions: RequestOptions;
-let _subject = new Subject<RequestOptions>();
-
-let _clearCacheOnBufferMovement = Observable.zip(_subject, _subject.skip(1), calcuateMovement).where(z => z.reset).select(x => x.current);
-let _clearCacheOnDot = _subject.where(z => z.prefix === "." || (z.prefix && !_.trim(z.prefix)) || !z.prefix || z.activatedManually);
-let _cacheClearOnForce = new Subject<RequestOptions>();
-
-// Only issue new requests when ever a cache change event occurs.
-let _requestStream = Observable.merge(_clearCacheOnDot, _clearCacheOnBufferMovement, _cacheClearOnForce)
-    // This covers us incase both return the same value.
-    .distinctUntilChanged()
-    // Make the request
-    .flatMapLatest(options => Omni.request(client => client.autocomplete(client.makeDataRequest(autoCompleteOptions))))
-    // Ensure the array is not null;
-    .map(completions => completions || [])
-    .share();
-
-function makeNextResolver() {
-    var result: any;
-    var resolver;
-    var promise = new Promise(r => resolver = r);
-    return { promise: promise, resolver: resolver };
-}
-
-let _suggestions = new BehaviorSubject<{ promise: Rx.IPromise<OmniSharp.Models.AutoCompleteResponse[]>; resolver?: (results: OmniSharp.Models.AutoCompleteResponse[]) => void }>(makeNextResolver());
-
-// Reset the cache when the user asks us.
-let clearCacheValue = _.debounce(() => {
-    _suggestions.onNext(makeNextResolver());
-}, 100, { leading: true });
+let previous: RequestOptions;
+let results: Rx.Promise<any>;
 
 let setupSubscriptions = () => {
     if (_initialized) return;
 
     var disposable = _disposable = new CompositeDisposable();
 
-    disposable.add(_requestStream.subscribe(results => {
-        var v = _suggestions.getValue();
-        if (v.resolver) {
-            v.resolver(results);
-            v.resolver = null;
-        } else {
-            var nr = makeNextResolver();
-            _suggestions.onNext(nr);
-            nr.resolver(results);
-            nr.resolver = null;
-        }
-    }));
-
     // Clear when auto-complete is opening.
     // TODO: Update atom typings
     disposable.add(atom.commands.onWillDispatch(function(event: Event) {
         if (event.type === "autocomplete-plus:activate" || event.type === "autocomplete-plus:confirm" || event.type === "autocomplete-plus:cancel") {
-            _cacheClearOnForce.onNext(_currentOptions);
-            clearCacheValue();
-        }
-
-        if (event.type === "autocomplete-plus:activate" && _currentOptions) {
-            //_cacheClearOnForce.onNext(_currentOptions);
+            results = null;
         }
     }));
 
@@ -128,19 +82,6 @@ let setupSubscriptions = () => {
 
     _initialized = true;
 }
-
-var onNext = (options: RequestOptions) => {
-    // Hold on to options incase we're activating
-    _currentOptions = options;
-    _subject.onNext(options);
-    _currentOptions = null;
-};
-
-// This method returns the currently held promise
-// This is out cache container.  This resets when we ask for new values.
-let promise = () => {
-    return _suggestions.getValue().promise;
-};
 
 function makeSuggestion(item: OmniSharp.Models.AutoCompleteResponse) {
     var description, leftLabel, iconHTML, type;
@@ -188,7 +129,15 @@ function renderIcon(item) {
 function getSuggestions(options: RequestOptions): Rx.IPromise<Suggestion[]> {
     if (!_initialized) setupSubscriptions();
 
-    onNext(options);
+    if (results && previous && calcuateMovement(previous, options).reset) {
+        results = null;
+    }
+
+    if (results && options.prefix === "." || (options.prefix && !_.trim(options.prefix)) || !options.prefix || options.activatedManually) {
+        results = null;
+    }
+
+    previous = options;
 
     var buffer = options.editor.getBuffer();
     var end = options.bufferPosition.column;
@@ -204,23 +153,27 @@ function getSuggestions(options: RequestOptions): Rx.IPromise<Suggestion[]> {
     if (search === ".")
         search = "";
 
-    var p = promise();
+    if (!results) results = Omni.request(client => client.autocomplete(client.makeDataRequest(autoCompleteOptions))).toPromise();
+
+    var p = results;
     if (search)
         p = p.then(s => filter(s, search, { key: 'CompletionText' }));
 
-    return p.then(response => response.map(s => makeSuggestion(s)))
+    return p.then(response => response.map(s => makeSuggestion(s)));
 }
 
 function onDidInsertSuggestion(editor: Atom.TextEditor, triggerPosition: TextBuffer.Point, suggestion: any) {
-    clearCacheValue();
+    results = null;
 }
 
 function dispose() {
     if (_disposable)
         _disposable.dispose();
+
     _disposable = null;
     _initialized = false;
 }
+
 export var CompletionProvider = {
     selector: '.source.cs, .source.csx',
     disableForSelector: 'source.cs .comment',
