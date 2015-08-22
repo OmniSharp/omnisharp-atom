@@ -126,9 +126,10 @@ class CodeLens implements OmniSharp.IFeature {
             .flatMap(({fileMember, marker}) => Omni.request(editor, solution =>
                 solution.findusages({ FileName: editor.getPath(), Column: fileMember.Column + 1, Line: fileMember.Line }, { silent: true })
                     .map(response => ({ response, fileMember, marker }))))
+            .where(x => x.response.QuickFixes.length > 1)
             .tapOnNext(({response, marker, fileMember}) => {
                 var activeDecoration = _.find(decorations, d => d.getMarker().isEqual(<any>marker));
-                var text = (response.QuickFixes.length).toString();
+                var text = (response.QuickFixes.length - 1).toString();
 
                 if (activeDecoration) {
                     var htmlElement: HTMLDivElement = activeDecoration.getProperties().item;
