@@ -5,6 +5,7 @@ import $ = require('jquery');
 import {CompositeDisposable, Observable, Disposable, Subject} from "rx";
 import Omni = require('../../omni-sharp-server/omni');
 import {DriverState} from "omnisharp-client";
+import {createToggleableObservable} from "../helpers";
 
 interface IDecoration {
     destroy();
@@ -14,10 +15,20 @@ interface IDecoration {
 }
 
 class CodeLens implements OmniSharp.IFeature {
+    public active = false;
+    public enabled: boolean;
+    public observe: { enabled: Observable<boolean> };
+
     private disposable: Rx.CompositeDisposable;
     private decorations = new WeakMap<Atom.TextEditor, IDecoration[]>();
 
+    constructor() {
+        this.observe = createToggleableObservable(this, "omnisharp-atom.codeLens");
+    }
+
     public activate() {
+        if (!this.enabled || this.active) return;
+
         this.disposable = new CompositeDisposable();
         this.disposable.add(Omni.editors.subscribe(editor => {
             var ad = Omni.activeEditor
@@ -71,7 +82,14 @@ class CodeLens implements OmniSharp.IFeature {
             cd.add(editor.onDidChangeScrollTop(() => {
                 this.updateDecoratorVisiblility(editor);
             }));
-            //subject.onNext(null);
+
+            cd.add(atom.commands.onWillDispatch((event: Event) => {
+                if (_.contains(["omnisharp-atom:toggle-dock","omnisharp-atom:show-dock","omnisharp-atom:hide-dock"], event.type)) {
+                    this.updateDecoratorVisiblility(editor);
+                }
+            }));
+
+            this.updateDecoratorVisiblility(editor);
         }));
     }
 

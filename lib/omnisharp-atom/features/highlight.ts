@@ -3,39 +3,21 @@ import {DriverState} from "omnisharp-client";
 import OmniSharpAtom = require('../omnisharp-atom');
 import {each, indexOf, extend, has, map, flatten, contains, any, range, remove, pull, find, defer, startsWith, trim, isArray, chain, unique, set, findIndex, delay, filter, all, isEqual, min} from "lodash";
 import {Observable, Subject, ReplaySubject, Scheduler, CompositeDisposable, Disposable} from "rx";
+import {createToggleableObservable} from "../helpers";
 var AtomGrammar = require((<any> atom).config.resourcePath + "/node_modules/first-mate/lib/grammar.js");
 var Range: typeof TextBuffer.Range = <any>require('atom').Range;
 
-class Highlight implements OmniSharp.IFeature {
+class Highlight implements OmniSharp.IToggleFeature {
+    public active = false;
+    public enabled: boolean;
+    public observe: { enabled: Observable<boolean> };
+
     private disposable: Rx.CompositeDisposable;
     private editors: Array<Atom.TextEditor>;
 
     constructor() {
-        var subject = new ReplaySubject<boolean>(1);
-        var loaded = false;
-        atom.config.observe("omnisharp-atom.enhancedHighlighting", (enabled: boolean) => {
-            this.enabled = enabled;
-            subject.onNext(enabled);
-
-            if (loaded) {
-                if (enabled) {
-                    this.activate();
-                } else {
-                    this.dispose();
-                }
-            }
-            if (!loaded) {
-                loaded = true;
-            }
-        });
-
-        this.observe = { enabled: subject.asObservable() };
+        this.observe = createToggleableObservable(this, "omnisharp-atom.enhancedHighlighting");
     }
-
-    public active = false;
-    public enabled: boolean;
-
-    public observe: { enabled: Observable<boolean> };
 
     public activate() {
         if (!this.enabled || this.active) return;

@@ -343,6 +343,12 @@ class OmniSharpAtom {
             description: "Enables server based highlighting, which includes support for string interpolation, class names and more.",
             type: 'boolean',
             default: false
+        },
+        codeLens: {
+            title: 'Code Lens',
+            description: "Enables code lens support to show references to fields.",
+            type: 'boolean',
+            default: true
         }
     }
 }

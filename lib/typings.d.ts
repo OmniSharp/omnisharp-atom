@@ -5,6 +5,12 @@ declare module OmniSharp {
         dispose(): void;
     }
 
+    interface IToggleFeature extends IFeature {
+        active: boolean;
+        enabled: boolean;
+        observe: {enabled: Rx.Observable<boolean>; };
+    }
+
     interface IAtomFeature extends IFeature {
         attach(): void;
     }
@@ -42,32 +48,4 @@ declare module OmniSharp {
         commands: { [key: string]: string };
     }
 
-}
-
-declare module Rx {
-    interface ObjectObserveChange<T> {
-        type: string;
-        object: T;
-        name: string;
-        oldValue?: any;
-    }
-
-    interface ArrayObserveChange<T> {
-        type: string;
-        object: T[];
-        name?: string;
-        oldValue?: T;
-        index?: number;
-        removed?: T[];
-        added?: number;
-    }
-
-    interface ObservableStatic {
-        ofObjectChanges<T>(obj: T): Observable<ObjectObserveChange<T>>;
-        ofArrayChanges<T>(obj: T): Observable<ArrayObserveChange<T>>;
-    }
-
-    interface Observable<T> {
-        throttleFirst(windowDuration: number, scheduler?: Rx.Scheduler): Observable<T>;
-    }
 }

@@ -64,6 +64,7 @@
         "./lib/omnisharp-atom/features/run-tests.ts",
         "./lib/omnisharp-atom/features/server-information.ts",
         "./lib/omnisharp-atom/features/solution-information.ts",
+        "./lib/omnisharp-atom/helpers.ts",
         "./lib/omnisharp-atom/omnisharp-atom.ts",
         "./lib/omnisharp-atom/services/apply-changes.ts",
         "./lib/omnisharp-atom/services/completion-provider.ts",
