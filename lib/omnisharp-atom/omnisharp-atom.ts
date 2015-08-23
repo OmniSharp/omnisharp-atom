@@ -16,12 +16,14 @@ class OmniSharpAtom {
 
     // Internal: Used by unit testing to make sure the plugin is completely activated.
     private _started: AsyncSubject<boolean>;
+    private _activated: AsyncSubject<boolean>;
 
     private restartLinter: () => void = () => { };
 
     public activate(state) {
         this.disposable = new CompositeDisposable;
         this._started = new AsyncSubject<boolean>();
+        this._activated = new AsyncSubject<boolean>();
 
         console.info("Starting omnisharp-atom...");
         if (dependencyChecker.findAllDeps(this.getPackageDir())) {
@@ -34,21 +36,23 @@ class OmniSharpAtom {
                 this.features = [];
             }));
 
-            var whiteList = atom.config.get<boolean>("omnisharp-atom:feature-white-list") || undefined;
-            var featureList = atom.config.get<string[]>('omnisharp-atom:feature-list') || [];
+            var whiteList = atom.config.get<boolean>("omnisharp-atom:feature-white-list") || false;
+            var featureList = atom.config.get<string[]>('omnisharp-atom:feature-list') || this.toggleableFeatures();
 
-            var started = Observable.merge(this.getFeatures("atom"), this.getFeatures("features"))
-                .filter(l => {
-                    if (typeof whiteList === 'undefined') {
-                        return true;
-                    }
+            var started = Observable.merge(
+                this.getFeatures(featureList, whiteList, "atom"),
+                this.getFeatures(featureList, whiteList, "features")
+            ).filter(l => {
+                if (typeof whiteList === 'undefined') {
+                    return true;
+                }
 
-                    if (whiteList) {
-                        return _.contains(featureList, l.file);
-                    } else {
-                        return !_.contains(featureList, l.file);
-                    }
-                })
+                if (whiteList) {
+                    return _.contains(featureList, l.file);
+                } else {
+                    return !_.contains(featureList, l.file);
+                }
+            })
                 .flatMap(z => z.load())
                 .toArray()
                 .share();
@@ -83,11 +87,56 @@ class OmniSharpAtom {
                 this.disposable.add(atom.workspace.observeTextEditors((editor: Atom.TextEditor) => {
                     this.detectAutoToggleGrammar(editor);
                 }));
+
+
+                this._activated.onNext(true);
+                this._activated.onCompleted();
             }));
         } else {
             console.info(`omnisharp-atom not started missing depedencies ${dependencyChecker.errors() }...`);
             _.map(dependencyChecker.errors() || [], missingDependency => console.error(missingDependency))
         }
+    }
+
+    // TODO: Make this generic at somepoint
+    public toggleableFeatures() {
+        var excludedFeatures = [];
+        if (!atom.config.get<boolean>('omnisharp-atom.enhancedHighlighting')) {
+            excludedFeatures.push('features/highlight.highlight');
+        }
+
+        if (!atom.config.get<boolean>('omnisharp-atom.codeLens')) {
+            excludedFeatures.push('features/code-lens.codeLens');
+        }
+
+        this._activated.take(1).subscribe(() => {
+            var highlightEnabled = atom.config.get<boolean>('omnisharp-atom.enhancedHighlighting');
+            var codeLensEnabled = atom.config.get<boolean>('omnisharp-atom.codeLens');
+            var highlight = require('./features/highlight').highlight;
+            var codeLens = require('./features/code-lens').codeLens;
+            var cd = new CompositeDisposable();
+            this.disposable.add(cd);
+
+            atom.config.onDidChange('omnisharp-atom.enhancedHighlighting', enabled => {
+                if (highlightEnabled) {
+                    highlight.dispose();
+                } else {
+                    highlight.activate();
+                }
+                highlightEnabled = enabled.newValue;
+            });
+
+            atom.config.onDidChange('omnisharp-atom.codeLens', enabled => {
+                if (codeLensEnabled) {
+                    codeLens.dispose();
+                } else {
+                    codeLens.activate();
+                }
+                codeLensEnabled = enabled.newValue;
+            });
+        });
+
+        return excludedFeatures;
     }
 
     private _packageDir: string;
@@ -107,7 +156,7 @@ class OmniSharpAtom {
         return this._packageDir;
     }
 
-    public getFeatures(folder: string) {
+    public getFeatures(featureList: string[], whiteList: boolean, folder: string) {
         console.info(`Getting features for '${folder}'...`);
 
         var packageDir = this.getPackageDir();
@@ -116,7 +165,18 @@ class OmniSharpAtom {
         function loadFeature(file: string) {
             var result = require(`./${folder}/${file}`);
             console.info(`Loading feature '${folder}/${file}'...`);
-            return _.values(result).filter(feature => !_.isFunction(feature));
+            return _.keys(result).filter(key => {
+                if (typeof whiteList === 'undefined') {
+                    return true;
+                }
+
+                if (whiteList) {
+                    return _.contains(featureList, `${folder}/${file}.${key}`);
+                } else {
+                    return !_.contains(featureList, `${folder}/${file}.${key}`);
+                }
+            }).map(x => result[x])
+                .filter(feature => !_.isFunction(feature));
         }
 
         return Observable.fromNodeCallback(fs.readdir)(featureDir)

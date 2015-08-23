@@ -5,7 +5,6 @@ import $ = require('jquery');
 import {CompositeDisposable, Observable, Disposable, Subject} from "rx";
 import Omni = require('../../omni-sharp-server/omni');
 import {DriverState} from "omnisharp-client";
-import {createToggleableObservable} from "../helpers";
 
 interface IDecoration {
     destroy();
@@ -15,21 +14,12 @@ interface IDecoration {
 }
 
 class CodeLens implements OmniSharp.IFeature {
-    public active = false;
-    public enabled: boolean;
-    public observe: { enabled: Observable<boolean> };
-
     private disposable: Rx.CompositeDisposable;
     private decorations = new WeakMap<Atom.TextEditor, IDecoration[]>();
 
-    constructor() {
-        this.observe = createToggleableObservable(this, "omnisharp-atom.codeLens");
-    }
-
     public activate() {
-        if (!this.enabled || this.active) return;
-
         this.disposable = new CompositeDisposable();
+
         this.disposable.add(Omni.editors.subscribe(editor => {
             var ad = Omni.activeEditor
                 .where(active => active === editor)
@@ -43,6 +33,7 @@ class CodeLens implements OmniSharp.IFeature {
 
                         var markers = this.decorations.get(editor);
                         _.each(markers, (marker: any) => marker.destroy());
+                        this.decorations.set(editor, []);
                     }));
 
                     cd.add(atom.config.observe('editor.fontSize', (size: number) => {
@@ -84,12 +75,17 @@ class CodeLens implements OmniSharp.IFeature {
             }));
 
             cd.add(atom.commands.onWillDispatch((event: Event) => {
-                if (_.contains(["omnisharp-atom:toggle-dock","omnisharp-atom:show-dock","omnisharp-atom:hide-dock"], event.type)) {
+                if (_.contains(["omnisharp-atom:toggle-dock", "omnisharp-atom:show-dock", "omnisharp-atom:hide-dock"], event.type)) {
                     this.updateDecoratorVisiblility(editor);
                 }
             }));
 
             this.updateDecoratorVisiblility(editor);
+
+            cd.add(Disposable.create(() => {
+                this.decorations.get(editor).forEach(x => x.destroy());
+                this.decorations.set(editor, []);
+            }))
         }));
     }
 
@@ -122,7 +118,7 @@ class CodeLens implements OmniSharp.IFeature {
             solution.currentfilemembersasflat(solution.makeRequest(editor)))
             .flatMap(fileMembers => Observable.from(fileMembers))
             .map(fileMember => {
-                var range: TextBuffer.Range = <any> editor.getBuffer().rangeForRow(fileMember.Line, false);
+                var range: TextBuffer.Range = <any>editor.getBuffer().rangeForRow(fileMember.Line, false);
                 var marker = (<any>editor).markBufferRange(range, { invalidate: 'inside' });
 
                 var activeDecoration = _.find(decorations, d => d.getMarker().isEqual(<any>marker));

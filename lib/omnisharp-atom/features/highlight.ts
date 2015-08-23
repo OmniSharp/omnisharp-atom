@@ -3,32 +3,19 @@ import {DriverState} from "omnisharp-client";
 import OmniSharpAtom = require('../omnisharp-atom');
 import {each, indexOf, extend, has, map, flatten, contains, any, range, remove, pull, find, defer, startsWith, trim, isArray, chain, unique, set, findIndex, delay, filter, all, isEqual, min} from "lodash";
 import {Observable, Subject, ReplaySubject, Scheduler, CompositeDisposable, Disposable} from "rx";
-import {createToggleableObservable} from "../helpers";
-var AtomGrammar = require((<any> atom).config.resourcePath + "/node_modules/first-mate/lib/grammar.js");
+var AtomGrammar = require((<any>atom).config.resourcePath + "/node_modules/first-mate/lib/grammar.js");
 var Range: typeof TextBuffer.Range = <any>require('atom').Range;
 
-class Highlight implements OmniSharp.IToggleFeature {
-    public active = false;
-    public enabled: boolean;
-    public observe: { enabled: Observable<boolean> };
-
+class Highlight implements OmniSharp.IFeature {
     private disposable: Rx.CompositeDisposable;
     private editors: Array<Atom.TextEditor>;
 
     constructor() {
-        this.observe = createToggleableObservable(this, "omnisharp-atom.enhancedHighlighting");
     }
 
     public activate() {
-        if (!this.enabled || this.active) return;
-
         this.disposable = new CompositeDisposable();
         this.editors = [];
-
-        this.active = true;
-        this.disposable.add(Disposable.create(() => {
-            this.active = false
-        }));
 
         this.disposable.add(Omni.editors
             .subscribe(editor => this.setupEditor(editor)));
@@ -41,7 +28,7 @@ class Highlight implements OmniSharp.IToggleFeature {
                         .where(z => z.request.FileName == editor.getPath())
                         .map(z => ({ editor, request: z.request, response: z.response }))
                         .take(1))
-                )
+            )
                 .subscribe(({editor, request, response}) => {
                     editor.getGrammar && (<any>editor.getGrammar()).setResponses(response.Highlights, request.ProjectNames.length > 0);
                     editor.displayBuffer.tokenizedBuffer.retokenizeLines();
@@ -51,7 +38,7 @@ class Highlight implements OmniSharp.IToggleFeature {
             isObserveRetokenizing(
                 Omni.listener.observeHighlight
                     .map(z => ({ editor: find(this.editors, editor => editor.getPath() === z.request.FileName), request: z.request, response: z.response }))
-                )
+            )
                 .subscribe(({editor, request, response}) => {
                     editor.getGrammar && (<any>editor.getGrammar()).setResponses(response.Highlights, request.ProjectNames.length > 0);
                 }));
@@ -60,7 +47,7 @@ class Highlight implements OmniSharp.IToggleFeature {
             Omni.listener.observeHighlight
                 .map(z => ({ editor: find(atom.workspace.getTextEditors(), editor => editor.getPath() == z.request.FileName), request: z.request, response: z.response }))
                 .flatMap(z => Omni.activeEditor.take(1).where(x => x === z.editor).map(x => z))
-            )
+        )
             .debounce(400)
             .subscribe(({request, response, editor}) => {
                 editor.displayBuffer.tokenizedBuffer['silentRetokenizeLines']();
@@ -76,7 +63,7 @@ class Highlight implements OmniSharp.IToggleFeature {
                     .flatMap(z => Omni.activeEditor))
                 .debounce(20)
                 .where(z => !!z)
-            )
+        )
             .subscribe(editor => {
                 editor.displayBuffer.tokenizedBuffer['silentRetokenizeLines']();
             }));

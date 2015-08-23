@@ -3,14 +3,13 @@ import {CompositeDisposable, Observable} from "rx";
 import Omni = require('../../omni-sharp-server/omni');
 import $ = require('jquery');
 var Range: typeof TextBuffer.Range = require('atom').Range;
-import {highlight} from "./highlight";
-
 var identifierRegex = /^identifier|identifier$|\.identifier\./;
 
 class GoToDefinition implements OmniSharp.IFeature {
     private disposable: Rx.CompositeDisposable;
     private exprTypeTimeout = null;
     private marker = null;
+    private enhancedHighlighting: boolean;
 
     public activate() {
         this.disposable = new CompositeDisposable();
@@ -52,7 +51,8 @@ class GoToDefinition implements OmniSharp.IFeature {
             editor.onDidDestroy(() => cd.dispose());
 
             var eventDisposable: Rx.Disposable;
-            cd.add(highlight.observe.enabled.subscribe((enabled: boolean) => {
+            cd.add(atom.config.observe('omnisharp-atom.enhancedHighlighting', (enabled: boolean) => {
+                this.enhancedHighlighting = enabled;
                 if (eventDisposable) {
                     eventDisposable.dispose();
                     cd.remove(eventDisposable);
@@ -152,7 +152,7 @@ class GoToDefinition implements OmniSharp.IFeature {
             var decoration = editor.decorateMarker(this.marker, { type: 'highlight', class: 'gotodefinition-underline' });
         };
 
-        if (highlight.enabled) {
+        if (this.enhancedHighlighting) {
             var scopes: string[] = (<any>editor.scopeDescriptorForBufferPosition(bufferPt)).scopes;
             if (identifierRegex.test(_.last(scopes))) {
                 addMark();
