@@ -36,8 +36,13 @@ class OmniSharpAtom {
                 this.features = [];
             }));
 
-            var whiteList = atom.config.get<boolean>("omnisharp-atom:feature-white-list") || false;
-            var featureList = atom.config.get<string[]>('omnisharp-atom:feature-list') || this.toggleableFeatures();
+            var whiteList = atom.config.get<boolean>("omnisharp-atom:feature-white-list");
+            var featureList = atom.config.get<string[]>('omnisharp-atom:feature-list');
+
+            if (typeof whiteList === 'undefined') {
+                whiteList = false;
+                featureList = this.toggleableFeatures();
+            }
 
             var started = Observable.merge(
                 this.getFeatures(featureList, whiteList, "atom"),
@@ -102,11 +107,11 @@ class OmniSharpAtom {
     public toggleableFeatures() {
         var excludedFeatures = [];
         if (!atom.config.get<boolean>('omnisharp-atom.enhancedHighlighting')) {
-            excludedFeatures.push('features/highlight.highlight');
+            excludedFeatures.push('features/highlight');
         }
 
         if (!atom.config.get<boolean>('omnisharp-atom.codeLens')) {
-            excludedFeatures.push('features/code-lens.codeLens');
+            excludedFeatures.push('features/code-lens');
         }
 
         this._activated.take(1).subscribe(() => {
@@ -165,18 +170,7 @@ class OmniSharpAtom {
         function loadFeature(file: string) {
             var result = require(`./${folder}/${file}`);
             console.info(`Loading feature '${folder}/${file}'...`);
-            return _.keys(result).filter(key => {
-                if (typeof whiteList === 'undefined') {
-                    return true;
-                }
-
-                if (whiteList) {
-                    return _.contains(featureList, `${folder}/${file}.${key}`);
-                } else {
-                    return !_.contains(featureList, `${folder}/${file}.${key}`);
-                }
-            }).map(x => result[x])
-                .filter(feature => !_.isFunction(feature));
+            return _.values(result).filter(feature => !_.isFunction(feature));
         }
 
         return Observable.fromNodeCallback(fs.readdir)(featureDir)
