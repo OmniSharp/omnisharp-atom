@@ -5,19 +5,22 @@ os: Windows Server 2012 R2
 install:
   - appveyor DownloadFile https://atom.io/download/windows -FileName AtomSetup.exe
   - AtomSetup.exe /silent
-  - set PATH=%LOCALAPPDATA%\atom\bin;%GOPATH%\bin;c:\go\bin;%PATH%
+  - set PATH=%LOCALAPPDATA%\atom\bin;%PATH%
   - ps: "&{$Branch='dev';iex ((new-object net.webclient).DownloadString('https://raw.githubusercontent.com/aspnet/Home/dev/dnvminstall.ps1'))}"
   - dnvm install 1.0.0-beta4
   - dnvm upgrade
+  - set PATH=%LOCALAPPDATA%\atom\bin;%PATH%
   - apm install atom-yeoman
   - apm install linter
   - apm install json-schema
   - apm install advanced-new-file
+  - apm install language-cshtml
+  - ps: .\install-fixtures.ps1
 
 # to run your custom scripts instead of automatic MSBuild
 build_script:
   - cd %APPVEYOR_BUILD_FOLDER%
-  - SET PATH=%LOCALAPPDATA%\atom\bin;%GOPATH%\bin;%PATH%
+  - SET PATH=%LOCALAPPDATA%\atom\bin;%PATH%
   - apm clean
   - apm install
   - apm test

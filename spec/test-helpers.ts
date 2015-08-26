@@ -10,13 +10,13 @@ ClientManager.observationClient.events.subscribe(event => console.info(`server e
 ClientManager.observationClient.requests.subscribe(r => console.info(`request: ${JSON.stringify(r) }`));
 ClientManager.observationClient.responses.subscribe(r => console.info(`response: ${JSON.stringify(r) }`));
 
-export function setupFeature(features: string[], unitTestMode = true) {
+export function setupFeature(features: string[], unitTestMode = true, whitelist = true) {
     var cd: CompositeDisposable;
     beforeEach(function() {
         cd = new CompositeDisposable();
         ClientManager._unitTestMode_ = unitTestMode;
 
-        atom.config.set('omnisharp-atom:feature-white-list', true);
+        atom.config.set('omnisharp-atom:feature-white-list', whitelist);
         atom.config.set('omnisharp-atom:feature-list', features);
 
         waitsForPromise(() => atom.packages.activatePackage('language-csharp')

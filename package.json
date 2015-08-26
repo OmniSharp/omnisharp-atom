@@ -59,29 +59,29 @@
   "dependencies": {
     "ansi-to-html": "^0.3.0",
     "atom-package-dependencies": "https://github.com/basarat/atom-package-dependencies/archive/cb1.tar.gz",
-    "atom-space-pen-views": "^2.0.5",
-    "bluebird": "^2.9.30",
-    "del": "^1.1.1",
-    "escape-html": "^1.0.1",
+    "atom-space-pen-views": "^2.1.0",
+    "bluebird": "^2.9.34",
+    "del": "^1.2.1",
+    "escape-html": "^1.0.2",
     "event-kit": "^1.2.0",
-    "font-awesome": "^4.3.0",
-    "fs-plus": "^2.3.1",
+    "font-awesome": "^4.4.0",
+    "fs-plus": "^2.8.1",
     "fuzzaldrin": "^2.1.0",
-    "generator-aspnet": "0.0.35",
-    "glob": "^5.0.5",
-    "gulp": "^3.8.11",
+    "generator-aspnet": "^0.0.60",
+    "glob": "^5.0.14",
+    "gulp": "^3.9.0",
     "gulp-util": "^3.0.6",
     "jquery": "^2.1.1",
-    "lodash": "^3.9.3",
-    "merge-stream": "^0.1.7",
-    "omnisharp-client": "^2.0.2",
+    "lodash": "^3.10.1",
+    "merge-stream": "^1.0.0",
+    "omnisharp-client": "^2.0.4",
     "react": "^0.13.3",
     "rimraf": "^2.4.2",
-    "rx": "^2.5.3",
-    "semver": "^4.2.0",
+    "rx": "^3.0.1",
+    "semver": "^5.0.1",
     "through2": "^2.0.0",
     "tsd": "^0.6.3",
-    "typescript": "^1.5.0-beta"
+    "typescript": "^1.5.3"
   },
   "consumedServices": {
     "status-bar": {
@@ -122,6 +122,7 @@
     "atom-yeoman": ">=0.3.0",
     "linter": ">=1.0.0",
     "json-schema": ">=0.1.11",
-    "advanced-new-file": ">=0.4.3"
+    "advanced-new-file": ">=0.4.3",
+    "language-cshtml": ">=0.1.0"
   }
 }
