@@ -7,15 +7,7 @@ import * as _ from "lodash";
 describe('Code Lens', () => {
     setupFeature(['features/code-lens']);
 
-    var oldIsVisible: any;
-    beforeEach(() => {
-        var oldIsVisible = (<any>Lens.prototype)._isVisible;
-        (<any>Lens.prototype)._isVisible = () => true;
-    });
-
-    afterEach(() => {
-        (<any>Lens.prototype)._isVisible = oldIsVisible;
-    });
+    (<any>Lens.prototype)._isVisible = () => true;
 
     var e: Atom.TextEditor;
     it('should add code lens\'', () => {
@@ -41,16 +33,14 @@ describe('Code Lens', () => {
     it('should handle editor switching', () => {
         var p1 = openEditor('simple/code-lens/CodeLens.cs')
             .then(() => Omni.listener.observeCurrentfilemembersasflat.debounce(1000).take(1).toPromise())
-            .then(() => Observable.timer(1000).toPromise())
             .then(() => openEditor('simple/code-lens/CodeLens2.cs'))
             .then(() => Omni.listener.observeCurrentfilemembersasflat.debounce(1000).take(1).toPromise())
-            .then(() => Observable.timer(1000).toPromise())
-            .then(() => Promise.all([openEditor('simple/code-lens/CodeLens.cs'), Omni.listener.observeCurrentfilemembersasflat.debounce(1000).take(1).toPromise()]))
+            .then(() => openEditor('simple/code-lens/CodeLens.cs'))
             .then((a: any) => {
-                e = a[0].editor;
+                e = a.editor;
                 return a;
             })
-            .then(() => Observable.timer(1000).toPromise());
+            .then(() => Omni.listener.observeCurrentfilemembersasflat.debounce(1000).take(1).toPromise());
 
         waitsForPromise(() => p1);
 
