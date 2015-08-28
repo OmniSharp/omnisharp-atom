@@ -116,9 +116,11 @@ class OmniSharpAtom {
 
         this._activated.take(1).subscribe(() => {
             var highlightEnabled = atom.config.get<boolean>('omnisharp-atom.enhancedHighlighting');
-            var codeLensEnabled = atom.config.get<boolean>('omnisharp-atom.codeLens');
             var highlight = require('./features/highlight').highlight;
+
+            var codeLensEnabled = atom.config.get<boolean>('omnisharp-atom.codeLens');
             var codeLens = require('./features/code-lens').codeLens;
+            
             var cd = new CompositeDisposable();
             this.disposable.add(cd);
 

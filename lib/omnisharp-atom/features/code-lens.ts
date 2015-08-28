@@ -32,7 +32,8 @@ class CodeLens implements OmniSharp.IFeature {
                         cd.dispose();
 
                         var markers = this.decorations.get(editor);
-                        _.each(markers, (marker) => marker.dispose());
+
+                        _.each(markers, (marker) => marker && marker.dispose());
                         this.decorations.set(editor, []);
                     }));
 
