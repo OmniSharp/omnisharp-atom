@@ -65,12 +65,8 @@ class OmniSharpAtom {
 
                 (<any>atom.config).setSchema('omnisharp-atom', {
                     type: 'object',
-                    properties: OmniSharpAtom.settings
+                    properties: this.config
                 });
-
-                // Migrate old settings to new settings
-                atom.config.set('omnisharp-atom.highlight', atom.config.get('omnisharp-atom.enhancedHighlighting'));
-                atom.config.set('omnisharp-atom.codeLens', atom.config.get('omnisharp-atom.codeLens'));
 
                 Omni.activate();
                 this.disposable.add(Omni);
@@ -82,9 +78,8 @@ class OmniSharpAtom {
                 _.each(features, f => {
                     var {key, value} = f;
 
-
                     // Whitelist is used for unit testing, we don't want the config to make changes here
-                    if (whiteListUndefined && _.has(OmniSharpAtom.settings, key)) {
+                    if (whiteListUndefined && _.has(this.config, key)) {
                         this.disposable.add(atom.config.observe(`omnisharp-atom.${key}`, enabled => {
                             if (!enabled) {
                                 try { value.dispose(); } catch (ex) { }
@@ -103,7 +98,6 @@ class OmniSharpAtom {
                             deferred.push(() => value['attach']());
                         }
                     }
-
 
                     this.disposable.add(Disposable.create(() => { try { value.dispose() } catch (ex) { } }));
                 });
@@ -165,9 +159,9 @@ class OmniSharpAtom {
                     _.each(feature, (value: OmniSharp.IFeature, key: string) => {
                         if (!_.isFunction(value)) {
                             if (!value.required) {
-                                OmniSharpAtom.settings[key] = {
+                                this.config[key] = {
                                     title: `${value.title}`,
-                                    descrption: value.description,
+                                    description: value.description,
                                     type: 'boolean',
                                     default: (_.has(value, 'default') ? value.default : true)
                                 };
@@ -324,7 +318,7 @@ class OmniSharpAtom {
         }));
     }
 
-    public static settings = {
+    public config = {
         autoStartOnCompatibleFile: {
             title: "Autostart Omnisharp Roslyn",
             description: "Automatically starts Omnisharp Roslyn when a compatible file is opened.",
@@ -393,11 +387,6 @@ class OmniSharpAtom {
             title: 'Hide the linter interface when using omnisharp-atom editors',
             type: 'boolean',
             default: true
-        },
-        features: {
-            type: 'object',
-            //default: {},
-            properties: {}
         }
     }
 }

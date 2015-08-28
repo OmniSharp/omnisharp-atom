@@ -550,4 +550,4 @@ function setGrammar(grammar: FirstMate.Grammar): FirstMate.Grammar {
     return this._setGrammar(grammar);
 }
 
-export var highlight = new Highlight;
+export var enhancedHighlighting = new Highlight;
