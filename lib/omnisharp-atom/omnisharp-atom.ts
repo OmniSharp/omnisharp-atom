@@ -8,6 +8,7 @@ import fs = require('fs');
 import Omni = require('../omni-sharp-server/omni');
 import dependencyChecker = require('./dependency-checker');
 import {world} from './world';
+var win32 = process.platform === "win32";
 
 class OmniSharpAtom {
     private disposable: Rx.CompositeDisposable;
@@ -387,6 +388,12 @@ class OmniSharpAtom {
             title: 'Hide the linter interface when using omnisharp-atom editors',
             type: 'boolean',
             default: true
+        },
+        wantMetadata: {
+            title: 'Want metadata',
+            descrption: 'Request symbol metadata from the server, when using go-to-definition.  This is disabled by default on Linux, due to issues with Roslyn on Mono.',
+            type: 'boolean',
+            default: win32
         }
     }
 }

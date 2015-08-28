@@ -132,7 +132,7 @@ class CodeLens implements OmniSharp.IFeature {
             .tapOnCompleted(() => {
                 // Remove all old/missing decorations
                 _.each(decorations, d => {
-                    if (!updated.has(d)) {
+                    if (d && !updated.has(d)) {
                         d.dispose();
                     }
                 });
@@ -163,6 +163,7 @@ export class Lens implements Rx.IDisposable {
     private _disposable = new CompositeDisposable();
     private _element: HTMLDivElement;
     private _updateObservable: Rx.Observable<number>;
+    private _path: string;
 
     public loaded: boolean = false;
 
@@ -170,11 +171,12 @@ export class Lens implements Rx.IDisposable {
         this._row = _range.getRows()[0];
         this._update = new Subject<any>();
         this._disposable.add(this._update);
+        this._path = _editor.getPath();
 
         this._updateObservable = this._update
             .where(x => !!x)
             .flatMap(() => Omni.request(this._editor, solution =>
-                solution.findusages({ FileName: this._editor.getPath(), Column: this._member.Column + 1, Line: this._member.Line }, { silent: true })))
+                solution.findusages({ FileName: this._path, Column: this._member.Column + 1, Line: this._member.Line }, { silent: true })))
             .map(x => x.QuickFixes.length - 1)
             .publish()
             .refCount();
@@ -206,8 +208,13 @@ export class Lens implements Rx.IDisposable {
     public invalidate() {
         this._updateObservable
             .take(1)
-            .where(x => x > 0)
-            .subscribe((x) => this._element && (this._element.textContent = x.toString()));
+            .subscribe((x) => {
+                if (x === 0) {
+                    this.dispose();
+                } else {
+                    this._element && (this._element.textContent = x.toString());
+                }
+            });
     }
 
     public isEqual(marker: Atom.Marker) {
@@ -237,7 +244,7 @@ export class Lens implements Rx.IDisposable {
         element.style.left = '16px';
         element.classList.add('highlight-info', 'badge', 'badge-small');
         element.textContent = count.toString();
-        element.onclick = function() { Omni.request(this._editor, s => s.findusages({ FileName: this._editor.getPath(), Column: this._member.Column + 1, Line: this._member.Line })); }
+        element.onclick = function() { Omni.request(this._editor, s => s.findusages({ FileName: this._path, Column: this._member.Column + 1, Line: this._member.Line })); }
 
         this._decoration = <any>this._editor.decorateMarker(this._marker, { type: "overlay", class: `codelens`, item: element, position: 'head' });
         this._disposable.add(Disposable.create(() => {

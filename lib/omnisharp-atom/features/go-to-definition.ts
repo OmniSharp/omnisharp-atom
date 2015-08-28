@@ -10,6 +10,7 @@ class GoToDefinition implements OmniSharp.IFeature {
     private exprTypeTimeout = null;
     private marker = null;
     private enhancedHighlighting: boolean;
+    private wantMetadata: boolean;
 
     public activate() {
         this.disposable = new CompositeDisposable();
@@ -82,8 +83,11 @@ class GoToDefinition implements OmniSharp.IFeature {
             this.disposable.add(cd);
         }));
 
-        this.disposable.add(atom.emitter.on("symbols-view:go-to-declaration", this.goToDefinition));
-        this.disposable.add(Omni.addTextEditorCommand("omnisharp-atom:go-to-definition", this.goToDefinition));
+        this.disposable.add(atom.emitter.on("symbols-view:go-to-declaration", () => this.goToDefinition()));
+        this.disposable.add(Omni.addTextEditorCommand("omnisharp-atom:go-to-definition", () => this.goToDefinition()));
+        this.disposable.add(atom.config.observe('omnisharp-atom.wantMetadata', enabled => {
+            this.wantMetadata = enabled;
+        }));
     }
 
     public dispose() {
@@ -94,7 +98,9 @@ class GoToDefinition implements OmniSharp.IFeature {
         var editor = atom.workspace.getActiveTextEditor();
         if (editor) {
             var word = <any>editor.getWordUnderCursor();
-            Omni.request(editor, client => client.gotodefinition(client.makeRequest()))
+            Omni.request(editor, client => client.gotodefinition(client.makeDataRequest({
+                WantMetadata: this.wantMetadata
+            })))
                 .subscribe((data: OmniSharp.Models.GotoDefinitionResponse) => {
                     if (data.FileName != null) {
                         Omni.navigateTo(data);
