@@ -104,8 +104,8 @@ class GoToDefinition implements OmniSharp.IFeature {
                 .subscribe((data: OmniSharp.Models.GotoDefinitionResponse) => {
                     if (data.FileName != null) {
                         Omni.navigateTo(data);
-                    } else if (data['MetadataSource']) {
-                        var {AssemblyName, TypeName}: { AssemblyName: string; TypeName: string } = data['MetadataSource'];
+                    } else if (data.MetadataSource) {
+                        var {AssemblyName, TypeName} = data.MetadataSource;
                         atom.workspace.open(`omnisharp://metadata/${AssemblyName}/${TypeName}`, <any>{
                             initialLine: data.Line,
                             initialColumn: data.Column,
