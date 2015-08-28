@@ -56,7 +56,7 @@ class CodeFormat implements OmniSharp.IFeature {
         return false;
     }
 
-    public required = false;
+    public required = true;
     public title = 'Code Format';
     public description = 'Support for code formatting.';
 }

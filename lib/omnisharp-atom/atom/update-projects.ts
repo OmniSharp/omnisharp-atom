@@ -154,7 +154,7 @@ class UpdateProject implements OmniSharp.IAtomFeature {
         this.disposable.dispose();
     }
 
-    public required = false;
+    public required = true;
     public title = 'Atom Project Updater';
     public description = 'Adds support for detecting external projects and if atom is looking at the wrong project folder.';
 }

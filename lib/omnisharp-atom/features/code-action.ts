@@ -138,7 +138,7 @@ class CodeAction implements OmniSharp.IFeature {
         });
     }
 
-    public required = false;
+    public required = true;
     public title = 'Code Actions';
     public description = 'Adds code action support to omnisharp-atom.';
 }

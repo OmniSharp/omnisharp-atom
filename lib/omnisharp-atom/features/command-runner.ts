@@ -138,7 +138,7 @@ class CommandRunner implements OmniSharp.IFeature {
         this.disposable.dispose();
     }
 
-    public required = false;
+    public required = true;
     public title = 'Command Runner';
     public description = 'Adds command runner to run dnx and other similar commands from within atom.';
 }

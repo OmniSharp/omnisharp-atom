@@ -22,7 +22,7 @@ class FindSymbols implements OmniSharp.IFeature {
         this.disposable.dispose();
     }
 
-    public required = false;
+    public required = true;
     public title = 'Find Symbols';
     public description = 'Adds commands to find symbols through the UI.';
 }

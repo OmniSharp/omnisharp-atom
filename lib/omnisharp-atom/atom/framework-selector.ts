@@ -83,7 +83,7 @@ class FrameworkSelector implements OmniSharp.IAtomFeature {
         }
     }
 
-    public required = false;
+    public required = true;
     public title = 'Framework Selector';
     public description = 'Lets you select the framework you\'re currently targeting.';
 }

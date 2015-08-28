@@ -35,7 +35,7 @@ class PackageRestore implements OmniSharp.IFeature {
         }
     }
 
-    public required = false;
+    public required = true;
     public title = 'Package Restore';
     public description = 'Initializes a package restore, when an project.json file is saved.';
 }

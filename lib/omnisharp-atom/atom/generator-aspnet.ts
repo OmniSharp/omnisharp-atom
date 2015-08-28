@@ -73,7 +73,7 @@ class GeneratorAspnet implements OmniSharp.IFeature {
         this.disposable.dispose();
     }
 
-    public required = false;
+    public required = true;
     public title = 'Aspnet Yeoman Generator';
     public description = 'Enables the aspnet yeoman generator.';
 }

@@ -36,7 +36,7 @@ class Navigate implements OmniSharp.IFeature {
         Omni.navigateTo({ FileName: editor.getURI(), Line: data.Line, Column: data.Column });
     }
 
-    public required = false;
+    public required = true;
     public title = 'Navigate';
     public description = 'Adds server based navigation support';
 }

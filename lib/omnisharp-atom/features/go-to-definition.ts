@@ -190,7 +190,7 @@ class GoToDefinition implements OmniSharp.IFeature {
         }
     }
 
-    public required = false;
+    public required = true;
     public title = 'Go To Definition';
     public description = 'Adds support to goto definition, as well as display metadata returned by a goto definition metadata response';
 }

@@ -27,7 +27,7 @@ class NotificationHandler implements OmniSharp.IFeature {
         this.disposable.dispose();
     }
 
-    public required = false;
+    public required = true;
     public title = 'Package Restore Notifications';
     public description = 'Adds support to show package restore progress, when the server initiates a restore operation.';
 }
