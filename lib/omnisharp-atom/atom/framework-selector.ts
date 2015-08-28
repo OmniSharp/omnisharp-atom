@@ -82,6 +82,10 @@ class FrameworkSelector implements OmniSharp.IAtomFeature {
             this._component.setState({ activeFramework: framework })
         }
     }
+
+    public required = false;
+    public title = 'Framework Selector';
+    public description = 'Lets you select the framework you\'re currently targeting.';
 }
 
 export var frameworkSelector = new FrameworkSelector;

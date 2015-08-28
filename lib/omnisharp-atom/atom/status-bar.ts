@@ -46,6 +46,9 @@ class StatusBar implements OmniSharp.IAtomFeature {
         this.disposable.dispose();
     }
 
+    public required = true;
+    public title = 'Status Bar';
+    public description = 'Adds the OmniSharp status icon to the status bar.';
 }
 
 export var statusBar = new StatusBar;

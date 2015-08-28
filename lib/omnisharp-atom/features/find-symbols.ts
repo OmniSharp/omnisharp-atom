@@ -21,6 +21,10 @@ class FindSymbols implements OmniSharp.IFeature {
     public dispose() {
         this.disposable.dispose();
     }
+
+    public required = false;
+    public title = 'Find Symbols';
+    public description = 'Adds commands to find symbols through the UI.';
 }
 
 export var findSymbols = new FindSymbols;

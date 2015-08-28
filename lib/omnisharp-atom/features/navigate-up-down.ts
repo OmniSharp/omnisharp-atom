@@ -35,5 +35,9 @@ class Navigate implements OmniSharp.IFeature {
         var editor = atom.workspace.getActiveTextEditor();
         Omni.navigateTo({ FileName: editor.getURI(), Line: data.Line, Column: data.Column });
     }
+
+    public required = false;
+    public title = 'Navigate';
+    public description = 'Adds server based navigation support';
 }
 export var navigate = new Navigate;

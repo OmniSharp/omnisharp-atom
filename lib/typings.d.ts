@@ -3,6 +3,10 @@ declare module OmniSharp {
     interface IFeature {
         activate(): void;
         dispose(): void;
+        required: boolean;
+        title: string;
+        description: string;
+        default?: boolean;
     }
 
     interface IToggleFeature extends IFeature {

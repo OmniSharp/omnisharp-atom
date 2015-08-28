@@ -55,5 +55,9 @@ class CodeFormat implements OmniSharp.IFeature {
         event.stopPropagation();
         return false;
     }
+
+    public required = false;
+    public title = 'Diagnostics';
+    public description = 'Support for diagnostic errors.';
 }
 export var codeFormat = new CodeFormat

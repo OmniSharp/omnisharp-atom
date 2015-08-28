@@ -137,6 +137,10 @@ class CodeLens implements OmniSharp.IFeature {
             })
             .tapOnNext((lens) => lens.updateVisible());
     }
+
+    public required = false;
+    public title = 'Code Lens';
+    public description = 'Adds support for displaying references in the editor.';
 }
 
 function isLineVisible(editor: Atom.TextEditor, line: number) {

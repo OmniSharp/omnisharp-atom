@@ -159,6 +159,10 @@ class CodeCheck implements OmniSharp.IFeature {
                 });
         });
     }, 500);
+
+    public required = true;
+    public title = 'Diagnostics';
+    public description = 'Support for diagnostic errors.';
 }
 
 export var codeCheck = new CodeCheck;

@@ -95,6 +95,10 @@ class FileMonitor implements OmniSharp.IFeature {
     public dispose() {
         this.disposable.dispose();
     }
+
+    public required = false;
+    public title = 'Project Monitor';
+    public description = 'Monitors project.lock.json files for changes outside of atom, and keeps the running solution in sync';
 }
 
 export var fileMonitor = new FileMonitor;

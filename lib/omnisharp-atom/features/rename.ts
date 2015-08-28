@@ -6,8 +6,11 @@ import Changes = require('../services/apply-changes')
 
 class Rename implements OmniSharp.IFeature {
     private disposable: Rx.CompositeDisposable;
+    private renameView: RenameView;
 
-    private renameView: RenameView
+    public required = false;
+    public title = 'Rename';
+    public description = 'Adds command to rename symbols.';
 
     public activate() {
         this.disposable = new CompositeDisposable();

@@ -143,6 +143,10 @@ class SolutionInformation implements OmniSharp.IFeature {
     public dispose() {
         this.disposable.dispose();
     }
+
+    public required = true;
+    public title = 'Solution Information';
+    public description = 'Monitors each running solution and offers the ability to start/restart/stop a solution.';
 }
 
 export var solutionInformation = new SolutionInformation;

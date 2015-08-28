@@ -39,6 +39,10 @@ class TypeLookup implements OmniSharp.IFeature {
     public dispose() {
         this.disposable.dispose();
     }
+
+    public required = false;
+    public title = 'Tooltip Lookup';
+    public description = 'Adds hover tooltips to the editor, also has a keybind';
 }
 
 class Tooltip implements Rx.Disposable {

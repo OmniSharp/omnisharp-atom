@@ -23,6 +23,10 @@ class RunTests implements OmniSharp.IFeature {
         output: Observable<OmniSharp.OutputMessage[]>;
     };
 
+    public required = false;
+    public title = 'Test Runner';
+    public description = 'Adds support for running tests within atom.';
+
     public activate() {
         this.disposable = new CompositeDisposable();
 
