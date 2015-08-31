@@ -52,7 +52,7 @@ class StatusBarComponent extends ReactClientComponent<{}, StatusBarState> {
         }));
 
         this.disposable.add(world.observe.updates
-            .buffer(world.observe.updates.throttleFirst(100), () => Observable.timer(100))
+            .buffer(world.observe.updates.throttle(100), () => Observable.timer(100))
             .subscribe(items => {
                 var updates = _(items)
                     .filter(item => _.contains(['isOff', 'isConnecting', 'isOn', 'isReady', 'isError'], item.name))

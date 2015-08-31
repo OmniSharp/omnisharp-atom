@@ -34,7 +34,7 @@ export class TestResultsWindow extends ReactClientComponent<TestWindowProps, Tes
         super.componentWillMount();
 
         this.disposable.add(this.props.runTests.observe.output
-            .buffer(this.props.runTests.observe.output.throttleFirst(100), () => Observable.timer(100))
+            .buffer(this.props.runTests.observe.output.throttle(100), () => Observable.timer(100))
             .map(arr => arr[0])
             .subscribe(testResults => this.setState({ testResults })));
         _.defer(_.bind(this.scrollToBottom, this));

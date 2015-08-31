@@ -26,7 +26,7 @@ function projectLock(solution: Client, project: ProjectViewModel, filePath: stri
     disposable.add(onWillThrowWatchError);
 
     return {
-        observable: subject.throttleFirst(30000).asObservable(),
+        observable: subject.throttle(30000).asObservable(),
         dispose: () => disposable.dispose()
     };
 }
@@ -49,7 +49,7 @@ class FileMonitor implements OmniSharp.IFeature {
             });
 
         var pauser = Observable.merge(
-                projectJsonEditors.throttleFirst(10000),
+                projectJsonEditors.throttle(10000),
                 Omni.listener.packageRestoreFinished.debounce(1000).map(z => true)
             ).startWith(true);
 
@@ -73,7 +73,7 @@ class FileMonitor implements OmniSharp.IFeature {
             .pausable(pauser);
 
         this.disposable.add(changes
-            .buffer(changes.throttleFirst(1000), () => Observable.timer(1000))
+            .buffer(changes.throttle(1000), () => Observable.timer(1000))
             .subscribe(changes => {
                 _.each(_.groupBy(changes, x => x.client.uniqueId), changes => {
                     var client = changes[0].client;

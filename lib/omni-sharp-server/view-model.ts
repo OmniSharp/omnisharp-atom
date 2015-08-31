@@ -114,7 +114,7 @@ export class ViewModel {
             .map(z => this.projects);
 
         var outputObservable = _client.logs
-            .window(_client.logs.throttleFirst(100), () => Observable.timer(100))
+            .window(_client.logs.throttle(100), () => Observable.timer(100))
             .flatMap(x => x.last())
             .map(() => output);
 

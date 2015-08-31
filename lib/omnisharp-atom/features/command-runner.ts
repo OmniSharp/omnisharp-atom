@@ -79,7 +79,7 @@ class CommandRunner implements OmniSharp.IFeature {
                     .concatMap(model => model.getProjectContainingEditor(editor))
                     .take(1)
                     .where(project => !!project))
-            .throttleFirst(1000)
+            .throttle(1000)
             .subscribe(project => {
                 each(this._watchProcesses, process => {
                     if (project.solutionPath === process.project.solutionPath)

@@ -29,7 +29,7 @@ class UpdateProject implements OmniSharp.IAtomFeature {
             .where(z => this._autoAddExternalProjects || this._nagAddExternalProjects)
             .where(z => !_.startsWith(z.path, z.solutionPath))
             .where(z => !_.any(this._paths, x => _.startsWith(z.path, x)))
-            .buffer(Omni.listener.model.projectAdded.throttleFirst(1000), () => Observable.timer(1000))
+            .buffer(Omni.listener.model.projectAdded.throttle(1000), () => Observable.timer(1000))
             .where(z => z.length > 0)
             .subscribe(project => this.handleProjectAdded(project)));
 
@@ -37,7 +37,7 @@ class UpdateProject implements OmniSharp.IAtomFeature {
             .where(z => this._autoAddExternalProjects || this._nagAddExternalProjects)
             .where(z => !_.startsWith(z.path, z.solutionPath))
             .where(z => _.any(this._paths, x => _.startsWith(z.path, x)))
-            .buffer(Omni.listener.model.projectRemoved.throttleFirst(1000), () => Observable.timer(1000))
+            .buffer(Omni.listener.model.projectRemoved.throttle(1000), () => Observable.timer(1000))
             .where(z => z.length > 0)
             .subscribe(project => this.handleProjectRemoved(project)));
 

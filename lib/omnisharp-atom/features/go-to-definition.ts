@@ -29,12 +29,12 @@ class GoToDefinition implements OmniSharp.IFeature {
                 Observable.fromEvent<KeyboardEvent>(view[0], 'keyup')
                     .where(x => x.which === 17 || x.which === 224 || x.which === 93 || x.which === 91)
             )
-                .throttleFirst(100);
+                .throttle(100);
 
             var keydown = Observable.fromEvent<KeyboardEvent>(view[0], 'keydown')
                 .where(z => !z.repeat)
                 .where(e => e.ctrlKey || e.metaKey)
-                .throttleFirst(100);
+                .throttle(100);
 
             var specialKeyDown = keydown
                 .flatMapLatest(x => mousemove
