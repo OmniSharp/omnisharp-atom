@@ -10,6 +10,7 @@ class GoToDefinition implements OmniSharp.IFeature {
     private exprTypeTimeout = null;
     private marker = null;
     private enhancedHighlighting: boolean;
+    private wantMetadata: boolean;
 
     public activate() {
         this.disposable = new CompositeDisposable();
@@ -51,7 +52,7 @@ class GoToDefinition implements OmniSharp.IFeature {
             editor.onDidDestroy(() => cd.dispose());
 
             var eventDisposable: Rx.Disposable;
-            cd.add(atom.config.observe('omnisharp-atom.enhancedHighlighting', (enabled: boolean) => {
+            cd.add(atom.config.observe('omnisharp-atom.highlight', (enabled: boolean) => {
                 this.enhancedHighlighting = enabled;
                 if (eventDisposable) {
                     eventDisposable.dispose();
@@ -82,8 +83,11 @@ class GoToDefinition implements OmniSharp.IFeature {
             this.disposable.add(cd);
         }));
 
-        this.disposable.add(atom.emitter.on("symbols-view:go-to-declaration", this.goToDefinition));
-        this.disposable.add(Omni.addTextEditorCommand("omnisharp-atom:go-to-definition", this.goToDefinition));
+        this.disposable.add(atom.emitter.on("symbols-view:go-to-declaration", () => this.goToDefinition()));
+        this.disposable.add(Omni.addTextEditorCommand("omnisharp-atom:go-to-definition", () => this.goToDefinition()));
+        this.disposable.add(atom.config.observe('omnisharp-atom.wantMetadata', enabled => {
+            this.wantMetadata = enabled;
+        }));
     }
 
     public dispose() {
@@ -94,13 +98,14 @@ class GoToDefinition implements OmniSharp.IFeature {
         var editor = atom.workspace.getActiveTextEditor();
         if (editor) {
             var word = <any>editor.getWordUnderCursor();
-            Omni.request(editor, client => client.gotodefinition(client.makeRequest()))
+            Omni.request(editor, client => client.gotodefinition(client.makeDataRequest({
+                WantMetadata: this.wantMetadata
+            })))
                 .subscribe((data: OmniSharp.Models.GotoDefinitionResponse) => {
                     if (data.FileName != null) {
-                        if (data.FileName)
-                            Omni.navigateTo(data);
-                    } else if (data['MetadataSource']) {
-                        var {AssemblyName, TypeName}: { AssemblyName: string; TypeName: string } = data['MetadataSource'];
+                        Omni.navigateTo(data);
+                    } else if (data.MetadataSource) {
+                        var {AssemblyName, TypeName} = data.MetadataSource;
                         atom.workspace.open(`omnisharp://metadata/${AssemblyName}/${TypeName}`, <any>{
                             initialLine: data.Line,
                             initialColumn: data.Column,
@@ -180,7 +185,7 @@ class GoToDefinition implements OmniSharp.IFeature {
 
     private getFromShadowDom(element: JQuery, selector: string): JQuery {
         var el = element[0];
-        var found = (<any> el).rootElement.querySelectorAll(selector);
+        var found = (<any>el).rootElement.querySelectorAll(selector);
         return $(found[0]);
     }
 
@@ -190,6 +195,10 @@ class GoToDefinition implements OmniSharp.IFeature {
             this.marker = null;
         }
     }
+
+    public required = true;
+    public title = 'Go To Definition';
+    public description = 'Adds support to goto definition, as well as display metadata returned by a goto definition metadata response';
 }
 
 export var goToDefintion = new GoToDefinition;

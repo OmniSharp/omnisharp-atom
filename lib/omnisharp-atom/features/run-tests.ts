@@ -101,6 +101,10 @@ class RunTests implements OmniSharp.IFeature {
             this.disposable.add(this.window);
         }
     }
+
+    public required = true;
+    public title = 'Test Runner';
+    public description = 'Adds support for running tests within atom.';
 }
 
 export var runTests = new RunTests;

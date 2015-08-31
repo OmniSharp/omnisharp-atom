@@ -46,11 +46,9 @@ class GeneratorAspnet implements OmniSharp.IFeature {
         run(generator: string, path?: string, options?: any): void; start(prefix: string, path?: string, options?: any): void;
         list(prefix?: string, path?: string, options?: any): Promise<{ displayName: string; name: string; resolved: string; }[]>
     };
-    private _active = false;
 
     public activate() {
         this.disposable = new CompositeDisposable();
-        this.disposable.add(Disposable.create(() => this._active = false));
 
         this.disposable.add(atom.commands.add('atom-workspace', 'omnisharp-atom:new-application', () => this.run("aspnet:app")));
         this.disposable.add(atom.commands.add('atom-workspace', 'omnisharp-atom:new-class', () => this.run("aspnet:Class")));
@@ -74,6 +72,10 @@ class GeneratorAspnet implements OmniSharp.IFeature {
     public dispose() {
         this.disposable.dispose();
     }
+
+    public required = true;
+    public title = 'Aspnet Yeoman Generator';
+    public description = 'Enables the aspnet yeoman generator.';
 }
 
 export var generatorAspnet = new GeneratorAspnet;

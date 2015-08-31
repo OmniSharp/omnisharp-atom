@@ -134,5 +134,9 @@ class FindUsages implements OmniSharp.IFeature {
     public navigateToSelectedItem() {
         Omni.navigateTo(this.usages[this.selectedIndex]);
     }
+
+    public required = true;
+    public title = 'Find Usages / Go To Implementations';
+    public description = 'Adds support to find usages, and go to implementations';
 }
 export var findUsages = new FindUsages;

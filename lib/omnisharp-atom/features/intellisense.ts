@@ -38,5 +38,9 @@ class Intellisense implements OmniSharp.IFeature {
             return false;
         }
     }
+
+    public required = true;
+    public title = 'Intellisense';
+    public description = 'Augments some of the issues with Atoms autocomplete-plus package';
 }
 export var intellisense = new Intellisense

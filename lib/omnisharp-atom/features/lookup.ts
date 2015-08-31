@@ -1,7 +1,7 @@
 // Inspiration : https://atom.io/packages/ide-haskell
 // and https://atom.io/packages/ide-flow
 // https://atom.io/packages/atom-typescript
-import {CompositeDisposable, Observable} from "rx";
+import {CompositeDisposable, Observable, Disposable} from "rx";
 import Omni = require('../../omni-sharp-server/omni');
 import path = require('path');
 import fs = require('fs');
@@ -39,6 +39,10 @@ class TypeLookup implements OmniSharp.IFeature {
     public dispose() {
         this.disposable.dispose();
     }
+
+    public required = false;
+    public title = 'Tooltip Lookup';
+    public description = 'Adds hover tooltips to the editor, also has a keybind';
 }
 
 class Tooltip implements Rx.Disposable {
@@ -85,9 +89,13 @@ class Tooltip implements Rx.Disposable {
 
         cd.add(mouseout.subscribe((e) => this.hideExpressionType()));
 
-        cd.add(Omni.activeEditor.subscribe((activeItem) => {
-            this.hideExpressionType();
+        cd.add(Omni.switchActiveEditor((editor, cd) => {
+            cd.add(Disposable.create(() => this.hideExpressionType()));
         }));
+
+        cd.add(Disposable.create(() => {
+            this.hideExpressionType();
+        }))
     }
 
     private subcribeKeyDown() {
@@ -151,11 +159,7 @@ class Tooltip implements Rx.Disposable {
         this.exprTypeTooltip = new TooltipView(tooltipRect);
 
         var buffer = this.editor.getBuffer();
-        // TODO: Fix typings
-        // characterIndexForPosition should return a number
-        //var position = buffer.characterIndexForPosition(bufferPt);
         // Actually make the program manager query
-
         Omni.request(client => client.typelookup({
             IncludeDocumentation: true,
             Line: bufferPt.row,

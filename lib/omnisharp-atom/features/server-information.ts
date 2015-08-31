@@ -60,6 +60,10 @@ class ServerInformation implements OmniSharp.IFeature {
     public dispose() {
         this.disposable.dispose();
     }
+
+    public required = true;
+    public title = 'Server Information';
+    public description = 'Monitors server output and status.';
 }
 
 export var server = new ServerInformation;

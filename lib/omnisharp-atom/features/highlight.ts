@@ -10,9 +10,6 @@ class Highlight implements OmniSharp.IFeature {
     private disposable: Rx.CompositeDisposable;
     private editors: Array<Atom.TextEditor>;
 
-    constructor() {
-    }
-
     public activate() {
         this.disposable = new CompositeDisposable();
         this.editors = [];
@@ -196,6 +193,11 @@ class Highlight implements OmniSharp.IFeature {
 
         issueRequest.onNext(true);
     }
+
+    public required = false;
+    public title = 'Enhanced Highlighting';
+    public description = 'Enables server based highlighting, which includes support for string interpolation, class names and more.';
+    public default = false;
 }
 
 function isObserveRetokenizing(observable: Rx.Observable<{ editor: Atom.TextEditor; request: OmniSharp.Models.HighlightRequest; response: OmniSharp.Models.HighlightResponse }>) {
@@ -548,4 +550,4 @@ function setGrammar(grammar: FirstMate.Grammar): FirstMate.Grammar {
     return this._setGrammar(grammar);
 }
 
-export var highlight = new Highlight;
+export var enhancedHighlighting = new Highlight;

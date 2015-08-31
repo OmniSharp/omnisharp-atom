@@ -8,9 +8,9 @@ import fs = require('fs');
 import Omni = require('../omni-sharp-server/omni');
 import dependencyChecker = require('./dependency-checker');
 import {world} from './world';
+var win32 = process.platform === "win32";
 
 class OmniSharpAtom {
-    private features: OmniSharp.IFeature[] = [];
     private disposable: Rx.CompositeDisposable;
     private menu: EventKit.Disposable;
 
@@ -32,17 +32,11 @@ class OmniSharpAtom {
             this.configureKeybindings();
 
             this.disposable.add(atom.commands.add('atom-workspace', 'omnisharp-atom:toggle', () => this.toggle()));
-            this.disposable.add(Disposable.create(() => {
-                this.features = [];
-            }));
 
             var whiteList = atom.config.get<boolean>("omnisharp-atom:feature-white-list");
             var featureList = atom.config.get<string[]>('omnisharp-atom:feature-list');
 
-            if (typeof whiteList === 'undefined') {
-                whiteList = false;
-                featureList = this.toggleableFeatures();
-            }
+            var whiteListUndefined = (typeof whiteList === 'undefined');
 
             var started = Observable.merge(
                 this.getFeatures(featureList, whiteList, "atom"),
@@ -70,7 +64,10 @@ class OmniSharpAtom {
             this.disposable.add(started.subscribe(features => {
                 console.info("Activating omnisharp-atom...");
 
-                this.features = features;
+                (<any>atom.config).setSchema('omnisharp-atom', {
+                    type: 'object',
+                    properties: this.config
+                });
 
                 Omni.activate();
                 this.disposable.add(Omni);
@@ -78,21 +75,38 @@ class OmniSharpAtom {
                 world.activate();
                 this.disposable.add(world);
 
-                _.each(this.features, f => {
-                    f.activate();
-                    this.disposable.add(f);
-                });
+                var deferred = [];
+                _.each(features, f => {
+                    var {key, value} = f;
 
-                _.each(this.features, f => {
-                    if (_.isFunction(f['attach'])) {
-                        f['attach']();
+                    // Whitelist is used for unit testing, we don't want the config to make changes here
+                    if (whiteListUndefined && _.has(this.config, key)) {
+                        this.disposable.add(atom.config.observe(`omnisharp-atom.${key}`, enabled => {
+                            if (!enabled) {
+                                try { value.dispose(); } catch (ex) { }
+                            } else {
+                                value.activate();
+
+                                if (_.isFunction(value['attach'])) {
+                                    deferred.push(() => value['attach']());
+                                }
+                            }
+                        }));
+                    } else {
+                        value.activate();
+
+                        if (_.isFunction(value['attach'])) {
+                            deferred.push(() => value['attach']());
+                        }
                     }
+
+                    this.disposable.add(Disposable.create(() => { try { value.dispose() } catch (ex) { } }));
                 });
+                _.each(deferred, x => x());
 
                 this.disposable.add(atom.workspace.observeTextEditors((editor: Atom.TextEditor) => {
                     this.detectAutoToggleGrammar(editor);
                 }));
-
 
                 this._activated.onNext(true);
                 this._activated.onCompleted();
@@ -101,47 +115,6 @@ class OmniSharpAtom {
             console.info(`omnisharp-atom not started missing depedencies ${dependencyChecker.errors() }...`);
             _.map(dependencyChecker.errors() || [], missingDependency => console.error(missingDependency))
         }
-    }
-
-    // TODO: Make this generic at somepoint
-    public toggleableFeatures() {
-        var excludedFeatures = [];
-        if (!atom.config.get<boolean>('omnisharp-atom.enhancedHighlighting')) {
-            excludedFeatures.push('features/highlight');
-        }
-
-        if (!atom.config.get<boolean>('omnisharp-atom.codeLens')) {
-            excludedFeatures.push('features/code-lens');
-        }
-
-        this._activated.take(1).subscribe(() => {
-            var highlightEnabled = atom.config.get<boolean>('omnisharp-atom.enhancedHighlighting');
-            var codeLensEnabled = atom.config.get<boolean>('omnisharp-atom.codeLens');
-            var highlight = require('./features/highlight').highlight;
-            var codeLens = require('./features/code-lens').codeLens;
-            var cd = new CompositeDisposable();
-            this.disposable.add(cd);
-
-            atom.config.onDidChange('omnisharp-atom.enhancedHighlighting', enabled => {
-                if (highlightEnabled) {
-                    highlight.dispose();
-                } else {
-                    highlight.activate();
-                }
-                highlightEnabled = enabled.newValue;
-            });
-
-            atom.config.onDidChange('omnisharp-atom.codeLens', enabled => {
-                if (codeLensEnabled) {
-                    codeLens.dispose();
-                } else {
-                    codeLens.activate();
-                }
-                codeLensEnabled = enabled.newValue;
-            });
-        });
-
-        return excludedFeatures;
     }
 
     private _packageDir: string;
@@ -170,7 +143,7 @@ class OmniSharpAtom {
         function loadFeature(file: string) {
             var result = require(`./${folder}/${file}`);
             console.info(`Loading feature '${folder}/${file}'...`);
-            return _.values(result).filter(feature => !_.isFunction(feature));
+            return result;//_.values(result).filter(feature => !_.isFunction(feature));
         }
 
         return Observable.fromNodeCallback(fs.readdir)(featureDir)
@@ -178,7 +151,31 @@ class OmniSharpAtom {
             .where(file => /\.js$/.test(file))
             .flatMap(file => Observable.fromNodeCallback(fs.stat)(`${featureDir}/${file}`).map(stat => ({ file, stat })))
             .where(z => !z.stat.isDirectory())
-            .map(z => ({ file: `${folder}/${path.basename(z.file) }`.replace(/\.js$/, ''), load: () => Observable.from<OmniSharp.IFeature>(loadFeature(z.file)) }));
+            .map(z => ({
+                file: `${folder}/${path.basename(z.file) }`.replace(/\.js$/, ''),
+                load: () => {
+                    var feature = loadFeature(z.file);
+
+                    var features: { key: string, value: OmniSharp.IFeature }[] = [];
+                    _.each(feature, (value: OmniSharp.IFeature, key: string) => {
+                        if (!_.isFunction(value)) {
+                            if (!value.required) {
+                                this.config[key] = {
+                                    title: `${value.title}`,
+                                    description: value.description,
+                                    type: 'boolean',
+                                    default: (_.has(value, 'default') ? value.default : true)
+                                };
+                                //OmniSharpAtom.config.features.default[key] = (_.has(value, 'default') ? value.default : true);
+                            }
+
+                            features.push({ key, value });
+                        }
+                    });
+
+                    return Observable.from<{ key: string, value: OmniSharp.IFeature }>(features);
+                }
+            }));
     }
 
     private detectAutoToggleGrammar(editor: Atom.TextEditor) {
@@ -392,17 +389,11 @@ class OmniSharpAtom {
             type: 'boolean',
             default: true
         },
-        enhancedHighlighting: {
-            title: 'Enhanced Highlighting',
-            description: "Enables server based highlighting, which includes support for string interpolation, class names and more.",
+        wantMetadata: {
+            title: 'Want metadata',
+            descrption: 'Request symbol metadata from the server, when using go-to-definition.  This is disabled by default on Linux, due to issues with Roslyn on Mono.',
             type: 'boolean',
-            default: false
-        },
-        codeLens: {
-            title: 'Code Lens',
-            description: "Enables code lens support to show references to fields.",
-            type: 'boolean',
-            default: true
+            default: win32
         }
     }
 }

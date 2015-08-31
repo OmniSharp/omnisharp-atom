@@ -123,6 +123,10 @@ class Dock implements OmniSharp.IAtomFeature {
             this.dock.forceUpdate();
         }
     }
+
+    public required = true;
+    public title = 'Dock';
+    public description = 'The dock window used to show logs and diagnostics and other things.';
 }
 
 export var dock = new Dock;
