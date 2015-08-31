@@ -8,14 +8,12 @@ import * as readline from "readline";
 import {dock} from "../atom/dock";
 import {normalize} from "path";
 
-var win32 = process.platform === "win32";
+var win32 = !(process.platform === "win32");
 
-var daemonFlags = ['--server Kestrel', '--server Microsoft.AspNet.Server.WebListener'];
+var daemonFlags = ['Microsoft.AspNet.Hosting'];
 if (win32) {
-    var inactiveCommands = ['--server Kestrel'];
     var env = <typeof process.env>{};
 } else {
-    var inactiveCommands = ['--server Microsoft.AspNet.Server.WebListener'];
     var env = process.env;
 }
 
@@ -45,8 +43,9 @@ class CommandRunner implements OmniSharp.IFeature {
                 if (cd) {
                     cd.dispose();
                     this._projectMap.delete(project);
-                    this.addCommands(project);
                 }
+                
+                this.addCommands(project);
             }));
 
         this.disposable.add(Omni.listener.model.projectRemoved
@@ -95,9 +94,7 @@ class CommandRunner implements OmniSharp.IFeature {
             this.disposable.add(cd);
 
             each(project.commands, (content, command) => {
-                if (!any(inactiveCommands, cnt => contains(content, cnt))) {
-                    cd.add(this.addCommand(project, command, content));
-                }
+                cd.add(this.addCommand(project, command, content));
             });
         }
     }
