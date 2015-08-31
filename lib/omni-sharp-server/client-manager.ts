@@ -212,7 +212,7 @@ class SolutionManager {
             .debounce(100)
             .take(1)
             .map(() => solution)
-            .timeout(15000) // Wait 30 seconds for the project to load.
+            .timeout(15000, Scheduler.timeout) // Wait 30 seconds for the project to load.
             .subscribe(() => {
                 // We loaded successfully return the solution
                 result.onNext(solution);
