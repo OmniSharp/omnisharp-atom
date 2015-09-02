@@ -5,8 +5,8 @@
   },
   "commands": {
     "run": "",
-    "web": "--server Microsoft.AspNet.Server.WebListener",
-    "kestrel": "--server Kestrel"
+    "web": "Microsoft.AspNet.Hosting--server Microsoft.AspNet.Server.WebListener",
+    "kestrel": "Microsoft.AspNet.Hosting--server Kestrel"
   },
   "frameworks": {
     "dnx451": {}

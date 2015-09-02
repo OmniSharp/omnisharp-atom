@@ -1,3 +1,4 @@
+import Client = require("../../omni-sharp-server/client");
 import {CompositeDisposable, Disposable, Observable, Subject} from "rx";
 import Omni = require('../../omni-sharp-server/omni');
 import {ProjectViewModel} from "../../omni-sharp-server/view-model";
@@ -8,7 +9,7 @@ import * as readline from "readline";
 import {dock} from "../atom/dock";
 import {normalize} from "path";
 
-var win32 = !(process.platform === "win32");
+var win32 = process.platform === "win32";
 
 var daemonFlags = ['Microsoft.AspNet.Hosting'];
 if (win32) {
@@ -44,7 +45,7 @@ class CommandRunner implements OmniSharp.IFeature {
                     cd.dispose();
                     this._projectMap.delete(project);
                 }
-                
+
                 this.addCommands(project);
             }));
 
@@ -140,6 +141,10 @@ class CommandRunner implements OmniSharp.IFeature {
     public description = 'Adds command runner to run dnx and other similar commands from within atom.';
 }
 
+export function getDnxExe(solution: Client) {
+    return solution.model.dnx.RuntimePath + (win32 ? '/bin/dnx.exe' : '/bin/dnx');
+}
+
 export class RunProcess {
     public disposable = new CompositeDisposable();
     public update = new Subject<{ message: string }[]>();
@@ -158,7 +163,7 @@ export class RunProcess {
 
     public start() {
         var solution = Omni.getClientForProject(this.project)
-            .map(solution => solution.model.dnx.RuntimePath + (win32 ? '/bin/dnx.exe' : '/bin/dnx'))
+            .map(getDnxExe)
             .map(normalize)
             .tapOnNext(() => dock.selectWindow(this.id))
             .subscribe((runtime) => this.bootRuntime(runtime));
