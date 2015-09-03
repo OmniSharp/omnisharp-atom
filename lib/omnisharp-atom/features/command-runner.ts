@@ -176,7 +176,12 @@ export class RunProcess {
     }
 
     private bootRuntime(runtime: string) {
-        var args = ['.', this.command];
+        var args = [this.command];
+        // Support old way of doing things (remove at RC?)
+        if (any(['beta3', 'beta4', 'beta5', 'beta6'], x => runtime.indexOf(x))) {
+            args.unshift('.');
+        }
+
         if (this.watch) {
             args.unshift('--watch');
         }
