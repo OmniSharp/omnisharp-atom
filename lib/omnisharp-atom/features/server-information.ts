@@ -25,7 +25,7 @@ class ServerInformation implements OmniSharp.IFeature {
         var output = this.setupOutput();
         var projects = this.setupProjects();
 
-        Omni.activeModel.subscribe(z => this.model = z);
+        this.disposable.add(Omni.activeModel.subscribe(z => this.model = z));
         this.observe = { status, output, projects, model: Omni.activeModel, updates: Observable.ofObjectChanges(this) };
 
         this.disposable.add(dock.addWindow('output', 'Omnisharp output', OutputWindow, {}));

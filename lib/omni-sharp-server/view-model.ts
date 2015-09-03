@@ -1,7 +1,7 @@
 import * as _ from "lodash";
 import Client = require('./client');
 import {DriverState, OmnisharpClientStatus} from "omnisharp-client";
-import {Observable, Subject} from "rx";
+import {Observable, Subject, CompositeDisposable} from "rx";
 import {basename, dirname, normalize} from "path";
 
 export class ProjectViewModel implements OmniSharp.IProjectViewModel {
@@ -29,6 +29,7 @@ export class ProjectViewModel implements OmniSharp.IProjectViewModel {
             Name: 'all',
             ShortName: 'all'
         }].concat(frameworks);
+
         this.activeFramework = this.frameworks[0];
 
         this.observe = {
@@ -40,7 +41,7 @@ export class ProjectViewModel implements OmniSharp.IProjectViewModel {
     }
 }
 
-export class ViewModel {
+export class ViewModel implements Rx.IDisposable {
     public isOff: boolean;
     public isConnecting: boolean;
     public isOn: boolean;
@@ -49,6 +50,7 @@ export class ViewModel {
 
 
     private _uniqueId;
+    private _disposable = new CompositeDisposable();
     public get uniqueId() { return this._client.uniqueId; }
 
     public get index() { return this._client.index; }
@@ -57,12 +59,6 @@ export class ViewModel {
     public diagnostics: OmniSharp.Models.DiagnosticLocation[] = [];
     public get state() { return this._client.currentState };
     public packageSources: string[] = [];
-
-    // Project information
-    public msbuild: OmniSharp.Models.MsBuildWorkspaceInformation;
-    public dnx: OmniSharp.Models.DnxWorkspaceInformation;
-    public scriptcs: OmniSharp.ScriptCs.ScriptCsContext;
-
     public runtime = '';
     public projects: ProjectViewModel[] = [];
     private _projectAddedStream = new Subject<ProjectViewModel>();
@@ -86,17 +82,17 @@ export class ViewModel {
         this._observeProjectEvents();
 
         // Manage our build log for display
-        _client.logs.subscribe(event => {
+        this._disposable.add(_client.logs.subscribe(event => {
             this.output.push(event);
             if (this.output.length > 1000)
                 this.output.shift();
-        });
+        }));
 
-        _client.state.where(z => z === DriverState.Disconnected).subscribe(() => {
+        this._disposable.add(_client.state.where(z => z === DriverState.Disconnected).subscribe(() => {
             _.each(this.projects.slice(), project => this._projectRemovedStream.onNext(project));
             this.projects = [];
             this.diagnostics = [];
-        });
+        }));
 
         var codecheck = this.setupCodecheck(_client);
         var status = this.setupStatus(_client);
@@ -129,11 +125,11 @@ export class ViewModel {
             get projectChanged() { return _projectChangedStream; },
         };
 
-        _client.state.subscribe(_.bind(this._updateState, this));
+        this._disposable.add(_client.state.subscribe(_.bind(this._updateState, this)));
 
         (window['clients'] || (window['clients'] = [])).push(this);  //TEMP
 
-        _client.state.where(z => z === DriverState.Connected)
+        this._disposable.add(_client.state.where(z => z === DriverState.Connected)
             .subscribe(() => {
                 _client.projects({ ExcludeSourceFiles: false });
 
@@ -141,73 +137,73 @@ export class ViewModel {
                     .subscribe(response => {
                         this.packageSources = response.Sources;
                     });
-            });
+            }));
 
-        _client.observeProjects.first().subscribe(() => {
-            _client.projectAdded
-                .where(z => z.MsBuildProject != null)
-                .map(z => z.MsBuildProject)
-                .where(z => !_.any(this.msbuild.Projects, { Path: z.Path }))
-                .subscribe(project => {
-                    this.msbuild.Projects.push(project);
-                    this._projectAddedStream.onNext(
-                        new ProjectViewModel(project.AssemblyName, project.Path, _client.path, [{
-                            FriendlyName: project.TargetFramework, Name: project.TargetFramework, ShortName: project.TargetFramework
-                        }], project.SourceFiles));
-                });
+        // MSBUILD
+        this._disposable.add(_client.projectAdded
+            .where(z => z.MsBuildProject != null)
+            .map(z => z.MsBuildProject)
+            .where(z => !_.any(this.projects, { path: z.Path }))
+            .subscribe(project => {
+                this._projectAddedStream.onNext(
+                    new ProjectViewModel(project.AssemblyName, project.Path, _client.path, [{
+                        FriendlyName: project.TargetFramework, Name: project.TargetFramework, ShortName: project.TargetFramework
+                    }], project.SourceFiles));
+            }));
 
-            _client.projectRemoved
-                .where(z => z.MsBuildProject != null)
-                .map(z => z.MsBuildProject)
-                .subscribe(project => {
-                    _.pull(this.msbuild.Projects, _.find(this.msbuild.Projects, { Path: project.Path }));
-                    this._projectRemovedStream.onNext(_.find(this.projects, { path: project.Path }));
-                });
+        this._disposable.add(_client.projectRemoved
+            .where(z => z.MsBuildProject != null)
+            .map(z => z.MsBuildProject)
+            .subscribe(project => {
+                this._projectRemovedStream.onNext(_.find(this.projects, { path: project.Path }));
+            }));
 
-            _client.projectChanged
-                .where(z => z.MsBuildProject != null)
-                .map(z => z.MsBuildProject)
-                .subscribe(project => {
-                    var current = _.find(this.projects, { path: project.Path });
-                    if (current) {
-                        var changed = new ProjectViewModel(project.AssemblyName, project.Path, _client.path, [{
-                            FriendlyName: project.TargetFramework, Name: project.TargetFramework, ShortName: project.TargetFramework
-                        }], project.SourceFiles);
-                        _.assign(current, changed);
-                        this._projectChangedStream.onNext(current);
-                    }
-                });
+        this._disposable.add(_client.projectChanged
+            .where(z => z.MsBuildProject != null)
+            .map(z => z.MsBuildProject)
+            .subscribe(project => {
+                var current = _.find(this.projects, { path: project.Path });
+                if (current) {
+                    var changed = new ProjectViewModel(project.AssemblyName, project.Path, _client.path, [{
+                        FriendlyName: project.TargetFramework, Name: project.TargetFramework, ShortName: project.TargetFramework
+                    }], project.SourceFiles);
+                    _.assign(current, changed);
+                    this._projectChangedStream.onNext(current);
+                }
+            }));
 
-            _client.projectAdded
-                .where(z => z.DnxProject != null)
-                .map(z => z.DnxProject)
-                .where(z => !_.any(this.dnx.Projects, { Path: z.Path }))
-                .subscribe(project => {
-                    this.dnx.Projects.push(project);
-                    this._projectAddedStream.onNext(
-                        new ProjectViewModel(project.Name, project.Path, _client.path, project.Frameworks, project.Configurations, project.Commands, project.SourceFiles));
-                });
+        //DNX
+        this._disposable.add(_client.projectAdded
+            .where(z => z.DnxProject != null)
+            .map(z => z.DnxProject)
+            .where(z => !_.any(this.projects, { path: z.Path }))
+            .subscribe(project => {
+                this._projectAddedStream.onNext(
+                    new ProjectViewModel(project.Name, project.Path, _client.path, project.Frameworks, project.Configurations, project.Commands, project.SourceFiles));
+            }));
 
-            _client.projectRemoved
-                .where(z => z.DnxProject != null)
-                .map(z => z.DnxProject)
-                .subscribe(project => {
-                    _.pull(this.dnx.Projects, _.find(this.dnx.Projects, { Path: project.Path }));
-                    this._projectRemovedStream.onNext(_.find(this.projects, { path: project.Path }));
-                });
+        this._disposable.add(_client.projectRemoved
+            .where(z => z.DnxProject != null)
+            .map(z => z.DnxProject)
+            .subscribe(project => {
+                this._projectRemovedStream.onNext(_.find(this.projects, { path: project.Path }));
+            }));
 
-            _client.projectChanged
-                .where(z => z.DnxProject != null)
-                .map(z => z.DnxProject)
-                .subscribe(project => {
-                    var current = _.find(this.projects, { path: project.Path });
-                    if (current) {
-                        var changed = new ProjectViewModel(project.Name, project.Path, _client.path, project.Frameworks, project.Configurations, project.Commands, project.SourceFiles);
-                        _.assign(current, changed);
-                        this._projectChangedStream.onNext(current);
-                    }
-                });
-        });
+        this._disposable.add(_client.projectChanged
+            .where(z => z.DnxProject != null)
+            .map(z => z.DnxProject)
+            .subscribe(project => {
+                var current = _.find(this.projects, { path: project.Path });
+                if (current) {
+                    var changed = new ProjectViewModel(project.Name, project.Path, _client.path, project.Frameworks, project.Configurations, project.Commands, project.SourceFiles);
+                    _.assign(current, changed);
+                    this._projectChangedStream.onNext(current);
+                }
+            }));
+    }
+
+    public dispose() {
+        this._disposable.dispose();
     }
 
     public getProjectForEditor(editor: Atom.TextEditor) {
@@ -254,15 +250,15 @@ export class ViewModel {
     }
 
     private _observeProjectEvents() {
-        this._projectAddedStream
+        this._disposable.add(this._projectAddedStream
             .where(z => !_.any(this.projects, { path: z.path }))
-            .subscribe(project => this.projects.push(project));
+            .subscribe(project => this.projects.push(project)));
 
-        this._projectRemovedStream.subscribe(
-            project => _.pull(this.projects, _.find(this.projects, z => z.path === project.path)));
+        this._disposable.add(this._projectRemovedStream.subscribe(
+            project => _.pull(this.projects, _.find(this.projects, z => z.path === project.path))));
 
-        this._projectChangedStream.subscribe(
-            project => _.assign(_.find(this.projects, z => z.path === project.path), project));
+        this._disposable.add(this._projectChangedStream.subscribe(
+            project => _.assign(_.find(this.projects, z => z.path === project.path), project)));
     }
 
     private setupCodecheck(_client: Client) {
@@ -285,7 +281,7 @@ export class ViewModel {
             .startWith([])
             .shareReplay(1);
 
-        codecheck.subscribe((data) => this.diagnostics = data);
+        this._disposable.add(codecheck.subscribe((data) => this.diagnostics = data));
         return codecheck;
     }
 
@@ -303,16 +299,14 @@ export class ViewModel {
             .where(z => z.response.MSBuild.Projects.length > 0)
             .map(z => z.response.MSBuild);
 
-        workspace.subscribe(project => {
-            this.msbuild = project;
-
-            _.each(this.msbuild.Projects, p => {
+        this._disposable.add(workspace.subscribe(system => {
+            _.each(system.Projects, p => {
                 var project = new ProjectViewModel(p.AssemblyName, p.Path, _client.path, [{
                     FriendlyName: p.TargetFramework, Name: p.TargetFramework, ShortName: p.TargetFramework
                 }], p.SourceFiles);
                 this._projectAddedStream.onNext(project);
             });
-        });
+        }));
         return workspace;
     }
 
@@ -322,15 +316,14 @@ export class ViewModel {
             .where(z => z.response.Dnx.Projects.length > 0)
             .map(z => z.response.Dnx);
 
-        workspace.subscribe(project => {
-            this.dnx = project;
-            this.runtime = basename(project.RuntimePath);
+        this._disposable.add(workspace.subscribe(system => {
+            this.runtime = basename(system.RuntimePath);
 
-            _.each(this.dnx.Projects, p => {
+            _.each(system.Projects, p => {
                 var project = new ProjectViewModel(p.Name, p.Path, _client.path, p.Frameworks, p.Configurations, p.Commands, p.SourceFiles);
                 this._projectAddedStream.onNext(project);
             });
-        });
+        }));
         return workspace;
     }
 
@@ -340,10 +333,9 @@ export class ViewModel {
             .where(z => z.response.ScriptCs.CsxFiles.length > 0)
             .map(z => z.response.ScriptCs);
 
-        context.subscribe(context => {
-            this.scriptcs = context;
+        this._disposable.add(context.subscribe(context => {
             this._projectAddedStream.onNext(new ProjectViewModel("ScriptCs", context.Path, _client.path));
-        });
+        }));
         return context;
     }
 }

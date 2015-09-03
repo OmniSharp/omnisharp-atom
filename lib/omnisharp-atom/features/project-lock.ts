@@ -24,6 +24,7 @@ function projectLock(solution: Client, project: ProjectViewModel, filePath: stri
 
     disposable.add(onDidChange);
     disposable.add(onWillThrowWatchError);
+    disposable.add(subject);
 
     return {
         observable: subject.throttle(30000).asObservable(),

@@ -70,7 +70,6 @@ class CommandRunner implements OmniSharp.IFeature {
 
         // Auto restart the process if a file changes for a project that applies
         var restart = new Subject<Atom.TextEditor>();
-        this.disposable.add(restart);
 
         this.disposable.add(restart
             .where(z => !!this._watchProcesses.length)
@@ -86,6 +85,7 @@ class CommandRunner implements OmniSharp.IFeature {
                         process.stop();
                 });
             }));
+        this.disposable.add(restart);
     }
 
     private addCommands(project: ProjectViewModel) {

@@ -74,14 +74,14 @@
     "jquery": "^2.1.1",
     "lodash": "^3.10.1",
     "merge-stream": "^0.1.7",
+    "ntypescript": "1.201509010003.1",
     "omnisharp-client": "^2.0.5",
     "react": "^0.13.3",
     "rimraf": "^2.4.2",
     "rx": "^3.1.2",
     "semver": "^4.2.0",
     "through2": "^2.0.0",
-    "tsd": "^0.6.4",
-    "typescript": "^1.5.0-beta"
+    "tsd": "^0.6.4"
   },
   "consumedServices": {
     "status-bar": {
