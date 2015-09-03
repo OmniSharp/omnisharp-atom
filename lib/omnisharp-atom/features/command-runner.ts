@@ -142,7 +142,7 @@ class CommandRunner implements OmniSharp.IFeature {
 }
 
 export function getDnxExe(solution: Client) {
-    return solution.model.dnx.RuntimePath + (win32 ? '/bin/dnx.exe' : '/bin/dnx');
+    return solution.model.runtime + (win32 ? '/bin/dnx.exe' : '/bin/dnx');
 }
 
 export class RunProcess {

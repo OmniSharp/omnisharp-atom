@@ -28,9 +28,7 @@ describe('Command Runner', () => {
     it('returns the correct path for a given environment', () => {
         var result = getDnxExe(<any>{
             model: {
-                dnx: {
-                    RuntimePath: 'abc'
-                }
+                runtime: 'abc'
             }
         });
 
