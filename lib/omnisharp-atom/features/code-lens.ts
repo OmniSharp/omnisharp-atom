@@ -109,6 +109,10 @@ class CodeLens implements OmniSharp.IFeature {
         var updated = new WeakSet<Lens>();
         _.each(decorations, x => x.invalidate());
 
+        if (editor.isDestroyed()) {
+            return;
+        }
+
         return Omni.request(editor, solution => solution.currentfilemembersasflat(solution.makeRequest(editor)))
             .observeOn(raf)
             .concatMap(fileMembers => Observable.from(fileMembers))
@@ -177,7 +181,8 @@ export class Lens implements Rx.IDisposable {
             .where(x => !!x)
             .flatMap(() => Omni.request(this._editor, solution =>
                 solution.findusages({ FileName: this._path, Column: this._member.Column + 1, Line: this._member.Line }, { silent: true })))
-            .map(x => x.QuickFixes.length - 1)
+            .where(x => x && !!x.QuickFixes.length)
+            .map(x => x && x.QuickFixes.length - 1)
             .publish()
             .refCount();
 

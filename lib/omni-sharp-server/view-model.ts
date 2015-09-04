@@ -111,7 +111,7 @@ export class ViewModel implements Rx.IDisposable {
 
         var outputObservable = _client.logs
             .window(_client.logs.throttle(100), () => Observable.timer(100))
-            .flatMap(x => x.last())
+            .flatMap(x => x.startWith(null).last())
             .map(() => output);
 
         this.observe = {
