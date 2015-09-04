@@ -9,6 +9,7 @@ var _ = require('lodash');
 var win32 = process.platform === "win32";
 var spawn = require('child_process').spawn;
 var gulpPath = path.join(__dirname, 'node_modules/.bin/gulp' + (win32 && '.cmd' || ''));
+var Promise = require('bluebird');
 
 var metadata = {
     lib: ['lib/**/*.ts', '!lib/**/*.d.ts'],
