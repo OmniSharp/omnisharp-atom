@@ -115,6 +115,7 @@ class CodeLens implements OmniSharp.IFeature {
 
         return Omni.request(editor, solution => solution.currentfilemembersasflat(solution.makeRequest(editor)))
             .observeOn(raf)
+            .where(fileMembers => !!fileMembers)
             .concatMap(fileMembers => Observable.from(fileMembers))
             .concatMap(fileMember => {
                 var range: TextBuffer.Range = <any>editor.getBuffer().rangeForRow(fileMember.Line, false);

@@ -17,6 +17,10 @@ class GoToDefinition implements OmniSharp.IFeature {
         this.disposable.add(Omni.switchActiveEditor((editor, cd) => {
             var view = $(atom.views.getView(editor));
             var scroll = this.getFromShadowDom(view, '.scroll-view');
+            if (!scroll[0]) {
+                return;
+            }
+
             var click = Observable.fromEvent<MouseEvent>(scroll[0], 'click');
 
             var mousemove = Observable.fromEvent<MouseEvent>(scroll[0], 'mousemove');

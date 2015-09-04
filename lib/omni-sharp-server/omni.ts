@@ -203,7 +203,7 @@ class Omni implements Rx.IDisposable {
                 disposable.add(s);
             }
         }));
-        
+
         disposable.add(subject);
         disposable.add(editorSubject);
 
@@ -328,7 +328,8 @@ class Omni implements Rx.IDisposable {
             .flatMap(solution => solution.state.startWith(solution.currentState))
             .where(x => x === DriverState.Connected)
             .take(1)
-            .map(z => editor);
+            .map(z => editor)
+            .where(editor => !editor.isDestroyed());
     }
 
     public get activeConfigEditor() {
