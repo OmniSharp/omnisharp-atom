@@ -66,6 +66,7 @@ class CodeLens implements OmniSharp.IFeature {
 
             cd.add(subject
                 .debounce(500)
+                .where(() => !editor.isDestroyed())
                 .flatMapLatest(() => this.updateCodeLens(editor))
                 .subscribe(() => { })
             );

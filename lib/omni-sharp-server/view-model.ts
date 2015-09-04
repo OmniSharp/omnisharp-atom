@@ -207,7 +207,8 @@ export class ViewModel implements Rx.IDisposable {
     }
 
     public getProjectForEditor(editor: Atom.TextEditor) {
-        return this.getProjectForPath(editor.getPath());
+        return this.getProjectForPath(editor.getPath())
+            .where(() => !editor.isDestroyed());
     }
 
     public getProjectForPath(path: string) {

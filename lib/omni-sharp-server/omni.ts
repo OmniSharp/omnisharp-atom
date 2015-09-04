@@ -8,7 +8,15 @@ import {ProjectViewModel} from "./view-model";
 
 // Time we wait to try and do our active switch tasks.
 const DEBOUNCE_TIMEOUT = 400;
-import raf from "../rafscheduler"
+import raf from "../rafscheduler";
+
+function wrapEditorObservable(observable: Observable<Atom.TextEditor>) {
+    return observable
+        .subscribeOn(Scheduler.timeout)
+        .observeOn(raf)
+        .debounce(DEBOUNCE_TIMEOUT)
+        .where(editor => !editor.isDestroyed());
+}
 
 class Omni implements Rx.IDisposable {
     private disposable: CompositeDisposable;
@@ -17,31 +25,19 @@ class Omni implements Rx.IDisposable {
     private _configEditors: Observable<Atom.TextEditor>;
 
     private _activeEditorSubject = new BehaviorSubject<Atom.TextEditor>(null);
-    private _activeEditor = this._activeEditorSubject
-        .subscribeOn(Scheduler.timeout)
-        .observeOn(raf)
-        .debounce(DEBOUNCE_TIMEOUT)
+    private _activeEditor = wrapEditorObservable(this._activeEditorSubject)
         .shareReplay(1);
 
     private _activeConfigEditorSubject = new BehaviorSubject<Atom.TextEditor>(null);
-    private _activeConfigEditor = this._activeConfigEditorSubject
-        .subscribeOn(Scheduler.timeout)
-        .observeOn(raf)
-        .debounce(DEBOUNCE_TIMEOUT)
+    private _activeConfigEditor = wrapEditorObservable(this._activeConfigEditorSubject)
         .shareReplay(1);
 
-    private _activeProject = Observable.combineLatest(this._activeEditorSubject, this._activeConfigEditorSubject, (editor, config) => editor || config || null)
-        .subscribeOn(Scheduler.timeout)
-        .observeOn(raf)
-        .debounce(DEBOUNCE_TIMEOUT)
+    private _activeProject = wrapEditorObservable(Observable.combineLatest(this._activeEditorSubject, this._activeConfigEditorSubject, (editor, config) => editor || config || null))
         .flatMap(editor => manager.getClientForEditor(editor)
             .flatMap(z => z.model.getProjectForEditor(editor)))
         .shareReplay(1);
 
-    private _activeFramework = Observable.combineLatest(this._activeEditorSubject, this._activeConfigEditorSubject, (editor, config) => editor || config || null)
-        .subscribeOn(Scheduler.timeout)
-        .observeOn(raf)
-        .debounce(DEBOUNCE_TIMEOUT)
+    private _activeFramework = wrapEditorObservable(Observable.combineLatest(this._activeEditorSubject, this._activeConfigEditorSubject, (editor, config) => editor || config || null))
         .flatMapLatest(editor => manager.getClientForEditor(editor)
             .flatMapLatest(z => z.model.getProjectForEditor(editor)))
         .flatMapLatest(project => project.observe.activeFramework.map(framework => ({ project, framework })))
