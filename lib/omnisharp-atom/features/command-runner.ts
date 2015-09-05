@@ -70,7 +70,6 @@ class CommandRunner implements OmniSharp.IFeature {
 
         // Auto restart the process if a file changes for a project that applies
         var restart = new Subject<Atom.TextEditor>();
-        this.disposable.add(restart);
 
         this.disposable.add(restart
             .where(z => !!this._watchProcesses.length)
@@ -86,6 +85,7 @@ class CommandRunner implements OmniSharp.IFeature {
                         process.stop();
                 });
             }));
+        this.disposable.add(restart);
     }
 
     private addCommands(project: ProjectViewModel) {
@@ -142,7 +142,7 @@ class CommandRunner implements OmniSharp.IFeature {
 }
 
 export function getDnxExe(solution: Client) {
-    return solution.model.dnx.RuntimePath + (win32 ? '/bin/dnx.exe' : '/bin/dnx');
+    return solution.model.runtime + (win32 ? '/bin/dnx.exe' : '/bin/dnx');
 }
 
 export class RunProcess {
@@ -176,7 +176,12 @@ export class RunProcess {
     }
 
     private bootRuntime(runtime: string) {
-        var args = ['.', this.command];
+        var args = [this.command];
+        // Support old way of doing things (remove at RC?)
+        if (any(['beta3', 'beta4', 'beta5', 'beta6'], x => runtime.indexOf(x))) {
+            args.unshift('.');
+        }
+
         if (this.watch) {
             args.unshift('--watch');
         }

@@ -7,6 +7,7 @@
         "noImplicitAny": false,
         "removeComments": false
     },
+    "moduleResolution": "node",
     "formatCodeOptions": {
         "indentSize": 4,
         "tabSize": 4,
@@ -87,6 +88,7 @@
         "./lib/omnisharp-atom/views/test-results-window.ts",
         "./lib/omnisharp-atom/views/tooltip-view.ts",
         "./lib/omnisharp-atom/world.ts",
+        "./lib/rafscheduler.ts",
         "./lib/typings.d.ts",
         "./spec/atom/dock-spec.ts",
         "./spec/atom/framework-selector-spec.ts",

@@ -92,10 +92,10 @@ class SolutionManager {
         if (this._unitTestMode_) return;
         this._activated = false;
         this._disposable.dispose();
+        this.disconnect();
 
         this._solutions.clear();
         this._solutionProjects.clear();
-        this.disconnect();
         this._findSolutionCache.clear();
         //this._temporarySolutions.clear();
         //this._disposableSolutionMap.clear();
@@ -288,6 +288,10 @@ class SolutionManager {
     }
 
     public getClientForEditor(editor: Atom.TextEditor) {
+        return this._getClientForEditor(editor).where(() => !editor.isDestroyed());
+    }
+    
+    private _getClientForEditor(editor: Atom.TextEditor) {
         var solution: Observable<Solution>;
         if (!editor)
             // No text editor found

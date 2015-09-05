@@ -5,6 +5,7 @@ import $ = require('jquery');
 import {CompositeDisposable, Observable, Disposable, Subject} from "rx";
 import Omni = require('../../omni-sharp-server/omni');
 import {DriverState} from "omnisharp-client";
+import raf from "../../rafscheduler";
 
 interface IDecoration {
     destroy();
@@ -62,10 +63,10 @@ class CodeLens implements OmniSharp.IFeature {
             if (!items) this.decorations.set(editor, []);
 
             var subject = new Subject<any>();
-            cd.add(subject);
 
             cd.add(subject
                 .debounce(500)
+                .where(() => !editor.isDestroyed())
                 .flatMapLatest(() => this.updateCodeLens(editor))
                 .subscribe(() => { })
             );
@@ -85,6 +86,7 @@ class CodeLens implements OmniSharp.IFeature {
                 }
             }));
 
+            cd.add(subject);
             this.updateDecoratorVisiblility(editor);
         }));
     }
@@ -108,11 +110,15 @@ class CodeLens implements OmniSharp.IFeature {
         var updated = new WeakSet<Lens>();
         _.each(decorations, x => x.invalidate());
 
-        return Omni.request(editor, solution =>
-            solution.currentfilemembersasflat(solution.makeRequest(editor)))
-            .concatMap(fileMembers => Observable.from(fileMembers)
-                .flatMap(x => Observable.just(x).delay(100)))
-            .map(fileMember => {
+        if (editor.isDestroyed()) {
+            return;
+        }
+
+        return Omni.request(editor, solution => solution.currentfilemembersasflat(solution.makeRequest(editor)))
+            .observeOn(raf)
+            .where(fileMembers => !!fileMembers)
+            .concatMap(fileMembers => Observable.from(fileMembers))
+            .concatMap(fileMember => {
                 var range: TextBuffer.Range = <any>editor.getBuffer().rangeForRow(fileMember.Line, false);
                 var marker: Atom.Marker = (<any>editor).markBufferRange(range, { invalidate: 'inside' });
 
@@ -127,17 +133,16 @@ class CodeLens implements OmniSharp.IFeature {
                     decorations.push(lens);
                 }
 
-                return lens;
+                return Observable.timer(1000 / 10).map(() => lens.updateVisible());
             })
             .tapOnCompleted(() => {
                 // Remove all old/missing decorations
-                _.each(decorations, d => {
-                    if (d && !updated.has(d)) {
-                        d.dispose();
+                var items = _.map(decorations, lens => {
+                    if (lens && !updated.has(lens)) {
+                        lens.dispose();
                     }
                 });
-            })
-            .tapOnNext((lens) => lens.updateVisible());
+            });
     }
 
     public required = false;
@@ -174,10 +179,12 @@ export class Lens implements Rx.IDisposable {
         this._path = _editor.getPath();
 
         this._updateObservable = this._update
+            .observeOn(raf)
             .where(x => !!x)
             .flatMap(() => Omni.request(this._editor, solution =>
                 solution.findusages({ FileName: this._path, Column: this._member.Column + 1, Line: this._member.Line }, { silent: true })))
-            .map(x => x.QuickFixes.length - 1)
+            .where(x => x && !!x.QuickFixes.length)
+            .map(x => x && x.QuickFixes.length - 1)
             .publish()
             .refCount();
 
@@ -197,7 +204,7 @@ export class Lens implements Rx.IDisposable {
     public updateVisible() {
         var isVisible = this._isVisible();
         this._updateDecoration(isVisible);
-        this._update.onNext(isVisible);
+        !this._update.isDisposed && this._update.onNext(isVisible);
     }
 
     public updateTop(lineHeight: number) {
@@ -208,8 +215,8 @@ export class Lens implements Rx.IDisposable {
     public invalidate() {
         this._updateObservable
             .take(1)
-            .subscribe((x) => {
-                if (x === 0) {
+            .subscribe(x => {
+                if (x <= 0) {
                     this.dispose();
                 } else {
                     this._element && (this._element.textContent = x.toString());
@@ -244,7 +251,7 @@ export class Lens implements Rx.IDisposable {
         element.style.left = '16px';
         element.classList.add('highlight-info', 'badge', 'badge-small');
         element.textContent = count.toString();
-        element.onclick = function() { Omni.request(this._editor, s => s.findusages({ FileName: this._path, Column: this._member.Column + 1, Line: this._member.Line })); }
+        element.onclick = () => Omni.request(this._editor, s => s.findusages({ FileName: this._path, Column: this._member.Column + 1, Line: this._member.Line }));
 
         this._decoration = <any>this._editor.decorateMarker(this._marker, { type: "overlay", class: `codelens`, item: element, position: 'head' });
         this._disposable.add(Disposable.create(() => {

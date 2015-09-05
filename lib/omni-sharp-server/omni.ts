@@ -6,6 +6,18 @@ import {basename} from "path";
 import {DriverState} from "omnisharp-client";
 import {ProjectViewModel} from "./view-model";
 
+// Time we wait to try and do our active switch tasks.
+const DEBOUNCE_TIMEOUT = 400;
+import raf from "../rafscheduler";
+
+function wrapEditorObservable(observable: Observable<Atom.TextEditor>) {
+    return observable
+        .subscribeOn(Scheduler.timeout)
+        .observeOn(raf)
+        .debounce(DEBOUNCE_TIMEOUT)
+        .where(editor => !editor || !editor.isDestroyed());
+}
+
 class Omni implements Rx.IDisposable {
     private disposable: CompositeDisposable;
 
@@ -13,21 +25,19 @@ class Omni implements Rx.IDisposable {
     private _configEditors: Observable<Atom.TextEditor>;
 
     private _activeEditorSubject = new BehaviorSubject<Atom.TextEditor>(null);
-    private _activeEditor = this._activeEditorSubject.asObservable().delay(50).shareReplay(1);
+    private _activeEditor = wrapEditorObservable(this._activeEditorSubject)
+        .shareReplay(1);
 
     private _activeConfigEditorSubject = new BehaviorSubject<Atom.TextEditor>(null);
-    private _activeConfigEditor = this._activeConfigEditorSubject.asObservable().delay(50).shareReplay(1);
+    private _activeConfigEditor = wrapEditorObservable(this._activeConfigEditorSubject)
+        .shareReplay(1);
 
-    private _activeProject = Observable.combineLatest(this._activeEditorSubject, this._activeConfigEditorSubject, (editor, config) => editor || config || null)
-        .debounce(10)
-        .asObservable()
+    private _activeProject = wrapEditorObservable(Observable.combineLatest(this._activeEditorSubject, this._activeConfigEditorSubject, (editor, config) => editor || config || null))
         .flatMap(editor => manager.getClientForEditor(editor)
             .flatMap(z => z.model.getProjectForEditor(editor)))
         .shareReplay(1);
 
-    private _activeFramework = Observable.combineLatest(this._activeEditorSubject, this._activeConfigEditorSubject, (editor, config) => editor || config || null)
-        .debounce(10)
-        .asObservable()
+    private _activeFramework = wrapEditorObservable(Observable.combineLatest(this._activeEditorSubject, this._activeConfigEditorSubject, (editor, config) => editor || config || null))
         .flatMapLatest(editor => manager.getClientForEditor(editor)
             .flatMapLatest(z => z.model.getProjectForEditor(editor)))
         .flatMapLatest(project => project.observe.activeFramework.map(framework => ({ project, framework })))
@@ -133,12 +143,9 @@ class Omni implements Rx.IDisposable {
     private static createTextEditorObservable(grammars: string[], disposable: CompositeDisposable) {
         var editors: Atom.TextEditor[] = [];
         var subject = new Subject<Atom.TextEditor>();
-        disposable.add(subject);
-
         var editorSubject = new Subject<Atom.TextEditor>();
-        disposable.add(editorSubject);
 
-        disposable.add(atom.workspace.observeActivePaneItem((pane: any) => editorSubject.onNext(pane)));
+        disposable.add(atom.workspace.observeActivePaneItem((pane: any) => !editorSubject.isDisposed && editorSubject.onNext(pane)));
         var editorObservable = editorSubject.where(z => z && !!z.getGrammar);
 
         disposable.add(Observable.zip(editorObservable, editorObservable.skip(1), (editor, nextEditor) => ({ editor, nextEditor }))
@@ -156,7 +163,7 @@ class Omni implements Rx.IDisposable {
         disposable.add(atom.workspace.observeTextEditors((editor: Atom.TextEditor) => {
             function cb() {
                 editors.push(editor);
-                subject.onNext(editor);
+                !subject.isDisposed && subject.onNext(editor);
 
                 // pull old editors.
                 disposable.add(editor.onDidDestroy(() => _.pull(editors, editor)));
@@ -192,6 +199,9 @@ class Omni implements Rx.IDisposable {
                 disposable.add(s);
             }
         }));
+
+        disposable.add(subject);
+        disposable.add(editorSubject);
 
         return Observable.merge(subject, Observable.defer(() => Observable.from(editors))).delay(50);
     }
@@ -243,7 +253,7 @@ class Omni implements Rx.IDisposable {
         var clientCallback = (client: Client) => {
             var r = callback(client);
             if (helpers.isPromise(r)) {
-                return Observable.fromPromise(<Rx.IPromise<T>> r);
+                return Observable.fromPromise(<Rx.IPromise<T>>r);
             } else {
                 return <Rx.Observable<T>>r;
             }
@@ -252,7 +262,7 @@ class Omni implements Rx.IDisposable {
         var result: Observable<T>;
 
         if (editor) {
-            result = manager.getClientForEditor(<Atom.TextEditor> editor)
+            result = manager.getClientForEditor(<Atom.TextEditor>editor)
                 .where(z => !!z)
                 .flatMap(clientCallback).share();
         } else {

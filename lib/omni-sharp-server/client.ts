@@ -1,6 +1,6 @@
 import _ = require('lodash');
-import {Observable, Subject} from 'rx';
-import {OmnisharpClientV2 as OmnisharpClient, DriverState, OmnisharpClientOptions} from "omnisharp-client";
+import {Observable, Subject, CompositeDisposable} from 'rx';
+import {OmnisharpClientV2, DriverState, OmnisharpClientOptions} from "omnisharp-client";
 
 interface ClientOptions extends OmnisharpClientOptions {
     temporary: boolean;
@@ -10,14 +10,14 @@ interface ClientOptions extends OmnisharpClientOptions {
 
 import {ViewModel} from "./view-model";
 
-class Client extends OmnisharpClient {
+class Client extends OmnisharpClientV2 {
     public model: ViewModel;
     public logs: Observable<OmniSharp.OutputMessage>;
     public path: string;
     public index: number;
     public temporary: boolean = false;
+    private _clientDisposable = new CompositeDisposable();
     private repository: Atom.GitRepository;
-
     constructor(options: ClientOptions) {
         super(options);
         this.configureClient();
@@ -27,6 +27,7 @@ class Client extends OmnisharpClient {
         this.index = options['index'];
         this.repository = options.repository;
         this.setupRepository();
+        this._clientDisposable.add(this.model);
     }
 
     public toggle() {
@@ -54,6 +55,11 @@ class Client extends OmnisharpClient {
         super.disconnect();
 
         this.log("Omnisharp server stopped.");
+    }
+
+    public dispose() {
+        super.dispose();
+        this._clientDisposable.dispose();
     }
 
     public getEditorContext(editor: Atom.TextEditor): OmniSharp.Models.Request {
@@ -100,15 +106,15 @@ class Client extends OmnisharpClient {
             logLevel: event.Body && event.Body.LogLevel || (event.Type === "error" && 'ERROR') || 'INFORMATION'
         }));
 
-        this.errors.subscribe(exception => {
+        this._clientDisposable.add(this.errors.subscribe(exception => {
             console.error(exception);
-        });
+        }));
 
-        this.responses.subscribe(data => {
+        this._clientDisposable.add(this.responses.subscribe(data => {
             if (atom.config.get('omnisharp-atom.developerMode')) {
                 console.log("omni:" + data.command, data.request, data.response);
             }
-        });
+        }));
     }
 
     public request<TRequest, TResponse>(action: string, request?: TRequest, options?: OmniSharp.RequestOptions): Rx.Observable<TResponse> {
@@ -121,29 +127,23 @@ class Client extends OmnisharpClient {
         if (tempR && _.endsWith(tempR.FileName, '.json')) {
             tempR.Buffer = null;
         }
-        return OmnisharpClient.prototype.request.call(this, action, request, options);
+        return super.request<TRequest, TResponse>(action, request, options);
     }
 
     private setupRepository() {
         if (this.repository) {
             var branchSubject = new Subject<string>();
 
-            branchSubject
+            this._clientDisposable.add(branchSubject
                 .distinctUntilChanged()
-                .subscribe(() => atom.commands.dispatch(atom.views.getView(atom.workspace), 'omnisharp-atom:restart-server'));
+                .subscribe(() => atom.commands.dispatch(atom.views.getView(atom.workspace), 'omnisharp-atom:restart-server')));
+            this._clientDisposable.add(branchSubject);
 
-            this.repository.onDidChangeStatuses(() => {
+            this._clientDisposable.add(this.repository.onDidChangeStatuses(() => {
                 branchSubject.onNext(this.repository['branch']);
-            });
+            }));
         }
     }
 }
 
 export = Client;
-
-// Hack to workaround issue with ts.transpile not working correctly
-(function(Client: any) {
-    Client.connect = Client.prototype.connect;
-    Client.disconnect = Client.prototype.disconnect;
-    Client.log = Client.prototype.log;
-})(OmnisharpClient);

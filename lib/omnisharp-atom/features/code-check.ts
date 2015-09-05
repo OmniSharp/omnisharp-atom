@@ -94,17 +94,18 @@ class CodeCheck implements OmniSharp.IFeature {
         /**
         * monitor configuration
         */
-        var showDiagnosticsForAllSolutions = (function() {
+        var showDiagnosticsForAllSolutions = (() => {
             // Get a subject that will give us the state of the value right away.
             let subject = new ReplaySubject<boolean>(1);
-            subject.subscribe(x => currentlyEnabled = x);
+            this.disposable.add(subject.subscribe(x => currentlyEnabled = x));
             subject.onNext(atom.config.get<boolean>("omnisharp-atom.showDiagnosticsForAllSolutions"));
 
-            atom.config.onDidChange("omnisharp-atom.showDiagnosticsForAllSolutions", function() {
+            this.disposable.add(atom.config.onDidChange("omnisharp-atom.showDiagnosticsForAllSolutions", function() {
                 let enabled = atom.config.get<boolean>("omnisharp-atom.showDiagnosticsForAllSolutions");
                 subject.onNext(enabled);
-            });
+            }));
 
+            this.disposable.add(subject);
             return <Observable<boolean>>subject;
         })();
 

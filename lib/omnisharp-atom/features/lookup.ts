@@ -57,7 +57,10 @@ class Tooltip implements Rx.Disposable {
     constructor(private editorView: JQuery, private editor: Atom.TextEditor) {
         this.rawView = editorView[0];
 
+        var cd = this.disposable = new CompositeDisposable();
+
         var scroll = this.getFromShadowDom(editorView, '.scroll-view');
+        if (!scroll[0]) return;
 
         // to debounce mousemove event's firing for some reason on some machines
         var lastExprTypeBufferPt: any;
@@ -65,8 +68,6 @@ class Tooltip implements Rx.Disposable {
         var mousemove = Observable.fromEvent<MouseEvent>(scroll[0], 'mousemove');
         var mouseout = Observable.fromEvent<MouseEvent>(scroll[0], 'mouseout');
         this.keydown = Observable.fromEvent<KeyboardEvent>(scroll[0], 'keydown');
-
-        var cd = this.disposable = new CompositeDisposable();
 
         cd.add(mousemove.map(event => {
             var pixelPt = this.pixelPositionFromMouseEvent(editorView, event);

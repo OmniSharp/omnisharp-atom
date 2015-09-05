@@ -38,7 +38,7 @@ class OmniSharpAtom {
 
             var whiteListUndefined = (typeof whiteList === 'undefined');
 
-            var started = Observable.merge(
+            var started = Observable.concat( // Concat is important here, atom features need to be bootstrapped first.
                 this.getFeatures(featureList, whiteList, "atom"),
                 this.getFeatures(featureList, whiteList, "features")
             ).filter(l => {
@@ -52,7 +52,7 @@ class OmniSharpAtom {
                     return !_.contains(featureList, l.file);
                 }
             })
-                .flatMap(z => z.load())
+                .concatMap(z => z.load())
                 .toArray()
                 .share();
 

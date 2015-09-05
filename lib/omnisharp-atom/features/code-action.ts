@@ -82,7 +82,7 @@ class CodeAction implements OmniSharp.IFeature {
                 .debounce(200)
                 .subscribe(cursor => update(cursor.newBufferPosition)));
 
-            cd.add(editor.onDidStopChanging(() => onDidStopChanging.onNext(true)));
+            cd.add(editor.onDidStopChanging(() => !onDidStopChanging.isDisposed && onDidStopChanging.onNext(true)));
             cd.add(editor.onDidChangeCursorPosition(e => {
                 var oldPos = e.oldBufferPosition;
                 var newPos = e.newBufferPosition;
@@ -96,7 +96,7 @@ class CodeAction implements OmniSharp.IFeature {
                     }
                 }
 
-                onDidChangeCursorPosition.onNext(e);
+                !onDidChangeCursorPosition.isDisposed && onDidChangeCursorPosition.onNext(e);
             }));
         }));
     }

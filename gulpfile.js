@@ -1,5 +1,4 @@
 var gulp = require('gulp');
-var ts = require('typescript');
 var through = require('through2');
 var gutil = require('gulp-util');
 var merge = require('merge-stream');
@@ -10,7 +9,13 @@ var _ = require('lodash');
 var win32 = process.platform === "win32";
 var spawn = require('child_process').spawn;
 var gulpPath = path.join(__dirname, 'node_modules/.bin/gulp' + (win32 && '.cmd' || ''));
+var Promise = require('bluebird');
+var ts = require('ntypescript');
 
+var metadata = {
+    lib: ['lib/**/*.ts', '!lib/**/*.d.ts'],
+    spec: ['spec/**/*.ts'],
+}
 
 // Simply take TS code and strip anything not javascript
 // Does not do any compile time checking.
@@ -37,11 +42,6 @@ function tsTranspiler(source, dest) {
     return source
         .pipe(tsTranspile())
         .pipe(gulp.dest(dest));
-}
-
-var metadata = {
-    lib: ['lib/**/*.ts', '!lib/**/*.d.ts'],
-    spec: ['spec/**/*.ts'],
 }
 
 gulp.task('typescript', ['clean'], function() {

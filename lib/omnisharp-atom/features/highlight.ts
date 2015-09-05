@@ -201,13 +201,22 @@ class Highlight implements OmniSharp.IFeature {
 }
 
 function isObserveRetokenizing(observable: Rx.Observable<{ editor: Atom.TextEditor; request: OmniSharp.Models.HighlightRequest; response: OmniSharp.Models.HighlightResponse }>) {
-    return observable.where(z => !!z.editor.getGrammar).where(z => !!(<Observable<boolean>>(<any>z.editor.getGrammar()).isObserveRetokenizing))
-        .flatMap(z => (<Observable<boolean>>(<any>z.editor.getGrammar()).isObserveRetokenizing).where(z => !!z).take(1).map(x => z));
+    return observable
+        .where(z => !!z.editor.getGrammar)
+        .where(z => !!(<Observable<boolean>>(<any>z.editor.getGrammar()).isObserveRetokenizing))
+        .flatMap(z => (<Observable<boolean>>(<any>z.editor.getGrammar()).isObserveRetokenizing)
+            .where(z => !!z)
+            .take(1)
+            .map(x => z));
 }
 
 function isEditorObserveRetokenizing(observable: Rx.Observable<Atom.TextEditor>) {
-    return observable.where(z => !!z.getGrammar).where(z => !!(<Observable<boolean>>(<any>z.getGrammar()).isObserveRetokenizing))
-        .flatMap(z => (<Observable<boolean>>(<any>z.getGrammar()).isObserveRetokenizing).where(z => !!z).take(1).map(x => z))
+    return observable.where(z => !!z.getGrammar)
+        .where(z => !!(<Observable<boolean>>(<any>z.getGrammar()).isObserveRetokenizing))
+        .flatMap(z => (<Observable<boolean>>(<any>z.getGrammar()).isObserveRetokenizing)
+            .where(z => !!z)
+            .take(1)
+            .map(x => z));
 }
 
 interface IHighlightingGrammar extends FirstMate.Grammar {
