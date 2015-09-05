@@ -15,7 +15,7 @@ function wrapEditorObservable(observable: Observable<Atom.TextEditor>) {
         .subscribeOn(Scheduler.timeout)
         .observeOn(raf)
         .debounce(DEBOUNCE_TIMEOUT)
-        .where(editor => !editor.isDestroyed());
+        .where(editor => !editor || !editor.isDestroyed());
 }
 
 class Omni implements Rx.IDisposable {
@@ -324,8 +324,7 @@ class Omni implements Rx.IDisposable {
             .flatMap(solution => solution.state.startWith(solution.currentState))
             .where(x => x === DriverState.Connected)
             .take(1)
-            .map(z => editor)
-            .where(editor => !editor.isDestroyed());
+            .map(z => editor);
     }
 
     public get activeConfigEditor() {

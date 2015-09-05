@@ -1,6 +1,6 @@
 import _ = require('lodash');
 import {Observable, Subject, CompositeDisposable} from 'rx';
-import {OmnisharpClientV2 as OmnisharpClient, DriverState, OmnisharpClientOptions} from "omnisharp-client";
+import {OmnisharpClientV2, DriverState, OmnisharpClientOptions} from "omnisharp-client";
 
 interface ClientOptions extends OmnisharpClientOptions {
     temporary: boolean;
@@ -10,7 +10,7 @@ interface ClientOptions extends OmnisharpClientOptions {
 
 import {ViewModel} from "./view-model";
 
-class Client extends OmnisharpClient {
+class Client extends OmnisharpClientV2 {
     public model: ViewModel;
     public logs: Observable<OmniSharp.OutputMessage>;
     public path: string;
@@ -127,7 +127,7 @@ class Client extends OmnisharpClient {
         if (tempR && _.endsWith(tempR.FileName, '.json')) {
             tempR.Buffer = null;
         }
-        return OmnisharpClient.prototype.request.call(this, action, request, options);
+        return super.request<TRequest, TResponse>(action, request, options);
     }
 
     private setupRepository() {
