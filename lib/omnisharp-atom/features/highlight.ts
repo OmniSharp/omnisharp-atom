@@ -202,7 +202,7 @@ class Highlight implements OmniSharp.IFeature {
 
 function isObserveRetokenizing(observable: Rx.Observable<{ editor: Atom.TextEditor; request: OmniSharp.Models.HighlightRequest; response: OmniSharp.Models.HighlightResponse }>) {
     return observable
-        .where(z => !!z.editor.getGrammar)
+        .where(z => !!z && !!z.editor && !!z.editor.getGrammar)
         .where(z => !!(<Observable<boolean>>(<any>z.editor.getGrammar()).isObserveRetokenizing))
         .flatMap(z => (<Observable<boolean>>(<any>z.editor.getGrammar()).isObserveRetokenizing)
             .where(z => !!z)
@@ -211,7 +211,7 @@ function isObserveRetokenizing(observable: Rx.Observable<{ editor: Atom.TextEdit
 }
 
 function isEditorObserveRetokenizing(observable: Rx.Observable<Atom.TextEditor>) {
-    return observable.where(z => !!z.getGrammar)
+    return observable.where(z => !!z && !!z.getGrammar)
         .where(z => !!(<Observable<boolean>>(<any>z.getGrammar()).isObserveRetokenizing))
         .flatMap(z => (<Observable<boolean>>(<any>z.getGrammar()).isObserveRetokenizing)
             .where(z => !!z)
