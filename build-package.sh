@@ -1,5 +1,5 @@
 #!/bin/sh
-set -e
+
 echo "Downloading latest Atom release..."
 curl -s -L "https://atom.io/download/mac" \
   -H 'Accept: application/octet-stream' \
@@ -14,7 +14,7 @@ ATOM_PATH=./atom ./atom/Atom.app/Contents/Resources/app/atom.sh -v
 
 echo "Downloading package dependencies..."
 atom/Atom.app/Contents/Resources/app/apm/node_modules/.bin/apm clean
-atom/Atom.app/Contents/Resources/app/apm/node_modules/.bin/apm install
+atom/Atom.app/Contents/Resources/app/apm/node_modules/.bin/apm install --verbose
 
 TEST_PACKAGES="${APM_TEST_PACKAGES:=none}"
 
