@@ -24,11 +24,12 @@ class CodeFormat implements OmniSharp.IFeature {
         if (editor) {
             var buffer = editor.getBuffer();
             Omni.request(editor, client => {
-                var request = <OmniSharp.Models.FormatRangeRequest>client.makeRequest();
-                request.Line = 0;
-                request.Column = 0;
-                request.EndLine = buffer.getLineCount() - 1;
-                request.EndColumn = 0;
+                var request = <OmniSharp.Models.FormatRangeRequest>{
+                    Line: 0,
+                    Column: 0,
+                    EndLine: buffer.getLineCount(),
+                    EndColumn: 0,
+                };
 
                 return client
                     .formatRangePromise(request)
@@ -43,8 +44,9 @@ class CodeFormat implements OmniSharp.IFeature {
             editor.insertText(char);
 
             Omni.request(editor, client => {
-                var request = <OmniSharp.Models.FormatAfterKeystrokeRequest>client.makeRequest();
-                request.Character = char;
+                var request = <OmniSharp.Models.FormatAfterKeystrokeRequest>{
+                    Character: char
+                };
 
                 return client.formatAfterKeystrokePromise(request)
                     .then((data) => Changes.applyChanges(editor, data));

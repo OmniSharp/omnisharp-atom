@@ -52,7 +52,7 @@ class CodeAction implements OmniSharp.IFeature {
 
                 var range = editor.getSelectedBufferRange();
 
-                subscription = Omni.request(client => client.getcodeactions(this.getRequest(client), { silent: true }))
+                subscription = Omni.request(editor, client => client.getcodeactions(this.getRequest(client), { silent: true }))
                     .subscribe(response => {
                         if (response.CodeActions.length > 0) {
                             if (marker) {
@@ -106,7 +106,7 @@ class CodeAction implements OmniSharp.IFeature {
     private getRequest(client: OmniSharp.ExtendApi, codeAction?: string) {
         var editor = atom.workspace.getActiveTextEditor();
         var range = <any>editor.getSelectedBufferRange();
-        var request = client.makeDataRequest<OmniSharp.Models.V2.RunCodeActionRequest>({
+        var request = <OmniSharp.Models.V2.RunCodeActionRequest>{
             WantsTextChanges: true,
             Selection: {
                 Start: {
@@ -118,7 +118,7 @@ class CodeAction implements OmniSharp.IFeature {
                     Column: range.end.column
                 }
             }
-        });
+        };
 
         if (codeAction !== undefined) {
             request.Identifier = codeAction;

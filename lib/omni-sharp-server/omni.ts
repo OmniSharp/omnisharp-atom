@@ -85,6 +85,23 @@ class Omni implements Rx.IDisposable {
             this._activeConfigEditorSubject.onNext(null);
         }));
 
+        this.disposable.add(this._editors.subscribe(editor => {
+            var cd = new CompositeDisposable();
+            var omniChanges: { oldRange: TextBuffer.Range; newRange: TextBuffer.Range; oldText: string; newText: string; }[] = (<any>editor).__omniChanges__ = [];
+
+            cd.add(editor.getBuffer().onDidChange((change: { oldRange: TextBuffer.Range; newRange: TextBuffer.Range; oldText: string; newText: string; }) => {
+                omniChanges.push(change);
+            }));
+
+            cd.add(editor.onDidStopChanging(_.debounce(() => {
+                if (omniChanges.length) {
+                    this.request(editor, client => client.checkreadystatus({}, {silent: true}));
+                }
+            }, 1000)));
+
+            this.disposable.add(cd);
+        }));
+
         this.disposable.add(Disposable.create(() => {
             this._activeEditorSubject.onNext(null);
             this._activeConfigEditorSubject.onNext(null);
@@ -250,7 +267,7 @@ class Omni implements Rx.IDisposable {
         }
 
         var clientCallback = (client: Client) => {
-            var r = callback(client);
+            var r = callback(client.withEditor(<any>editor));
             if (helpers.isPromise(r)) {
                 return Observable.fromPromise(<Rx.IPromise<T>>r);
             } else {

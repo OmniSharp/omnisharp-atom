@@ -38,16 +38,16 @@ class FindUsages implements OmniSharp.IFeature {
             // NOTE: We cannot do the same for find implementations because find implementation
             //      just goes to the item if only one comes back.
             open: Omni.listener.requests.where(z => !z.silent && z.command === "findusages").map(() => true),
-            reset: Omni.listener.requests.where(z => !z.silent && z.command === "findimplementations" || z.command === "findusages").map(() => true),
+            reset: Omni.listener.requests.where(z => !z.silent && (z.command === "findimplementations" || z.command === "findusages")).map(() => true),
             updated: updated,
         };
 
         this.disposable.add(Omni.addTextEditorCommand("omnisharp-atom:find-usages", () => {
-            Omni.request(client => client.findusages(client.makeRequest()));
+            Omni.request(client => client.findusages({}));
         }));
 
         this.disposable.add(Omni.addTextEditorCommand("omnisharp-atom:go-to-implementation", () => {
-            Omni.request(client => client.findimplementations(client.makeRequest()));
+            Omni.request(client => client.findimplementations({}));
         }));
 
         this.disposable.add(atom.commands.add("atom-workspace", 'omnisharp-atom:next-usage', () => {

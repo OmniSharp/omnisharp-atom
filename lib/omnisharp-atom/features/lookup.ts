@@ -164,8 +164,7 @@ class Tooltip implements Rx.Disposable {
         Omni.request(client => client.typelookup({
             IncludeDocumentation: true,
             Line: bufferPt.row,
-            Column: bufferPt.column,
-            FileName: this.editor.getURI()
+            Column: bufferPt.column
         })).subscribe((response: OmniSharp.Models.TypeLookupResponse) => {
             if (response.Type === null) {
                 return;

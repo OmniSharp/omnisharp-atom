@@ -156,9 +156,7 @@ class Highlight implements OmniSharp.IFeature {
                 if (!linesToFetch || !linesToFetch.length)
                     linesToFetch = [];
 
-                Omni.request(editor, client => client.highlight(
-                    client.makeDataRequest<OmniSharp.Models.HighlightRequest>({
-                        FileName: editor.getPath(),
+                Omni.request(editor, client => client.highlight({
                         ProjectNames: projects,
                         Lines: <any>linesToFetch,
                         ExcludeClassifications: [
@@ -168,7 +166,7 @@ class Highlight implements OmniSharp.IFeature {
                             OmniSharp.Models.HighlightClassification.Operator,
                             OmniSharp.Models.HighlightClassification.Keyword
                         ]
-                    }, editor)));
+                    }));
             }));
 
         disposable.add(Omni.getProject(editor)

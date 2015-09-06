@@ -105,7 +105,7 @@ export var provider = [
         lint: (editor: Atom.TextEditor) => {
             if (!_.contains(Omni.validGammarNames, editor.getGrammar().name)) return Promise.resolve([]);
 
-            return Omni.request(editor, client => client.codecheck(client.makeRequest(editor)))
+            return Omni.request(editor, client => client.codecheck({}))
                 .flatMap(x => Observable.from(<OmniSharp.Models.DiagnosticLocation[]>x.QuickFixes))
                 .where(z => z.LogLevel !== "Hidden")
                 .map(error => mapValues(editor, error))

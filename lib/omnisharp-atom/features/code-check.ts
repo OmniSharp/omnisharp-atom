@@ -172,11 +172,7 @@ class CodeCheck implements OmniSharp.IFeature {
 
     public doCodeCheck = _.debounce((editor: Atom.TextEditor) => {
         Omni.request(editor, client => {
-            var request = <OmniSharp.Models.FormatRangeRequest>client.makeRequest(editor);
-            return client.updatebufferPromise(request)
-                .then(() => {
-                    Omni.request(editor, client => client.codecheck(request));
-                });
+            return Omni.request(editor, client => client.codecheck({}));
         });
     }, 500);
 
