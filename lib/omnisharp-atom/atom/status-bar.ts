@@ -1,11 +1,11 @@
 import {CompositeDisposable, Disposable} from "rx";
 import Omni = require('../../omni-sharp-server/omni')
-import StatusBarComponent = require('../views/status-bar-view');
+import {StatusBarElement} from "../views/status-bar-view";
 import React = require('react');
 
 class StatusBar implements OmniSharp.IAtomFeature {
     private disposable: Rx.CompositeDisposable;
-    private view: Element;
+    private view: StatusBarElement;
     private tile: any;
     private statusBar: any;
     private _active = false;
@@ -29,17 +29,16 @@ class StatusBar implements OmniSharp.IAtomFeature {
     }
 
     private _attach() {
-        this.view = document.createElement("span");
+        this.view = new StatusBarElement();
         var tile = this.statusBar.addLeftTile({
             item: this.view,
             priority: -10000
         });
+        this.disposable.add(this.view);
         this.disposable.add(Disposable.create(() => {
-            React.unmountComponentAtNode(this.view);
             tile.destroy();
             this.view.remove();
         }));
-        React.render(React.createElement(StatusBarComponent, {}), this.view);
     }
 
     public dispose() {
