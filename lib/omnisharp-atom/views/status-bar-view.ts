@@ -38,7 +38,7 @@ interface StatusBarState {
     status?: OmnisharpClientStatus;
 }
 
-export class FlameElement extends HTMLElement implements WebComponent {
+export class FlameElement extends HTMLAnchorElement implements WebComponent {
     private _state: {
         isOff?: boolean;
         isConnecting?: boolean;
@@ -118,7 +118,7 @@ export class FlameElement extends HTMLElement implements WebComponent {
 (<any>exports).FlameElement = (<any>document).registerElement('omnisharp-flame', { prototype: FlameElement.prototype });
 
 export enum CommandRunnerState { Running, Started, Off };
-export class CommandRunnerElement extends HTMLElement implements WebComponent {
+export class CommandRunnerElement extends HTMLAnchorElement implements WebComponent {
     private _state: CommandRunnerState;
 
     public createdCallback() {
@@ -127,7 +127,7 @@ export class CommandRunnerElement extends HTMLElement implements WebComponent {
 
     public attachedCallback() {
         if (this._state === undefined)
-        this.updateState(CommandRunnerState.Off);
+            this.updateState(CommandRunnerState.Off);
     }
 
     public updateState(state: CommandRunnerState) {
@@ -152,33 +152,42 @@ export class CommandRunnerElement extends HTMLElement implements WebComponent {
 
 (<any>exports).CommandRunnerElement = (<any>document).registerElement('omnisharp-command-runner', { prototype: CommandRunnerElement.prototype });
 
-export class DiagnosticsElement extends HTMLElement implements WebComponent {
+export class DiagnosticsElement extends HTMLAnchorElement implements WebComponent {
     private _state: {
         errorCount: number;
         warningCount: number;
     };
     private _errors: HTMLSpanElement;
     private _warnings: HTMLSpanElement;
+    private _sync: HTMLAnchorElement;
 
     public createdCallback() {
         this.classList.add('inline-block', 'error-warning-summary');
 
+        var sync = this._sync = document.createElement('a');
+        sync.classList.add('icon', 'icon-sync', 'text-subtle');
+        this.appendChild(sync);
+        sync.onclick = () => this.syncClick();
+
+        var s = document.createElement('span');
+        this.appendChild(s);
+        s.onclick = () => this.diagnosticClick();
+
         var errorsIcon = document.createElement('span');
         errorsIcon.classList.add('icon', 'icon-issue-opened');
-        this.appendChild(errorsIcon);
+        s.appendChild(errorsIcon);
 
         var errors = this._errors = document.createElement('span');
         errors.classList.add('error-summary');
-        this.appendChild(errors);
-
+        s.appendChild(errors);
 
         var warningsIcon = document.createElement('span');
         warningsIcon.classList.add('icon', 'icon-alert');
-        this.appendChild(warningsIcon);
+        s.appendChild(warningsIcon);
 
         var warnings = this._warnings = document.createElement('span');
         warnings.classList.add('warning-summary');
-        this.appendChild(warnings);
+        s.appendChild(warnings);
     }
 
     public updateState(state: typeof DiagnosticsElement.prototype._state) {
@@ -188,11 +197,14 @@ export class DiagnosticsElement extends HTMLElement implements WebComponent {
             write(() => this._warnings.innerText = this._state.warningCount.toString());
         }
     }
+
+    public syncClick: () => void;
+    public diagnosticClick: () => void;
 }
 
 (<any>exports).DiagnosticsElement = (<any>document).registerElement('omnisharp-diagnostics', { prototype: DiagnosticsElement.prototype });
 
-export class ProjectCountElement extends HTMLElement implements WebComponent {
+export class ProjectCountElement extends HTMLAnchorElement implements WebComponent {
     private _state: { projectCount: number };
     private _projects: HTMLSpanElement;
     private _solutionNunmber: HTMLSpanElement;
@@ -239,20 +251,21 @@ export class StatusBarElement extends HTMLElement implements WebComponent, Rx.ID
     public createdCallback() {
         this.classList.add('inline-block');
 
-        var flameElement = this._flame = new exports.FlameElement();
+        var flameElement = this._flame = <FlameElement>new exports.FlameElement();
         this.appendChild(flameElement);
         flameElement.onclick = () => this.toggle();
 
-        var commandRunnerElement = this._commandRunner = new exports.CommandRunnerElement();
+        var commandRunnerElement = this._commandRunner = <CommandRunnerElement>new exports.CommandRunnerElement();
         this.appendChild(commandRunnerElement);
 
-        var diagnostics = this._diagnostics = new exports.DiagnosticsElement();
+        var diagnostics = this._diagnostics = <DiagnosticsElement>new exports.DiagnosticsElement();
         this.appendChild(diagnostics);
-        diagnostics.onclick = (e) => this.toggleErrorWarningPanel();
+        diagnostics.diagnosticClick = () => this.toggleErrorWarningPanel();
+        diagnostics.syncClick = () => this.doCodeCheck();
 
-        var projectCount = this._projectCount = new exports.ProjectCountElement();
+        var projectCount = this._projectCount = <ProjectCountElement>new exports.ProjectCountElement();
         this.appendChild(projectCount);
-        projectCount.onclick = (e) => this.toggleSolutionInformation();
+        projectCount.onclick = () => this.toggleSolutionInformation();
 
         this._disposable = new CompositeDisposable();
         this._state = { status: <any>{} };
@@ -339,6 +352,10 @@ export class StatusBarElement extends HTMLElement implements WebComponent, Rx.ID
 
     public toggleSolutionInformation() {
         atom.commands.dispatch(atom.views.getView(atom.workspace), 'omnisharp-atom:solution-status');
+    }
+
+    public doCodeCheck() {
+        atom.commands.dispatch(atom.views.getView(atom.workspace), 'omnisharp-atom:code-check');
     }
 }
 

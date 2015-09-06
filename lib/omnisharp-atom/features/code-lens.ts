@@ -2,10 +2,10 @@ import _ = require('lodash');
 //import spacePenViews = require('atom-space-pen-views')
 //var $ = spacePenViews.jQuery;
 import $ = require('jquery');
-import {CompositeDisposable, Observable, Disposable, Subject} from "rx";
+import {CompositeDisposable, Observable, Disposable, Subject, Scheduler} from "rx";
 import Omni = require('../../omni-sharp-server/omni');
 import {DriverState} from "omnisharp-client";
-import raf from "../../rafscheduler";
+import {read, write} from "fastdom";
 
 interface IDecoration {
     destroy();
@@ -58,21 +58,21 @@ class CodeLens implements OmniSharp.IFeature {
                 .subscribe(() => { })
             );
 
-            cd.add(editor.getBuffer().onDidStopChanging(() => subject.onNext(null)));
+            cd.add(editor.getBuffer().onDidStopChanging(_.debounce(() => subject.onNext(null), 5000)));
             cd.add(editor.getBuffer().onDidSave(() => subject.onNext(null)));
             cd.add(editor.getBuffer().onDidReload(() => subject.onNext(null)));
             cd.add(Omni.whenEditorConnected(editor).subscribe(() => subject.onNext(null)));
 
-            cd.add(editor.onDidChangeScrollTop(() => this.updateDecoratorVisiblility(editor)));
+            //cd.add(editor.onDidChangeScrollTop(() => this.updateDecoratorVisiblility(editor)));
 
             cd.add(atom.commands.onWillDispatch((event: Event) => {
                 if (_.contains(["omnisharp-atom:toggle-dock", "omnisharp-atom:show-dock", "omnisharp-atom:hide-dock"], event.type)) {
-                    this.updateDecoratorVisiblility(editor);
+                    //this.updateDecoratorVisiblility(editor);
                 }
             }));
 
             cd.add(subject);
-            this.updateDecoratorVisiblility(editor);
+            //this.updateDecoratorVisiblility(editor);
         }));
     }
 
@@ -100,7 +100,7 @@ class CodeLens implements OmniSharp.IFeature {
         }
 
         return Omni.request(editor, solution => solution.currentfilemembersasflat(solution.makeRequest(editor)))
-            .observeOn(raf)
+            .observeOn(Scheduler.timeout)
             .where(fileMembers => !!fileMembers)
             .concatMap(fileMembers => Observable.from(fileMembers))
             .concatMap(fileMember => {
@@ -164,7 +164,7 @@ export class Lens implements Rx.IDisposable {
         this._path = _editor.getPath();
 
         this._updateObservable = this._update
-            .observeOn(raf)
+            .observeOn(Scheduler.timeout)
             .where(x => !!x)
             .flatMap(() => Omni.request(this._editor, solution =>
                 solution.findusages({ FileName: this._path, Column: this._member.Column + 1, Line: this._member.Line }, { silent: true })))
@@ -223,10 +223,16 @@ export class Lens implements Rx.IDisposable {
 
     private _updateDecoration(isVisible: boolean) {
         if (this._decoration && this._element) {
-            if (isVisible && this._element.style.display === 'none') {
-                this._element.style.display = '';
-            } else if (!isVisible && this._element.style.display !== 'none') {
-                this._element.style.display = 'none';
+            if (isVisible) {
+                read(() => {
+                    if (this._element.style.display === 'none')
+                        write(() => this._element.style.display = '');
+                });
+            } else {
+                read(() => {
+                    if (this._element.style.display !== 'none')
+                        write(() => this._element.style.display = 'none');
+                });
             }
         }
     }

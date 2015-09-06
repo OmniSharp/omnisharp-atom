@@ -8,12 +8,11 @@ import {ProjectViewModel} from "./view-model";
 
 // Time we wait to try and do our active switch tasks.
 const DEBOUNCE_TIMEOUT = 400;
-import raf from "../rafscheduler";
 
 function wrapEditorObservable(observable: Observable<Atom.TextEditor>) {
     return observable
         .subscribeOn(Scheduler.timeout)
-        .observeOn(raf)
+        .observeOn(Scheduler.timeout)
         .debounce(DEBOUNCE_TIMEOUT)
         .where(editor => !editor || !editor.isDestroyed());
 }

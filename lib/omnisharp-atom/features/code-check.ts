@@ -1,9 +1,10 @@
 import _ = require('lodash');
-import {CompositeDisposable, Observable, ReplaySubject} from "rx";
+import {CompositeDisposable, Observable, ReplaySubject, Subject} from "rx";
 import Omni = require('../../omni-sharp-server/omni');
 var currentlyEnabled = false;
 import {dock} from "../atom/dock";
 import {CodeCheckOutputWindow, ICodeCheckOutputWindowProps} from '../views/codecheck-output-pane-view';
+import {DriverState} from "omnisharp-client";
 
 class CodeCheck implements OmniSharp.IFeature {
     private disposable: Rx.CompositeDisposable;
@@ -45,13 +46,23 @@ class CodeCheck implements OmniSharp.IFeature {
         }));
 
         this.disposable.add(Omni.editors.subscribe((editor: Atom.TextEditor) => {
-            var disposer = new CompositeDisposable();
+            var cd = new CompositeDisposable();
 
-            disposer.add(editor.getBuffer().onDidSave(() => this.doCodeCheck(editor)));
-            disposer.add(editor.getBuffer().onDidReload(() => this.doCodeCheck(editor)));
-            disposer.add(editor.getBuffer().onDidDestroy(() => {
-                this.disposable.remove(disposer);
-                disposer.dispose();
+            var subject = new Subject<any>();
+
+            cd.add(subject
+                .debounce(500)
+                .where(() => !editor.isDestroyed())
+                .subscribe(() => this.doCodeCheck(editor))
+            );
+
+            cd.add(editor.getBuffer().onDidSave(() => subject.onNext(null)));
+            cd.add(editor.getBuffer().onDidReload(() => subject.onNext(null)));
+            cd.add(editor.getBuffer().onDidStopChanging(() => subject.onNext(null)));
+            cd.add(Omni.whenEditorConnected(editor).subscribe(() => subject.onNext(null)));
+            cd.add(editor.getBuffer().onDidDestroy(() => {
+                this.disposable.remove(cd);
+                cd.dispose();
             }));
         }));
 
@@ -72,7 +83,16 @@ class CodeCheck implements OmniSharp.IFeature {
             codeCheck: this
         }));
 
-        Omni.registerConfiguration(client => client.codecheck({}));
+        Omni.registerConfiguration(client => client
+            .state.startWith(client.currentState)
+            .where(state => state == DriverState.Connected)
+            .subscribe(() => client.codecheck({})));
+
+        this.disposable.add(atom.commands.add('atom-workspace', 'omnisharp-atom:code-check', () => {
+            Omni.clients.subscribe(client => {
+                client.codecheck({});
+            });
+        }));
     }
 
     private filterOnlyWarningsAndErrors(quickFixes): OmniSharp.Models.DiagnosticLocation[] {
@@ -155,7 +175,6 @@ class CodeCheck implements OmniSharp.IFeature {
             var request = <OmniSharp.Models.FormatRangeRequest>client.makeRequest(editor);
             return client.updatebufferPromise(request)
                 .then(() => {
-                    request.FileName = null;
                     Omni.request(editor, client => client.codecheck(request));
                 });
         });
