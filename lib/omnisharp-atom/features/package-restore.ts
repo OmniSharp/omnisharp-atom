@@ -28,9 +28,7 @@ class PackageRestore implements OmniSharp.IFeature {
         var filename = path.basename(editor.getPath());
         if (filename === 'project.json') {
             return editor.getBuffer().onDidSave(() => {
-                Omni.request(client => client.filesChanged([{
-                    FileName: editor.getPath()
-                }]));
+                Omni.request(client => client.filesChanged([{ FileName: editor.getPath() }]));
             });
         }
     }

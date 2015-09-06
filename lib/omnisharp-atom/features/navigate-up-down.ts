@@ -24,11 +24,11 @@ class Navigate implements OmniSharp.IFeature {
     }
 
     public navigateUp() {
-        Omni.request(client => client.navigateup(client.makeRequest()));
+        Omni.request(client => client.navigateup({}));
     }
 
     public navigateDown() {
-        Omni.request(client => client.navigatedown(client.makeRequest()));
+        Omni.request(client => client.navigatedown({}));
     }
 
     private navigateTo(data: OmniSharp.Models.NavigateResponse) {

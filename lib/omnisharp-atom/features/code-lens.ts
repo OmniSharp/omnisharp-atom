@@ -112,7 +112,7 @@ class CodeLens implements OmniSharp.IFeature {
             return;
         }
 
-        return Omni.request(editor, solution => solution.currentfilemembersasflat(solution.makeRequest(editor)))
+        return Omni.request(editor, solution => solution.currentfilemembersasflat({}))
             .observeOn(Scheduler.timeout)
             .where(fileMembers => !!fileMembers)
             .concatMap(fileMembers => Observable.from(fileMembers))
