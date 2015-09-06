@@ -58,7 +58,7 @@ class Highlight implements OmniSharp.IFeature {
                         .map(z => ({ editor: find(this.editors, editor => editor.getPath() === z.request.FileName), request: z.request, response: z.response }))
                         .take(1))
                     .flatMap(z => Omni.activeEditor))
-                .debounce(20)
+                .debounce(300)
                 .where(z => !!z)
         )
             .subscribe(editor => {
@@ -134,12 +134,6 @@ class Highlight implements OmniSharp.IFeature {
             grammar.linesToFetch = [];
             grammar.responses.clear();
             editor.displayBuffer.tokenizedBuffer.retokenizeLines();
-            //editor.setGrammar = editor['_setGrammar'];
-            //editor.displayBuffer.tokenizedBuffer.buildTokenizedLineForRowWithText = editor.displayBuffer.tokenizedBuffer['_buildTokenizedLineForRowWithText'];
-            //editor.displayBuffer.tokenizedBuffer.markTokenizationComplete = editor.displayBuffer.tokenizedBuffer['_markTokenizationComplete'];
-            //editor.displayBuffer.tokenizedBuffer.retokenizeLines = editor.displayBuffer.tokenizedBuffer['_retokenizeLines'];
-            //editor.displayBuffer.tokenizedBuffer.chunkSize = editor.displayBuffer.tokenizedBuffer['_chunkSize'];
-            //editor.setGrammar(editor['_oldGrammar']);
         }));
 
         this.disposable.add(editor.onDidDestroy(() => {
@@ -151,7 +145,7 @@ class Highlight implements OmniSharp.IFeature {
         var issueRequest = new Subject<boolean>();
 
         disposable.add(issueRequest
-            .debounce(200)
+            .debounce(400)
             .flatMap(z => Omni.getProject(editor).map(z => z.activeFramework.Name === 'all' ? '' : (z.name + '+' + z.activeFramework.ShortName)).timeout(200, Observable.just('')))
             .subscribe((framework) => {
                 var projects = [];
