@@ -76,9 +76,7 @@ class CodeLens implements OmniSharp.IFeature {
             cd.add(editor.getBuffer().onDidReload(() => subject.onNext(null)));
             cd.add(Omni.whenEditorConnected(editor).subscribe(() => subject.onNext(null)));
 
-            cd.add(editor.onDidChangeScrollTop(() => {
-                this.updateDecoratorVisiblility(editor);
-            }));
+            cd.add(editor.onDidChangeScrollTop(() => this.updateDecoratorVisiblility(editor)));
 
             cd.add(atom.commands.onWillDispatch((event: Event) => {
                 if (_.contains(["omnisharp-atom:toggle-dock", "omnisharp-atom:show-dock", "omnisharp-atom:hide-dock"], event.type)) {
@@ -183,8 +181,8 @@ export class Lens implements Rx.IDisposable {
             .where(x => !!x)
             .flatMap(() => Omni.request(this._editor, solution =>
                 solution.findusages({ FileName: this._path, Column: this._member.Column + 1, Line: this._member.Line }, { silent: true })))
-            .where(x => x && !!x.QuickFixes.length)
-            .map(x => x && x.QuickFixes.length - 1)
+            .where(x => x && x.QuickFixes && !!x.QuickFixes.length)
+            .map(x => x && x.QuickFixes && x.QuickFixes.length - 1)
             .publish()
             .refCount();
 
@@ -204,8 +202,12 @@ export class Lens implements Rx.IDisposable {
     public updateVisible() {
         var isVisible = this._isVisible();
         this._updateDecoration(isVisible);
-        !this._update.isDisposed && this._update.onNext(isVisible);
+        this._issueUpdate(isVisible);
     }
+
+    private _issueUpdate = _.debounce((isVisible) => {
+        !this._update.isDisposed && this._update.onNext(isVisible);
+    }, 250);
 
     public updateTop(lineHeight: number) {
         if (this._element)
