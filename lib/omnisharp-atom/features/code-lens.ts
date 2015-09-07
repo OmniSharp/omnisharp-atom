@@ -71,21 +71,21 @@ class CodeLens implements OmniSharp.IFeature {
                 .subscribe(() => { })
             );
 
-            cd.add(editor.getBuffer().onDidStopChanging(_.debounce(() => subject.onNext(null), 5000)));
-            cd.add(editor.getBuffer().onDidSave(() => subject.onNext(null)));
-            cd.add(editor.getBuffer().onDidReload(() => subject.onNext(null)));
+            cd.add(editor.getBuffer().onDidStopChanging(_.debounce(() =>  !subject.isDisposed && subject.onNext(null), 5000)));
+            cd.add(editor.getBuffer().onDidSave(() =>  !subject.isDisposed && subject.onNext(null)));
+            cd.add(editor.getBuffer().onDidReload(() =>  !subject.isDisposed && subject.onNext(null)));
             cd.add(Omni.whenEditorConnected(editor).subscribe(() => subject.onNext(null)));
 
-            //cd.add(editor.onDidChangeScrollTop(() => this.updateDecoratorVisiblility(editor)));
+            cd.add(editor.onDidChangeScrollTop(() => this.updateDecoratorVisiblility(editor)));
 
             cd.add(atom.commands.onWillDispatch((event: Event) => {
                 if (_.contains(["omnisharp-atom:toggle-dock", "omnisharp-atom:show-dock", "omnisharp-atom:hide-dock"], event.type)) {
-                    //this.updateDecoratorVisiblility(editor);
+                    this.updateDecoratorVisiblility(editor);
                 }
             }));
 
             cd.add(subject);
-            //this.updateDecoratorVisiblility(editor);
+            this.updateDecoratorVisiblility(editor);
         }));
     }
 

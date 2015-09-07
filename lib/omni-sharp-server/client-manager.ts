@@ -290,7 +290,7 @@ class SolutionManager {
     public getClientForEditor(editor: Atom.TextEditor) {
         return this._getClientForEditor(editor).where(() => !editor.isDestroyed());
     }
-    
+
     private _getClientForEditor(editor: Atom.TextEditor) {
         var solution: Observable<Solution>;
         if (!editor)

@@ -87,17 +87,24 @@ class Omni implements Rx.IDisposable {
 
         this.disposable.add(this._editors.subscribe(editor => {
             var cd = new CompositeDisposable();
-            var omniChanges: { oldRange: TextBuffer.Range; newRange: TextBuffer.Range; oldText: string; newText: string; }[] = (<any>editor).__omniChanges__ = [];
+            // TODO: Update once rename/codeactions support optional workspace changes
+            //var omniChanges: { oldRange: TextBuffer.Range; newRange: TextBuffer.Range; oldText: string; newText: string; }[] = (<any>editor).__omniChanges__ = [];
 
             cd.add(editor.getBuffer().onDidChange((change: { oldRange: TextBuffer.Range; newRange: TextBuffer.Range; oldText: string; newText: string; }) => {
-                omniChanges.push(change);
+                //omniChanges.push(change);
             }));
 
             cd.add(editor.onDidStopChanging(_.debounce(() => {
-                if (omniChanges.length) {
-                    this.request(editor, client => client.checkreadystatus({}, {silent: true}));
-                }
+                /*if (omniChanges.length) {
+                }*/
+                this.request(editor, client => client.updatebuffer({}, { silent: true }));
             }, 1000)));
+
+            cd.add(editor.onDidSave(() => client => client.updatebuffer({}, { silent: true })));
+
+            cd.add(editor.onDidDestroy(() => {
+                cd.dispose();
+            }));
 
             this.disposable.add(cd);
         }));
@@ -337,9 +344,7 @@ class Omni implements Rx.IDisposable {
 
     public whenEditorConnected(editor: Atom.TextEditor) {
         return manager.getClientForEditor(editor)
-            .flatMap(solution => solution.state.startWith(solution.currentState))
-            .where(x => x === DriverState.Connected)
-            .take(1)
+            .flatMap(solution => solution.whenConnected())
             .map(z => editor);
     }
 
