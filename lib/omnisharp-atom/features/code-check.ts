@@ -56,9 +56,9 @@ class CodeCheck implements OmniSharp.IFeature {
                 .subscribe(() => this.doCodeCheck(editor))
             );
 
-            cd.add(editor.getBuffer().onDidSave(() => subject.onNext(null)));
-            cd.add(editor.getBuffer().onDidReload(() => subject.onNext(null)));
-            cd.add(editor.getBuffer().onDidStopChanging(() => subject.onNext(null)));
+            cd.add(editor.getBuffer().onDidSave(() => !subject.isDisposed && subject.onNext(null)));
+            cd.add(editor.getBuffer().onDidReload(() =>  !subject.isDisposed && subject.onNext(null)));
+            cd.add(editor.getBuffer().onDidStopChanging(() =>  !subject.isDisposed && subject.onNext(null)));
             cd.add(Omni.whenEditorConnected(editor).subscribe(() => subject.onNext(null)));
             cd.add(editor.getBuffer().onDidDestroy(() => {
                 this.disposable.remove(cd);
@@ -90,7 +90,9 @@ class CodeCheck implements OmniSharp.IFeature {
 
         this.disposable.add(atom.commands.add('atom-workspace', 'omnisharp-atom:code-check', () => {
             Omni.clients.subscribe(client => {
-                client.codecheck({});
+                client.whenConnected()
+                    .delay(2000)
+                    .subscribe(() => client.codecheck({}));
             });
         }));
     }

@@ -27,7 +27,7 @@ class CodeFormat implements OmniSharp.IFeature {
                 var request = <OmniSharp.Models.FormatRangeRequest>{
                     Line: 0,
                     Column: 0,
-                    EndLine: buffer.getLineCount(),
+                    EndLine: buffer.getLineCount() - 1,
                     EndColumn: 0,
                 };
 

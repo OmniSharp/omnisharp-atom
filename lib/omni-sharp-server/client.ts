@@ -42,7 +42,7 @@ class Client extends OmnisharpClientV2 {
     }
 
     public connect(options?) {
-        if (this.currentState === DriverState.Connected || this.currentState === DriverState.Connecting || this.currentState === DriverState.Error) return;
+        if (this.currentState === DriverState.Connected || this.currentState === DriverState.Connecting) return;
         super.connect(options);
 
         this.log("Starting OmniSharp server (pid:" + this.id + ")");
@@ -85,18 +85,20 @@ class Client extends OmnisharpClientV2 {
         return this;
     }
 
-    private _fixupRequest<TRequest>(action: string, request: TRequest) {
+    private _fixupRequest<TRequest, TResponse>(action: string, request: TRequest, cb: () => Rx.Observable<TResponse>) {
         // Only send changes for requests that really need them.
         if (this._currentEditor && _.isObject(request)) {
             var editor = this._currentEditor;
 
             var marker = editor.getCursorBufferPosition();
-            _.defaults(request, { Column: marker.column, Line: marker.row, FileName: editor.getURI() });
+            _.defaults(request, { Column: marker.column, Line: marker.row, FileName: editor.getURI(), Buffer: editor.getText() });
+            /*
+            TODO: Update once rename/code actions don't apply changes to the workspace
             var omniChanges: { oldRange: { start: TextBuffer.Point, end: TextBuffer.Point }; newRange: { start: TextBuffer.Point, end: TextBuffer.Point }; oldText: string; newText: string; }[] = (<any>editor).__omniChanges__ || [];
             var computedChanges: OmniSharp.Models.LinePositionSpanTextChange[];
 
             if (_.any(['goto', 'navigate', 'find', 'package'], x => _.startsWith(action, x))) {
-                computedChanges = [];
+                computedChanges = null;
             } else {
                 computedChanges = omniChanges.map(change => <OmniSharp.Models.LinePositionSpanTextChange>{
                     NewText: change.newText,
@@ -107,10 +109,12 @@ class Client extends OmnisharpClientV2 {
                 });
             }
 
-            // empty in place
             omniChanges.splice(0, omniChanges.length);
-            _.defaults(request, { Changes: computedChanges.length && computedChanges || [] });
+            _.defaults(request, { Changes: computedChanges });
+            */
         }
+
+        return cb();
     }
 
     public request<TRequest, TResponse>(action: string, request?: TRequest, options?: OmniSharp.RequestOptions): Rx.Observable<TResponse> {
@@ -146,6 +150,12 @@ class Client extends OmnisharpClientV2 {
             }));
         }
     }
+
+    public whenConnected() {
+        return this.state.startWith(this.currentState)
+            .where(x => x === DriverState.Connected)
+            .take(1);
+    }
 }
 
 export = Client;
@@ -158,13 +168,11 @@ for (var key in Client.prototype) {
             var observableMethod = Client.prototype[action];
 
             Client.prototype[key] = function(request, options) {
-                this._fixupRequest(action, request);
-                return promiseMethod.call(this, request, options);
+                return this._fixupRequest(action, request, () => promiseMethod.call(this, request, options));
             };
 
             Client.prototype[action] = function(request, options) {
-                this._fixupRequest(action, request);
-                return observableMethod.call(this, request, options);
+                return this._fixupRequest(action, request, () => observableMethod.call(this, request, options));
             };
         })();
     }

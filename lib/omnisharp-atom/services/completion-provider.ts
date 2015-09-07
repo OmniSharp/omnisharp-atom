@@ -153,7 +153,7 @@ function getSuggestions(options: RequestOptions): Rx.IPromise<Suggestion[]> {
     if (search === ".")
         search = "";
 
-    if (!results) results = Omni.request(client => client.autocomplete(autoCompleteOptions)).toPromise();
+    if (!results) results = Omni.request(client => client.autocomplete(_.clone(autoCompleteOptions))).toPromise();
 
     var p = results;
     if (search)

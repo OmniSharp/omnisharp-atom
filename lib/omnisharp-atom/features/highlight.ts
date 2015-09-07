@@ -1,7 +1,7 @@
 import Omni = require('../../omni-sharp-server/omni');
 import {DriverState} from "omnisharp-client";
 import OmniSharpAtom = require('../omnisharp-atom');
-import {each, indexOf, extend, has, map, flatten, contains, any, range, remove, pull, find, defer, startsWith, trim, isArray, chain, unique, set, findIndex, delay, filter, all, isEqual, min} from "lodash";
+import {each, indexOf, extend, has, map, flatten, contains, any, range, remove, pull, find, defer, startsWith, trim, isArray, chain, unique, set, findIndex, delay, filter, all, isEqual, min, debounce} from "lodash";
 import {Observable, Subject, ReplaySubject, Scheduler, CompositeDisposable, Disposable} from "rx";
 var AtomGrammar = require((<any>atom).config.resourcePath + "/node_modules/first-mate/lib/grammar.js");
 var Range: typeof TextBuffer.Range = <any>require('atom').Range;
@@ -102,7 +102,7 @@ class Highlight implements OmniSharp.IFeature {
         };
 
         if (!(<any>editor.displayBuffer.tokenizedBuffer).silentRetokenizeLines) {
-            (<any>editor.displayBuffer.tokenizedBuffer).silentRetokenizeLines = function() {
+            (<any>editor.displayBuffer.tokenizedBuffer).silentRetokenizeLines = debounce(function() {
                 if (grammar.isObserveRetokenizing)
                     grammar.isObserveRetokenizing.onNext(false);
                 var event, lastRow;
@@ -115,7 +115,7 @@ class Highlight implements OmniSharp.IFeature {
                     this.invalidateRow(0);
                 }
                 this.fullyTokenized = false;
-            };
+            }, 240);
         }
 
         (<any>editor.displayBuffer.tokenizedBuffer).markTokenizationComplete = function() {
@@ -157,16 +157,16 @@ class Highlight implements OmniSharp.IFeature {
                     linesToFetch = [];
 
                 Omni.request(editor, client => client.highlight({
-                        ProjectNames: projects,
-                        Lines: <any>linesToFetch,
-                        ExcludeClassifications: [
-                            OmniSharp.Models.HighlightClassification.Comment,
-                            OmniSharp.Models.HighlightClassification.String,
-                            OmniSharp.Models.HighlightClassification.Punctuation,
-                            OmniSharp.Models.HighlightClassification.Operator,
-                            OmniSharp.Models.HighlightClassification.Keyword
-                        ]
-                    }));
+                    ProjectNames: projects,
+                    Lines: <any>linesToFetch,
+                    ExcludeClassifications: [
+                        OmniSharp.Models.HighlightClassification.Comment,
+                        OmniSharp.Models.HighlightClassification.String,
+                        OmniSharp.Models.HighlightClassification.Punctuation,
+                        OmniSharp.Models.HighlightClassification.Operator,
+                        OmniSharp.Models.HighlightClassification.Keyword
+                    ]
+                }));
             }));
 
         disposable.add(Omni.getProject(editor)
@@ -183,7 +183,7 @@ class Highlight implements OmniSharp.IFeature {
             issueRequest.onNext(true);
         }));
 
-        issueRequest.onNext(true);
+        disposable.add(Omni.whenEditorConnected(editor).subscribe(() => issueRequest.onNext(true)));
     }
 
     public required = false;

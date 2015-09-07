@@ -33,6 +33,7 @@ declare module OmniSharp {
         v1: OmniSharp.Api.V1;
         request<TRequest, TResponse>(path: string, request: TRequest): Rx.Observable<TResponse>;
         path: string;
+        whenConnected(): Rx.Observable<any>;
     }
 
     interface IProjectViewModel {
