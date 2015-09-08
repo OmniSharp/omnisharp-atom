@@ -84,17 +84,34 @@ class OmniSharpAtom {
 
                 // Whitelist is used for unit testing, we don't want the config to make changes here
                 if (whiteListUndefined && _.has(this.config, key)) {
-                    this.disposable.add(atom.config.observe(`omnisharp-atom.${key}`, enabled => {
+                    var configKey = `omnisharp-atom.${key}`;
+                    this.disposable.add(atom.config.observe(configKey, enabled => {
                         if (!enabled) {
                             try { value.dispose(); } catch (ex) { }
                         } else {
                             value.activate();
 
                             if (_.isFunction(value['attach'])) {
-                                deferred.push(() => value['attach']());
+                                if (deferred)
+                                    deferred.push(() => value['attach']());
+                                else
+                                    value['attach']()
                             }
                         }
                     }));
+
+                    this.disposable.add(atom.commands.add('atom-workspace', `omnisharp-atom:disable-feature-${_.kebabCase(key) }`,
+                        () => {
+                            atom.config.set(configKey, false);
+                        }));
+                    this.disposable.add(atom.commands.add('atom-workspace', `omnisharp-atom:enable-feature-${_.kebabCase(key) }`,
+                        () => {
+                            atom.config.set(configKey, true);
+                        }));
+                    this.disposable.add(atom.commands.add('atom-workspace', `omnisharp-atom:toggle-feature-${_.kebabCase(key) }`,
+                        () => {
+                            atom.config.set(configKey, !atom.config.get(configKey));
+                        }));
                 } else {
                     value.activate();
 
@@ -106,6 +123,7 @@ class OmniSharpAtom {
                 this.disposable.add(Disposable.create(() => { try { value.dispose() } catch (ex) { } }));
             });
             _.each(deferred, x => x());
+            deferred = null;
 
             this.disposable.add(atom.workspace.observeTextEditors((editor: Atom.TextEditor) => {
                 this.detectAutoToggleGrammar(editor);

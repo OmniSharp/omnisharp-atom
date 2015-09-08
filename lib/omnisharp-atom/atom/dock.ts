@@ -38,7 +38,7 @@ class Dock implements OmniSharp.IAtomFeature {
 
         this.disposable.add(Disposable.create(() => {
             React.unmountComponentAtNode(this.view);
-            p.destroy()
+            p.destroy();
             this.view.remove();
         }));
     }
@@ -123,6 +123,7 @@ class Dock implements OmniSharp.IAtomFeature {
 
         cd.add(Disposable.create(() => {
             _.remove(this._buttons, { id });
+            this.dock.forceUpdate();
         }));
 
         this._update();
