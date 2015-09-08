@@ -118,5 +118,5 @@
       }
     }
   },
-  "package-deps": ["atom-yeoman", "linter", "json-schema", "advanced-new-file"]
+  "package-deps": ["atom-yeoman", "linter", "json-schema", "advanced-open-file"]
 }
