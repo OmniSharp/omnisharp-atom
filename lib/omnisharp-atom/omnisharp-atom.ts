@@ -6,7 +6,6 @@ import fs = require('fs');
 
 // TODO: Remove these at some point to stream line startup.
 import Omni = require('../omni-sharp-server/omni');
-import dependencyChecker = require('./dependency-checker');
 import {world} from './world';
 var win32 = process.platform === "win32";
 
@@ -25,8 +24,7 @@ class OmniSharpAtom {
         this._started = new AsyncSubject<boolean>();
         this._activated = new AsyncSubject<boolean>();
 
-        console.info("Starting omnisharp-atom...");
-        if (dependencyChecker.findAllDeps(this.getPackageDir())) {
+        require('atom-package-deps').install('omnisharp-atom')
             console.info("Dependencies installed...");
 
             this.configureKeybindings();
@@ -111,10 +109,6 @@ class OmniSharpAtom {
                 this._activated.onNext(true);
                 this._activated.onCompleted();
             }));
-        } else {
-            console.info(`omnisharp-atom not started missing depedencies ${dependencyChecker.errors() }...`);
-            _.map(dependencyChecker.errors() || [], missingDependency => console.error(missingDependency))
-        }
     }
 
     private _packageDir: string;
