@@ -6,7 +6,6 @@ import fs = require('fs');
 
 // TODO: Remove these at some point to stream line startup.
 import Omni = require('../omni-sharp-server/omni');
-import dependencyChecker = require('./dependency-checker');
 import {world} from './world';
 var win32 = process.platform === "win32";
 
@@ -25,96 +24,90 @@ class OmniSharpAtom {
         this._started = new AsyncSubject<boolean>();
         this._activated = new AsyncSubject<boolean>();
 
-        console.info("Starting omnisharp-atom...");
-        if (dependencyChecker.findAllDeps(this.getPackageDir())) {
-            console.info("Dependencies installed...");
+        this.configureKeybindings();
 
-            this.configureKeybindings();
+        this.disposable.add(atom.commands.add('atom-workspace', 'omnisharp-atom:toggle', () => this.toggle()));
 
-            this.disposable.add(atom.commands.add('atom-workspace', 'omnisharp-atom:toggle', () => this.toggle()));
+        var whiteList = atom.config.get<boolean>("omnisharp-atom:feature-white-list");
+        var featureList = atom.config.get<string[]>('omnisharp-atom:feature-list');
 
-            var whiteList = atom.config.get<boolean>("omnisharp-atom:feature-white-list");
-            var featureList = atom.config.get<string[]>('omnisharp-atom:feature-list');
+        var whiteListUndefined = (typeof whiteList === 'undefined');
 
-            var whiteListUndefined = (typeof whiteList === 'undefined');
+        var started = Observable.concat( // Concat is important here, atom features need to be bootstrapped first.
+            this.getFeatures(featureList, whiteList, "atom"),
+            this.getFeatures(featureList, whiteList, "features")
+        ).filter(l => {
+            if (typeof whiteList === 'undefined') {
+                return true;
+            }
 
-            var started = Observable.concat( // Concat is important here, atom features need to be bootstrapped first.
-                this.getFeatures(featureList, whiteList, "atom"),
-                this.getFeatures(featureList, whiteList, "features")
-            ).filter(l => {
-                if (typeof whiteList === 'undefined') {
-                    return true;
-                }
+            if (whiteList) {
+                return _.contains(featureList, l.file);
+            } else {
+                return !_.contains(featureList, l.file);
+            }
+        })
+            .concatMap(z => z.load())
+            .toArray()
+            .share();
 
-                if (whiteList) {
-                    return _.contains(featureList, l.file);
-                } else {
-                    return !_.contains(featureList, l.file);
-                }
-            })
-                .concatMap(z => z.load())
-                .toArray()
-                .share();
+        require('atom-package-deps').install('omnisharp-atom')
+          .then(() => started.toPromise())
+          .then(() => {
+            this._started.onNext(true);
+            this._started.onCompleted();
+        });
 
-            started.subscribe(() => {
-                this._started.onNext(true);
-                this._started.onCompleted();
+        this.disposable.add(started.subscribe(features => {
+            console.info("Activating omnisharp-atom...");
+
+            (<any>atom.config).setSchema('omnisharp-atom', {
+                type: 'object',
+                properties: this.config
             });
 
-            this.disposable.add(started.subscribe(features => {
-                console.info("Activating omnisharp-atom...");
+            Omni.activate();
+            this.disposable.add(Omni);
 
-                (<any>atom.config).setSchema('omnisharp-atom', {
-                    type: 'object',
-                    properties: this.config
-                });
+            world.activate();
+            this.disposable.add(world);
 
-                Omni.activate();
-                this.disposable.add(Omni);
+            var deferred = [];
+            _.each(features, f => {
+                var {key, value} = f;
 
-                world.activate();
-                this.disposable.add(world);
+                // Whitelist is used for unit testing, we don't want the config to make changes here
+                if (whiteListUndefined && _.has(this.config, key)) {
+                    this.disposable.add(atom.config.observe(`omnisharp-atom.${key}`, enabled => {
+                        if (!enabled) {
+                            try { value.dispose(); } catch (ex) { }
+                        } else {
+                            value.activate();
 
-                var deferred = [];
-                _.each(features, f => {
-                    var {key, value} = f;
-
-                    // Whitelist is used for unit testing, we don't want the config to make changes here
-                    if (whiteListUndefined && _.has(this.config, key)) {
-                        this.disposable.add(atom.config.observe(`omnisharp-atom.${key}`, enabled => {
-                            if (!enabled) {
-                                try { value.dispose(); } catch (ex) { }
-                            } else {
-                                value.activate();
-
-                                if (_.isFunction(value['attach'])) {
-                                    deferred.push(() => value['attach']());
-                                }
+                            if (_.isFunction(value['attach'])) {
+                                deferred.push(() => value['attach']());
                             }
-                        }));
-                    } else {
-                        value.activate();
-
-                        if (_.isFunction(value['attach'])) {
-                            deferred.push(() => value['attach']());
                         }
+                    }));
+                } else {
+                    value.activate();
+
+                    if (_.isFunction(value['attach'])) {
+                        deferred.push(() => value['attach']());
                     }
+                }
 
-                    this.disposable.add(Disposable.create(() => { try { value.dispose() } catch (ex) { } }));
-                });
-                _.each(deferred, x => x());
+                this.disposable.add(Disposable.create(() => { try { value.dispose() } catch (ex) { } }));
+            });
+            _.each(deferred, x => x());
 
-                this.disposable.add(atom.workspace.observeTextEditors((editor: Atom.TextEditor) => {
-                    this.detectAutoToggleGrammar(editor);
-                }));
-
-                this._activated.onNext(true);
-                this._activated.onCompleted();
+            this.disposable.add(atom.workspace.observeTextEditors((editor: Atom.TextEditor) => {
+                this.detectAutoToggleGrammar(editor);
             }));
-        } else {
-            console.info(`omnisharp-atom not started missing depedencies ${dependencyChecker.errors() }...`);
-            _.map(dependencyChecker.errors() || [], missingDependency => console.error(missingDependency))
-        }
+
+            this._activated.onNext(true);
+            this._activated.onCompleted();
+        }));
     }
 
     private _packageDir: string;
@@ -218,22 +211,17 @@ class OmniSharpAtom {
     }
 
     public toggle() {
-        var dependencyErrors = dependencyChecker.errors();
-        if (dependencyErrors.length === 0) {
-            if (Omni.isOff) {
-                Omni.connect();
-                this.toggleMenu();
-            } else if (Omni.isOn) {
-                Omni.disconnect();
+        if (Omni.isOff) {
+            Omni.connect();
+            this.toggleMenu();
+        } else if (Omni.isOn) {
+            Omni.disconnect();
 
-                if (this.menu) {
-                    this.disposable.remove(this.menu);
-                    this.menu.dispose();
-                    this.menu = null;
-                }
+            if (this.menu) {
+                this.disposable.remove(this.menu);
+                this.menu.dispose();
+                this.menu = null;
             }
-        } else {
-            _.map(dependencyErrors, missingDependency => alert(missingDependency));
         }
     }
 
