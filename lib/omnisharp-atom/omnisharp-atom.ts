@@ -236,7 +236,7 @@ class OmniSharpAtom {
         var f = require('./atom/framework-selector');
         f.frameworkSelector.setup(statusBar);
         var f = require('./features/highlight-button');
-        f.highlight.setup(statusBar);
+        f.highlightButton.setup(statusBar);
         var f = require('./features/code-lens-button');
         f.codeLensButton.setup(statusBar);
     }

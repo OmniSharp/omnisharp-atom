@@ -31,7 +31,7 @@ class CodeLens implements OmniSharp.IFeature {
                 var markers = this.decorations.get(editor);
 
                 _.each(markers, (marker) => marker && marker.dispose());
-                this.decorations.set(editor, []);
+                this.decorations.delete(editor);
             }));
 
             cd.add(atom.config.observe('editor.fontSize', (size: number) => {

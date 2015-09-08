@@ -98,4 +98,4 @@ class HighlightingButton implements OmniSharp.IAtomFeature {
     public default = true;
 }
 
-export var highlight = new HighlightingButton();
+export var highlightButton = new HighlightingButton();
