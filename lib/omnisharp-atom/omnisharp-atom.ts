@@ -27,7 +27,12 @@ class OmniSharpAtom {
         this.configureKeybindings();
 
         this.disposable.add(atom.commands.add('atom-workspace', 'omnisharp-atom:toggle', () => this.toggle()));
-        this.disposable.add(atom.commands.add('atom-workspace', 'omnisharp-atom:settings', () => atom.workspace.open('atom://config/packages/omnisharp-atom')));
+        this.disposable.add(atom.commands.add('atom-workspace', 'omnisharp-atom:settings', () => atom.workspace.open('atom://config/packages/omnisharp-atom')
+            .then(tab => {
+                if (tab && tab.getURI && tab.getURI() !== 'atom://config/packages/omnisharp-atom') {
+                    atom.workspace.open('atom://config/packages/omnisharp-atom');
+                }
+            })));
 
         var whiteList = atom.config.get<boolean>("omnisharp-atom:feature-white-list");
         var featureList = atom.config.get<string[]>('omnisharp-atom:feature-list');
@@ -53,11 +58,11 @@ class OmniSharpAtom {
             .share();
 
         require('atom-package-deps').install('omnisharp-atom')
-          .then(() => started.toPromise())
-          .then(() => {
-            this._started.onNext(true);
-            this._started.onCompleted();
-        });
+            .then(() => started.toPromise())
+            .then(() => {
+                this._started.onNext(true);
+                this._started.onCompleted();
+            });
 
         this.disposable.add(started.subscribe(features => {
             console.info("Activating omnisharp-atom...");

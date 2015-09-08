@@ -22,14 +22,23 @@ class HighlightingButton implements OmniSharp.IAtomFeature {
             this.buttonDisposable.dispose();
         }
 
+        var tooltip: Rx.IDisposable;
         var button = React.DOM.a({
             className: `btn icon-pencil ${enabled ? 'btn-success' : ''}`,
-            onClick: () => atom.config.set('omnisharp-atom.enhancedHighlighting', !atom.config.get('omnisharp-atom.enhancedHighlighting'))
+            onClick: () => atom.config.set('omnisharp-atom.enhancedHighlighting', !atom.config.get('omnisharp-atom.enhancedHighlighting')),
+            onMouseEnter: (e) => {
+                tooltip = atom.tooltips.add(<any>e.currentTarget, { title: this.tooltip });
+                this.disposable.add(tooltip);
+            },
+            onMouseLeave: (e) => {
+                this.disposable.remove(tooltip);
+                tooltip.dispose();
+            }
         });
 
         this.buttonDisposable = dock.addButton(
             'enhanced-highlighting-button',
-            'Enhanced Highlighting',
+            this.description,
             button,
             { priority: 100 }
         );
@@ -59,6 +68,15 @@ class HighlightingButton implements OmniSharp.IAtomFeature {
         this.view.classList.add('inline-block', 'enhanced-highlighting-button', 'icon-pencil');
         this.view.style.display = 'none';
         this.view.onclick = () => atom.config.set('omnisharp-atom.enhancedHighlighting', !atom.config.get('omnisharp-atom.enhancedHighlighting'));
+        var tooltip: Rx.IDisposable;
+        this.view.onmouseenter = () => {
+            tooltip = atom.tooltips.add(this.view, { title: this.tooltip });
+            this.disposable.add(tooltip);
+        };
+        this.view.onmouseleave = () => {
+            this.disposable.remove(tooltip);
+            tooltip.dispose();
+        }
 
         if (atom.config.get('grammar-selector.showOnRightSideOfStatusBar')) {
             var tile = this.statusBar.addRightTile({
@@ -94,6 +112,7 @@ class HighlightingButton implements OmniSharp.IAtomFeature {
 
     public required = false;
     public title = "Show Highlighting buttons";
+    public tooltip = "Enable / Disable Enhanced Highlighting";
     public description = "Show the highlighting buttons in the editor near the current grammar as well as in the OmniSharp dock";
     public default = true;
 }

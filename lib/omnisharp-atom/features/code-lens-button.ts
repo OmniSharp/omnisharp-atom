@@ -21,15 +21,24 @@ class CodeLensButton implements OmniSharp.IAtomFeature {
             this.disposable.remove(this.buttonDisposable);
             this.buttonDisposable.dispose();
         }
-
+        var that = this;
+        var tooltip: Rx.IDisposable;
         var button = React.DOM.a({
             className: `btn icon-telescope ${enabled ? 'btn-success' : ''}`,
-            onClick: () => atom.config.set('omnisharp-atom.codeLens', !atom.config.get('omnisharp-atom.codeLens'))
+            onClick: () => atom.config.set('omnisharp-atom.codeLens', !atom.config.get('omnisharp-atom.codeLens')),
+            onMouseEnter: (e) => {
+                tooltip = atom.tooltips.add(<any>e.currentTarget, { title: this.tooltip });
+                this.disposable.add(tooltip);
+            },
+            onMouseLeave: (e) => {
+                this.disposable.remove(tooltip);
+                tooltip.dispose();
+            }
         });
 
         this.buttonDisposable = dock.addButton(
             'code-lens-button',
-            'Enable Code Lens',
+            this.description,
             button,
             { priority: 999 }
         );
@@ -59,6 +68,15 @@ class CodeLensButton implements OmniSharp.IAtomFeature {
         this.view.classList.add('inline-block', 'code-lens-button', 'icon-telescope');
         this.view.style.display = 'none';
         this.view.onclick = () => atom.config.set('omnisharp-atom.codeLens', !atom.config.get('omnisharp-atom.codeLens'));
+        var tooltip: Rx.IDisposable;
+        this.view.onmouseenter = () => {
+            tooltip = atom.tooltips.add(this.view, { title: this.tooltip });
+            this.disposable.add(tooltip);
+        };
+        this.view.onmouseleave = () => {
+            this.disposable.remove(tooltip);
+            tooltip.dispose();
+        }
 
         if (atom.config.get('grammar-selector.showOnRightSideOfStatusBar')) {
             var tile = this.statusBar.addRightTile({
@@ -94,6 +112,7 @@ class CodeLensButton implements OmniSharp.IAtomFeature {
 
     public required = false;
     public title = "Show Code Lens buttons";
+    public tooltip = "Enable / Disable Code Lens";
     public description = "Show the code lens buttons in the editor near the current grammar as well as in the OmniSharp dock";
     public default = true;
 }
