@@ -234,6 +234,10 @@ class OmniSharpAtom {
         f.statusBar.setup(statusBar);
         var f = require('./atom/framework-selector');
         f.frameworkSelector.setup(statusBar);
+        var f = require('./features/enhanced-highlighting-button');
+        f.enhancedHighlightingButton.setup(statusBar);
+        var f = require('./features/code-lens-button');
+        f.codeLensButton.setup(statusBar);
     }
 
     public consumeYeomanEnvironment(generatorService) {

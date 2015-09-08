@@ -15,6 +15,7 @@ interface IDockWindowState {
 export interface IDockWindowProps {
     panel: Atom.Panel;
     panes: DockPane<any, any>[];
+    buttons: DockButton[];
 }
 
 interface IDockWindowButtonsState {
@@ -24,6 +25,7 @@ interface IDockWindowButtonsProps {
     selected: string;
     setSelected: (selected: string) => void;
     panes: DockPane<any, any>[];
+    buttons: DockButton[];
     children: any[];
 }
 
@@ -42,6 +44,20 @@ export interface DockPane<P, S> {
     options: DocPaneOptions;
     disposable: Rx.IDisposable;
 }
+
+
+export interface DocButtonOptions {
+    priority?: number;
+}
+
+export interface DockButton {
+    id: string;
+    title: string;
+    view: React.HTMLElement;
+    options: DocButtonOptions;
+    disposable: Rx.IDisposable;
+}
+
 export interface DisposableDockPane<P, S> {
     id: string;
     title: string;
@@ -58,7 +74,7 @@ class DockWindows<T extends IDockWindowButtonsProps> extends ReactClientComponen
         this.state = {};
     }
 
-    private button({id, title, options, disposable}: DisposableDockPane<any, any>) {
+    private panelButton({id, title, options, disposable}: DisposableDockPane<any, any>) {
 
         var children = [React.DOM.span({ className: 'text' }, title)];
         if (options.closeable) {
@@ -85,15 +101,28 @@ class DockWindows<T extends IDockWindowButtonsProps> extends ReactClientComponen
         }, ...children);
     }
 
+    private button({view}: DockButton) {
+        return view;
+    }
+
+    private getPanelButtons() {
+        return _.map(this.props.panes, (e) => this.panelButton(e));
+    }
+
     private getButtons() {
-        return _.map(this.props.panes, this.button.bind(this));
+        return _.map(this.props.buttons, (e) => this.button(e));
     }
 
     public render() {
         return React.DOM.div({
             className: "panel-heading clearfix"
         }, React.DOM.div({ className: 'btn-toolbar pull-left' },
-            React.DOM.div({ className: 'btn-group btn-toggle' }, this.getButtons())));
+            React.DOM.div({ className: 'btn-group btn-toggle' },
+                this.getPanelButtons())
+            ),
+            React.DOM.div({className:"btn-well pull-right btn-group"},
+                this.getButtons())
+        );
     }
 }
 
@@ -251,7 +280,7 @@ export class DockWindow<T extends IDockWindowProps> extends ReactClientComponent
                     this.setState(<any>{});
                 }
             }),
-            React.createElement(DockWindows, { selected: this.state.selected, setSelected: this.selectWindow.bind(this), panes: this.props.panes }),
+            React.createElement(DockWindows, { selected: this.state.selected, setSelected: this.selectWindow.bind(this), panes: this.props.panes, buttons: this.props.buttons }),
             this.getWindows());
     }
 }

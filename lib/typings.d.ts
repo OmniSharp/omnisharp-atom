@@ -9,12 +9,6 @@ declare module OmniSharp {
         default?: boolean;
     }
 
-    interface IToggleFeature extends IFeature {
-        active: boolean;
-        enabled: boolean;
-        observe: {enabled: Rx.Observable<boolean>; };
-    }
-
     interface IAtomFeature extends IFeature {
         attach(): void;
     }
