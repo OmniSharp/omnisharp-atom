@@ -12,7 +12,7 @@ install:
   - apm install atom-yeoman
   - apm install linter
   - apm install json-schema
-  - apm install advanced-new-file
+  - apm install advanced-open-file
 
 # to run your custom scripts instead of automatic MSBuild
 build_script:

@@ -20,4 +20,4 @@ git:
   depth: 10
 
 env:
-  - APM_TEST_PACKAGES='atom-yeoman linter json-schema advanced-new-file'
+  - APM_TEST_PACKAGES='atom-yeoman linter json-schema advanced-open-file'

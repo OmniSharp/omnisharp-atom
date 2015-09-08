@@ -289,7 +289,7 @@ class OmniSharpAtom {
                 _.each(anymenu.template, (template: any) => {
                     var item = <any>_.find(template.submenu, { command: "application:new-file" });
                     if (item) {
-                        item.command = 'advanced-new-file:toggle';
+                        item.command = 'advanced-open-file:toggle';
                     }
                 });
             } else {
@@ -298,7 +298,7 @@ class OmniSharpAtom {
 
                 var anymenu = <any>atom.menu;
                 _.each(anymenu.template, (template: any) => {
-                    var item = <any>_.find(template.submenu, { command: "advanced-new-file:toggle" });
+                    var item = <any>_.find(template.submenu, { command: "advanced-open-file:toggle" });
                     if (item) {
                         item.command = 'application:new-file';
                     }
