@@ -58,7 +58,7 @@
   },
   "dependencies": {
     "ansi-to-html": "^0.3.0",
-    "atom-package-dependencies": "https://github.com/basarat/atom-package-dependencies/archive/cb1.tar.gz",
+    "atom-package-deps": "^2.0.5",
     "atom-space-pen-views": "^2.1.0",
     "bluebird": "^2.9.30",
     "del": "^1.1.1",
@@ -118,10 +118,5 @@
       }
     }
   },
-  "package-dependencies": {
-    "atom-yeoman": ">=0.3.0",
-    "linter": ">=1.0.0",
-    "json-schema": ">=0.1.11",
-    "advanced-new-file": ">=0.4.3"
-  }
+  "package-deps": ["atom-yeoman", "linter", "json-schema", "advanced-new-file"]
 }
