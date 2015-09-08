@@ -4,7 +4,7 @@ import StatusBarComponent = require('../views/status-bar-view');
 import React = require('react');
 import {dock} from "../atom/dock";
 
-class EnhancedHighlightingButton implements OmniSharp.IAtomFeature {
+class HighlightingButton implements OmniSharp.IAtomFeature {
     private disposable: Rx.CompositeDisposable;
     private view: HTMLSpanElement;
     private tile: any;
@@ -24,7 +24,7 @@ class EnhancedHighlightingButton implements OmniSharp.IAtomFeature {
 
         var button = React.DOM.a({
             className: `btn icon-pencil ${enabled ? 'btn-success' : ''}`,
-            onClick: () => atom.config.set('omnisharp-atom.highlight', !atom.config.get('omnisharp-atom.highlight'))
+            onClick: () => atom.config.set('omnisharp-atom.enhancedHighlighting', !atom.config.get('omnisharp-atom.enhancedHighlighting'))
         });
 
         this.buttonDisposable = dock.addButton(
@@ -58,7 +58,7 @@ class EnhancedHighlightingButton implements OmniSharp.IAtomFeature {
         this.view = document.createElement("span");
         this.view.classList.add('inline-block', 'enhanced-highlighting-button', 'icon-pencil');
         this.view.style.display = 'none';
-        this.view.onclick = () => atom.config.set('omnisharp-atom.highlight', !atom.config.get('omnisharp-atom.highlight'));
+        this.view.onclick = () => atom.config.set('omnisharp-atom.enhancedHighlighting', !atom.config.get('omnisharp-atom.enhancedHighlighting'));
 
         if (atom.config.get('grammar-selector.showOnRightSideOfStatusBar')) {
             var tile = this.statusBar.addRightTile({
@@ -72,7 +72,7 @@ class EnhancedHighlightingButton implements OmniSharp.IAtomFeature {
             });
         }
 
-        this.disposable.add(atom.config.observe('omnisharp-atom.highlight', (value: boolean) => {
+        this.disposable.add(atom.config.observe('omnisharp-atom.enhancedHighlighting', (value: boolean) => {
             if (value) {
                 this.view.classList.add('text-success');
             } else {
@@ -93,9 +93,9 @@ class EnhancedHighlightingButton implements OmniSharp.IAtomFeature {
     }
 
     public required = false;
-    public title = "Show Enhanced Highlighting buttons";
+    public title = "Show Highlighting buttons";
     public description = "Show the highlighting buttons in the editor near the current grammar as well as in the OmniSharp dock";
     public default = true;
 }
 
-export var enhancedHighlightingButton = new EnhancedHighlightingButton();
+export var highlight = new HighlightingButton();

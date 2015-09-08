@@ -434,6 +434,12 @@ li.selected span.filename {
         padding-left: 4px !important;
         padding-right: 4px !important;
         top: 0 !important;
+
+        &::before {
+            width: 14px;
+            height: 14px;
+            font-size: 14px;
+        }
     }
 }
 
@@ -444,7 +450,6 @@ li.selected span.filename {
     background-image: linear-gradient(lighten(@color, 2%), @color);
 
     &:focus {
-
         //.focus(); // disabled for now, since :focus styles stay even after releasing mouse.
         outline: none;
     }

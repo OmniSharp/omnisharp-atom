@@ -27,6 +27,7 @@ class OmniSharpAtom {
         this.configureKeybindings();
 
         this.disposable.add(atom.commands.add('atom-workspace', 'omnisharp-atom:toggle', () => this.toggle()));
+        this.disposable.add(atom.commands.add('atom-workspace', 'omnisharp-atom:settings', () => atom.workspace.open('atom://config/packages/omnisharp-atom')));
 
         var whiteList = atom.config.get<boolean>("omnisharp-atom:feature-white-list");
         var featureList = atom.config.get<string[]>('omnisharp-atom:feature-list');
@@ -234,8 +235,8 @@ class OmniSharpAtom {
         f.statusBar.setup(statusBar);
         var f = require('./atom/framework-selector');
         f.frameworkSelector.setup(statusBar);
-        var f = require('./features/enhanced-highlighting-button');
-        f.enhancedHighlightingButton.setup(statusBar);
+        var f = require('./features/highlight-button');
+        f.highlight.setup(statusBar);
         var f = require('./features/code-lens-button');
         f.codeLensButton.setup(statusBar);
     }
