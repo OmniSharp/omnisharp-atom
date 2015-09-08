@@ -24,8 +24,6 @@ class OmniSharpAtom {
         this._started = new AsyncSubject<boolean>();
         this._activated = new AsyncSubject<boolean>();
 
-        require('atom-package-deps').install('omnisharp-atom')
-
         this.configureKeybindings();
 
         this.disposable.add(atom.commands.add('atom-workspace', 'omnisharp-atom:toggle', () => this.toggle()));
@@ -53,7 +51,9 @@ class OmniSharpAtom {
             .toArray()
             .share();
 
-        started.subscribe(() => {
+        require('atom-package-deps').install('omnisharp-atom')
+          .then(() => started.toPromise())
+          .then(() => {
             this._started.onNext(true);
             this._started.onCompleted();
         });
