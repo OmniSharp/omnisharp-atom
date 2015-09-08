@@ -211,22 +211,17 @@ class OmniSharpAtom {
     }
 
     public toggle() {
-        var dependencyErrors = dependencyChecker.errors();
-        if (dependencyErrors.length === 0) {
-            if (Omni.isOff) {
-                Omni.connect();
-                this.toggleMenu();
-            } else if (Omni.isOn) {
-                Omni.disconnect();
+        if (Omni.isOff) {
+            Omni.connect();
+            this.toggleMenu();
+        } else if (Omni.isOn) {
+            Omni.disconnect();
 
-                if (this.menu) {
-                    this.disposable.remove(this.menu);
-                    this.menu.dispose();
-                    this.menu = null;
-                }
+            if (this.menu) {
+                this.disposable.remove(this.menu);
+                this.menu.dispose();
+                this.menu = null;
             }
-        } else {
-            _.map(dependencyErrors, missingDependency => alert(missingDependency));
         }
     }
 
