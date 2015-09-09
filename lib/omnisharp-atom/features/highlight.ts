@@ -85,6 +85,8 @@ class Highlight implements OmniSharp.IFeature {
             editor.displayBuffer.tokenizedBuffer['_markTokenizationComplete'] = editor.displayBuffer.tokenizedBuffer.markTokenizationComplete;
         if (!editor.displayBuffer.tokenizedBuffer['_retokenizeLines'])
             editor.displayBuffer.tokenizedBuffer['_retokenizeLines'] = editor.displayBuffer.tokenizedBuffer.retokenizeLines;
+        if (!editor.displayBuffer.tokenizedBuffer['_tokenizeInBackground'])
+            editor.displayBuffer.tokenizedBuffer['_tokenizeInBackground'] = editor.displayBuffer.tokenizedBuffer.tokenizeInBackground;
         if (!editor.displayBuffer.tokenizedBuffer['_chunkSize'])
             editor.displayBuffer.tokenizedBuffer['chunkSize'] = 20;
 
@@ -125,6 +127,20 @@ class Highlight implements OmniSharp.IFeature {
             if (grammar.isObserveRetokenizing)
                 grammar.isObserveRetokenizing.onNext(false);
             return editor.displayBuffer.tokenizedBuffer['_retokenizeLines'].apply(this, arguments);
+        };
+
+        (<any>editor.displayBuffer.tokenizedBuffer).tokenizeInBackground = function() {
+            debugger;
+            if (!this.visible || this.pendingChunk || !this.isAlive())
+                return;
+
+            this.pendingChunk = true;
+            defer(() => window.requestAnimationFrame(() => {
+                this.pendingChunk = false;
+                if (this.isAlive() && this.buffer.isAlive()) {
+                    this.tokenizeNextChunk();
+                }
+            }));
         };
 
         disposable.add(Disposable.create(() => {

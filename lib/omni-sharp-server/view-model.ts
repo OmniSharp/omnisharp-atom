@@ -4,6 +4,26 @@ import {DriverState, OmnisharpClientStatus} from "omnisharp-client";
 import {Observable, Subject, CompositeDisposable} from "rx";
 import {basename, dirname, normalize} from "path";
 
+export function excludeUnexpectedCharacters(data: OmniSharp.Models.DiagnosticLocation[]) {
+    var unexpectedIndexes = _(data)
+        .map((value, index) => ({value, index}))
+        .filter(x => _.startsWith(x.value.Text, 'Unexpected character'))
+        .sortBy(x => x.value.Line)
+        .sortBy(x => x.value.Column)
+        .groupBy(x => x.value.Line)
+        .value();
+
+    _.each(unexpectedIndexes, set => {
+        if (set.length === 3 && set[0].value.Column === 0 && set[1].value.Column === 1 && set[2].value.Column === 2) {
+            var sorted = _.sortBy(set, x => x.index);
+            sorted.reverse();
+            _.each(sorted, x => data.splice(x.index, 1));
+        }
+    });
+    
+    return data;
+}
+
 export class ProjectViewModel implements OmniSharp.IProjectViewModel {
     public path: string;
     public activeFramework: OmniSharp.Models.DnxFramework;
@@ -273,12 +293,16 @@ export class ViewModel implements Rx.IDisposable {
             // Then insert the new diagnostics
             _client.observeCodecheck
                 .where(z => !!z.request.FileName)
-                .map(({request, response}) => {
+                .map((ctx) => {
+                    var {request, response} = ctx;
                     var results = _.filter(this.diagnostics, (fix: OmniSharp.Models.DiagnosticLocation) => request.FileName !== fix.FileName);
                     results.unshift(...<OmniSharp.Models.DiagnosticLocation[]>response.QuickFixes);
                     return results;
                 }))
-            .map(data => _.sortBy(data, quickFix => quickFix.LogLevel))
+            .map(data => {
+                excludeUnexpectedCharacters(data);
+                return _.sortBy(data, quickFix => quickFix.LogLevel);
+            })
             .startWith([])
             .shareReplay(1);
 

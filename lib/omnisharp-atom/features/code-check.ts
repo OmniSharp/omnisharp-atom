@@ -5,6 +5,7 @@ var currentlyEnabled = false;
 import {dock} from "../atom/dock";
 import {CodeCheckOutputWindow, ICodeCheckOutputWindowProps} from '../views/codecheck-output-pane-view';
 import {DriverState} from "omnisharp-client";
+import {excludeUnexpectedCharacters} from "../../omni-sharp-server/view-model";
 
 class CodeCheck implements OmniSharp.IFeature {
     private disposable: Rx.CompositeDisposable;
@@ -54,6 +55,7 @@ class CodeCheck implements OmniSharp.IFeature {
                 .where(() => !editor.isDestroyed())
                 .flatMap(() => this._doCodeCheck(editor))
                 .map(response => response.QuickFixes || [])
+                .map(excludeUnexpectedCharacters)
                 .share();
 
             this._editorSubjects.set(editor, () => {

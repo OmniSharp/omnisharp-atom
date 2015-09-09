@@ -443,8 +443,6 @@ function makeOpener(): Rx.IDisposable {
         return manager.activeClient
             .take(1)
             .flatMap(issueRequest)
-        //.concat(..._.map(manager.activeClients, issueRequest))
-        //.take(1)
             .map(setupEditor)
             .toPromise();
     }
