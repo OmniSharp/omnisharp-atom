@@ -18,9 +18,11 @@ export function excludeUnexpectedCharacters(data: OmniSharp.Models.DiagnosticLoc
             var sorted = _.sortBy(set, x => x.index);
             sorted.reverse();
             _.each(sorted, x => data.splice(x.index, 1));
+
+            _.each(sorted, x => _.each(x.value.Text.substr('Unexpected character'.length), z => console.log(`char-code: ${z.charCodeAt(0)}`)));
         }
     });
-    
+
     return data;
 }
 

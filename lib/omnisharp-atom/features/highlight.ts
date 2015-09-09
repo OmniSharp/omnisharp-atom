@@ -130,7 +130,6 @@ class Highlight implements OmniSharp.IFeature {
         };
 
         (<any>editor.displayBuffer.tokenizedBuffer).tokenizeInBackground = function() {
-            debugger;
             if (!this.visible || this.pendingChunk || !this.isAlive())
                 return;
 

@@ -85,6 +85,7 @@ class Client extends OmnisharpClientV2 {
         return this;
     }
 
+    private static _regex = new RegExp(String.fromCharCode(0xFFFD), 'g');
     private _fixupRequest<TRequest, TResponse>(action: string, request: TRequest, cb: () => Rx.Observable<TResponse>) {
         // Only send changes for requests that really need them.
         if (this._currentEditor && _.isObject(request)) {
@@ -112,6 +113,10 @@ class Client extends OmnisharpClientV2 {
             omniChanges.splice(0, omniChanges.length);
             _.defaults(request, { Changes: computedChanges });
             */
+        }
+
+        if (request['Buffer']) {
+            request['Buffer'] = request['Buffer'].replace(Client._regex, '');
         }
 
         return cb();

@@ -92,9 +92,9 @@ class Omni implements Rx.IDisposable {
             // TODO: Update once rename/codeactions support optional workspace changes
             //var omniChanges: { oldRange: TextBuffer.Range; newRange: TextBuffer.Range; oldText: string; newText: string; }[] = (<any>editor).__omniChanges__ = [];
 
-            cd.add(editor.getBuffer().onDidChange((change: { oldRange: TextBuffer.Range; newRange: TextBuffer.Range; oldText: string; newText: string; }) => {
+            /*cd.add(editor.getBuffer().onDidChange((change: { oldRange: TextBuffer.Range; newRange: TextBuffer.Range; oldText: string; newText: string; }) => {
                 //omniChanges.push(change);
-            }));
+            }));*/
 
             cd.add(editor.onDidStopChanging(_.debounce(() => {
                 /*if (omniChanges.length) {
