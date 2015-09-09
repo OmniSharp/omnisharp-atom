@@ -22,10 +22,10 @@ describe('Code Lens', () => {
         waitsForPromise(() => Promise.all([p1, p2]));
 
         runs(function() {
-            var map: WeakMap<Atom.TextEditor, Lens[]> = (<any>codeLens).decorations;
+            var map: WeakMap<Atom.TextEditor, Set<Lens>> = (<any>codeLens).decorations;
             var lenses = map.get(e);
 
-            expect(lenses.length).toBe(15);
+            expect(lenses.size).toBe(15);
             //expect(_.filter(lenses, x => x.loaded).length).toBe(9);
         });
     });
@@ -46,7 +46,7 @@ describe('Code Lens', () => {
 
         runs(function() {
             // Sometimes varies as the server starts up
-            expect(e.getDecorations().length).toBeGreaterThan(10);
+            expect(e.getDecorations().length).toBeGreaterThan(9);
         });
     });
 });
