@@ -134,6 +134,7 @@ class Highlight implements OmniSharp.IFeature {
             grammar.linesToFetch = [];
             grammar.responses.clear();
             editor.displayBuffer.tokenizedBuffer.retokenizeLines();
+            delete editor['_oldGrammar'];
         }));
 
         this.disposable.add(editor.onDidDestroy(() => {
@@ -183,7 +184,9 @@ class Highlight implements OmniSharp.IFeature {
             issueRequest.onNext(true);
         }));
 
-        disposable.add(Omni.whenEditorConnected(editor).subscribe(() => issueRequest.onNext(true)));
+        disposable.add(Omni.whenEditorConnected(editor).subscribe(() => {
+            issueRequest.onNext(true);
+        }));
     }
 
     public required = false;
