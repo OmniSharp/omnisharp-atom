@@ -58,9 +58,7 @@ class CommandRunner implements OmniSharp.IFeature {
                 }
             }));
 
-        this.disposable.add(Omni.editors.subscribe(editor => {
-            var cd = new CompositeDisposable();
-
+        this.disposable.add(Omni.eachEditor((editor, cd) => {
             cd.add(editor.onDidSave(() => restart.onNext(editor)));
             cd.add(editor.getBuffer().onDidReload(() => restart.onNext(editor)));
         }));

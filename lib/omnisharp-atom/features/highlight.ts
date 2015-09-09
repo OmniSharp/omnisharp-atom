@@ -14,8 +14,7 @@ class Highlight implements OmniSharp.IFeature {
         this.disposable = new CompositeDisposable();
         this.editors = [];
 
-        this.disposable.add(Omni.editors
-            .subscribe(editor => this.setupEditor(editor)));
+        this.disposable.add(Omni.eachEditor((editor, cd) => this.setupEditor(editor, cd)));
 
         this.disposable.add(
             isObserveRetokenizing(
@@ -70,12 +69,10 @@ class Highlight implements OmniSharp.IFeature {
         this.disposable && this.disposable.dispose();
     }
 
-    private setupEditor(editor: Atom.TextEditor) {
+    private setupEditor(editor: Atom.TextEditor, disposable: CompositeDisposable) {
         if (editor['_oldGrammar'] || !editor.getGrammar) return;
 
         this.editors.push(editor);
-
-        var disposable = new CompositeDisposable();
         this.disposable.add(disposable);
 
         if (!editor['_oldGrammar'])
@@ -138,8 +135,6 @@ class Highlight implements OmniSharp.IFeature {
         }));
 
         this.disposable.add(editor.onDidDestroy(() => {
-            disposable.dispose();
-            this.disposable.remove(disposable);
             pull(this.editors, editor);
         }));
 
@@ -184,7 +179,7 @@ class Highlight implements OmniSharp.IFeature {
             issueRequest.onNext(true);
         }));
 
-        disposable.add(Omni.whenEditorConnected(editor).subscribe(() => {
+        disposable.add(Omni.whenEditorConnected(editor).delay(1000).subscribe(() => {
             issueRequest.onNext(true);
         }));
     }

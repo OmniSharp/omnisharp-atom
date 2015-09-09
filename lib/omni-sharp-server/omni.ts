@@ -374,6 +374,40 @@ class Omni implements Rx.IDisposable {
         return this._configEditors;
     }
 
+    public eachEditor(callback: (editor: Atom.TextEditor, cd: CompositeDisposable) => void): Rx.IDisposable {
+        var outerCd = new CompositeDisposable();
+        outerCd.add(this._editors.subscribe(editor => {
+            var cd = new CompositeDisposable();
+            outerCd.add(cd);
+
+            cd.add(editor.onDidDestroy((() => {
+                outerCd.remove(cd);
+                cd.dispose();
+            })));
+
+            callback(editor, cd);
+        }));
+
+        return outerCd;
+    }
+
+    public eachConfigEditor(callback: (editor: Atom.TextEditor, cd: CompositeDisposable) => void): Rx.IDisposable {
+        var outerCd = new CompositeDisposable();
+        outerCd.add(this._configEditors.subscribe(editor => {
+            var cd = new CompositeDisposable();
+            outerCd.add(cd);
+
+            cd.add(editor.onDidDestroy((() => {
+                outerCd.remove(cd);
+                cd.dispose();
+            })));
+
+            callback(editor, cd);
+        }));
+
+        return outerCd;
+    }
+
     public registerConfiguration(callback: (client: Client) => void) {
         manager.registerConfiguration(callback);
     }

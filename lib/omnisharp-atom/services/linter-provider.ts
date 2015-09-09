@@ -1,7 +1,8 @@
 import Omni = require('../../omni-sharp-server/omni')
 var Range = require('atom').Range;
 import _ = require('lodash');
-import {Observable, CompositeDisposable} from "rx";
+import {Observable, CompositeDisposable, Subject} from "rx";
+import {codeCheck} from "../features/code-check";
 
 interface LinterError {
     type: string; // 'error' | 'warning'
@@ -105,8 +106,8 @@ export var provider = [
         lint: (editor: Atom.TextEditor) => {
             if (!_.contains(Omni.validGammarNames, editor.getGrammar().name)) return Promise.resolve([]);
 
-            return Omni.request(editor, client => client.codecheck({}))
-                .flatMap(x => Observable.from(<OmniSharp.Models.DiagnosticLocation[]>x.QuickFixes))
+            return codeCheck.doCodeCheck(editor)
+                .flatMap(x => x)
                 .where(z => z.LogLevel !== "Hidden")
                 .map(error => mapValues(editor, error))
                 .toArray()
@@ -120,7 +121,7 @@ export var provider = [
             if (!_.contains(Omni.validGammarNames, editor.getGrammar().name)) return Promise.resolve([]);
 
             return Omni.activeModel
-                .flatMap(x => Observable.from(<OmniSharp.Models.DiagnosticLocation[]>x.diagnostics))
+                .flatMap(x => Observable.from(x.diagnostics))
                 .where(z => z.LogLevel != "Hidden")
                 .map(error => mapValues(editor, error))
                 .toArray()
