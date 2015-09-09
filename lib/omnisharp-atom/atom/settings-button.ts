@@ -19,8 +19,10 @@ class SettingsButton implements OmniSharp.IFeature {
                 this.disposable.add(tooltip);
             },
             onMouseLeave: (e) => {
-                this.disposable.remove(tooltip);
-                tooltip.dispose();
+                if (tooltip) {
+                    this.disposable.remove(tooltip);
+                    tooltip.dispose();
+                }
             }
         });
 

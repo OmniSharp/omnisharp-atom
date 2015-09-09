@@ -69,8 +69,10 @@ class FeatureEditorButtons implements OmniSharp.IAtomFeature {
             this.disposable.add(tooltipDisposable);
         };
         view.onmouseleave = () => {
-            this.disposable.remove(tooltipDisposable);
-            tooltipDisposable.dispose();
+            if (tooltipDisposable) {
+                this.disposable.remove(tooltipDisposable);
+                tooltipDisposable.dispose();
+            }
         }
 
         if (atom.config.get('grammar-selector.showOnRightSideOfStatusBar')) {
@@ -155,8 +157,10 @@ class FeatureButtons implements OmniSharp.IFeature {
                 this.disposable.add(tooltipDisposable);
             },
             onMouseLeave: (e) => {
-                this.disposable.remove(tooltipDisposable);
-                tooltipDisposable.dispose();
+                if (tooltipDisposable) {
+                    this.disposable.remove(tooltipDisposable);
+                    tooltipDisposable.dispose();
+                }
             }
         });
 
