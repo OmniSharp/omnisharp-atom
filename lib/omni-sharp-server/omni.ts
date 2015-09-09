@@ -31,12 +31,14 @@ class Omni implements Rx.IDisposable {
     private _activeConfigEditor = wrapEditorObservable(this._activeConfigEditorSubject)
         .shareReplay(1);
 
-    private _activeProject = wrapEditorObservable(Observable.combineLatest(this._activeEditorSubject, this._activeConfigEditorSubject, (editor, config) => editor || config || null))
+    private _activeEditorOrConfigEditor = wrapEditorObservable(Observable.combineLatest(this._activeEditorSubject, this._activeConfigEditorSubject, (editor, config) => editor || config || null));
+
+    private _activeProject = this._activeEditorOrConfigEditor
         .flatMap(editor => manager.getClientForEditor(editor)
             .flatMap(z => z.model.getProjectForEditor(editor)))
         .shareReplay(1);
 
-    private _activeFramework = wrapEditorObservable(Observable.combineLatest(this._activeEditorSubject, this._activeConfigEditorSubject, (editor, config) => editor || config || null))
+    private _activeFramework = this._activeEditorOrConfigEditor
         .flatMapLatest(editor => manager.getClientForEditor(editor)
             .flatMapLatest(z => z.model.getProjectForEditor(editor)))
         .flatMapLatest(project => project.observe.activeFramework.map(framework => ({ project, framework })))
@@ -350,6 +352,10 @@ class Omni implements Rx.IDisposable {
 
     public get activeConfigEditor() {
         return this._activeConfigEditor;
+    }
+
+    public get activeEditorOrConfigEditor() {
+        return this._activeEditorOrConfigEditor;
     }
 
     public get activeProject() {
