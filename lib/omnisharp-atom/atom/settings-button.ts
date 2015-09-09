@@ -28,7 +28,7 @@ class SettingsButton implements OmniSharp.IFeature {
             'settings-button',
             'Settings',
             button,
-            { priority: 1000 }
+            { priority: 999 }
         ));
     }
 

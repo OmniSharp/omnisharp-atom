@@ -85,33 +85,41 @@ class OmniSharpAtom {
                 // Whitelist is used for unit testing, we don't want the config to make changes here
                 if (whiteListUndefined && _.has(this.config, key)) {
                     var configKey = `omnisharp-atom.${key}`;
+                    var enableDisposable: Rx.IDisposable, disableDisposable: Rx.IDisposable;
                     this.disposable.add(atom.config.observe(configKey, enabled => {
                         if (!enabled) {
+                            if (disableDisposable) {
+                                disableDisposable.dispose();
+                                this.disposable.remove(disableDisposable);
+                                disableDisposable = null;
+                            }
+
                             try { value.dispose(); } catch (ex) { }
+
+                            enableDisposable = atom.commands.add('atom-workspace', `omnisharp-atom:enable-${_.kebabCase(key) }`, () => atom.config.set(configKey, true));
+                            this.disposable.add(enableDisposable);
                         } else {
+                            if (enableDisposable) {
+                                enableDisposable.dispose();
+                                this.disposable.remove(disableDisposable);
+                                enableDisposable = null;
+                            }
+
                             value.activate();
 
                             if (_.isFunction(value['attach'])) {
                                 if (deferred)
                                     deferred.push(() => value['attach']());
                                 else
-                                    value['attach']()
+                                    value['attach']();
                             }
+
+                            disableDisposable = atom.commands.add('atom-workspace', `omnisharp-atom:disable-${_.kebabCase(key) }`, () => atom.config.set(configKey, false));
+                            this.disposable.add(disableDisposable);
                         }
                     }));
 
-                    this.disposable.add(atom.commands.add('atom-workspace', `omnisharp-atom:disable-feature-${_.kebabCase(key) }`,
-                        () => {
-                            atom.config.set(configKey, false);
-                        }));
-                    this.disposable.add(atom.commands.add('atom-workspace', `omnisharp-atom:enable-feature-${_.kebabCase(key) }`,
-                        () => {
-                            atom.config.set(configKey, true);
-                        }));
-                    this.disposable.add(atom.commands.add('atom-workspace', `omnisharp-atom:toggle-feature-${_.kebabCase(key) }`,
-                        () => {
-                            atom.config.set(configKey, !atom.config.get(configKey));
-                        }));
+                    this.disposable.add(atom.commands.add('atom-workspace', `omnisharp-atom:toggle-${_.kebabCase(key) }`, () => atom.config.set(configKey, !atom.config.get(configKey))));
                 } else {
                     value.activate();
 
@@ -258,10 +266,8 @@ class OmniSharpAtom {
         f.statusBar.setup(statusBar);
         var f = require('./atom/framework-selector');
         f.frameworkSelector.setup(statusBar);
-        var f = require('./features/highlight-button');
-        f.highlightButton.setup(statusBar);
-        var f = require('./features/code-lens-button');
-        f.codeLensButton.setup(statusBar);
+        var f = require('./atom/feature-buttons');
+        f.featureEditorButtons.setup(statusBar);
     }
 
     public consumeYeomanEnvironment(generatorService) {
