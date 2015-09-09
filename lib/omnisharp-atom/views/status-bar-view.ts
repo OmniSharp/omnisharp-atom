@@ -262,6 +262,7 @@ export class StatusBarElement extends HTMLElement implements WebComponent, Rx.ID
         var projectCount = this._projectCount = <ProjectCountElement>new exports.ProjectCountElement();
         this.appendChild(projectCount);
         projectCount.onclick = () => this.toggleSolutionInformation();
+        projectCount.style.display = 'none';
         projectCount.projects.style.display = 'none';
 
         var diagnostics = this._diagnostics = <DiagnosticsElement>new exports.DiagnosticsElement();
@@ -341,6 +342,10 @@ export class StatusBarElement extends HTMLElement implements WebComponent, Rx.ID
     private _updateVisible(hasValidEditor?: boolean) {
         if (typeof hasValidEditor !== 'undefined') {
             this._hasValidEditor = hasValidEditor;
+        }
+
+        if (this._state.isOn) {
+            read(() => this._projectCount.style.display === 'none' && write(() => this._projectCount.style.display = ''));
         }
 
         if (this._state.isOn && this._hasValidEditor) {
