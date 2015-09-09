@@ -7,7 +7,7 @@ import {DriverState} from "omnisharp-client";
 import {ProjectViewModel} from "./view-model";
 
 // Time we wait to try and do our active switch tasks.
-const DEBOUNCE_TIMEOUT = 400;
+const DEBOUNCE_TIMEOUT = 100;
 
 function wrapEditorObservable(observable: Observable<Atom.TextEditor>) {
     return observable
