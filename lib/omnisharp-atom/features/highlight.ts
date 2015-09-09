@@ -6,6 +6,8 @@ import {Observable, Subject, ReplaySubject, Scheduler, CompositeDisposable, Disp
 var AtomGrammar = require((<any>atom).config.resourcePath + "/node_modules/first-mate/lib/grammar.js");
 var Range: typeof TextBuffer.Range = <any>require('atom').Range;
 
+const DEBOUNCE_TIME = 240;
+
 class Highlight implements OmniSharp.IFeature {
     private disposable: Rx.CompositeDisposable;
     private editors: Array<Atom.TextEditor>;
@@ -44,7 +46,7 @@ class Highlight implements OmniSharp.IFeature {
                 .map(z => ({ editor: find(atom.workspace.getTextEditors(), editor => editor.getPath() == z.request.FileName), request: z.request, response: z.response }))
                 .flatMap(z => Omni.activeEditor.take(1).where(x => x === z.editor).map(x => z))
         )
-            .debounce(400)
+            .debounce(DEBOUNCE_TIME)
             .subscribe(({request, response, editor}) => {
                 editor.displayBuffer.tokenizedBuffer['silentRetokenizeLines']();
             }));
@@ -57,7 +59,7 @@ class Highlight implements OmniSharp.IFeature {
                         .map(z => ({ editor: find(this.editors, editor => editor.getPath() === z.request.FileName), request: z.request, response: z.response }))
                         .take(1))
                     .flatMap(z => Omni.activeEditor))
-                .debounce(300)
+                .debounce(DEBOUNCE_TIME)
                 .where(z => !!z)
         )
             .subscribe(editor => {
@@ -114,7 +116,7 @@ class Highlight implements OmniSharp.IFeature {
                     this.invalidateRow(0);
                 }
                 this.fullyTokenized = false;
-            }, 240);
+            }, DEBOUNCE_TIME);
         }
 
         (<any>editor.displayBuffer.tokenizedBuffer).markTokenizationComplete = function() {
@@ -156,7 +158,7 @@ class Highlight implements OmniSharp.IFeature {
         var issueRequest = new Subject<boolean>();
 
         disposable.add(issueRequest
-            .debounce(400)
+            .debounce(DEBOUNCE_TIME)
             .flatMap(z => Omni.getProject(editor).map(z => z.activeFramework.Name === 'all' ? '' : (z.name + '+' + z.activeFramework.ShortName)).timeout(200, Observable.just('')))
             .subscribe((framework) => {
                 var projects = [];

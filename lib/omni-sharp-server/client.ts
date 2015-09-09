@@ -92,7 +92,7 @@ class Client extends OmnisharpClientV2 {
             var editor = this._currentEditor;
 
             var marker = editor.getCursorBufferPosition();
-            _.defaults(request, { Column: marker.column, Line: marker.row, FileName: editor.getURI(), Buffer: editor.getText() });
+            _.defaults(request, { Column: marker.column, Line: marker.row, FileName: editor.getURI(), Buffer: editor.getBuffer().getLines().join('\n') });
             /*
             TODO: Update once rename/code actions don't apply changes to the workspace
             var omniChanges: { oldRange: { start: TextBuffer.Point, end: TextBuffer.Point }; newRange: { start: TextBuffer.Point, end: TextBuffer.Point }; oldText: string; newText: string; }[] = (<any>editor).__omniChanges__ || [];
