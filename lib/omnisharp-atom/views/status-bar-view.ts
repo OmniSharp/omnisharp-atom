@@ -206,7 +206,7 @@ export class DiagnosticsElement extends HTMLAnchorElement implements WebComponen
 
 export class ProjectCountElement extends HTMLAnchorElement implements WebComponent {
     private _state: { projectCount: number };
-    private _projects: HTMLSpanElement;
+    public projects: HTMLSpanElement;
     private _solutionNunmber: HTMLSpanElement;
 
     public createdCallback() {
@@ -219,15 +219,16 @@ export class ProjectCountElement extends HTMLAnchorElement implements WebCompone
         var sub = this._solutionNunmber = document.createElement('sub');
         icon.appendChild(sub);
 
-        var projects = this._projects = document.createElement('span');
+        var projects = this.projects = document.createElement('span');
         projects.classList.add('projects');
+        projects.innerText = '0 Projects';
         this.appendChild(projects);
     }
 
     public updateState(state: typeof ProjectCountElement.prototype._state) {
         if (!_.isEqual(this._state, state)) {
             this._state = state;
-            write(() => this._projects.innerText = `${this._state.projectCount} Projects`);
+            write(() => this.projects.innerText = `${this._state.projectCount} Projects`);
         }
     }
 
@@ -258,14 +259,16 @@ export class StatusBarElement extends HTMLElement implements WebComponent, Rx.ID
         var commandRunnerElement = this._commandRunner = <CommandRunnerElement>new exports.CommandRunnerElement();
         this.appendChild(commandRunnerElement);
 
+        var projectCount = this._projectCount = <ProjectCountElement>new exports.ProjectCountElement();
+        this.appendChild(projectCount);
+        projectCount.onclick = () => this.toggleSolutionInformation();
+        projectCount.projects.style.display = 'none';
+
         var diagnostics = this._diagnostics = <DiagnosticsElement>new exports.DiagnosticsElement();
         this.appendChild(diagnostics);
         diagnostics.diagnosticClick = () => this.toggleErrorWarningPanel();
         diagnostics.syncClick = () => this.doCodeCheck();
-
-        var projectCount = this._projectCount = <ProjectCountElement>new exports.ProjectCountElement();
-        this.appendChild(projectCount);
-        projectCount.onclick = () => this.toggleSolutionInformation();
+        diagnostics.style.display = 'none';
 
         this._disposable = new CompositeDisposable();
         this._state = { status: <any>{} };
@@ -296,11 +299,7 @@ export class StatusBarElement extends HTMLElement implements WebComponent, Rx.ID
                     this._flame.updateState(update);
                     _.assign(this._state, update);
 
-                    if (this._state.isOn) {
-                        read(() => this._diagnostics.style.display === 'none' && write(() => this._diagnostics.style.display = ''));
-                    } else {
-                        read(() => this._diagnostics.style.display !== 'none' && write(() => this._diagnostics.style.display = 'none'));
-                    }
+                    this._updateVisible();
                 }
             }));
 
@@ -317,6 +316,10 @@ export class StatusBarElement extends HTMLElement implements WebComponent, Rx.ID
                 this._projectCount.updateSolutionNumber(solutionNumber);
             }));
 
+        this._disposable.add(Omni.activeEditorOrConfigEditor.subscribe(editor => {
+            this._updateVisible(!!editor);
+        }));
+
         this._disposable.add(commandRunner.observe.processes
             .subscribe(processes => {
                 if (_.all(processes, process => process.started))
@@ -332,6 +335,29 @@ export class StatusBarElement extends HTMLElement implements WebComponent, Rx.ID
                 var solutionNumber = solutions.length > 1 ? _.trim(server.model && (<any>server.model).index, 'client') : '';
                 this._projectCount.updateSolutionNumber(solutionNumber);
             }));
+    }
+
+    private _hasValidEditor: boolean = false;
+    private _updateVisible(hasValidEditor?: boolean) {
+        if (typeof hasValidEditor !== 'undefined') {
+            this._hasValidEditor = hasValidEditor;
+        }
+
+        if (this._state.isOn && this._hasValidEditor) {
+            this._showOnStateItems();
+        } else {
+            this._hideOnStateItems();
+        }
+    }
+
+    private _showOnStateItems() {
+        read(() => this._diagnostics.style.display === 'none' && write(() => this._diagnostics.style.display = ''));
+        read(() => this._projectCount.projects.style.display === 'none' && write(() => this._projectCount.projects.style.display = ''));
+    }
+
+    private _hideOnStateItems() {
+        read(() => this._diagnostics.style.display !== 'none' && write(() => this._diagnostics.style.display = 'none'));
+        read(() => this._projectCount.projects.style.display !== 'none' && write(() => this._projectCount.projects.style.display = 'none'));
     }
 
     public detachedCallback() {
