@@ -164,7 +164,7 @@ class FeatureButtons implements OmniSharp.IFeature {
             `${name}-button`,
             tooltip,
             reactButton,
-            { priority: 1000 + index }
+            { priority: 500 + index }
         );
 
         return buttonDisposable;
