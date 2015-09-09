@@ -1,7 +1,7 @@
 import {CompositeDisposable, SingleAssignmentDisposable, Disposable} from "rx";
 import * as _ from 'lodash';
 import Omni = require('../../omni-sharp-server/omni')
-import {DockWindow, DockPane, IDockWindowProps, DocPaneOptions} from '../views/dock-window';
+import {DockWindow, DockPane, DockButton, IDockWindowProps, DocPaneOptions, DocButtonOptions} from '../views/dock-window';
 import React = require('react');
 
 class Dock implements OmniSharp.IAtomFeature {
@@ -9,6 +9,7 @@ class Dock implements OmniSharp.IAtomFeature {
     private view: Element;
     private dock: DockWindow<IDockWindowProps>;
     private _panes: DockPane<any, any>[] = [];
+    private _buttons: DockButton[] = [];
 
     public activate() {
         this.disposable = new CompositeDisposable();
@@ -31,11 +32,13 @@ class Dock implements OmniSharp.IAtomFeature {
         this.view.classList.add('omnisharp-atom-pane');
         this.dock = <any> React.render(React.createElement<IDockWindowProps>(DockWindow, {
             panes: this._panes,
+            buttons: this._buttons,
             panel: p
         }), this.view);
+
         this.disposable.add(Disposable.create(() => {
             React.unmountComponentAtNode(this.view);
-            p.destroy()
+            p.destroy();
             this.view.remove();
         }));
     }
@@ -104,7 +107,28 @@ class Dock implements OmniSharp.IAtomFeature {
 
         this._update();
 
-        return <Disposable>disposable;
+        return <Rx.IDisposable>disposable;
+    }
+
+    public addButton<T>(id: string, title: string, view: React.HTMLElement, options: DocButtonOptions = { priority: 1000 }, parentDisposable?: Rx.Disposable) {
+        var disposable = new SingleAssignmentDisposable();
+        var cd = new CompositeDisposable();
+        this.disposable.add(disposable);
+        disposable.setDisposable(cd);
+
+        if (parentDisposable)
+            cd.add(parentDisposable);
+
+        this._buttons.push({ id, title, view, options, disposable });
+
+        cd.add(Disposable.create(() => {
+            _.remove(this._buttons, { id });
+            this.dock.forceUpdate();
+        }));
+
+        this._update();
+
+        return <Rx.IDisposable>disposable;
     }
 
     private _update() {
@@ -118,8 +142,18 @@ class Dock implements OmniSharp.IAtomFeature {
             })
             .value();
 
+        this._buttons = _(this._buttons)
+            .sortBy(z => z.id)
+            .sort((a, b) => {
+                if (a.options.priority === b.options.priority) return 0;
+                if (a.options.priority > b.options.priority) return 1;
+                return -1;
+            })
+            .value();
+
         if (this.dock) {
             this.dock.props.panes = this._panes;
+            this.dock.props.buttons = this._buttons;
             this.dock.forceUpdate();
         }
     }

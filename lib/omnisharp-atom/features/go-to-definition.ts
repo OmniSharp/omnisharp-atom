@@ -56,7 +56,7 @@ class GoToDefinition implements OmniSharp.IFeature {
             editor.onDidDestroy(() => cd.dispose());
 
             var eventDisposable: Rx.Disposable;
-            cd.add(atom.config.observe('omnisharp-atom.highlight', (enabled: boolean) => {
+            cd.add(atom.config.observe('omnisharp-atom.enhancedHighlighting', (enabled: boolean) => {
                 this.enhancedHighlighting = enabled;
                 if (eventDisposable) {
                     eventDisposable.dispose();

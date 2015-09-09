@@ -21,41 +21,28 @@ class CodeLens implements OmniSharp.IFeature {
     public activate() {
         this.disposable = new CompositeDisposable();
 
-        this.disposable.add(Omni.editors.subscribe(editor => {
-            var ad = Omni.activeEditor
-                .where(active => active === editor)
-                .subscribe(() => {
-                    var cd = new CompositeDisposable();
-                    this.disposable.add(cd);
+        this.disposable.add(Omni.switchActiveEditor((editor, cd) => {
+            cd.add(editor.onDidDestroy(() => {
+                this.disposable.remove(cd);
+                cd.dispose();
+            }));
 
-                    cd.add(editor.onDidDestroy(() => {
-                        this.disposable.remove(cd);
-                        cd.dispose();
-                    }));
+            cd.add(Disposable.create(() => {
+                var markers = this.decorations.get(editor);
 
-                    cd.add(Disposable.create(() => {
-                        var markers = this.decorations.get(editor);
+                _.each(markers, (marker) => marker && marker.dispose());
+                this.decorations.delete(editor);
+            }));
 
-                        _.each(markers, (marker) => marker && marker.dispose());
-                        this.decorations.set(editor, []);
-                    }))
-
-                    cd.add(atom.config.observe('editor.fontSize', (size: number) => {
-                        var decorations = this.decorations.get(editor);
-                        var lineHeight = editor.getLineHeightInPixels();
-                        if (decorations && lineHeight) {
-                            _.each(decorations, lens => {
-                                lens.updateTop(lineHeight);
-                            });
-                        }
-                    }));
-
-                    _.defer(() => {
-                        this.disposable.remove(ad);
-                        ad.dispose();
+            cd.add(atom.config.observe('editor.fontSize', (size: number) => {
+                var decorations = this.decorations.get(editor);
+                var lineHeight = editor.getLineHeightInPixels();
+                if (decorations && lineHeight) {
+                    _.each(decorations, lens => {
+                        lens.updateTop(lineHeight);
                     });
-                });
-            this.disposable.add(ad);
+                }
+            }));
         }));
 
         this.disposable.add(Omni.switchActiveEditor((editor, cd) => {
@@ -137,7 +124,7 @@ class CodeLens implements OmniSharp.IFeature {
             })
             .tapOnCompleted(() => {
                 // Remove all old/missing decorations
-                var items = _.map(decorations, lens => {
+                var items = _.map(decorations.slice(0), lens => {
                     if (lens && !updated.has(lens)) {
                         lens.dispose();
                     }

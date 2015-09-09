@@ -4,6 +4,7 @@
     {
       label: 'OmniSharp'
       submenu: [
+        { "label": "Settings", "command": "omnisharp-atom:settings" }
         { 'label': 'Toggle', 'command': 'omnisharp-atom:toggle' }
         { 'label': 'Find Usages', 'command': 'omnisharp-atom:find-usages' }
         { 'label': 'Go to Definition', 'command': 'omnisharp-atom:go-to-definition' }
@@ -22,6 +23,7 @@
     'submenu': [
       'label': 'OmniSharp'
       'submenu': [
+        { "label": "Settings", "command": "omnisharp-atom:settings" }
         { "label": "Toggle", "command": "omnisharp-atom:toggle" }
         { 'label': 'New Application', 'command': 'omnisharp-atom:new-application' }
       ]
