@@ -520,3 +520,11 @@ li.selected span.filename {
         .btn-variant(@background-color-error);
     }
 }
+body atom-text-editor.autocomplete-active {
+    #linter-inline {
+        display:none;
+    }
+}
+atom-text-editor::shadow.autocomplete-active .linter-highlight{
+        display:none;
+}
