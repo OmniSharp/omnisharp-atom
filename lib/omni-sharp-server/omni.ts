@@ -102,7 +102,7 @@ class Omni implements Rx.IDisposable {
                 this.request(editor, client => client.updatebuffer({}, { silent: true }));
             }, 1000)));
 
-            cd.add(editor.onDidSave(() => client => client.updatebuffer({ FromDisk: true }, { silent: true })));
+            cd.add(editor.onDidSave(() => this.request(editor, client => client.updatebuffer({ FromDisk: true }, { silent: true }))));
 
             cd.add(editor.onDidDestroy(() => {
                 cd.dispose();

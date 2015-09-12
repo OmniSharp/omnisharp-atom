@@ -5,6 +5,7 @@ var currentlyEnabled = false;
 import {dock} from "../atom/dock";
 import {CodeCheckOutputWindow, ICodeCheckOutputWindowProps} from '../views/codecheck-output-pane-view';
 import {DriverState} from "omnisharp-client";
+import {reloadWorkspace} from "./reload-workspace";
 
 class CodeCheck implements OmniSharp.IFeature {
     private disposable: Rx.CompositeDisposable;
@@ -94,13 +95,15 @@ class CodeCheck implements OmniSharp.IFeature {
 
         Omni.registerConfiguration(client => client
             .whenConnected()
-            .delay(2000)
+            .delay(1000)
             .subscribe(() => client.codecheck({ FileName: null })));
 
         this.disposable.add(atom.commands.add('atom-workspace', 'omnisharp-atom:code-check', () => {
-            Omni.clients.subscribe(client => {
-                client.whenConnected()
-                    .subscribe(() => client.codecheck({ FileName: null }));
+            reloadWorkspace.reloadWorkspace().subscribeOnCompleted(() => {
+                Omni.clients.subscribe(client => {
+                    client.whenConnected()
+                        .subscribe(() => client.codecheck({ FileName: null }));
+                });
             });
         }));
     }

@@ -61,6 +61,7 @@
         "./lib/omnisharp-atom/features/notification-handler.ts",
         "./lib/omnisharp-atom/features/package-restore.ts",
         "./lib/omnisharp-atom/features/project-lock.ts",
+        "./lib/omnisharp-atom/features/reload-workspace.ts",
         "./lib/omnisharp-atom/features/rename.ts",
         "./lib/omnisharp-atom/features/run-tests.ts",
         "./lib/omnisharp-atom/features/server-information.ts",

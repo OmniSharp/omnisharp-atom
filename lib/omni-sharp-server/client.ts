@@ -18,6 +18,7 @@ class Client extends OmnisharpClientV2 {
     public temporary: boolean = false;
     private _clientDisposable = new CompositeDisposable();
     private repository: Atom.GitRepository;
+
     constructor(options: ClientOptions) {
         super(options);
         this.configureClient();
