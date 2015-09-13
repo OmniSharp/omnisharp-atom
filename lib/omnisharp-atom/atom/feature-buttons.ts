@@ -156,7 +156,9 @@ class FeatureButtons implements OmniSharp.IFeature {
             },
             onMouseLeave: (e) => {
                 this.disposable.remove(tooltipDisposable);
-                tooltipDisposable.dispose();
+                if (tooltipDisposable) {
+                    tooltipDisposable.dispose();
+                }
             }
         });
 
