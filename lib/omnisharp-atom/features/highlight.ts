@@ -6,7 +6,7 @@ import {Observable, Subject, ReplaySubject, Scheduler, CompositeDisposable, Disp
 var AtomGrammar = require((<any>atom).config.resourcePath + "/node_modules/first-mate/lib/grammar.js");
 var Range: typeof TextBuffer.Range = <any>require('atom').Range;
 
-const DEBOUNCE_TIME = 240;
+const DEBOUNCE_TIME = 480/*240*/;
 
 class Highlight implements OmniSharp.IFeature {
     private disposable: Rx.CompositeDisposable;
@@ -131,7 +131,7 @@ class Highlight implements OmniSharp.IFeature {
             return editor.displayBuffer.tokenizedBuffer['_retokenizeLines'].apply(this, arguments);
         };
 
-        (<any>editor.displayBuffer.tokenizedBuffer).tokenizeInBackground = function() {
+        /*(<any>editor.displayBuffer.tokenizedBuffer).tokenizeInBackground = function() {
             if (!this.visible || this.pendingChunk || !this.isAlive())
                 return;
 
@@ -142,7 +142,7 @@ class Highlight implements OmniSharp.IFeature {
                     this.tokenizeNextChunk();
                 }
             });
-        };
+        };*/
 
         disposable.add(Disposable.create(() => {
             grammar.linesToFetch = [];
