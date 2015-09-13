@@ -136,12 +136,12 @@ class Highlight implements OmniSharp.IFeature {
                 return;
 
             this.pendingChunk = true;
-            defer(() => window.requestAnimationFrame(() => {
+            window.requestAnimationFrame(() => {
                 this.pendingChunk = false;
                 if (this.isAlive() && this.buffer.isAlive()) {
                     this.tokenizeNextChunk();
                 }
-            }));
+            });
         };
 
         disposable.add(Disposable.create(() => {

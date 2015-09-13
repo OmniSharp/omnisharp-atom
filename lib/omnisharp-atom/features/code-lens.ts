@@ -21,12 +21,7 @@ class CodeLens implements OmniSharp.IFeature {
     public activate() {
         this.disposable = new CompositeDisposable();
 
-        this.disposable.add(Omni.switchActiveEditor((editor, cd) => {
-            cd.add(editor.onDidDestroy(() => {
-                this.disposable.remove(cd);
-                cd.dispose();
-            }));
-
+        this.disposable.add(Omni.eachEditor((editor, cd) => {
             cd.add(Disposable.create(() => {
                 var markers = this.decorations.get(editor);
 
@@ -56,7 +51,7 @@ class CodeLens implements OmniSharp.IFeature {
                 .debounce(500)
                 .where(() => !editor.isDestroyed())
                 .flatMapLatest(() => this.updateCodeLens(editor))
-                .subscribe(() => { })
+                .subscribe()
             );
 
             cd.add(editor.getBuffer().onDidStopChanging(_.debounce(() => !subject.isDisposed && subject.onNext(null), 5000)));
@@ -230,10 +225,11 @@ export class Lens implements Rx.IDisposable {
 
     private _updateDecoration(isVisible: boolean) {
         if (this._decoration && this._element) {
+            var element = this._element;
             if (isVisible) {
-                read(() => this._element.style.display === 'none' && write(() => this._element.style.display = ''));
+                read(() => element.style.display === 'none' && write(() => element.style.display = ''));
             } else {
-                read(() => this._element.style.display !== 'none' && write(() => this._element.style.display = 'none'));
+                read(() => element.style.display !== 'none' && write(() => element.style.display = 'none'));
             }
         }
     }
