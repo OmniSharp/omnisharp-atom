@@ -61,9 +61,9 @@ class RunTests implements OmniSharp.IFeature {
     }
 
     private makeRequest(type: TestCommandType) {
-        Omni.request(client => client.gettestcontextPromise(client.makeDataRequest<OmniSharp.Models.TestCommandRequest>({
+        Omni.request(client => client.gettestcontextPromise({
             Type: <any>type
-        })));
+        }));
     }
 
     private executeTests(response: OmniSharp.Models.GetTestCommandResponse) {

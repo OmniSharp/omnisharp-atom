@@ -7,13 +7,12 @@ import {DriverState} from "omnisharp-client";
 import {ProjectViewModel} from "./view-model";
 
 // Time we wait to try and do our active switch tasks.
-const DEBOUNCE_TIMEOUT = 400;
-import raf from "../rafscheduler";
+const DEBOUNCE_TIMEOUT = 100;
 
 function wrapEditorObservable(observable: Observable<Atom.TextEditor>) {
     return observable
         .subscribeOn(Scheduler.timeout)
-        .observeOn(raf)
+        .observeOn(Scheduler.timeout)
         .debounce(DEBOUNCE_TIMEOUT)
         .where(editor => !editor || !editor.isDestroyed());
 }
@@ -32,12 +31,14 @@ class Omni implements Rx.IDisposable {
     private _activeConfigEditor = wrapEditorObservable(this._activeConfigEditorSubject)
         .shareReplay(1);
 
-    private _activeProject = wrapEditorObservable(Observable.combineLatest(this._activeEditorSubject, this._activeConfigEditorSubject, (editor, config) => editor || config || null))
+    private _activeEditorOrConfigEditor = wrapEditorObservable(Observable.combineLatest(this._activeEditorSubject, this._activeConfigEditorSubject, (editor, config) => editor || config || null));
+
+    private _activeProject = this._activeEditorOrConfigEditor
         .flatMap(editor => manager.getClientForEditor(editor)
             .flatMap(z => z.model.getProjectForEditor(editor)))
         .shareReplay(1);
 
-    private _activeFramework = wrapEditorObservable(Observable.combineLatest(this._activeEditorSubject, this._activeConfigEditorSubject, (editor, config) => editor || config || null))
+    private _activeFramework = this._activeEditorOrConfigEditor
         .flatMapLatest(editor => manager.getClientForEditor(editor)
             .flatMapLatest(z => z.model.getProjectForEditor(editor)))
         .flatMapLatest(project => project.observe.activeFramework.map(framework => ({ project, framework })))
@@ -84,6 +85,30 @@ class Omni implements Rx.IDisposable {
             // This will tell us when the editor is no longer an appropriate editor
             this._activeEditorSubject.onNext(null);
             this._activeConfigEditorSubject.onNext(null);
+        }));
+
+        this.disposable.add(this._editors.subscribe(editor => {
+            var cd = new CompositeDisposable();
+            // TODO: Update once rename/codeactions support optional workspace changes
+            //var omniChanges: { oldRange: TextBuffer.Range; newRange: TextBuffer.Range; oldText: string; newText: string; }[] = (<any>editor).__omniChanges__ = [];
+
+            /*cd.add(editor.getBuffer().onDidChange((change: { oldRange: TextBuffer.Range; newRange: TextBuffer.Range; oldText: string; newText: string; }) => {
+                //omniChanges.push(change);
+            }));*/
+
+            cd.add(editor.onDidStopChanging(_.debounce(() => {
+                /*if (omniChanges.length) {
+                }*/
+                this.request(editor, client => client.updatebuffer({}, { silent: true }));
+            }, 1000)));
+
+            cd.add(editor.onDidSave(() => this.request(editor, client => client.updatebuffer({ FromDisk: true }, { silent: true }))));
+
+            cd.add(editor.onDidDestroy(() => {
+                cd.dispose();
+            }));
+
+            this.disposable.add(cd);
         }));
 
         this.disposable.add(Disposable.create(() => {
@@ -251,7 +276,7 @@ class Omni implements Rx.IDisposable {
         }
 
         var clientCallback = (client: Client) => {
-            var r = callback(client);
+            var r = callback(client.withEditor(<any>editor));
             if (helpers.isPromise(r)) {
                 return Observable.fromPromise(<Rx.IPromise<T>>r);
             } else {
@@ -285,9 +310,11 @@ class Omni implements Rx.IDisposable {
     }
 
     public getClientForProject(project: ProjectViewModel) {
-        return Observable.from(manager.activeClients)
-            .where(solution => _.any(solution.model.projects, p => p === project))
-            .take(1);
+        return Observable.just(
+            _(manager.activeClients)
+            .filter(solution => _.any(solution.model.projects, p => p.name === project.name))
+            .first()
+        );
     }
 
     /**
@@ -321,14 +348,16 @@ class Omni implements Rx.IDisposable {
 
     public whenEditorConnected(editor: Atom.TextEditor) {
         return manager.getClientForEditor(editor)
-            .flatMap(solution => solution.state.startWith(solution.currentState))
-            .where(x => x === DriverState.Connected)
-            .take(1)
+            .flatMap(solution => solution.whenConnected())
             .map(z => editor);
     }
 
     public get activeConfigEditor() {
         return this._activeConfigEditor;
+    }
+
+    public get activeEditorOrConfigEditor() {
+        return this._activeEditorOrConfigEditor;
     }
 
     public get activeProject() {
@@ -345,6 +374,40 @@ class Omni implements Rx.IDisposable {
 
     public get configEditors() {
         return this._configEditors;
+    }
+
+    public eachEditor(callback: (editor: Atom.TextEditor, cd: CompositeDisposable) => void): Rx.IDisposable {
+        var outerCd = new CompositeDisposable();
+        outerCd.add(this._editors.subscribe(editor => {
+            var cd = new CompositeDisposable();
+            outerCd.add(cd);
+
+            cd.add(editor.onDidDestroy((() => {
+                outerCd.remove(cd);
+                cd.dispose();
+            })));
+
+            callback(editor, cd);
+        }));
+
+        return outerCd;
+    }
+
+    public eachConfigEditor(callback: (editor: Atom.TextEditor, cd: CompositeDisposable) => void): Rx.IDisposable {
+        var outerCd = new CompositeDisposable();
+        outerCd.add(this._configEditors.subscribe(editor => {
+            var cd = new CompositeDisposable();
+            outerCd.add(cd);
+
+            cd.add(editor.onDidDestroy((() => {
+                outerCd.remove(cd);
+                cd.dispose();
+            })));
+
+            callback(editor, cd);
+        }));
+
+        return outerCd;
     }
 
     public registerConfiguration(callback: (client: Client) => void) {
@@ -382,8 +445,6 @@ function makeOpener(): Rx.IDisposable {
         return manager.activeClient
             .take(1)
             .flatMap(issueRequest)
-        //.concat(..._.map(manager.activeClients, issueRequest))
-        //.take(1)
             .map(setupEditor)
             .toPromise();
     }

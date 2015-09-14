@@ -18,6 +18,7 @@ class Client extends OmnisharpClientV2 {
     public temporary: boolean = false;
     private _clientDisposable = new CompositeDisposable();
     private repository: Atom.GitRepository;
+
     constructor(options: ClientOptions) {
         super(options);
         this.configureClient();
@@ -42,7 +43,7 @@ class Client extends OmnisharpClientV2 {
     }
 
     public connect(options?) {
-        if (this.currentState === DriverState.Connected || this.currentState === DriverState.Connecting || this.currentState === DriverState.Error) return;
+        if (this.currentState === DriverState.Connected || this.currentState === DriverState.Connecting) return;
         super.connect(options);
 
         this.log("Starting OmniSharp server (pid:" + this.id + ")");
@@ -62,44 +63,6 @@ class Client extends OmnisharpClientV2 {
         this._clientDisposable.dispose();
     }
 
-    public getEditorContext(editor: Atom.TextEditor): OmniSharp.Models.Request {
-        editor = editor || atom.workspace.getActiveTextEditor();
-        if (!editor) {
-            return;
-        }
-        var marker = editor.getCursorBufferPosition();
-        var buffer = editor.getBuffer().getLines().join('\n');
-        return {
-            Column: marker.column,
-            FileName: editor.getURI(),
-            Line: marker.row,
-            Buffer: buffer
-        };
-    }
-
-    public makeRequest(editor?: Atom.TextEditor, buffer?: TextBuffer.TextBuffer) {
-        editor = editor || atom.workspace.getActiveTextEditor();
-        // TODO: update and add to typings.
-        if (_.has(editor, 'alive') && !editor.alive) {
-            return <OmniSharp.Models.Request>{ abort: true };
-        }
-        buffer = buffer || editor.getBuffer();
-
-        var bufferText = buffer.getLines().join('\n');
-
-        var marker = editor.getCursorBufferPosition();
-        return <OmniSharp.Models.Request>{
-            Column: marker.column,
-            FileName: editor.getURI(),
-            Line: marker.row,
-            Buffer: bufferText
-        };
-    }
-
-    public makeDataRequest<T>(data: T, editor?: Atom.TextEditor, buffer?: TextBuffer.TextBuffer) {
-        return <T>_.extend(data, this.makeRequest(editor, buffer));
-    }
-
     private configureClient() {
         this.logs = this.events.map(event => ({
             message: event.Body && event.Body.Message || event.Event || '',
@@ -117,16 +80,65 @@ class Client extends OmnisharpClientV2 {
         }));
     }
 
+    private _currentEditor: Atom.TextEditor;
+    public withEditor(editor: Atom.TextEditor) {
+        this._currentEditor = editor;
+        return this;
+    }
+
+    private static _regex = new RegExp(String.fromCharCode(0xFFFD), 'g');
+    private _fixupRequest<TRequest, TResponse>(action: string, request: TRequest, cb: () => Rx.Observable<TResponse>) {
+        // Only send changes for requests that really need them.
+        if (this._currentEditor && _.isObject(request)) {
+            var editor = this._currentEditor;
+
+            var marker = editor.getCursorBufferPosition();
+            _.defaults(request, { Column: marker.column, Line: marker.row, FileName: editor.getURI(), Buffer: editor.getBuffer().getLines().join('\n') });
+            /*
+            TODO: Update once rename/code actions don't apply changes to the workspace
+            var omniChanges: { oldRange: { start: TextBuffer.Point, end: TextBuffer.Point }; newRange: { start: TextBuffer.Point, end: TextBuffer.Point }; oldText: string; newText: string; }[] = (<any>editor).__omniChanges__ || [];
+            var computedChanges: OmniSharp.Models.LinePositionSpanTextChange[];
+
+            if (_.any(['goto', 'navigate', 'find', 'package'], x => _.startsWith(action, x))) {
+                computedChanges = null;
+            } else {
+                computedChanges = omniChanges.map(change => <OmniSharp.Models.LinePositionSpanTextChange>{
+                    NewText: change.newText,
+                    StartLine: change.oldRange.start.row,
+                    StartColumn: change.oldRange.start.column,
+                    EndLine: change.oldRange.end.row,
+                    EndColumn: change.oldRange.end.column
+                });
+            }
+
+            omniChanges.splice(0, omniChanges.length);
+            _.defaults(request, { Changes: computedChanges });
+            */
+        }
+
+        if (request['Buffer']) {
+            request['Buffer'] = request['Buffer'].replace(Client._regex, '');
+        }
+
+        return cb();
+    }
+
     public request<TRequest, TResponse>(action: string, request?: TRequest, options?: OmniSharp.RequestOptions): Rx.Observable<TResponse> {
-        // Custom property that we set inside make request if the editor is no longer active.
-        if (request['abort']) {
-            return Observable.empty<TResponse>();
+        if (this._currentEditor) {
+            var editor = this._currentEditor;
+            this._currentEditor = null;
+            // TODO: update and add to typings.
+            if (editor.isDestroyed()) {
+                return Observable.empty<TResponse>();
+            }
         }
 
         var tempR: OmniSharp.Models.Request = request;
         if (tempR && _.endsWith(tempR.FileName, '.json')) {
             tempR.Buffer = null;
+            tempR.Changes = null;
         }
+
         return super.request<TRequest, TResponse>(action, request, options);
     }
 
@@ -144,6 +156,30 @@ class Client extends OmnisharpClientV2 {
             }));
         }
     }
+
+    public whenConnected() {
+        return this.state.startWith(this.currentState)
+            .where(x => x === DriverState.Connected)
+            .take(1);
+    }
 }
 
 export = Client;
+
+for (var key in Client.prototype) {
+    if (_.endsWith(key, 'Promise')) {
+        (function() {
+            var action = key.replace(/Promise$/, '');
+            var promiseMethod = Client.prototype[key];
+            var observableMethod = Client.prototype[action];
+
+            Client.prototype[key] = function(request, options) {
+                return this._fixupRequest(action, request, () => promiseMethod.call(this, request, options));
+            };
+
+            Client.prototype[action] = function(request, options) {
+                return this._fixupRequest(action, request, () => observableMethod.call(this, request, options));
+            };
+        })();
+    }
+}

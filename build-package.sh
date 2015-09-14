@@ -14,7 +14,7 @@ ATOM_PATH=./atom ./atom/Atom.app/Contents/Resources/app/atom.sh -v
 
 echo "Downloading package dependencies..."
 atom/Atom.app/Contents/Resources/app/apm/node_modules/.bin/apm clean
-atom/Atom.app/Contents/Resources/app/apm/node_modules/.bin/apm install --verbose
+atom/Atom.app/Contents/Resources/app/apm/node_modules/.bin/apm install
 
 TEST_PACKAGES="${APM_TEST_PACKAGES:=none}"
 

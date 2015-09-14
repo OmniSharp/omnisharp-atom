@@ -34,9 +34,9 @@ class FindSymbolsView extends OmniSelectListView {
 
     public onFilter(filter : string) : void {
         Omni.request(client => {
-            var request = <OmniSharp.Models.FindSymbolsRequest>client.makeRequest();
-            request.Filter = filter;
-            return client.findsymbolsPromise(request);
+            return client.findsymbolsPromise({
+                Filter: filter
+            });
         });
     }
 

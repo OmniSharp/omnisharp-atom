@@ -30,11 +30,10 @@ declare module OmniSharp {
     }
 
     interface ExtendApi extends OmniSharp.Api.V2 {
-        makeRequest(editor?: Atom.TextEditor, buffer?: TextBuffer.TextBuffer): OmniSharp.Models.Request;
-        makeDataRequest<T>(data: T, editor?: Atom.TextEditor, buffer?: TextBuffer.TextBuffer): T;
         v1: OmniSharp.Api.V1;
         request<TRequest, TResponse>(path: string, request: TRequest): Rx.Observable<TResponse>;
         path: string;
+        whenConnected(): Rx.Observable<any>;
     }
 
     interface IProjectViewModel {
@@ -46,4 +45,18 @@ declare module OmniSharp {
         commands: { [key: string]: string };
     }
 
+}
+interface WebComponent {
+    createdCallback?: () => void;
+    attachedCallback?: () => void;
+    detachedCallback?: () => void;
+    attributeChangedCallback?: (attrName: string, oldVal: any, newVal: any) => void;
+}
+
+declare module "fastdom" {
+    export function read(cb: Function): any;
+    export function write(cb: Function): any;
+    export function defer(frames: number, cb: Function): any;
+    export function defer(cb: Function): any;
+    export function clear(caller: any): void;
 }

@@ -1,9 +1,11 @@
 import _ = require('lodash');
-import {CompositeDisposable, Observable, ReplaySubject} from "rx";
+import {CompositeDisposable, Observable, ReplaySubject, Subject, Disposable} from "rx";
 import Omni = require('../../omni-sharp-server/omni');
 var currentlyEnabled = false;
 import {dock} from "../atom/dock";
 import {CodeCheckOutputWindow, ICodeCheckOutputWindowProps} from '../views/codecheck-output-pane-view';
+import {DriverState} from "omnisharp-client";
+import {reloadWorkspace} from "./reload-workspace";
 
 class CodeCheck implements OmniSharp.IFeature {
     private disposable: Rx.CompositeDisposable;
@@ -16,6 +18,7 @@ class CodeCheck implements OmniSharp.IFeature {
     public displayDiagnostics: OmniSharp.Models.DiagnosticLocation[] = [];
     public selectedIndex: number = 0;
     private scrollTop: number = 0;
+    private _editorSubjects = new WeakMap<Atom.TextEditor, () => Rx.Observable<OmniSharp.Models.DiagnosticLocation[]>>();
 
     public activate() {
         this.disposable = new CompositeDisposable();
@@ -44,16 +47,34 @@ class CodeCheck implements OmniSharp.IFeature {
             Omni.navigateTo(this.displayDiagnostics[this.selectedIndex]);
         }));
 
-        this.disposable.add(Omni.editors.subscribe((editor: Atom.TextEditor) => {
-            var disposer = new CompositeDisposable();
+        this.disposable.add(Omni.eachEditor((editor, cd) => {
+            var subject = new Subject<any>();
 
-            disposer.add(editor.getBuffer().onDidSave(() => this.doCodeCheck(editor)));
-            disposer.add(editor.getBuffer().onDidReload(() => this.doCodeCheck(editor)));
-            disposer.add(editor.getBuffer().onDidDestroy(() => {
-                this.disposable.remove(disposer);
-                disposer.dispose();
-            }));
+            var o = subject
+                .debounce(500)
+                .where(() => !editor.isDestroyed())
+                .flatMap(() => this._doCodeCheck(editor))
+                .map(response => response.QuickFixes || [])
+                .share();
+
+            this._editorSubjects.set(editor, () => {
+                var result = o.take(1);
+                subject.onNext(null);
+                return result;
+            });
+
+            cd.add(o.subscribe());
+
+            cd.add(editor.getBuffer().onDidSave(() => !subject.isDisposed && subject.onNext(null)));
+            cd.add(editor.getBuffer().onDidReload(() => !subject.isDisposed && subject.onNext(null)));
+            cd.add(editor.getBuffer().onDidStopChanging(() => !subject.isDisposed && subject.onNext(null)));
+            cd.add(Disposable.create(() => this._editorSubjects.delete(editor)));
         }));
+
+        // Linter is doing this for us!
+        /*this.disposable.add(Omni.switchActiveEditor((editor, cd) => {
+            cd.add(Omni.whenEditorConnected(editor).subscribe(() => this.doCodeCheck(editor)));
+        }));*/
 
         this.disposable.add(this.observe.diagnostics
             .subscribe(diagnostics => {
@@ -72,7 +93,19 @@ class CodeCheck implements OmniSharp.IFeature {
             codeCheck: this
         }));
 
-        Omni.registerConfiguration(client => client.codecheck({}));
+        Omni.registerConfiguration(client => client
+            .whenConnected()
+            .delay(1000)
+            .subscribe(() => client.codecheck({ FileName: null })));
+
+        this.disposable.add(atom.commands.add('atom-workspace', 'omnisharp-atom:code-check', () => {
+            reloadWorkspace.reloadWorkspace().subscribeOnCompleted(() => {
+                Omni.clients.subscribe(client => {
+                    client.whenConnected()
+                        .subscribe(() => client.codecheck({ FileName: null }));
+                });
+            });
+        }));
     }
 
     private filterOnlyWarningsAndErrors(quickFixes): OmniSharp.Models.DiagnosticLocation[] {
@@ -150,16 +183,15 @@ class CodeCheck implements OmniSharp.IFeature {
         this.disposable.dispose();
     }
 
-    public doCodeCheck = _.debounce((editor: Atom.TextEditor) => {
-        Omni.request(editor, client => {
-            var request = <OmniSharp.Models.FormatRangeRequest>client.makeRequest(editor);
-            return client.updatebufferPromise(request)
-                .then(() => {
-                    request.FileName = null;
-                    Omni.request(editor, client => client.codecheck(request));
-                });
-        });
-    }, 500);
+    private _doCodeCheck(editor: Atom.TextEditor) {
+        return Omni.request(editor, client => client.codecheck({}));
+    };
+
+    public doCodeCheck(editor: Atom.TextEditor) {
+        if (!this._editorSubjects.has(editor)) return Observable.just<OmniSharp.Models.DiagnosticLocation[]>([]);
+        var callback = this._editorSubjects.get(editor);
+        return callback();
+    }
 
     public required = true;
     public title = 'Diagnostics';

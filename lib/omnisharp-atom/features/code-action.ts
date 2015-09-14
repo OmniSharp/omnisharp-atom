@@ -1,5 +1,5 @@
 import _ = require('lodash');
-import {CompositeDisposable, Subject, Observable} from "rx";
+import {CompositeDisposable, Subject, Observable, Scheduler} from "rx";
 import Omni = require('../../omni-sharp-server/omni')
 import SpacePen = require('atom-space-pen-views');
 import Changes = require('../services/apply-changes');
@@ -52,7 +52,7 @@ class CodeAction implements OmniSharp.IFeature {
 
                 var range = editor.getSelectedBufferRange();
 
-                subscription = Omni.request(client => client.getcodeactions(this.getRequest(client), { silent: true }))
+                subscription = Omni.request(editor, client => client.getcodeactions(this.getRequest(client), { silent: true }))
                     .subscribe(response => {
                         if (response.CodeActions.length > 0) {
                             if (marker) {
@@ -67,10 +67,10 @@ class CodeAction implements OmniSharp.IFeature {
                     });
             };
 
-            var update = _.debounce((pos: TextBuffer.Point) => {
+            var update = (pos: TextBuffer.Point) => {
                 if (subscription) subscription.dispose();
                 makeLightbulbRequest(pos);
-            }, 400);
+            };
 
             var onDidChangeCursorPosition = new Subject<{ oldBufferPosition: TextBuffer.Point; oldScreenPosition: TextBuffer.Point; newBufferPosition: TextBuffer.Point; newScreenPosition: TextBuffer.Point; textChanged: boolean; cursor: Atom.Cursor; }>();
             cd.add(onDidChangeCursorPosition);
@@ -78,12 +78,13 @@ class CodeAction implements OmniSharp.IFeature {
             var onDidStopChanging = new Subject<any>();
             cd.add(onDidStopChanging);
 
-            cd.add(Observable.combineLatest(onDidChangeCursorPosition.debounce(100), onDidStopChanging.debounce(100), (cursor, changing) => cursor)
-                .debounce(200)
+            cd.add(Observable.combineLatest(onDidChangeCursorPosition, onDidStopChanging, (cursor, changing) => cursor)
+                .observeOn(Scheduler.timeout)
+                .debounce(1000)
                 .subscribe(cursor => update(cursor.newBufferPosition)));
 
-            cd.add(editor.onDidStopChanging(() => !onDidStopChanging.isDisposed && onDidStopChanging.onNext(true)));
-            cd.add(editor.onDidChangeCursorPosition(e => {
+            cd.add(editor.onDidStopChanging(_.debounce(() => !onDidStopChanging.isDisposed && onDidStopChanging.onNext(true), 1000)));
+            cd.add(editor.onDidChangeCursorPosition(_.debounce(e => {
                 var oldPos = e.oldBufferPosition;
                 var newPos = e.newBufferPosition;
 
@@ -97,7 +98,7 @@ class CodeAction implements OmniSharp.IFeature {
                 }
 
                 !onDidChangeCursorPosition.isDisposed && onDidChangeCursorPosition.onNext(e);
-            }));
+            }, 1000)));
         }));
     }
 
@@ -106,7 +107,7 @@ class CodeAction implements OmniSharp.IFeature {
     private getRequest(client: OmniSharp.ExtendApi, codeAction?: string) {
         var editor = atom.workspace.getActiveTextEditor();
         var range = <any>editor.getSelectedBufferRange();
-        var request = client.makeDataRequest<OmniSharp.Models.V2.RunCodeActionRequest>({
+        var request = <OmniSharp.Models.V2.RunCodeActionRequest>{
             WantsTextChanges: true,
             Selection: {
                 Start: {
@@ -118,7 +119,7 @@ class CodeAction implements OmniSharp.IFeature {
                     Column: range.end.column
                 }
             }
-        });
+        };
 
         if (codeAction !== undefined) {
             request.Identifier = codeAction;

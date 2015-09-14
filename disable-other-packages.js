@@ -13,7 +13,7 @@ season.writeFileSync(path.join(ATOM_HOME, 'config.cson.bak'), config);
 
 var disabledPackages = config['*'].core.disabledPackages;
 
-var requiredPackages = Object.keys(require('./package.json')['package-dependencies']);
+var requiredPackages = require('./package.json')['package-deps'];
 fs.readdirSync(path.join(ATOM_HOME, 'packages')).forEach(function(package) {
     if (requiredPackages.indexOf(package) === -1 && disabledPackages.indexOf(package) === -1 && package !== "atom-typescript" && package !== "omnisharp-atom") {
         disabledPackages.push(package);

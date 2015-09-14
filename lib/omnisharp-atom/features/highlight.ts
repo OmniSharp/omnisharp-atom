@@ -1,10 +1,12 @@
 import Omni = require('../../omni-sharp-server/omni');
 import {DriverState} from "omnisharp-client";
 import OmniSharpAtom = require('../omnisharp-atom');
-import {each, indexOf, extend, has, map, flatten, contains, any, range, remove, pull, find, defer, startsWith, trim, isArray, chain, unique, set, findIndex, delay, filter, all, isEqual, min} from "lodash";
+import {each, indexOf, extend, has, map, flatten, contains, any, range, remove, pull, find, defer, startsWith, trim, isArray, chain, unique, set, findIndex, delay, filter, all, isEqual, min, debounce} from "lodash";
 import {Observable, Subject, ReplaySubject, Scheduler, CompositeDisposable, Disposable} from "rx";
 var AtomGrammar = require((<any>atom).config.resourcePath + "/node_modules/first-mate/lib/grammar.js");
 var Range: typeof TextBuffer.Range = <any>require('atom').Range;
+
+const DEBOUNCE_TIME = 240/*240*/;
 
 class Highlight implements OmniSharp.IFeature {
     private disposable: Rx.CompositeDisposable;
@@ -14,8 +16,7 @@ class Highlight implements OmniSharp.IFeature {
         this.disposable = new CompositeDisposable();
         this.editors = [];
 
-        this.disposable.add(Omni.editors
-            .subscribe(editor => this.setupEditor(editor)));
+        this.disposable.add(Omni.eachEditor((editor, cd) => this.setupEditor(editor, cd)));
 
         this.disposable.add(
             isObserveRetokenizing(
@@ -35,20 +36,11 @@ class Highlight implements OmniSharp.IFeature {
             isObserveRetokenizing(
                 Omni.listener.observeHighlight
                     .map(z => ({ editor: find(this.editors, editor => editor.getPath() === z.request.FileName), request: z.request, response: z.response }))
+                    .flatMap(z => Omni.activeEditor.take(1).where(x => x !== z.editor).map(x => z))
             )
                 .subscribe(({editor, request, response}) => {
                     editor.getGrammar && (<any>editor.getGrammar()).setResponses(response.Highlights, request.ProjectNames.length > 0);
                 }));
-
-        this.disposable.add(isObserveRetokenizing(
-            Omni.listener.observeHighlight
-                .map(z => ({ editor: find(atom.workspace.getTextEditors(), editor => editor.getPath() == z.request.FileName), request: z.request, response: z.response }))
-                .flatMap(z => Omni.activeEditor.take(1).where(x => x === z.editor).map(x => z))
-        )
-            .debounce(400)
-            .subscribe(({request, response, editor}) => {
-                editor.displayBuffer.tokenizedBuffer['silentRetokenizeLines']();
-            }));
 
         this.disposable.add(isEditorObserveRetokenizing(
             Observable.merge(Omni.activeEditor,
@@ -58,7 +50,7 @@ class Highlight implements OmniSharp.IFeature {
                         .map(z => ({ editor: find(this.editors, editor => editor.getPath() === z.request.FileName), request: z.request, response: z.response }))
                         .take(1))
                     .flatMap(z => Omni.activeEditor))
-                .debounce(20)
+                .debounce(DEBOUNCE_TIME)
                 .where(z => !!z)
         )
             .subscribe(editor => {
@@ -70,12 +62,10 @@ class Highlight implements OmniSharp.IFeature {
         this.disposable && this.disposable.dispose();
     }
 
-    private setupEditor(editor: Atom.TextEditor) {
+    private setupEditor(editor: Atom.TextEditor, disposable: CompositeDisposable) {
         if (editor['_oldGrammar'] || !editor.getGrammar) return;
 
         this.editors.push(editor);
-
-        var disposable = new CompositeDisposable();
         this.disposable.add(disposable);
 
         if (!editor['_oldGrammar'])
@@ -88,6 +78,8 @@ class Highlight implements OmniSharp.IFeature {
             editor.displayBuffer.tokenizedBuffer['_markTokenizationComplete'] = editor.displayBuffer.tokenizedBuffer.markTokenizationComplete;
         if (!editor.displayBuffer.tokenizedBuffer['_retokenizeLines'])
             editor.displayBuffer.tokenizedBuffer['_retokenizeLines'] = editor.displayBuffer.tokenizedBuffer.retokenizeLines;
+        if (!editor.displayBuffer.tokenizedBuffer['_tokenizeInBackground'])
+            editor.displayBuffer.tokenizedBuffer['_tokenizeInBackground'] = editor.displayBuffer.tokenizedBuffer.tokenizeInBackground;
         if (!editor.displayBuffer.tokenizedBuffer['_chunkSize'])
             editor.displayBuffer.tokenizedBuffer['chunkSize'] = 20;
 
@@ -102,7 +94,7 @@ class Highlight implements OmniSharp.IFeature {
         };
 
         if (!(<any>editor.displayBuffer.tokenizedBuffer).silentRetokenizeLines) {
-            (<any>editor.displayBuffer.tokenizedBuffer).silentRetokenizeLines = function() {
+            (<any>editor.displayBuffer.tokenizedBuffer).silentRetokenizeLines = debounce(function() {
                 if (grammar.isObserveRetokenizing)
                     grammar.isObserveRetokenizing.onNext(false);
                 var event, lastRow;
@@ -115,7 +107,7 @@ class Highlight implements OmniSharp.IFeature {
                     this.invalidateRow(0);
                 }
                 this.fullyTokenized = false;
-            };
+            }, DEBOUNCE_TIME);
         }
 
         (<any>editor.displayBuffer.tokenizedBuffer).markTokenizationComplete = function() {
@@ -130,30 +122,36 @@ class Highlight implements OmniSharp.IFeature {
             return editor.displayBuffer.tokenizedBuffer['_retokenizeLines'].apply(this, arguments);
         };
 
+        (<any>editor.displayBuffer.tokenizedBuffer).tokenizeInBackground = function() {
+            if (!this.visible || this.pendingChunk || !this.isAlive())
+                return;
+
+            this.pendingChunk = true;
+            window.requestAnimationFrame(() => {
+                this.pendingChunk = false;
+                if (this.isAlive() && this.buffer.isAlive()) {
+                    this.tokenizeNextChunk();
+                }
+            });
+        };
+
         disposable.add(Disposable.create(() => {
             grammar.linesToFetch = [];
             grammar.responses.clear();
             editor.displayBuffer.tokenizedBuffer.retokenizeLines();
-            //editor.setGrammar = editor['_setGrammar'];
-            //editor.displayBuffer.tokenizedBuffer.buildTokenizedLineForRowWithText = editor.displayBuffer.tokenizedBuffer['_buildTokenizedLineForRowWithText'];
-            //editor.displayBuffer.tokenizedBuffer.markTokenizationComplete = editor.displayBuffer.tokenizedBuffer['_markTokenizationComplete'];
-            //editor.displayBuffer.tokenizedBuffer.retokenizeLines = editor.displayBuffer.tokenizedBuffer['_retokenizeLines'];
-            //editor.displayBuffer.tokenizedBuffer.chunkSize = editor.displayBuffer.tokenizedBuffer['_chunkSize'];
-            //editor.setGrammar(editor['_oldGrammar']);
+            delete editor['_oldGrammar'];
         }));
 
         this.disposable.add(editor.onDidDestroy(() => {
-            disposable.dispose();
-            this.disposable.remove(disposable);
             pull(this.editors, editor);
         }));
 
         var issueRequest = new Subject<boolean>();
 
         disposable.add(issueRequest
-            .debounce(200)
+            .debounce(DEBOUNCE_TIME)
             .flatMap(z => Omni.getProject(editor).map(z => z.activeFramework.Name === 'all' ? '' : (z.name + '+' + z.activeFramework.ShortName)).timeout(200, Observable.just('')))
-            .subscribe((framework) => {
+            .flatMapLatest((framework) => {
                 var projects = [];
                 if (framework)
                     projects = [framework];
@@ -162,20 +160,24 @@ class Highlight implements OmniSharp.IFeature {
                 if (!linesToFetch || !linesToFetch.length)
                     linesToFetch = [];
 
-                Omni.request(editor, client => client.highlight(
-                    client.makeDataRequest<OmniSharp.Models.HighlightRequest>({
-                        FileName: editor.getPath(),
-                        ProjectNames: projects,
-                        Lines: <any>linesToFetch,
-                        ExcludeClassifications: [
-                            OmniSharp.Models.HighlightClassification.Comment,
-                            OmniSharp.Models.HighlightClassification.String,
-                            OmniSharp.Models.HighlightClassification.Punctuation,
-                            OmniSharp.Models.HighlightClassification.Operator,
-                            OmniSharp.Models.HighlightClassification.Keyword
-                        ]
-                    }, editor)));
-            }));
+                return Omni.request(editor, client => client.highlight({
+                    ProjectNames: projects,
+                    Lines: <any>linesToFetch,
+                    ExcludeClassifications: [
+                        OmniSharp.Models.HighlightClassification.Comment,
+                        OmniSharp.Models.HighlightClassification.String,
+                        OmniSharp.Models.HighlightClassification.Punctuation,
+                        OmniSharp.Models.HighlightClassification.Operator,
+                        OmniSharp.Models.HighlightClassification.Keyword
+                    ]
+                })).map(z => ({ projects, response: z }));
+            })
+            .subscribe(ctx => {
+                var {response, projects} = ctx;
+                editor.getGrammar && (<any>editor.getGrammar()).setResponses(response.Highlights, projects.length > 0);
+                editor.displayBuffer.tokenizedBuffer['silentRetokenizeLines']();
+            })
+        );
 
         disposable.add(Omni.getProject(editor)
             .flatMap(z => z.observe.activeFramework).subscribe(() => {
@@ -191,7 +193,9 @@ class Highlight implements OmniSharp.IFeature {
             issueRequest.onNext(true);
         }));
 
-        issueRequest.onNext(true);
+        disposable.add(Omni.whenEditorConnected(editor).delay(1000).subscribe(() => {
+            issueRequest.onNext(true);
+        }));
     }
 
     public required = false;

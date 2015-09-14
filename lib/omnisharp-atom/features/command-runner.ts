@@ -58,9 +58,7 @@ class CommandRunner implements OmniSharp.IFeature {
                 }
             }));
 
-        this.disposable.add(Omni.editors.subscribe(editor => {
-            var cd = new CompositeDisposable();
-
+        this.disposable.add(Omni.eachEditor((editor, cd) => {
             cd.add(editor.onDidSave(() => restart.onNext(editor)));
             cd.add(editor.getBuffer().onDidReload(() => restart.onNext(editor)));
         }));
@@ -142,7 +140,7 @@ class CommandRunner implements OmniSharp.IFeature {
 }
 
 export function getDnxExe(solution: Client) {
-    return solution.model.runtime + (win32 ? '/bin/dnx.exe' : '/bin/dnx');
+    return solution.model.runtimePath + (win32 ? '/bin/dnx.exe' : '/bin/dnx');
 }
 
 export class RunProcess {
@@ -163,8 +161,7 @@ export class RunProcess {
 
     public start() {
         var solution = Omni.getClientForProject(this.project)
-            .map(getDnxExe)
-            .map(normalize)
+            .map(x => normalize(getDnxExe(x)))
             .tapOnNext(() => dock.selectWindow(this.id))
             .subscribe((runtime) => this.bootRuntime(runtime));
 
