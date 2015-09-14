@@ -267,7 +267,7 @@ class SolutionManager {
             // No text editor found
             return Observable.empty<Solution>();
 
-        var isCsx = _.endsWith(path, '.csx');
+        var isCsx = _.endsWith(path, '.csx') || _.endsWith(path, '.cake');
 
         var location = path;
         if (!location) {
@@ -297,7 +297,7 @@ class SolutionManager {
             // No text editor found
             return Observable.empty<Solution>();
 
-        var isCsx = editor.getGrammar().name === "C# Script File" || _.endsWith(editor.getPath(), '.csx');
+        var isCsx = editor.getGrammar().name === "C# Script File" || _.endsWith(editor.getPath(), '.csx') || _.endsWith(editor.getPath(), '.cake');
 
         var p = (<any>editor).omniProject;
         // Not sure if we should just add properties onto editors...
