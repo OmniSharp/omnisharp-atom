@@ -171,7 +171,7 @@ export class Lens implements Rx.IDisposable {
             .observeOn(Scheduler.timeout)
             .where(x => !!x)
             .flatMap(() => Omni.request(this._editor, solution =>
-                solution.findusages({ FileName: this._path, Column: this._member.Column + 1, Line: this._member.Line }, { silent: true })))
+                solution.findusages({ FileName: this._path, Column: this._member.Column + 1, Line: this._member.Line, Buffer: null, Changes: null }, { silent: true })))
             .where(x => x && x.QuickFixes && !!x.QuickFixes.length)
             .map(x => x && x.QuickFixes && x.QuickFixes.length - 1)
             .share();
