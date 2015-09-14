@@ -60,6 +60,7 @@ export class ViewModel implements Rx.IDisposable {
     public get state() { return this._client.currentState };
     public packageSources: string[] = [];
     public runtime = '';
+    public runtimePath: string;
     public projects: ProjectViewModel[] = [];
     private _projectAddedStream = new Subject<ProjectViewModel>();
     private _projectRemovedStream = new Subject<ProjectViewModel>();
@@ -320,6 +321,7 @@ export class ViewModel implements Rx.IDisposable {
 
         this._disposable.add(workspace.subscribe(system => {
             this.runtime = basename(system.RuntimePath);
+            this.runtimePath = system.RuntimePath;
 
             _.each(system.Projects, p => {
                 var project = new ProjectViewModel(p.Name, p.Path, _client.path, p.Frameworks, p.Configurations, p.Commands, p.SourceFiles);

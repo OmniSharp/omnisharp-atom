@@ -310,9 +310,11 @@ class Omni implements Rx.IDisposable {
     }
 
     public getClientForProject(project: ProjectViewModel) {
-        return Observable.from(manager.activeClients)
-            .where(solution => _.any(solution.model.projects, p => p === project))
-            .take(1);
+        return Observable.just(
+            _(manager.activeClients)
+            .filter(solution => _.any(solution.model.projects, p => p.name === project.name))
+            .first()
+        );
     }
 
     /**
