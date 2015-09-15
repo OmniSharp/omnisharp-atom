@@ -49,7 +49,7 @@ class Omni implements Rx.IDisposable {
     public get isOff() { return this._isOff; }
     public get isOn() { return !this.isOff; }
 
-    private _supportedExtensions = ['.cs', '.csx', '.cake'];
+    private _supportedExtensions = ['.cs', '.csx'/*, '.cake'*/];
     public get supportedExtensions() { return this._supportedExtensions; }
 
     public activate() {
@@ -181,11 +181,26 @@ class Omni implements Rx.IDisposable {
             }));
 
         disposable.add(atom.workspace.observeTextEditors((editor: Atom.TextEditor) => {
-            editors.push(editor);
-            !subject.isDisposed && subject.onNext(editor);
+            var cb = () => {
+                var p = editor.getPath();
+                if (_.any(extensions, ext => _.endsWith(editor.getPath(), ext))) {
+                    editors.push(editor);
+                    !subject.isDisposed && subject.onNext(editor);
 
-            // pull old editors.
-            disposable.add(editor.onDidDestroy(() => _.pull(editors, editor)));
+                    // pull old editors.
+                    disposable.add(editor.onDidDestroy(() => _.pull(editors, editor)));
+                }
+            };
+
+            var path = editor.getPath();
+            if (!path) {
+                var disposer = editor.onDidChangePath(() => {
+                    cb();
+                    disposer.dispose();
+                });
+            } else {
+                cb();
+            }
         }));
 
         disposable.add(subject);

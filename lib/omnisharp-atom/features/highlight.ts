@@ -463,17 +463,13 @@ Grammar.prototype.getCsTokensForLine = function(highlights: OmniSharp.Models.Hig
 
 var getIdForScope = (function() {
     var ids: { [key: string]: { [key: string]: number }; } = {};
-    var extensionMap : { [key: string]: string; } = {};
     var grammars: any = {};
 
     function buildScopesForGrammar(grammarName: string) {
         var grammar = find(atom.grammars.getGrammars(), grammar => grammar.name === grammarName);
         if (!grammar) return;
 
-        var extension = find(Omni.supportedExtensions, ext => any((<any>grammar).fileTypes, ft => trimLeft(extension) === ft));
-
-        ids[grammar.name] = ids[extension] = {};
-        extensionMap[grammar.name] = extension;
+        ids[grammar.name] = {};
         grammars[grammar.name] = grammar;
 
         each(grammar.registry.scopesById, (value: string, key: any) => { ids[grammar.name][value] = +key; });
@@ -491,15 +487,8 @@ var getIdForScope = (function() {
     }
 
     (<any>method).end = (scope: number) => +scope - 1;
-    (<any>method).extension = (grammar: string) => {
-        if (!extensionMap[grammar]) {
-            buildScopesForGrammar(grammar);
-        }
 
-        return extensionMap[grammar];
-    };
-
-    return <{ (grammar: string, scope: string): number; end: (scope: number) => number; extension: (grammar: string) => string; }>method;
+    return <{ (grammar: string, scope: string): number; end: (scope: number) => number; }>method;
 })();
 
 
@@ -528,35 +517,33 @@ function getAtomStyleForToken(grammar: string, tags: number[], token: OmniSharp.
         replacement.push(getIdForScope.end(id))
     }
 
-
-    var extension = getIdForScope.extension(grammar);
     switch (token.Kind) {
         case "number":
-            add(`constant.numeric.source.${extension}`);
+            add(`constant.numeric.source.cs`);
             break;
         case "struct name":
-            add(`support.constant.numeric.identifier.struct.source.${extension}`);
+            add(`support.constant.numeric.identifier.struct.source.cs`);
             break;
         case "enum name":
-            add(`support.constant.numeric.identifier.enum.source.${extension}`);
+            add(`support.constant.numeric.identifier.enum.source.cs`);
             break;
         case "identifier":
-            add(`identifier.source.${extension}`);
+            add(`identifier.source.cs`);
             break;
         case "class name":
-            add(`support.class.type.identifier.source.${extension}`);
+            add(`support.class.type.identifier.source.cs`);
             break;
         case "delegate name":
-            add(`support.class.type.identifier.delegate.source.${extension}`);
+            add(`support.class.type.identifier.delegate.source.cs`);
             break;
         case "interface name":
-            add(`support.class.type.identifier.interface.source.${extension}`);
+            add(`support.class.type.identifier.interface.source.cs`);
             break;
         case "preprocessor keyword":
-            add(`constant.other.symbo.source.${extension}`);
+            add(`constant.other.symbo.source.cs`);
             break;
         case "excluded code":
-            add(`comment.block.source.${extension}`);
+            add(`comment.block.source.cs`);
             break;
         default:
             console.log(`unhandled Kind ${token.Kind}`);
@@ -569,6 +556,7 @@ function getAtomStyleForToken(grammar: string, tags: number[], token: OmniSharp.
 
 function setGrammar(grammar: FirstMate.Grammar): FirstMate.Grammar {
     if (!grammar['omnisharp'] && any(Omni.supportedExtensions, ext => any((<any>grammar).fileTypes, ft => trimLeft(ext, '.') === ft))) {
+        debugger;
         var newGrammar = new Grammar(this, grammar);
         each(grammar, (x, i) => has(grammar, i) && (newGrammar[i] = x));
         grammar = newGrammar;
