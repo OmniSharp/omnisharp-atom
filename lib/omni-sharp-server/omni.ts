@@ -49,8 +49,8 @@ class Omni implements Rx.IDisposable {
     public get isOff() { return this._isOff; }
     public get isOn() { return !this.isOff; }
 
-    private _validGammarNames = ['C#', 'C# Script File'];
-    public get validGammarNames() { return this._validGammarNames.slice(); };
+    private _supportedExtensions = ['.cs', '.csx', '.cake'];
+    public get supportedExtensions() { return this._supportedExtensions; }
 
     public activate() {
         var openerDisposable = makeOpener();
@@ -60,26 +60,22 @@ class Omni implements Rx.IDisposable {
         // we are only off if all our clients are disconncted or erroed.
         this.disposable.add(manager.combinationClient.state.subscribe(z => this._isOff = _.all(z, x => x.value === DriverState.Disconnected || x.value === DriverState.Error)));
 
-        this._editors = Omni.createTextEditorObservable(this.validGammarNames, this.disposable);
-        this._configEditors = Omni.createTextEditorObservable(['JSON'], this.disposable);
+        this._editors = Omni.createTextEditorObservable(this.supportedExtensions, this.disposable);
+        this._configEditors = Omni.createTextEditorObservable(['.json'], this.disposable);
 
         this.disposable.add(atom.workspace.observeActivePaneItem((pane: any) => {
             if (pane && pane.getGrammar) {
-                var grammar = pane.getGrammar();
-                if (grammar) {
-                    var grammarName = grammar.name;
-                    if (grammarName === 'C#' || grammarName === 'C# Script File') {
-                        this._activeConfigEditorSubject.onNext(null);
-                        this._activeEditorSubject.onNext(pane);
-                        return;
-                    }
+                if (_.any(this.supportedExtensions, ext => _.endsWith(pane.getPath(), ext))) {
+                    this._activeConfigEditorSubject.onNext(null);
+                    this._activeEditorSubject.onNext(pane);
+                    return;
+                }
 
-                    var filename = basename(pane.getPath());
-                    if (filename === 'project.json') {
-                        this._activeEditorSubject.onNext(null);
-                        this._activeConfigEditorSubject.onNext(pane);
-                        return;
-                    }
+                var filename = basename(pane.getPath());
+                if (filename === 'project.json') {
+                    this._activeEditorSubject.onNext(null);
+                    this._activeConfigEditorSubject.onNext(pane);
+                    return;
                 }
             }
             // This will tell us when the editor is no longer an appropriate editor
@@ -156,8 +152,7 @@ class Omni implements Rx.IDisposable {
                 return;
             };
 
-            var grammarName = editor.getGrammar().name;
-            if (grammarName === 'C#' || grammarName === 'C# Script File') {
+            if (_.any(this.supportedExtensions, ext => _.endsWith(editor.getPath(), ext))) {
                 event.stopPropagation();
                 event.stopImmediatePropagation();
                 callback(event);
@@ -165,7 +160,7 @@ class Omni implements Rx.IDisposable {
         });
     }
 
-    private static createTextEditorObservable(grammars: string[], disposable: CompositeDisposable) {
+    private static createTextEditorObservable(extensions: string[], disposable: CompositeDisposable) {
         var editors: Atom.TextEditor[] = [];
         var subject = new Subject<Atom.TextEditor>();
         var editorSubject = new Subject<Atom.TextEditor>();
@@ -179,50 +174,18 @@ class Omni implements Rx.IDisposable {
                 var path = nextEditor.getPath();
                 if (!path) {
                     // editor isn't saved yet.
-                    if (editor && _.contains(grammars, editor.getGrammar().name)) {
+                    if (editor && _.any(extensions, ext => _.endsWith(editor.getPath(), ext))) {
                         atom.notifications.addInfo("OmniSharp", { detail: "Functionality will limited until the file has been saved." });
                     }
                 }
             }));
 
         disposable.add(atom.workspace.observeTextEditors((editor: Atom.TextEditor) => {
-            function cb() {
-                editors.push(editor);
-                !subject.isDisposed && subject.onNext(editor);
+            editors.push(editor);
+            !subject.isDisposed && subject.onNext(editor);
 
-                // pull old editors.
-                disposable.add(editor.onDidDestroy(() => _.pull(editors, editor)));
-            }
-
-            var editorFilePath;
-            if (editor.getGrammar) {
-                var s = editor.observeGrammar(grammar => {
-                    var grammarName = editor.getGrammar().name;
-                    if (_.contains(grammars, grammarName)) {
-                        var path = editor.getPath();
-                        if (!path) {
-                            // editor isn't saved yet.
-                            var sub = editor.onDidSave(() => {
-                                if (editor.getPath()) {
-                                    _.defer(() => {
-                                        cb();
-                                        s.dispose();
-                                    });
-                                }
-                                sub.dispose();
-                            });
-                            disposable.add(sub);
-                        } else {
-                            _.defer(() => {
-                                cb();
-                                s.dispose();
-                            });
-                        }
-                    }
-                });
-
-                disposable.add(s);
-            }
+            // pull old editors.
+            disposable.add(editor.onDidDestroy(() => _.pull(editors, editor)));
         }));
 
         disposable.add(subject);
@@ -312,8 +275,8 @@ class Omni implements Rx.IDisposable {
     public getClientForProject(project: ProjectViewModel) {
         return Observable.just(
             _(manager.activeClients)
-            .filter(solution => _.any(solution.model.projects, p => p.name === project.name))
-            .first()
+                .filter(solution => _.any(solution.model.projects, p => p.name === project.name))
+                .first()
         );
     }
 

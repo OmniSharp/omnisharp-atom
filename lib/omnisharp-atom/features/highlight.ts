@@ -1,7 +1,7 @@
 import Omni = require('../../omni-sharp-server/omni');
 import {DriverState} from "omnisharp-client";
 import OmniSharpAtom = require('../omnisharp-atom');
-import {each, indexOf, extend, has, map, flatten, contains, any, range, remove, pull, find, defer, startsWith, trim, isArray, chain, unique, set, findIndex, delay, filter, all, isEqual, min, debounce} from "lodash";
+import {each, indexOf, extend, has, map, flatten, contains, any, range, remove, pull, find, defer, startsWith, trim, isArray, chain, unique, set, findIndex, delay, filter, all, isEqual, min, debounce, trimLeft} from "lodash";
 import {Observable, Subject, ReplaySubject, Scheduler, CompositeDisposable, Disposable} from "rx";
 var AtomGrammar = require((<any>atom).config.resourcePath + "/node_modules/first-mate/lib/grammar.js");
 var Range: typeof TextBuffer.Range = <any>require('atom').Range;
@@ -367,7 +367,7 @@ Grammar.prototype.tokenizeLine = function(line: string, ruleStack: any[], firstL
         // Excluded code blows away any other formatting, otherwise we get into a very weird state.
         if (highlights[0] && highlights[0].Kind === "excluded code") {
             tags = [line.length];
-            getAtomStyleForToken(tags, highlights[0], 0, tags.length - 1, line);
+            getAtomStyleForToken(this.name, tags, highlights[0], 0, tags.length - 1, line);
             baseResult.ruleStack = [baseResult.ruleStack[0]]
         } else {
             tags = this.getCsTokensForLine(highlights, line, row, ruleStack, firstLine, baseResult.tags);
@@ -382,12 +382,12 @@ Grammar.prototype.getCsTokensForLine = function(highlights: OmniSharp.Models.Hig
 
     var originalTags = tags.slice();
 
-    each(highlights, function(highlight) {
+    each(highlights, (highlight) => {
         var start = highlight.StartColumn - 1;
         var end = highlight.EndColumn - 1;
 
         if (highlight.EndLine > highlight.StartLine && highlight.StartColumn === 0 && highlight.EndColumn === 0) {
-            getAtomStyleForToken(tags, highlight, 0, tags.length - 1, line);
+            getAtomStyleForToken(this.name, tags, highlight, 0, tags.length - 1, line);
             return;
         }
 
@@ -419,7 +419,7 @@ Grammar.prototype.getCsTokensForLine = function(highlights: OmniSharp.Models.Hig
             }
             tags.splice(index, 1, ...values);
             if (prev) index = index + 1;
-            getAtomStyleForToken(tags, highlight, index, index, str);
+            getAtomStyleForToken(this.name, tags, highlight, index, index, str);
         } else if (tags[index] < size) {
             var backtrackIndex = index;
             var backtrackDistance = 0;
@@ -454,7 +454,7 @@ Grammar.prototype.getCsTokensForLine = function(highlights: OmniSharp.Models.Hig
                 forwardtrackIndex = tags.length - 1;
             }
 
-            getAtomStyleForToken(tags, highlight, backtrackIndex, forwardtrackIndex, str);
+            getAtomStyleForToken(this.name, tags, highlight, backtrackIndex, forwardtrackIndex, str);
         }
     });
 
@@ -462,39 +462,50 @@ Grammar.prototype.getCsTokensForLine = function(highlights: OmniSharp.Models.Hig
 }
 
 var getIdForScope = (function() {
-    var ids: { [key: string]: number } = {};
-    var csharpGrammar: FirstMate.Grammar;
+    var ids: { [key: string]: { [key: string]: number }; } = {};
+    var extensionMap : { [key: string]: string; } = {};
+    var grammars: any = {};
 
-    var cb = () => {
-        csharpGrammar = find(atom.grammars.getGrammars(), grammar => grammar.name === 'C#');
-        if (!csharpGrammar) return;
-        each(csharpGrammar.registry.scopesById, (value: string, key: any) => { ids[value] = +key; });
-    };
-    cb();
+    function buildScopesForGrammar(grammarName: string) {
+        var grammar = find(atom.grammars.getGrammars(), grammar => grammar.name === grammarName);
+        if (!grammar) return;
 
-    if (!csharpGrammar) {
-        var sub = atom.grammars.onDidAddGrammar(() => {
-            cb();
-            if (csharpGrammar)
-                sub.dispose();
-        });
+        var extension = find(Omni.supportedExtensions, ext => any((<any>grammar).fileTypes, ft => trimLeft(extension) === ft));
+
+        ids[grammar.name] = ids[extension] = {};
+        extensionMap[grammar.name] = extension;
+        grammars[grammar.name] = grammar;
+
+        each(grammar.registry.scopesById, (value: string, key: any) => { ids[grammar.name][value] = +key; });
     }
 
-    var method = (scope: string) => {
-        if (!ids[scope])
-            ids[scope] = csharpGrammar.registry.startIdForScope(scope);
-        return +ids[scope];
+    var method = (grammar: string, scope: string) => {
+        if (!ids[grammar]) {
+            buildScopesForGrammar(grammar);
+        }
+
+        if (!ids[grammar][scope])
+            ids[grammar][scope] = grammars[grammar].registry.startIdForScope(scope);
+
+        return +ids[grammar][scope];
     }
 
     (<any>method).end = (scope: number) => +scope - 1;
+    (<any>method).extension = (grammar: string) => {
+        if (!extensionMap[grammar]) {
+            buildScopesForGrammar(grammar);
+        }
 
-    return <{ (scope: string): number; end: (scope: number) => number; }>method;
+        return extensionMap[grammar];
+    };
+
+    return <{ (grammar: string, scope: string): number; end: (scope: number) => number; extension: (grammar: string) => string; }>method;
 })();
 
 
 /// NOTE: best way I have found for these is to just look at theme "less" files
 // Alternatively just inspect the token for a .js file
-function getAtomStyleForToken(tags: number[], token: OmniSharp.Models.HighlightSpan, index: number, indexEnd: number, str: string) {
+function getAtomStyleForToken(grammar: string, tags: number[], token: OmniSharp.Models.HighlightSpan, index: number, indexEnd: number, str: string) {
     var previousScopes = [];
 
     for (var i = index - 1; i >= 0; i--) {
@@ -507,7 +518,7 @@ function getAtomStyleForToken(tags: number[], token: OmniSharp.Models.HighlightS
     var replacement = tags.slice(index, indexEnd + 1);
 
     function add(scope: string) {
-        var id = getIdForScope(scope);
+        var id = getIdForScope(grammar, scope);
         if (id === -1) return;
         if (!any(previousScopes, z => z === id)) {
             previousScopes.push(id);
@@ -517,33 +528,35 @@ function getAtomStyleForToken(tags: number[], token: OmniSharp.Models.HighlightS
         replacement.push(getIdForScope.end(id))
     }
 
+
+    var extension = getIdForScope.extension(grammar);
     switch (token.Kind) {
         case "number":
-            add('constant.numeric.source.cs');
+            add(`constant.numeric.source.${extension}`);
             break;
         case "struct name":
-            add('support.constant.numeric.identifier.struct.source.cs');
+            add(`support.constant.numeric.identifier.struct.source.${extension}`);
             break;
         case "enum name":
-            add('support.constant.numeric.identifier.enum.source.cs');
+            add(`support.constant.numeric.identifier.enum.source.${extension}`);
             break;
         case "identifier":
-            add('identifier.source.cs');
+            add(`identifier.source.${extension}`);
             break;
         case "class name":
-            add('support.class.type.identifier.source.cs');
+            add(`support.class.type.identifier.source.${extension}`);
             break;
         case "delegate name":
-            add('support.class.type.identifier.delegate.source.cs');
+            add(`support.class.type.identifier.delegate.source.${extension}`);
             break;
         case "interface name":
-            add('support.class.type.identifier.interface.source.cs');
+            add(`support.class.type.identifier.interface.source.${extension}`);
             break;
         case "preprocessor keyword":
-            add('constant.other.symbo.source.csl');
+            add(`constant.other.symbo.source.${extension}`);
             break;
         case "excluded code":
-            add('comment.block.source.cs');
+            add(`comment.block.source.${extension}`);
             break;
         default:
             console.log(`unhandled Kind ${token.Kind}`);
@@ -555,7 +568,7 @@ function getAtomStyleForToken(tags: number[], token: OmniSharp.Models.HighlightS
 }
 
 function setGrammar(grammar: FirstMate.Grammar): FirstMate.Grammar {
-    if (!grammar['omnisharp'] && (grammar.name === 'C#' || grammar.name === 'C# Script File')) {
+    if (!grammar['omnisharp'] && any(Omni.supportedExtensions, ext => any((<any>grammar).fileTypes, ft => trimLeft(ext, '.') === ft))) {
         var newGrammar = new Grammar(this, grammar);
         each(grammar, (x, i) => has(grammar, i) && (newGrammar[i] = x));
         grammar = newGrammar;
