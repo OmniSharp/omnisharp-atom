@@ -94,7 +94,7 @@ class CodeLens implements OmniSharp.IFeature {
             return;
         }
 
-        return Omni.request(editor, solution => solution.currentfilemembersasflat({}))
+        return Omni.request(editor, solution => solution.currentfilemembersasflat({ Buffer: null, Changes: null }))
             .observeOn(Scheduler.timeout)
             .where(fileMembers => !!fileMembers)
             .concatMap(fileMembers => Observable.from(fileMembers))
@@ -243,7 +243,7 @@ export class Lens implements Rx.IDisposable {
         element.style.left = '16px';
         element.classList.add('highlight-info', 'badge', 'badge-small');
         element.textContent = count.toString();
-        element.onclick = () => Omni.request(this._editor, s => s.findusages({ FileName: this._path, Column: this._member.Column + 1, Line: this._member.Line }));
+        element.onclick = () => Omni.request(this._editor, s => s.findusages({ FileName: this._path, Column: this._member.Column + 1, Line: this._member.Line, Buffer: null, Changes: null }));
 
         this._decoration = <any>this._editor.decorateMarker(this._marker, { type: "overlay", class: `codelens`, item: this._element, position: 'head' });
         this._disposable.add(Disposable.create(() => {
