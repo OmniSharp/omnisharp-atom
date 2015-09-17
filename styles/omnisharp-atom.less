@@ -485,10 +485,6 @@ li.selected span.filename {
     color: @_text-color;
     text-shadow: 0 1px 0 hsla(0,0%,0%,.2);
 
-    & when (@ui-lightness > 50%) {
-        border-color: transparent; // hide border on light backgrounds
-    }
-
     &:hover,
     &:focus {
         color: @_text-color;
