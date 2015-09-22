@@ -175,7 +175,7 @@ export class RunProcess {
     private bootRuntime(runtime: string) {
         var args = [this.command];
         // Support old way of doing things (remove at RC?)
-        if (any(['beta3', 'beta4', 'beta5', 'beta6'], x => runtime.indexOf(x))) {
+        if (any(['beta3', 'beta4', 'beta5', 'beta6'], x => runtime.indexOf(x) > -1)) {
             args.unshift('.');
         }
 
