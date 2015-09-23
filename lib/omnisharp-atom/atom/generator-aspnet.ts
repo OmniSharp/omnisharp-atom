@@ -5,6 +5,7 @@ import React = require('react');
 import {each, delay, any, endsWith, filter} from "lodash";
 import * as fs from "fs";
 import * as path from "path";
+import {solutionInformation} from "../features/solution-information";
 
 var readdir = Observable.fromNodeCallback(fs.readdir);
 var stat = Observable.fromNodeCallback(fs.stat);
@@ -84,7 +85,13 @@ class GeneratorAspnet implements OmniSharp.IFeature {
                         .map(file => path.join(messages.cwd, file))
                         .toPromise();
                 })
-                .then(file => atom.workspace.open(file))
+                .then(file => {
+                    if (solutionInformation.solutions.length) {
+                        atom.commands.dispatch(atom.views.getView(atom.workspace), 'omnisharp-atom:restart-server');
+                    }
+
+                    atom.workspace.open(file);
+                })
         ));
         this.disposable.add(atom.commands.add('atom-workspace', 'omnisharp-atom:new-class', () => this.run("aspnet:Class")));
 
