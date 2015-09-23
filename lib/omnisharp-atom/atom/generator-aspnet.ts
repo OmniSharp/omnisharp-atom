@@ -1,8 +1,13 @@
-import {CompositeDisposable, Disposable} from "rx";
+import {CompositeDisposable, Disposable, Observable} from "rx";
 import Omni = require('../../omni-sharp-server/omni')
 import StatusBarComponent = require('../views/status-bar-view');
 import React = require('react');
-import {each, delay} from "lodash";
+import {each, delay, any, endsWith, filter} from "lodash";
+import * as fs from "fs";
+import * as path from "path";
+
+var readdir = Observable.fromNodeCallback(fs.readdir);
+var stat = Observable.fromNodeCallback(fs.stat);
 
 // TODO: Make sure it stays in sync with
 var commands = [
@@ -40,17 +45,47 @@ var commands = [
     'WebApiController'
 ];
 
+module Yeoman {
+    export interface IMessages {
+        cwd?: string;
+        skip: string[];
+        force: string[];
+        create: string[];
+        invoke: string[];
+        conflict: string[];
+        identical: string[];
+        info: string[];
+    }
+}
+
 class GeneratorAspnet implements OmniSharp.IFeature {
     private disposable: Rx.CompositeDisposable;
     private generator: {
-        run(generator: string, path?: string, options?: any): void; start(prefix: string, path?: string, options?: any): void;
+        run(generator: string, path?: string, options?: any): Promise<any>; start(prefix: string, path?: string, options?: any): Promise<any>;
         list(prefix?: string, path?: string, options?: any): Promise<{ displayName: string; name: string; resolved: string; }[]>
     };
 
     public activate() {
         this.disposable = new CompositeDisposable();
 
-        this.disposable.add(atom.commands.add('atom-workspace', 'omnisharp-atom:new-application', () => this.run("aspnet:app")));
+        this.disposable.add(atom.commands.add('atom-workspace', 'omnisharp-atom:new-project', () =>
+            this.run("aspnet:app --useCurrentDirectory")
+                .then((messages: Yeoman.IMessages) => {
+                    var allMessages = messages.skip
+                        .concat(messages.create)
+                        .concat(messages.identical)
+                        .concat(messages.force);
+
+                    return Observable.from(['Startup.cs', 'Program.cs', '.cs'])
+                        .concatMap(file => {
+                            return filter(allMessages, message => endsWith(message, file))
+                        })
+                        .take(1)
+                        .map(file => path.join(messages.cwd, file))
+                        .toPromise();
+                })
+                .then(file => atom.workspace.open(file))
+        ));
         this.disposable.add(atom.commands.add('atom-workspace', 'omnisharp-atom:new-class', () => this.run("aspnet:Class")));
 
         each(commands, command => {
@@ -59,14 +94,11 @@ class GeneratorAspnet implements OmniSharp.IFeature {
     }
 
     private run(command: string) {
-        if (this.generator) {
-            this.generator.run(command, undefined, { promptOnZeroDirectories: true });
-        }
+        return this.generator.run(command, undefined, { promptOnZeroDirectories: true });
     }
 
     public setup(generator) {
         this.generator = generator;
-
     }
 
     public dispose() {
