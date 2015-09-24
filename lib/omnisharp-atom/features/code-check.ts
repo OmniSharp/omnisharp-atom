@@ -116,7 +116,6 @@ class CodeCheck implements OmniSharp.IFeature {
     }
 
     public doFullCodeCheck() {
-        debugger;
         this._fullCodeCheck.onNext(true);
     }
 
