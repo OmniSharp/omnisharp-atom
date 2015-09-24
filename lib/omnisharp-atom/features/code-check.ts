@@ -19,10 +19,14 @@ class CodeCheck implements OmniSharp.IFeature {
     public selectedIndex: number = 0;
     private scrollTop: number = 0;
     private _editorSubjects = new WeakMap<Atom.TextEditor, () => Rx.Observable<OmniSharp.Models.DiagnosticLocation[]>>();
+    private _fullCodeCheck : Subject<any>;
 
     public activate() {
         this.disposable = new CompositeDisposable();
         this.setup();
+
+        this._fullCodeCheck = new Subject<any>();
+        this.disposable.add(this._fullCodeCheck);
 
         this.disposable.add(atom.commands.add("atom-workspace", 'omnisharp-atom:next-diagnostic', () => {
             this.updateSelectedItem(this.selectedIndex + 1);
@@ -93,19 +97,27 @@ class CodeCheck implements OmniSharp.IFeature {
             codeCheck: this
         }));
 
+        this.disposable.add(Omni.listener.packageRestoreFinished.subscribe(() => this.doFullCodeCheck()));
+        this.disposable.add(atom.commands.add('atom-workspace', 'omnisharp-atom:code-check', () => this.doFullCodeCheck()));
+
+        this.disposable.add(this._fullCodeCheck
+            .concatMap(() => reloadWorkspace.reloadWorkspace()
+                .toArray()
+                .concatMap(x => Omni.clients)
+                .concatMap(client => client.whenConnected()
+                    .tapOnNext(() => client.codecheck({ FileName: null })))
+            )
+            .subscribe());
+
         Omni.registerConfiguration(client => client
             .whenConnected()
             .delay(1000)
-            .subscribe(() => client.codecheck({ FileName: null })));
+            .subscribe(() => this._fullCodeCheck.onNext(true)));
+    }
 
-        this.disposable.add(atom.commands.add('atom-workspace', 'omnisharp-atom:code-check', () => {
-            reloadWorkspace.reloadWorkspace().subscribeOnCompleted(() => {
-                Omni.clients.subscribe(client => {
-                    client.whenConnected()
-                        .subscribe(() => client.codecheck({ FileName: null }));
-                });
-            });
-        }));
+    public doFullCodeCheck() {
+        debugger;
+        this._fullCodeCheck.onNext(true);
     }
 
     private filterOnlyWarningsAndErrors(quickFixes): OmniSharp.Models.DiagnosticLocation[] {
