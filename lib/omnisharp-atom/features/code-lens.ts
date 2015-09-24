@@ -112,7 +112,7 @@ class CodeLens implements OmniSharp.IFeature {
             .observeOn(Scheduler.timeout)
             .where(fileMembers => !!fileMembers)
             .flatMap(fileMembers => Observable.from(fileMembers))
-            .concatMap(fileMember => {
+            .flatMap(fileMember => {
                 var range: TextBuffer.Range = <any>editor.getBuffer().rangeForRow(fileMember.Line, false);
                 var marker: Atom.Marker = (<any>editor).markBufferRange(range, { invalidate: 'inside' });
 
@@ -212,7 +212,7 @@ export class Lens implements Rx.IDisposable {
         } else {
             var result = Observable.empty<number>();
         }
-        
+
         this._issueUpdate(isVisible);
         return result;
     }
