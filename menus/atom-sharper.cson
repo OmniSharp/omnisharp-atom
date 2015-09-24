@@ -25,7 +25,7 @@
       'submenu': [
         { "label": "Settings", "command": "omnisharp-atom:settings" }
         { "label": "Toggle", "command": "omnisharp-atom:toggle" }
-        { 'label': 'New Application', 'command': 'omnisharp-atom:new-application' }
+        { 'label': 'New Application', 'command': 'omnisharp-atom:new-project' }
       ]
     ]
   }

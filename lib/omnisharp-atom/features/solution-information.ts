@@ -8,6 +8,7 @@ import manager = require("../../omni-sharp-server/client-manager");
 import {DriverState} from "omnisharp-client";
 import React = require('react');
 import $ = require('jquery');
+import {codeCheck} from "./code-check";
 
 class SolutionInformation implements OmniSharp.IFeature {
     private disposable: CompositeDisposable;
@@ -58,10 +59,13 @@ class SolutionInformation implements OmniSharp.IFeature {
 
         this.disposable.add(atom.commands.add("atom-workspace", 'omnisharp-atom:restart-server', () => {
             var client = manager.activeClients[this.selectedIndex];
-            client.state.where(z => z == DriverState.Disconnected)
-                .take(1).delay(500)
-                .subscribe(() =>
-                    client.connect());
+            client.state
+                .where(z => z == DriverState.Disconnected)
+                .take(1)
+                .delay(500)
+                .subscribe(() => {
+                    client.connect();
+                });
             client.disconnect();
         }));
     }

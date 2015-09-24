@@ -45,19 +45,35 @@ class CodeLens implements OmniSharp.IFeature {
             var items = this.decorations.get(editor);
             if (!items) this.decorations.set(editor, new Set<Lens>());
 
-            var subject = new Subject<any>();
+            var subject = new Subject<boolean>();
 
             cd.add(subject
+                .distinctUntilChanged(x => !!x)
+                .where(x => !!x && !editor.isDestroyed())
                 .debounce(500)
-                .where(() => !editor.isDestroyed())
                 .flatMapLatest(() => this.updateCodeLens(editor))
                 .subscribe()
             );
 
-            cd.add(editor.getBuffer().onDidStopChanging(_.debounce(() => !subject.isDisposed && subject.onNext(null), 5000)));
-            cd.add(editor.getBuffer().onDidSave(() => !subject.isDisposed && subject.onNext(null)));
-            cd.add(editor.getBuffer().onDidReload(() => !subject.isDisposed && subject.onNext(null)));
-            cd.add(Omni.whenEditorConnected(editor).subscribe(() => subject.onNext(null)));
+            var bindDidChange = function() {
+                var didChange = editor.getBuffer().onDidChange(() => {
+                    didChange.dispose();
+                    cd.remove(didChange);
+
+                    subject.onNext(false);
+                });
+
+                cd.add(didChange);
+            };
+
+            cd.add(editor.getBuffer().onDidStopChanging(_.debounce(() => {
+                !subject.isDisposed && subject.onNext(true);
+                bindDidChange();
+            }, 5000)));
+
+            cd.add(editor.getBuffer().onDidSave(() => !subject.isDisposed && subject.onNext(true)));
+            cd.add(editor.getBuffer().onDidReload(() => !subject.isDisposed && subject.onNext(true)));
+            cd.add(Omni.whenEditorConnected(editor).subscribe(() => subject.onNext(true)));
 
             cd.add(editor.onDidChangeScrollTop(() => this.updateDecoratorVisiblility(editor)));
 
@@ -88,8 +104,6 @@ class CodeLens implements OmniSharp.IFeature {
 
         var updated = new WeakSet<Lens>();
 
-        var iteratee = decorations.forEach(decoration => decoration.invalidate());
-
         if (editor.isDestroyed()) {
             return;
         }
@@ -97,7 +111,7 @@ class CodeLens implements OmniSharp.IFeature {
         return Omni.request(editor, solution => solution.currentfilemembersasflat({ Buffer: null, Changes: null }))
             .observeOn(Scheduler.timeout)
             .where(fileMembers => !!fileMembers)
-            .concatMap(fileMembers => Observable.from(fileMembers))
+            .flatMap(fileMembers => Observable.from(fileMembers))
             .flatMap(fileMember => {
                 var range: TextBuffer.Range = <any>editor.getBuffer().rangeForRow(fileMember.Line, false);
                 var marker: Atom.Marker = (<any>editor).markBufferRange(range, { invalidate: 'inside' });
@@ -114,6 +128,7 @@ class CodeLens implements OmniSharp.IFeature {
 
                 if (lens) {
                     updated.add(lens);
+                    lens.invalidate();
                 } else {
                     lens = new Lens(editor, fileMember, marker, range, Disposable.create(() => {
                         decorations.delete(lens);
@@ -122,7 +137,7 @@ class CodeLens implements OmniSharp.IFeature {
                     decorations.add(lens);
                 }
 
-                return Observable.timer(1000 / 10).map(() => lens.updateVisible());
+                return lens.updateVisible();
             })
             .tapOnCompleted(() => {
                 // Remove all old/missing decorations
@@ -191,7 +206,15 @@ export class Lens implements Rx.IDisposable {
     public updateVisible() {
         var isVisible = this._isVisible();
         this._updateDecoration(isVisible);
+
+        if (isVisible) {
+            var result = this._updateObservable.take(1);
+        } else {
+            var result = Observable.empty<number>();
+        }
+
         this._issueUpdate(isVisible);
+        return result;
     }
 
     private _issueUpdate = _.debounce((isVisible) => {
