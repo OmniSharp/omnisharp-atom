@@ -1,7 +1,7 @@
 import Omni = require('../../omni-sharp-server/omni');
 import {DriverState} from "omnisharp-client";
 import OmniSharpAtom = require('../omnisharp-atom');
-import {each, indexOf, extend, has, map, flatten, contains, any, range, remove, pull, find, defer, startsWith, trim, isArray, chain, unique, set, findIndex, delay, filter, all, isEqual, min, debounce} from "lodash";
+import {each, indexOf, extend, has, map, flatten, contains, any, range, remove, pull, find, defer, startsWith, trim, isArray, chain, unique, set, findIndex, delay, filter, all, isEqual, min, debounce, sortBy} from "lodash";
 import {Observable, Subject, ReplaySubject, Scheduler, CompositeDisposable, Disposable} from "rx";
 var AtomGrammar = require((<any>atom).config.resourcePath + "/node_modules/first-mate/lib/grammar.js");
 var Range: typeof TextBuffer.Range = <any>require('atom').Range;
@@ -263,8 +263,12 @@ function Grammar(editor: Atom.TextEditor, base: FirstMate.Grammar) {
     var disposable = editor.getBuffer().preemptDidChange((e) => {
         var {oldRange, newRange} = e,
             start: number = oldRange.start.row,
-            end: number = oldRange.end.row,
             delta: number = newRange.end.row - oldRange.end.row;
+
+        start = start - 5;
+        if (start < 0) start = 0;
+
+        var end = editor.buffer.getLineCount() - 1;
 
         var lines = range(start, end + 1);
         if (!responses.keys().next().done) {
@@ -508,30 +512,74 @@ var getIdForScope = (function() {
 
 
 /// NOTE: best way I have found for these is to just look at theme "less" files
-// Alternatively just inspect the token for a .js file
-function getAtomStyleForToken(tags: number[], token: OmniSharp.Models.HighlightSpan, index: number, indexEnd: number, str: string) {
+// Alternatively just inspect the token for a .cs file
+function getAtomStyleForToken(tags: number[], token: any, index: number, indexEnd: number, str: string) {
     var previousScopes = [];
-
     for (var i = index - 1; i >= 0; i--) {
         if (tags[i] > 0)
             break;
-        //if (tags[i] % 2 === -1)
         previousScopes.push(tags[i]);
     }
 
-    var replacement = tags.slice(index, indexEnd + 1);
+    var replacements: { start: number; end: number; replacement: number[] }[] = [];
+    var opens: { tag: number; index: number }[] = [];
+    var closes: typeof opens = [];
 
-    function add(scope: string) {
+    // Scan for any unclosed or unopened tags
+    for (var i = index; i < indexEnd; i++) {
+        if (tags[i] > 0) continue;
+        if (tags[i] % 2 === 0) {
+            var openIndex = findIndex(opens, x => x.tag == (tags[i] + 1));
+            if (openIndex > -1) {
+                opens.splice(openIndex, 1);
+            } else {
+                closes.push({ tag: tags[i], index: i });
+            }
+        } else {
+            opens.unshift({ tag: tags[i], index: i });
+        }
+    }
+
+    var unfullfilled = sortBy(opens.concat(closes), x => x.index);
+
+    var internalIndex = index;
+    for (var i = 0; i < unfullfilled.length; i++) {
+        var v = unfullfilled[i];
+        replacements.unshift({
+            start: internalIndex,
+            end: v.index - 1,
+            replacement: tags.slice(internalIndex, v.index)
+        });
+        internalIndex = v.index + 1;
+    }
+
+    if (replacements.length === 0) {
+        replacements.unshift({
+            start: index,
+            end: indexEnd,
+            replacement: tags.slice(index, indexEnd + 1)
+        });
+    } else {
+        replacements.unshift({
+            start: internalIndex,
+            end: indexEnd,
+            replacement: tags.slice(internalIndex, indexEnd + 1)
+        });
+    }
+
+    function add(scope) {
         var id = getIdForScope(scope);
-        if (id === -1) return;
+        if (id === -1)
+            return;
         if (!any(previousScopes, z => z === id)) {
             previousScopes.push(id);
         }
-
-        replacement.unshift(id);
-        replacement.push(getIdForScope.end(id))
+        each(replacements, ctx => {
+            var replacement = ctx.replacement;
+            replacement.unshift(id);
+            replacement.push(getIdForScope.end(id));
+        });
     }
-
     switch (token.Kind) {
         case "number":
             add('constant.numeric.source.cs');
@@ -561,12 +609,14 @@ function getAtomStyleForToken(tags: number[], token: OmniSharp.Models.HighlightS
             add('comment.block.source.cs');
             break;
         default:
-            console.log(`unhandled Kind ${token.Kind}`);
+            console.log("unhandled Kind " + token.Kind);
             break;
     }
-    if (replacement.length > indexEnd - index + 1) {
-        tags.splice(index, indexEnd - index + 1, ...replacement);
-    }
+
+    each(replacements, ctx => {
+        var {replacement, end, start} = ctx;
+        tags.splice(start, end - start + 1, ...replacement);
+    });
 }
 
 function setGrammar(grammar: FirstMate.Grammar): FirstMate.Grammar {
