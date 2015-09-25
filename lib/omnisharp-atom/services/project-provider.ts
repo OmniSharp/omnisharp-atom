@@ -171,7 +171,7 @@ var nugetName: IAutocompleteProvider = {
     },
     fileMatchs: ['project.json'],
     pathMatch(path) {
-        return !!path.match(nameRegex);
+        return path && !!path.match(nameRegex);
     },
     dispose() { }
 }
@@ -220,7 +220,7 @@ var nugetVersion: IAutocompleteProvider = {
     },
     fileMatchs: ['project.json'],
     pathMatch(path) {
-        return !!path.match(versionRegex);
+        return path && !!path.match(versionRegex);
     },
     dispose() { }
 }
