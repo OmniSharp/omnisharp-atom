@@ -56,7 +56,7 @@ function mapValues(editor: Atom.TextEditor, error: OmniSharp.Models.DiagnosticLo
 function showLinter() {
     _.each(document.querySelectorAll('linter-bottom-tab'), (element: HTMLElement) => element.style.display = '');
     _.each(document.querySelectorAll('linter-bottom-status'), (element: HTMLElement) => element.style.display = '');
-    var panel = <HTMLElement>document.getElementById('#linter-panel');
+    var panel = <HTMLElement>document.querySelector('linter-panel');
     if (panel)
         panel.style.display = '';
 }
@@ -64,7 +64,7 @@ function showLinter() {
 function hideLinter() {
     _.each(document.querySelectorAll('linter-bottom-tab'), (element: HTMLElement) => element.style.display = 'none');
     _.each(document.querySelectorAll('linter-bottom-status'), (element: HTMLElement) => element.style.display = 'none');
-    var panel = <HTMLElement>document.getElementById('#linter-panel');
+    var panel = <HTMLElement>document.querySelector('linter-panel');
     if (panel)
         panel.style.display = 'none';
 }
