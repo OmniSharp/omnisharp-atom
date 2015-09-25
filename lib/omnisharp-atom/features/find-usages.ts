@@ -25,9 +25,9 @@ class FindUsages implements OmniSharp.IFeature {
             Omni.listener.observeFindusages,
             // We also want find implementations, where we found more than one
             Omni.listener.observeFindimplementations
-                .where(z => z.response.QuickFixes.length > 1)
-            )
-        // For the UI we only need the qucik fixes.
+                .where(z => z.response.QuickFixes && z.response.QuickFixes.length > 1)
+        )
+            // For the UI we only need the qucik fixes.
             .map(z => <OmniSharp.Models.DiagnosticLocation[]>z.response.QuickFixes || [])
             .share();
 
@@ -115,9 +115,9 @@ class FindUsages implements OmniSharp.IFeature {
                 setScrollTop: (scrollTop) => this.scrollTop = scrollTop,
                 findUsages: this
             }, {
-                priority: 2000,
-                closeable: true
-            }, this.window);
+                    priority: 2000,
+                    closeable: true
+                }, this.window);
             this.window.add(windowDisposable);
             this.window.add(Disposable.create(() => {
                 this.disposable.remove(this.window);
