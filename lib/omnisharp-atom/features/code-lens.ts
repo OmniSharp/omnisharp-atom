@@ -89,6 +89,7 @@ class CodeLens implements OmniSharp.IFeature {
     }
 
     public updateDecoratorVisiblility(editor: Atom.TextEditor) {
+        if (!this.decorations.has(editor)) this.decorations.set(editor, new Set<Lens>());
         var decorations = this.decorations.get(editor);
         decorations.forEach(decoration => decoration.updateVisible());
     }
