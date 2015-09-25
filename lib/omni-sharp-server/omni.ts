@@ -438,6 +438,7 @@ function makeOpener(): Rx.IDisposable {
             (<any>editor).__omniClient__ = solution;
             editor.save = function() { };
             editor.saveAs = function() { };
+            (<any>editor)._metadataEditor = true;
 
             return editor;
         }

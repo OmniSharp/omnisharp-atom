@@ -328,6 +328,11 @@ class SolutionManager {
             return Observable.empty<Solution>();
         }
 
+        if ((<any>editor)._metadataEditor) {
+            // client / server doesn't work currently for metadata documents.
+            return Observable.empty<Solution>();
+        }
+
         var [intersect, solutionValue] = this.getSolutionForUnderlyingPath(location, isCsx);
         p = (<any>editor).omniProject = intersect;
         (<any>editor).__omniClient__ = solutionValue;
