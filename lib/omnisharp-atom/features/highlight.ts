@@ -448,6 +448,21 @@ Grammar.prototype.getCsTokensForLine = function(highlights: OmniSharp.Models.Hig
                     forwardtrackIndex = i - 1;
                     break;
                 }
+                // Handles case where there is a closing tag
+                // but no opening tag here.
+                if (tags[i] % 2 === 0) {
+                    var openFound = false;
+                    for (var h = i; h >= 0; h--) {
+                        if (tags[h] === tags[i] + 1) {
+                            openFound = true;
+                            break;
+                        }
+                    }
+                    if (!openFound) {
+                        forwardtrackIndex = i - 1;
+                        break;
+                    }
+                }
             }
 
             if (i === tags.length) {
