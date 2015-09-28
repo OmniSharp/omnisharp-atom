@@ -99,7 +99,7 @@ class SignatureHelp implements OmniSharp.IFeature {
         this.disposable.dispose();
     }
 
-    public required = true;
+    public required = false;
     public title = 'Signature Help';
     public description = 'Adds signature help to method calls.';
 }
