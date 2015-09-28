@@ -36,6 +36,26 @@ class SignatureHelp implements OmniSharp.IFeature {
             }
         }));
 
+        var shouldContinue = Observable.zip(
+            Omni.listener.observeSignatureHelp,
+            Omni.listener.observeSignatureHelp.skip(1),
+            (current, previous) => ({ current, previous }))
+            .map(ctx => {
+                var {current, previous} = ctx;
+                if (!current.response || !current.response.Signatures || current.response.Signatures.length === 0) {
+                    return false;
+                }
+
+                if (current.response && current.response.Signatures && previous.response && previous.response.Signatures) {
+                    if (!_.isEqual(current.response.Signatures, previous.response.Signatures)) {
+                        return false;
+                    }
+                }
+
+                return true;
+            })
+            .startWith(true);
+
         this.disposable.add(Omni.switchActiveEditor((editor, cd) => {
             cd.add(issueRequest
                 .flatMap((position: TextBuffer.Point) =>
@@ -43,13 +63,17 @@ class SignatureHelp implements OmniSharp.IFeature {
                         Line: position.row,
                         Column: position.column,
                     }))
-                        .delay(50) // wait for the closing handler to catch up.
+                        .flatMap(x => shouldContinue.where(z => z).take(1).map(z => x))
                         .flatMap(response => {
                             if (response && response.Signatures && response.Signatures.length > 0) {
                                 if (!this._bubble) {
-                                    var disposable = editor.onDidChangeCursorPosition(_.debounce(event => {
-                                        issueRequest.onNext(event.newBufferPosition);
-                                    }, 200));
+                                    var disposable = editor.onDidChangeCursorPosition(
+                                        //_.debounce(
+                                            event => {
+                                                issueRequest.onNext(event.newBufferPosition);
+                                            }
+                                            //, 200)
+                                        );
                                     cd.add(disposable);
 
                                     var disposer = Disposable.create(() => {
@@ -72,25 +96,6 @@ class SignatureHelp implements OmniSharp.IFeature {
                             return Observable.empty<any>();
                         }))
                 .subscribe());
-
-            cd.add(Observable.zip(
-                Omni.listener.observeSignatureHelp,
-                Omni.listener.observeSignatureHelp.skip(1),
-                (current, previous) => ({ current, previous }))
-                .subscribe(ctx => {
-                    var {current, previous} = ctx;
-                    if (!current.response || !current.response.Signatures || current.response.Signatures.length === 0) {
-                        if (this._bubble) {
-                            this._bubble.dispose();
-                        }
-                    }
-
-                    if (current.response && current.response.Signatures && previous.response && previous.response.Signatures) {
-                        if (this._bubble && !_.isEqual(current.response.Signatures, previous.response.Signatures)) {
-                            this._bubble.dispose();
-                        }
-                    }
-                }));
         }));
         this.disposable.add(issueRequest);
     }
@@ -113,6 +118,7 @@ class SignatureBubble implements Rx.IDisposable {
     private _marker: Atom.Marker;
     private _position: TextBuffer.Point;
     private _member: OmniSharp.Models.SignatureHelp;
+    private _lineHeight: number;
 
     constructor(private _editor: Atom.TextEditor, disposer: Rx.IDisposable) {
         this._disposable.add(disposer);
@@ -144,11 +150,19 @@ class SignatureBubble implements Rx.IDisposable {
                     this.dispose();
                     event.stopImmediatePropagation();
                 }));
+
+        this._disposable.add(atom.config.observe('editor.fontSize', (size: number) => {
+            _.defer(() => {
+                this._lineHeight = _editor.getLineHeightInPixels();
+                if (this._element)
+                    this._element.setLineHeight(this._lineHeight);
+            });
+        }));
     }
 
     public update(position: TextBuffer.Point, member: OmniSharp.Models.SignatureHelp) {
         this._position = position;
-        var range = [[position.row - 1, position.column], [position.row - 1, position.column]];
+        var range = [[position.row, position.column], [position.row, position.column]];
         if (!this._marker) {
             this._marker = (<any>this._editor).markBufferRange(range/*, { invalidate: 'inside' }*/);
             this._disposable.add(Disposable.create(() => {
@@ -156,6 +170,12 @@ class SignatureBubble implements Rx.IDisposable {
             }));
         } else {
             this._marker.setBufferRange(<any>range);
+        }
+
+        if (!this._element || !this._decoration) {
+            this._element = new SignatureView();
+            this._element.setLineHeight(this._lineHeight);
+            this._decoration = <any>this._editor.decorateMarker(this._marker, { type: "overlay", class: `signature-help`, item: this._element, position: 'head' });
         }
 
         if (!this._member) {
@@ -177,11 +197,6 @@ class SignatureBubble implements Rx.IDisposable {
 
     private _updateMember(member: OmniSharp.Models.SignatureHelp) {
         this._member = member;
-        if (!this._element || !this._decoration) {
-            this._element = new SignatureView();
-            this._decoration = <any>this._editor.decorateMarker(this._marker, { type: "overlay", class: `signature-help`, item: this._element, position: 'head' });
-        }
-
         this._element.updateMember(member);
     }
 

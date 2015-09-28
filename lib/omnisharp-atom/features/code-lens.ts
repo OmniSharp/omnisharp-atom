@@ -110,7 +110,7 @@ class CodeLens implements OmniSharp.IFeature {
             .observeOn(Scheduler.timeout)
             .where(fileMembers => !!fileMembers)
             .flatMap(fileMembers => Observable.from(fileMembers))
-            .flatMap(fileMember => {
+            .concatMap(fileMember => {
                 var range: TextBuffer.Range = <any>editor.getBuffer().rangeForRow(fileMember.Line, false);
                 var marker: Atom.Marker = (<any>editor).markBufferRange(range, { invalidate: 'inside' });
 

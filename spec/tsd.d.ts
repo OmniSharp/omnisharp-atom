@@ -12,3 +12,8 @@ declare module  jasmine {
         toExist();
     }
 }
+declare module chai {
+    interface Assert {
+        isAbove(valueToCheck: number, valueToBeAbove: number, message?: string);
+    }
+}

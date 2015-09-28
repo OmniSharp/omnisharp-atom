@@ -8,6 +8,13 @@ function _d(cb: (value: Function) => Function) {
     }
 }
 
+var parseString = (function() {
+    var parser = new DOMParser();
+
+    return function(xml: string) {
+        return parser.parseFromString(xml, "text/xml");
+    }
+})();
 
 export class SignatureView extends HTMLDivElement { /* implements WebComponent */
     private _member: OmniSharp.Models.SignatureHelp;
@@ -21,15 +28,18 @@ export class SignatureView extends HTMLDivElement { /* implements WebComponent *
     private _count: HTMLSpanElement;
     private _selectedIndex: number;
     private _lastIndex: number;
+    private _editorLineHeight: number;
 
     public createdCallback() {
         this._selectedIndex = -1;
         this._lastIndex = -1;
+        this._editorLineHeight = 0;
 
         this._inner = document.createElement('div');
         this._label = document.createElement('span');
         this._documentation = document.createElement('div');
         this._parameterDocumentation = document.createElement('div');
+        this._parameterDocumentation.style.marginLeft = '2.4em';
         this._arrows = document.createElement('span');
         this._parameters = document.createElement('span');
         this._count = document.createElement('span');
@@ -65,6 +75,8 @@ export class SignatureView extends HTMLDivElement { /* implements WebComponent *
         this._inner.appendChild(open);
         this._inner.appendChild(this._count);
         this._inner.appendChild(close);
+
+        this._inner.appendChild(this._parameterDocumentation);
     }
 
     public moveIndex(direction: number) {
@@ -98,7 +110,14 @@ export class SignatureView extends HTMLDivElement { /* implements WebComponent *
         this._arrows.appendChild(down);
     }
 
-    @_d(m => _.debounce(m, 200, { leading: true, trailing: true }))
+    public setLineHeight(height: number) {
+        this._editorLineHeight = height;
+
+        if (this._member)
+            this.updateMember(this._member);
+    }
+
+    //@_d(m => _.debounce(m, 200, { leading: true, trailing: true }))
     public updateMember(member: OmniSharp.Models.SignatureHelp) {
         this._member = member;
 
@@ -111,6 +130,8 @@ export class SignatureView extends HTMLDivElement { /* implements WebComponent *
         }
 
         var signature = member.Signatures[this._selectedIndex];
+        if (signature.Documentation)
+            var docs = parseString(signature.Documentation);
 
         if (this._lastIndex !== this._selectedIndex) {
             this._lastIndex = this._selectedIndex;
@@ -120,7 +141,15 @@ export class SignatureView extends HTMLDivElement { /* implements WebComponent *
                 this._documentation.innerText = signature.Documentation;
 
                 if (signature.Documentation) {
-                    this._documentation.innerText = signature.Documentation;
+                    var summary = _.trim((<HTMLElement>docs.getElementsByTagName('summary')[0]).innerHTML);
+
+                    if (summary) {
+                        this._documentation.innerText = summary;
+                    } else {
+                        this._documentation.innerText = '';
+                        this._documentation.style.display = 'none';
+                    }
+
                     this._documentation.style.display = '';
                 } else {
                     this._documentation.innerText = '';
@@ -169,13 +198,30 @@ export class SignatureView extends HTMLDivElement { /* implements WebComponent *
 
         var currentParameter = signature.Parameters[member.ActiveParameter];
         read(() => {
-            if (currentParameter && this._parameterDocumentation.innerText !== currentParameter.Documentation) {
-                write(() => this._parameterDocumentation.innerText = currentParameter.Documentation);
+            if (signature.Documentation) {
+                var paramDocs = parseString(currentParameter.Documentation);
+                var summaryElement = <HTMLElement>paramDocs.getElementsByTagName('summary')[0];
+                if (summaryElement)
+                    var summary = _.trim(summaryElement.innerHTML);
+            }
+
+            if (!summary) {
+                var param = <HTMLElement>_.find(docs.getElementsByTagName('param'), x => x.attributes['name'] && x.attributes['name'].value === currentParameter.Name);
+                if (param) {
+                    summary = _.trim(param.innerHTML);
+                }
+            }
+
+            if (currentParameter && this._parameterDocumentation.innerText !== summary) {
+                if (summary) {
+                    this._parameterDocumentation.innerText = summary;
+                } else {
+                    this._parameterDocumentation.innerText = '';
+                }
             }
         });
 
-
-        write(() => this.style.bottom = `${this.clientHeight}px`);
+        write(() => this.style.bottom = `${this.clientHeight + this._editorLineHeight}px`);
     }
 
     public detachedCallback() {
