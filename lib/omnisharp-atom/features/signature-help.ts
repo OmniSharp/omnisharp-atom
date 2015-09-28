@@ -1,21 +1,7 @@
 import {CompositeDisposable, Observable, Disposable, Subject} from "rx";
 import Omni = require('../../omni-sharp-server/omni');
 import * as _ from "lodash";
-
-function _d(cb: (value: Function) => Function) {
-    return <MethodDecorator>function(target: Function, key: string, descriptor: any) {
-        descriptor.value = cb(descriptor.value);
-        return descriptor;
-    }
-}
-
-//, 100, { leading: true, trailing: true });
-function debounce(timeout: number, options: { leading?: boolean; trailing?: boolean }) {
-    return <MethodDecorator>function(target: Function, key: string, descriptor: any) {
-        descriptor.value = _.debounce(descriptor.value, timeout, options);
-        return descriptor;
-    }
-}
+import {SignatureView} from "../views/signature-help-view";
 
 interface IDecoration {
     destroy();
@@ -148,7 +134,7 @@ class SignatureBubble implements Rx.IDisposable {
         this._disposable.add(
             atom.commands.add('atom-text-editor:not(.autocomplete-active).signature-help-active',
                 'core:move-down', (event) => {
-                    this._element.moveIndex(-1);
+                    this._element.moveIndex(1);
                     event.stopImmediatePropagation();
                 }));
 
@@ -192,7 +178,7 @@ class SignatureBubble implements Rx.IDisposable {
     private _updateMember(member: OmniSharp.Models.SignatureHelp) {
         this._member = member;
         if (!this._element || !this._decoration) {
-            this._element = new exports.SignatureView();
+            this._element = new SignatureView();
             this._decoration = <any>this._editor.decorateMarker(this._marker, { type: "overlay", class: `signature-help`, item: this._element, position: 'head' });
         }
 
@@ -203,202 +189,3 @@ class SignatureBubble implements Rx.IDisposable {
         this._disposable.dispose();
     }
 }
-
-import {read, write} from "fastdom";
-
-export class SignatureView extends HTMLDivElement { /* implements WebComponent */
-    private _member: OmniSharp.Models.SignatureHelp;
-    private _inner: HTMLDivElement;
-    private _label: HTMLSpanElement;
-    private _documentation: HTMLDivElement;
-    private _parameterDocumentation: HTMLDivElement;
-    private _arrows: HTMLSpanElement;
-    private _parametersList: SignatureParameterView[];
-    private _parameters: HTMLSpanElement;
-    private _count: HTMLSpanElement;
-    private _selectedIndex: number;
-    private _lastIndex: number;
-
-    public createdCallback() {
-        this._selectedIndex = -1;
-        this._lastIndex = -1;
-
-        this._inner = document.createElement('div');
-        this._label = document.createElement('span');
-        this._documentation = document.createElement('div');
-        this._parameterDocumentation = document.createElement('div');
-        this._arrows = document.createElement('span');
-        this._parameters = document.createElement('span');
-        this._count = document.createElement('span');
-        this._parametersList = [];
-
-        this.classList.add('tooltip');
-        this._inner.classList.add('tooltip-inner');
-
-        this._setupArrows();
-
-        var open = document.createElement('span');
-        open.innerText = '(';
-
-        var close = document.createElement('span');
-        close.innerText = ')';
-
-        this.appendChild(this._inner);
-        this._inner.appendChild(this._documentation);
-
-        this._inner.appendChild(this._arrows);
-
-        this._inner.appendChild(this._label);
-        this._inner.appendChild(open);
-        this._inner.appendChild(this._parameters);
-        this._inner.appendChild(close);
-
-        var open = document.createElement('span');
-        open.innerText = ' [';
-
-        var close = document.createElement('span');
-        close.innerText = ']';
-
-        this._inner.appendChild(open);
-        this._inner.appendChild(this._count);
-        this._inner.appendChild(close);
-    }
-
-    public moveIndex(direction: number) {
-        if (!this._member) return;
-        this._selectedIndex += direction;
-
-        if (this._selectedIndex < 0) {
-            this._selectedIndex = this._member.Signatures.length - 1;
-        }
-
-        if (this._selectedIndex > this._member.Signatures.length - 1) {
-            this._selectedIndex = 0;
-        }
-
-        write(() => this._count.innerText = (this._selectedIndex + 1).toString());
-        this.updateMember(this._member);
-    }
-
-    private _setupArrows() {
-        var up = document.createElement('a');
-        up.classList.add('icon-arrow-up');
-        up.href = '#';
-        up.onclick = () => this.moveIndex(-1);
-
-        var down = document.createElement('a');
-        down.classList.add('icon-arrow-down');
-        down.href = '#';
-        down.onclick = () => this.moveIndex(1);
-
-        this._arrows.appendChild(up);
-        this._arrows.appendChild(down);
-    }
-
-    @_d(m => _.debounce(m, 200, { leading: true, trailing: true }))
-    public updateMember(member: OmniSharp.Models.SignatureHelp) {
-        this._member = member;
-
-        if (this._selectedIndex === -1) {
-            this._selectedIndex = member.ActiveSignature;
-        }
-
-        var signature = member.Signatures[this._selectedIndex];
-
-        if (this._lastIndex !== this._selectedIndex) {
-            this._lastIndex = this._selectedIndex;
-            write(() => {
-                this._count.innerText = (this._selectedIndex + 1).toString();
-                this._label.innerText = signature.Name;
-                this._documentation.innerText = signature.Documentation;
-
-                if (signature.Documentation) {
-                    this._documentation.innerText = signature.Documentation;
-                    this._documentation.style.display = '';
-                } else {
-                    this._documentation.innerText = '';
-                    this._documentation.style.display = 'none';
-                }
-
-                if (member.Signatures.length > 1) {
-                    this._arrows.style.display = '';
-                } else {
-                    this._arrows.style.display = 'none';
-                }
-            });
-
-            this._parametersList = [];
-
-            write(() => {
-                var parameters = signature.Parameters;
-                _.each(parameters, (parameter, i) => {
-                    var view: SignatureParameterView = <any>(this._parameters.children[index] && this._parameters.children[index]) || new exports.SignatureParameterView();
-                    view.setMember(parameter);
-
-                    var index = i * 2;
-                    var commaIndex = (i - 1) * 2 + 1;
-
-                    if (commaIndex > -1 && this._parametersList.length && !this._parameters.children[commaIndex]) {
-                        var comma = document.createElement('span');
-                        comma.innerText = ', ';
-                        this._parameters.appendChild(comma);
-                    }
-
-                    !this._parameters.children[index] && this._parameters.appendChild(view);
-                    this._parametersList.push(view);
-                });
-
-                var lengthWithCommas = parameters.length * 2 - 1;
-
-                for (var i = this._parameters.children.length; i > lengthWithCommas; i--) {
-                    write(() => this._parameters.children[i].remove());
-                }
-            });
-        }
-
-        var currentParameter = signature.Parameters[member.ActiveParameter];
-        read(() => {
-            if (currentParameter && this._parameterDocumentation.innerText !== currentParameter.Documentation) {
-                write(() => this._parameterDocumentation.innerText = currentParameter.Documentation);
-            }
-        });
-
-        _.each(signature.Parameters, (param, i) => write(() => this._parametersList[i].setCurrent(i === member.ActiveParameter)));
-
-        write(() => this.style.bottom = `${this.clientHeight}px`);
-    }
-
-    public detachedCallback() {
-        _.each(this._parametersList, parameter => parameter.remove());
-        this._parametersList = null;
-    }
-}
-
-(<any>exports).SignatureView = (<any>document).registerElement('omnisharp-signature-help', { prototype: SignatureView.prototype });
-
-export class SignatureParameterView extends HTMLSpanElement { /* implements WebComponent */
-    private _member: OmniSharp.Models.SignatureHelpParameter;
-    private _label: HTMLSpanElement;
-
-    public createdCallback() {
-        this._label = document.createElement('span');
-        this.appendChild(this._label);
-    }
-
-    public setMember(member: OmniSharp.Models.SignatureHelpParameter) {
-        this._member = member;
-        this._label.innerText = member.Label;
-    }
-
-    public setCurrent(current: boolean) {
-        read(() => {
-            if (!current && this.style.fontWeight === 'bold') {
-                write(() => this.style.fontWeight = '');
-            } else if (current && this.style.fontWeight !== 'bold') {
-                write(() => this.style.fontWeight = 'bold');
-            }
-        });
-    }
-}
-
-(<any>exports).SignatureParameterView = (<any>document).registerElement('omnisharp-signature-parameter', { prototype: SignatureParameterView.prototype });
