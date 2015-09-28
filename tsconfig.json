@@ -5,7 +5,9 @@
         "module": "commonjs",
         "declaration": false,
         "noImplicitAny": false,
-        "removeComments": false
+        "removeComments": false,
+        "emitDecoratorMetadata": true,
+        "experimentalAsyncFunctions": true
     },
     "moduleResolution": "node",
     "formatCodeOptions": {

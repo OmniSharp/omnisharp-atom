@@ -16,6 +16,4 @@ describe('Signature Help', () => {
             disposable.dispose();
         });
     });
-
-
 });
