@@ -1,4 +1,4 @@
-// Type definitions for first-mate (v3.1.0)
+// Type definitions for first-mate (v5.0.2)
 // Project: https://github.com/atom/first-mate
 // Definitions by: david-driscoll <https://github.com/david-driscoll/>
 // Definitions: https://github.com/borisyankov/DefinitelyTyped
@@ -88,43 +88,19 @@ declare module FirstMate {
         loadGrammar(grammarPath? : string, callback? : Function) : Grammar;
     
         /**
-         * Get the grammar override for the given file path.
-         * @param filePath? - A {String} file path.
+         * This field or method was not documented by atomdoc, assume it is private. Use with caution.
          */
-        grammarOverrideForPath(filePath? : string) : string;
-    
-        /**
-         * Set the grammar override for the given file path.
-         * @param filePath? - A non-empty {String} file path.
-         * @param scopeName? - A {String} such as `"source.js"`.
-         */
-        setGrammarOverrideForPath(filePath? : string, scopeName? : string) : string;
-    
-        /**
-         * Remove the grammar override for the given file path.
-         * @param filePath? - A {String} file path.
-         */
-        clearGrammarOverrideForPath(filePath? : string) : string;
-    
-        /**
-         * Remove all grammar overrides.
-         */
-        clearGrammarOverrides() : void;
-    
-        /**
-         * Select a grammar for the given file path and file contents.
-         * 
-         * This picks the best match by checking the file path and contents against
-         * each grammar.
-         * @param filePath? - A {String} file path.
-         * @param fileContents? - A {String} of text for the file path.
-         */
-        selectGrammar(filePath? : string, fileContents? : string) : Grammar;
+        startIdForScope(scope? : any) : void;
     
         /**
          * This field or method was not documented by atomdoc, assume it is private. Use with caution.
          */
-        createToken(value? : any, scopes? : Atom.Scope[]) : Atom.Token;
+        endIdForScope(scope? : any) : any;
+    
+        /**
+         * This field or method was not documented by atomdoc, assume it is private. Use with caution.
+         */
+        scopeForId(id? : any) : any;
     
         /**
          * This field or method was not documented by atomdoc, assume it is private. Use with caution.
@@ -135,6 +111,11 @@ declare module FirstMate {
          * This field or method was not documented by atomdoc, assume it is private. Use with caution.
          */
         createGrammar(grammarPath? : string, object? : any) : Grammar;
+    
+        /**
+         * This field or method was not documented by atomdoc, assume it is private. Use with caution.
+         */
+        decodeTokens(lineText? : string, tags? : any, scopeTags? : any, fn? : any) : Atom.Token[];
     
     }
 
@@ -176,7 +157,7 @@ declare module FirstMate {
          * @param ruleStack? - An optional {Array} of rules previously returned from this method. This should be null when tokenizing the first line in the file.
          * @param firstLine? - A optional {Boolean} denoting whether this is the first line in the file which defaults to `false`. This should be `true` when tokenizing the first line in the file.
          */
-        tokenizeLine(line? : string, ruleStack? : any[], firstLine? : boolean) : number;
+        tokenizeLine(line? : string, ruleStack? : any[], firstLine? : boolean, compatibilityMode? : any) : number;
     
         /**
          * This field or method was not documented by atomdoc, assume it is private. Use with caution.
@@ -206,7 +187,7 @@ declare module FirstMate {
         /**
          * This field or method was not documented by atomdoc, assume it is private. Use with caution.
          */
-        addIncludedGrammarScope(scope? : Atom.Scope) : Atom.Scope;
+        addIncludedGrammarScope(scope? : any) : void;
     
         /**
          * This field or method was not documented by atomdoc, assume it is private. Use with caution.
@@ -216,22 +197,17 @@ declare module FirstMate {
         /**
          * This field or method was not documented by atomdoc, assume it is private. Use with caution.
          */
-        getScore(filePath? : string, contents? : any) : any;
+        startIdForScope(scope? : any) : void;
     
         /**
          * This field or method was not documented by atomdoc, assume it is private. Use with caution.
          */
-        matchesContents(contents? : any) : any;
+        endIdForScope(scope? : any) : any;
     
         /**
          * This field or method was not documented by atomdoc, assume it is private. Use with caution.
          */
-        getPathScore(filePath? : string) : string;
-    
-        /**
-         * This field or method was not documented by atomdoc, assume it is private. Use with caution.
-         */
-        createToken(value? : any, scopes? : Atom.Scope[]) : Atom.Token;
+        scopeForId(id? : any) : any;
     
         /**
          * This field or method was not documented by atomdoc, assume it is private. Use with caution.
@@ -255,6 +231,43 @@ declare module FirstMate {
     
     
         name: string;
+    }
+
+    /**
+     * TokenizeLineResult
+     * This class was not documented by atomdoc, assume it is private. Use with caution.
+     */
+    class TokenizeLineResult {
+        /**
+         * This field or method was not documented by atomdoc, assume it is private. Use with caution.
+         */
+        line: number;
+    
+        /**
+         * This field or method was not documented by atomdoc, assume it is private. Use with caution.
+         */
+        openScopeTags: void;
+    
+        /**
+         * This field or method was not documented by atomdoc, assume it is private. Use with caution.
+         */
+        tags: any /* default */;
+    
+        /**
+         * This field or method was not documented by atomdoc, assume it is private. Use with caution.
+         */
+        ruleStack: any /* default */;
+    
+        /**
+         * This field or method was not documented by atomdoc, assume it is private. Use with caution.
+         */
+        registry: any /* default */;
+    
+        /**
+         * This field or method was not documented by atomdoc, assume it is private. Use with caution.
+         */
+        constructor(line? : number, openScopeTags? : any, tags? : any, ruleStack? : any, registry? : any);
+    
     }
 
     /**
@@ -364,7 +377,7 @@ declare module FirstMate {
         /**
          * This field or method was not documented by atomdoc, assume it is private. Use with caution.
          */
-        getTokensForCaptureRule(rule? : Rule, line? : number, captureStart? : any, captureEnd? : any, scopes? : Atom.Scope[], stack? : any) : Rule;
+        tagsForCaptureRule(rule? : Rule, line? : number, captureStart? : any, captureEnd? : any, stack? : any) : Rule;
     
         /**
          * Get the tokens for the capture indices.
@@ -376,12 +389,11 @@ declare module FirstMate {
          *                         this method.
          * allCaptureIndices - The array of all capture indices, this array will not
          *                     be modified.
-         * scopes - An array of scopes.
          * stack - An array of rules.
          * This field or method was marked private by atomdoc. Use with caution.
          * Returns a non-null but possibly empty array of tokens
          */
-        getTokensForCaptureIndices(line? : number, currentCaptureIndices? : any, allCaptureIndices? : any, scopes? : Atom.Scope[], stack? : any) : any;
+        tagsForCaptureIndices(line? : number, currentCaptureIndices? : any, allCaptureIndices? : any, stack? : any) : any;
     
     }
 
@@ -458,7 +470,7 @@ declare module FirstMate {
         /**
          * This field or method was not documented by atomdoc, assume it is private. Use with caution.
          */
-        getNextTokens(ruleStack? : any, line? : number, position? : TextBuffer.Point | { row: number; column: number } | [number, number], firstLine? : number) : Atom.Token[];
+        getNextTags(ruleStack? : any, line? : number, position? : TextBuffer.Point | { row: number; column: number } | [number, number], firstLine? : number) : any;
     
         /**
          * This field or method was not documented by atomdoc, assume it is private. Use with caution.
@@ -532,7 +544,7 @@ declare module FirstMate {
         /**
          * This field or method was not documented by atomdoc, assume it is private. Use with caution.
          */
-        matches(scope? : Atom.Scope) : any;
+        matches(scope? : any) : any;
     
         /**
          * This field or method was not documented by atomdoc, assume it is private. Use with caution.
@@ -576,7 +588,7 @@ declare module FirstMate {
         /**
          * This field or method was not documented by atomdoc, assume it is private. Use with caution.
          */
-        matches(scope? : Atom.Scope) : any;
+        matches(scope? : any) : any;
     
         /**
          * This field or method was not documented by atomdoc, assume it is private. Use with caution.
@@ -598,7 +610,7 @@ declare module FirstMate {
         /**
          * This field or method was not documented by atomdoc, assume it is private. Use with caution.
          */
-        matches(scopes? : Atom.Scope[]) : any;
+        matches(scopes? : any) : any;
     
         /**
          * This field or method was not documented by atomdoc, assume it is private. Use with caution.
@@ -630,7 +642,7 @@ declare module FirstMate {
         /**
          * This field or method was not documented by atomdoc, assume it is private. Use with caution.
          */
-        matches(scopes? : Atom.Scope[]) : any;
+        matches(scopes? : any) : any;
     
         /**
          * This field or method was not documented by atomdoc, assume it is private. Use with caution.
@@ -662,7 +674,7 @@ declare module FirstMate {
         /**
          * This field or method was not documented by atomdoc, assume it is private. Use with caution.
          */
-        matches(scopes? : Atom.Scope[]) : any;
+        matches(scopes? : any) : any;
     
         /**
          * This field or method was not documented by atomdoc, assume it is private. Use with caution.
@@ -689,7 +701,7 @@ declare module FirstMate {
         /**
          * This field or method was not documented by atomdoc, assume it is private. Use with caution.
          */
-        matches(scopes? : Atom.Scope[]) : any;
+        matches(scopes? : any) : any;
     
         /**
          * This field or method was not documented by atomdoc, assume it is private. Use with caution.
@@ -711,7 +723,7 @@ declare module FirstMate {
         /**
          * This field or method was not documented by atomdoc, assume it is private. Use with caution.
          */
-        matches(scopes? : Atom.Scope[]) : any;
+        matches(scopes? : any) : any;
     
         /**
          * This field or method was not documented by atomdoc, assume it is private. Use with caution.
@@ -740,7 +752,7 @@ declare module FirstMate {
          * This field or method was marked private by atomdoc. Use with caution.
          * Returns a {Boolean}.
          */
-        matches(scopes? : Atom.Scope[]) : boolean;
+        matches(scopes? : any) : boolean;
     
         /**
          * Convert this TextMate scope selector to a CSS selector.

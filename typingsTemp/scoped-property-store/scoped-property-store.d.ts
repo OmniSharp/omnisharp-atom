@@ -35,7 +35,7 @@ declare module ScopedPropertyStore {
         /**
          * This field or method was not documented by atomdoc, assume it is private. Use with caution.
          */
-        matches(scope? : Atom.Scope) : any;
+        matches(scope? : any) : any;
     
         /**
          * This field or method was not documented by atomdoc, assume it is private. Use with caution.
@@ -182,7 +182,7 @@ declare module ScopedPropertyStore {
         /**
          * This field or method was not documented by atomdoc, assume it is private. Use with caution.
          */
-        selectorComponentMatchesScope(selectorComponent? : any, scope? : Atom.Scope) : Atom.Scope;
+        selectorComponentMatchesScope(selectorComponent? : any, scope? : any) : any;
     
         /**
          * This field or method was not documented by atomdoc, assume it is private. Use with caution.

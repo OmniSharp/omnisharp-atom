@@ -1,4 +1,4 @@
-// Type definitions for atom-space-pen-views (v2.0.5)
+// Type definitions for atom-space-pen-views (v2.1.0)
 // Project: https://github.com/atom/atom-space-pen-views
 // Definitions by: david-driscoll <https://github.com/david-driscoll/>
 // Definitions: https://github.com/borisyankov/DefinitelyTyped

@@ -1,4 +1,4 @@
-// Type definitions for scandal (v2.0.0)
+// Type definitions for scandal (v2.2.0)
 // Project: https://github.com/atom/scandal
 // Definitions by: david-driscoll <https://github.com/david-driscoll/>
 // Definitions: https://github.com/borisyankov/DefinitelyTyped
@@ -84,7 +84,7 @@ declare module Scandal {
         /**
          * This field or method was not documented by atomdoc, assume it is private. Use with caution.
          */
-        constructor(filePath? : string);
+        constructor(filePath? : string, options? : any);
     
         /**
          * This field or method was not documented by atomdoc, assume it is private. Use with caution.
@@ -145,15 +145,16 @@ declare module Scandal {
         static escapeRegExp(str? : any) : any;
     
         /**
+         * This field or method was not documented by atomdoc, assume it is private. Use with caution.
+         */
+        rootPath: string;
+    
+        /**
          * Construct a {PathFilter}
          * @param rootPath? - {String} top level directory to scan. eg. `/Users/ben/somedir`
          * @param options? - {Object} options hash
-         * @param inclusions? - {Array} of patterns to include. Uses minimatch with a couple  additions: `['dirname']` and `['dirname/']` will match all paths in  directory dirname.
-         * @param exclusions? - {Array} of patterns to exclude. Same matcher as inclusions.
-         * @param includeHidden? - {Boolean} default false; true includes hidden files 
-         * @param excludeVcsIgnores? - {Boolean}; default false; true to exclude paths  defined in a .gitignore. Uses git-utils to check ignred files.
          */
-        constructor(rootPath? : string, options? : { inclusions? : any[],exclusions? : any[],includeHidden? : boolean,excludeVcsIgnores? : boolean });
+        constructor(rootPath? : string, options? : Object);
     
         /**
          * Test if the `filepath` is accepted as a file based on the
@@ -178,12 +179,27 @@ declare module Scandal {
          * Private Methods
          * This field or method was marked private by atomdoc. Use with caution.
          */
-        isPathIgnored(fileOrDirectory? : Pathwatcher.Directory, filepath? : string) : string;
+        isPathIncluded(fileOrDirectory? : Pathwatcher.Directory, filepath? : string) : string;
     
         /**
          * This field or method was not documented by atomdoc, assume it is private. Use with caution.
          */
-        isPathIncluded(fileOrDirectory? : Pathwatcher.Directory, filepath? : string) : string;
+        isPathExcluded(fileOrDirectory? : Pathwatcher.Directory, filepath? : string) : string;
+    
+        /**
+         * This field or method was not documented by atomdoc, assume it is private. Use with caution.
+         */
+        isPathGloballyExcluded(fileOrDirectory? : Pathwatcher.Directory, filepath? : string) : string;
+    
+        /**
+         * This field or method was not documented by atomdoc, assume it is private. Use with caution.
+         */
+        isPathExcludedByGit(filepath? : string) : string;
+    
+        /**
+         * This field or method was not documented by atomdoc, assume it is private. Use with caution.
+         */
+        sanitizePaths(options? : any) : string;
     
         /**
          * This field or method was not documented by atomdoc, assume it is private. Use with caution.
@@ -193,7 +209,71 @@ declare module Scandal {
         /**
          * This field or method was not documented by atomdoc, assume it is private. Use with caution.
          */
-        createMatchers(patterns? : FirstMate.Pattern[], deepMatch? : any) : any;
+        createMatchers(patterns? : FirstMate.Pattern[], options? : (deepMatch? : any,disallowDuplicatesFrom? : any) => any) : any;
+    
+        /**
+         * This field or method was not documented by atomdoc, assume it is private. Use with caution.
+         */
+        containsPattern(matchers? : any, fileOrDirectory? : Pathwatcher.Directory, pattern? : FirstMate.Pattern) : FirstMate.Pattern;
+    
+    }
+
+    /**
+     * ReplaceTransformer
+     * This class was not documented by atomdoc, assume it is private. Use with caution.
+     */
+    class ReplaceTransformer /*extends .Transform*/ {
+        /**
+         * This field or method was not documented by atomdoc, assume it is private. Use with caution.
+         */
+        regex: any /* default */;
+    
+        /**
+         * This field or method was not documented by atomdoc, assume it is private. Use with caution.
+         */
+        replacementText: string;
+    
+        /**
+         * This field or method was not documented by atomdoc, assume it is private. Use with caution.
+         */
+        dryReplace: any /* default */;
+    
+        /**
+         * This field or method was not documented by atomdoc, assume it is private. Use with caution.
+         */
+        constructor(regex? : any, replacementText? : string, options? : (dryReplace? : any) => any);
+    
+        /**
+         * This field or method was not documented by atomdoc, assume it is private. Use with caution.
+         */
+        _transform(chunk? : any, encoding? : string, done? : any) : any;
+    
+    }
+
+    /**
+     * PathReplacer
+     * This class was not documented by atomdoc, assume it is private. Use with caution.
+     */
+    class PathReplacer /*extends NodeJS.EventEmitter*/ {
+        /**
+         * This field or method was not documented by atomdoc, assume it is private. Use with caution.
+         */
+        dryReplace: any /* default */;
+    
+        /**
+         * This field or method was not documented by atomdoc, assume it is private. Use with caution.
+         */
+        constructor({ dryReplace } : { dryReplace? : any });
+    
+        /**
+         * This field or method was not documented by atomdoc, assume it is private. Use with caution.
+         */
+        replacePaths(regex? : any, replacementText? : string, paths? : string, doneCallback? : any) : string;
+    
+        /**
+         * This field or method was not documented by atomdoc, assume it is private. Use with caution.
+         */
+        replacePath(regex? : any, replacementText? : string, filePath? : string, doneCallback? : any) : string;
     
     }
 
@@ -243,6 +323,11 @@ declare module Scandal {
          * This field or method was not documented by atomdoc, assume it is private. Use with caution.
          */
         stat(filePath? : string) : any;
+    
+        /**
+         * This field or method was not documented by atomdoc, assume it is private. Use with caution.
+         */
+        isInternalSymlink(filePath? : string) : boolean;
     
         /**
          * This field or method was not documented by atomdoc, assume it is private. Use with caution.
