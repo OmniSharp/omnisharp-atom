@@ -1,4 +1,4 @@
-'.platform-win32 atom-text-editor:not([mini])[data-grammar~="cs"], .platform-win32 atom-text-editor:not([mini])[data-grammar~="csx"]':
+'.platform-win32 atom-text-editor:not([mini])[data-grammar~="cs"], .platform-win32 atom-text-editor:not([mini])[data-grammar~="csx"], .platform-win32 atom-text-editor:not([mini])[data-grammar~="cake"]':
   'ctrl-n': 'advanced-open-file:toggle'
-':not(.platform-win32) atom-text-editor:not([mini])[data-grammar~="cs"], :not(.platform-win32) atom-text-editor:not([mini])[data-grammar~="csx"]':
+':not(.platform-win32) atom-text-editor:not([mini])[data-grammar~="cs"], :not(.platform-win32) atom-text-editor:not([mini])[data-grammar~="csx"], :not(.platform-win32) atom-text-editor:not([mini])[data-grammar~="cake"]':
   'cmd-n': 'advanced-open-file:toggle'

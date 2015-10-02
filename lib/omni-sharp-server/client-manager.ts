@@ -26,6 +26,10 @@ class SolutionManager {
     private _nextIndex = 0;
     private _activeSearch: Rx.IPromise<any>;
 
+    // These extensions only support server per folder, unlike normal cs files.
+    private _specialCaseExtensions = ['.csx'/*, '.cake'*/];
+    public get __specialCaseExtensions() { return this._specialCaseExtensions; }
+
     private _activeSolutions: Solution[] = [];
     public get activeClients() {
         return this._activeSolutions;
@@ -267,7 +271,7 @@ class SolutionManager {
             // No text editor found
             return Observable.empty<Solution>();
 
-        var isCsx = _.endsWith(path, '.csx');
+        var isCsx = _.any(this.__specialCaseExtensions, ext => _.endsWith(path, ext));
 
         var location = path;
         if (!location) {
@@ -297,7 +301,7 @@ class SolutionManager {
             // No text editor found
             return Observable.empty<Solution>();
 
-        var isCsx = editor.getGrammar().name === "C# Script File" || _.endsWith(editor.getPath(), '.csx');
+        var isCsx = _.any(this.__specialCaseExtensions, ext => _.endsWith(editor.getPath(), ext));
 
         var p = (<any>editor).omniProject;
         // Not sure if we should just add properties onto editors...
