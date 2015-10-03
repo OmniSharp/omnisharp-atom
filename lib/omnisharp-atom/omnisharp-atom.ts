@@ -183,7 +183,7 @@ class OmniSharpAtom {
 
                     var features: { key: string, value: OmniSharp.IFeature }[] = [];
                     _.each(feature, (value: OmniSharp.IFeature, key: string) => {
-                        if (!_.isFunction(value)) {
+                        if (_.isObject(value) && !_.isFunction(value) && !_.isArray(value)) {
                             if (!value.required) {
                                 this.config[key] = {
                                     title: `${value.title}`,

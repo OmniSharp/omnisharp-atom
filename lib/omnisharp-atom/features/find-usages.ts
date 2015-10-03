@@ -43,7 +43,7 @@ class FindUsages implements OmniSharp.IFeature {
         };
 
         this.disposable.add(Omni.addTextEditorCommand("omnisharp-atom:find-usages", () => {
-            Omni.request(client => client.findusages({}));
+            Omni.request(client => client.findusages({ WantWhitespace: true }));
         }));
 
         this.disposable.add(Omni.addTextEditorCommand("omnisharp-atom:go-to-implementation", () => {

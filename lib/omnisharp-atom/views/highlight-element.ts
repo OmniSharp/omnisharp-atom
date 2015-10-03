@@ -1,3 +1,40 @@
+import {getTemporaryGrammar, ExcludeClassifications} from "../features/highlight";
+import * as _ from "lodash";
+import Omni = require("../../omni-sharp-server/omni");
+import {Observable, Subject} from "rx";
+
+const customExcludes = ExcludeClassifications.concat([
+    OmniSharp.Models.HighlightClassification.Identifier,
+    OmniSharp.Models.HighlightClassification.PreprocessorKeyword,
+    OmniSharp.Models.HighlightClassification.ExcludedCode,
+]);
+
+function request(request: {
+    filePath: string;
+    startLine: number;
+    endLine: number;
+    whitespace: number;
+}) {
+    return Omni.request(client => client.highlight({
+        Buffer: null,
+        FileName: request.filePath,
+        Lines: _.range(request.startLine, request.endLine),
+        ExcludeClassifications: customExcludes
+    }, { silent: true }))
+        .map(response => _(response.Highlights)
+            //.filter(x => x.StartLine >= request.startLine && x.EndLine <= request.endLine)
+            .map(x => ({
+                StartLine: x.StartLine - request.startLine,
+                StartColumn: (x.StartLine === request.startLine ? x.StartColumn - request.whitespace : x.StartColumn),
+                EndLine: x.EndLine - request.startLine,
+                EndColumn: (x.StartLine === request.startLine ? x.EndColumn - request.whitespace : x.EndColumn),
+                Kind: x.Kind,
+                Projects: x.Projects
+            }))
+            .value())
+        .where(x => x.length > 0);
+}
+
 export class HighlightElement extends HTMLElement {
     public editorElement: Atom.TextEditorComponent;
     public editor: Atom.TextEditor;
@@ -15,17 +52,37 @@ export class HighlightElement extends HTMLElement {
         var editor = this.editor = (<any>editorElement).getModel();
         editor.getDecorations({ class: 'cursor-line', type: 'line' })[0].destroy(); // remove the default selection of a line in each editor
         editor.setText(preview);
-
-        var grammar = atom.grammars.grammarForScopeName("source.cs");
-        editor.setGrammar(grammar);
         editor.setSoftWrapped(true);
 
         this.appendChild(editorElement);
     }
 
     // API
-    public text(text: string) {
-        this.editor.setText(text);
+    public attachedCallback() {
+        var grammars = atom.grammars.getGrammars();
+        var grammar = _.find(grammars, grammar => _.any((<any>grammar).fileTypes, ft => _.endsWith(this.dataset['filePath'], `.${ft}`)));
+
+        var text = this.dataset['lineText'];
+        var whitespace = text.length - _.trimLeft(text).length;
+        if (atom.config.get<boolean>('omnisharp-atom.enhancedHighlighting')) {
+            request({ filePath: this.dataset['filePath'], startLine: +this.dataset['startLine'], endLine: +this.dataset['endLine'], whitespace: text.length - _.trimLeft(text).length })
+                .subscribe(response => {
+                    var start = +this.dataset['startLine'];
+                    grammar = getTemporaryGrammar(this.editor, grammar);
+                    (<any>grammar).setResponses(response);
+                    this.editor.setGrammar(<any>grammar);
+                });
+        }
+
+        this.editor.setGrammar(<any>grammar);
+        this.editor.setText(_.trimLeft(text));
+
+        var marker = this.editor.markBufferRange([[0, +this.dataset['startColumn'] - whitespace], [+this.dataset['endLine'] - +this.dataset['startLine'], +this.dataset['endColumn'] - whitespace]]);
+        this.editor.decorateMarker(marker, { type: 'highlight', class: 'findusages-underline' });
+    }
+
+    public detachedCallback() {
+        this.editor.destroy();
     }
 }
 

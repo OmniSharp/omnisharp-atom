@@ -5,6 +5,7 @@ import path = require('path');
 import $ = require('jquery');
 import {ReactClientComponent} from "./react-client-component";
 import {findUsages} from "../features/find-usages";
+import "./highlight-element";
 
 interface FindWindowState {
     selectedIndex?: number;
@@ -103,22 +104,32 @@ export class FindWindow extends ReactClientComponent<FindWindowProps, FindWindow
         },
             React.DOM.ol({
                 style: <any>{ cursor: "pointer" },
-            }, _.map(this.state.usages, (usage: OmniSharp.Models.QuickFix, index) =>
-                React.DOM.li({
+            }, _.map(this.state.usages, (usage: OmniSharp.Models.QuickFix, index) => {
+
+                var highlight = React.createElement("omnisharp-highlight-element", {
+                    'data-start-line': usage.Line,
+                    'data-start-column': usage.Column,
+                    'data-end-line': usage.EndLine,
+                    'data-end-column': usage.EndColumn,
+                    'data-line-text': usage.Text,
+                    'data-file-path': usage.FileName
+                });
+                return React.DOM.li({
                     key: `quick-fix-${usage.FileName}-(${usage.Line}-${usage.Column})-(${usage.EndLine}-${usage.EndColumn})-(${usage.Projects.join('-') })`,
                     className: 'find-usages' + (index === this.state.selectedIndex ? ' selected' : ''),
                     onClick: (e) => this.gotoUsage(usage, index)
                 },
                     React.DOM.pre({
                         className: "text-highlight"
-                    }, usage.Text),
+                    }, highlight),
                     React.DOM.pre({
                         className: "inline-block"
                     }, `${path.basename(usage.FileName) }(${usage.Line},${usage.Column})`),
                     React.DOM.pre({
                         className: "text-subtle inline-block"
                     }, `${path.dirname(usage.FileName) }`)
-                    ))
+                );
+            })
                 ));
     }
 }
