@@ -6,7 +6,7 @@ import {Observable, Subject, ReplaySubject, Scheduler, CompositeDisposable, Disp
 var AtomGrammar = require((<any>atom).config.resourcePath + "/node_modules/first-mate/lib/grammar.js");
 var Range: typeof TextBuffer.Range = <any>require('atom').Range;
 
-const DEBOUNCE_TIME = 240/*240*/;
+const DEBOUNCE_TIME = 120/*240*/;
 
 class Highlight implements OmniSharp.IFeature {
     private disposable: Rx.CompositeDisposable;
@@ -91,8 +91,8 @@ class Highlight implements OmniSharp.IFeature {
         var issueRequest = new Subject<boolean>();
 
         disposable.add(issueRequest
-            .debounce(DEBOUNCE_TIME)
             .flatMap(z => Omni.getProject(editor).map(z => z.activeFramework.Name === 'all' ? '' : (z.name + '+' + z.activeFramework.ShortName)).timeout(200, Observable.just('')))
+            .debounce(DEBOUNCE_TIME)
             .flatMapLatest((framework) => {
                 var projects = [];
                 if (framework)
