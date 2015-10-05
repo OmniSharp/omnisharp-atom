@@ -140,7 +140,7 @@ export class SignatureView extends HTMLDivElement { /* implements WebComponent *
                 this._label.innerText = signature.Name;
                 this._documentation.innerText = signature.Documentation;
 
-                if (signature.Documentation) {
+                if (docs && signature.Documentation) {
                     var s: NodeListOf<HTMLElement> = <any>docs.getElementsByTagName('summary');
                     if (s.length) {
                         var summary = _.trim((s[0]).innerHTML);
@@ -201,15 +201,17 @@ export class SignatureView extends HTMLDivElement { /* implements WebComponent *
             if (signature.Documentation) {
                 var paramDocs = parseString(currentParameter.Documentation);
 
-                var s: NodeListOf<HTMLElement> = <any>docs.getElementsByTagName('summary');
-                if (s.length) {
-                    var summaryElement = s[0];
-                    if (summaryElement)
-                        var summary = _.trim(summaryElement.innerHTML);
+                if (paramDocs) {
+                    var s: NodeListOf<HTMLElement> = <any>paramDocs.getElementsByTagName('summary');
+                    if (s.length) {
+                        var summaryElement = s[0];
+                        if (summaryElement)
+                            var summary = _.trim(summaryElement.innerHTML);
+                    }
                 }
             }
 
-            if (!summary) {
+            if (docs && !summary) {
                 var s: NodeListOf<HTMLElement> = <any>docs.getElementsByTagName('param');
                 if (s.length) {
                     var param = <HTMLElement>_.find(s, x => x.attributes['name'] && x.attributes['name'].value === currentParameter.Name);
