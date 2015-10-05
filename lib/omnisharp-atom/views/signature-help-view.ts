@@ -141,9 +141,9 @@ export class SignatureView extends HTMLDivElement { /* implements WebComponent *
                 this._documentation.innerText = signature.Documentation;
 
                 if (signature.Documentation) {
-                    var summary = _.trim((<HTMLElement>docs.getElementsByTagName('summary')[0]).innerHTML);
-
-                    if (summary) {
+                    var s: NodeListOf<HTMLElement> = <any>docs.getElementsByTagName('summary');
+                    if (s.length) {
+                        var summary = _.trim((s[0]).innerHTML);
                         this._documentation.innerText = summary;
                     } else {
                         this._documentation.innerText = '';
@@ -200,15 +200,22 @@ export class SignatureView extends HTMLDivElement { /* implements WebComponent *
         read(() => {
             if (signature.Documentation) {
                 var paramDocs = parseString(currentParameter.Documentation);
-                var summaryElement = <HTMLElement>paramDocs.getElementsByTagName('summary')[0];
-                if (summaryElement)
-                    var summary = _.trim(summaryElement.innerHTML);
+
+                var s: NodeListOf<HTMLElement> = <any>docs.getElementsByTagName('summary');
+                if (s.length) {
+                    var summaryElement = s[0];
+                    if (summaryElement)
+                        var summary = _.trim(summaryElement.innerHTML);
+                }
             }
 
             if (!summary) {
-                var param = <HTMLElement>_.find(docs.getElementsByTagName('param'), x => x.attributes['name'] && x.attributes['name'].value === currentParameter.Name);
-                if (param) {
-                    summary = _.trim(param.innerHTML);
+                var s: NodeListOf<HTMLElement> = <any>docs.getElementsByTagName('param');
+                if (s.length) {
+                    var param = <HTMLElement>_.find(s, x => x.attributes['name'] && x.attributes['name'].value === currentParameter.Name);
+                    if (param) {
+                        summary = _.trim(param.innerHTML);
+                    }
                 }
             }
 
