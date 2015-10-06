@@ -2,6 +2,7 @@ import {getTemporaryGrammar, ExcludeClassifications} from "../features/highlight
 import * as _ from "lodash";
 import Omni = require("../../omni-sharp-server/omni");
 import {Observable, Subject} from "rx";
+import {write} from "fastdom";
 
 const customExcludes = ExcludeClassifications.concat([
     OmniSharp.Models.HighlightClassification.Identifier,
@@ -36,10 +37,20 @@ function request(request: {
 }
 
 export class HighlightElement extends HTMLElement {
-    public editorElement: Atom.TextEditorComponent;
+    public editorElement: any;
     public editor: Atom.TextEditor;
 
+    private _grammar: FirstMate.Grammar;
+    private _usage: OmniSharp.Models.DiagnosticLocation;
+    private _whitespace: number;
+
     public createdCallback() {
+        var preview = this.innerText;
+        this.innerText = "";
+    }
+
+    // API
+    public attachedCallback() {
         var preview = this.innerText;
         this.innerText = "";
 
@@ -54,61 +65,49 @@ export class HighlightElement extends HTMLElement {
         editor.setText(preview);
         editor.setSoftWrapped(true);
 
-        this.appendChild(editorElement);
-    }
-
-    // API
-    public attachedCallback() {
         var grammars = atom.grammars.getGrammars();
-        var grammar = this._grammar = _.find(grammars, grammar => _.any((<any>grammar).fileTypes, ft => _.endsWith(this.dataset['filePath'], `.${ft}`)));
+        var grammar = this._grammar = _.find(grammars, grammar => _.any((<any>grammar).fileTypes, ft => _.endsWith(this.usage.FileName, `.${ft}`)));
 
-        var text = this.dataset['lineText'];
-        var whitespace = text.length - _.trimLeft(text).length;
-        this.selected = this.dataset['selected'] === "true";
+        var text = this.usage.Text;
+        var whitespace = this._whitespace = text.length - _.trimLeft(text).length;
 
         this.editor.setGrammar(<any>grammar);
         this.editor.setText(_.trimLeft(text));
 
-        var marker = this.editor.markBufferRange([[0, +this.dataset['startColumn'] - whitespace], [+this.dataset['endLine'] - +this.dataset['startLine'], +this.dataset['endColumn'] - whitespace]]);
+        var marker = this.editor.markBufferRange([[0, +this.usage.Column - whitespace], [+this.usage.EndLine - +this.usage.Line, +this.usage.EndColumn - whitespace]]);
         this.editor.decorateMarker(marker, { type: 'highlight', class: 'findusages-underline' });
+
+        this.appendChild(this.editorElement);
     }
 
     public detachedCallback() {
         this.editor.destroy();
     }
 
-    private _grammar: FirstMate.Grammar;
-    private _grammarConfigured = false;
-
-    private _selected: boolean;
-    public get selected() {
-        return this._selected;
+    public get usage() {
+        return this._usage;
     }
 
-    public set selected(value) {
-        if (value && !this._grammarConfigured) {
-            this._grammarConfigured = true;
-            if (atom.config.get<boolean>('omnisharp-atom.enhancedHighlighting')) {
-                var text = this.dataset['lineText'];
-                var whitespace = text.length - _.trimLeft(text).length;
-                request({ filePath: this.dataset['filePath'], startLine: +this.dataset['startLine'], endLine: +this.dataset['endLine'], whitespace: whitespace })
-                    .subscribe(response => {
-                        var start = +this.dataset['startLine'];
-                        this._grammar = getTemporaryGrammar(this.editor, this._grammar);
-                        (<any>this._grammar).setResponses(response);
-                        this.editor.setGrammar(<any>this._grammar);
-                    });
-                this.editor.setGrammar(<any>this._grammar);
-            }
+    public set usage(value) {
+        if (!this._usage) {
+            this._usage = value;
         }
-        this._selected = value;
     }
 
-    public attributeChangedCallback(attrName, oldVal, newVal) {
-        if (attrName === "data-selected" && oldVal !== newVal) {
-            this.selected = newVal === "true";
+    public enableSemanticHighlighting() {
+        if (atom.config.get<boolean>('omnisharp-atom.enhancedHighlighting')) {
+            var text = this.usage.Text;
+
+            request({ filePath: this.usage.FileName, startLine: +this.usage.Line, endLine: +this.usage.EndLine, whitespace: this._whitespace })
+                .subscribe(response => {
+                    var start = +this.usage.Line;
+                    this._grammar = getTemporaryGrammar(this.editor, this._grammar);
+                    (<any>this._grammar).setResponses(response);
+                    this.editor.setGrammar(<any>this._grammar);
+                });
+            this.editor.setGrammar(<any>this._grammar);
         }
     }
 }
 
-(<any>exports).HighlightElement = (<any>document).registerElement('omnisharp-highlight-element', { prototype: HighlightElement.prototype });
+(<any>exports).HighlightElement = (<any>document).registerElement('omnisharp-highlight', { prototype: HighlightElement.prototype });

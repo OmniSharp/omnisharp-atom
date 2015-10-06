@@ -1,68 +1,147 @@
 import _ = require('lodash')
 import Omni = require('../../omni-sharp-server/omni')
-import React = require('react');
-import path = require('path');
-import $ = require('jquery');
-import {ReactClientComponent} from "./react-client-component";
+import {CompositeDisposable, Observable} from "rx";
+import * as $ from "jquery";
+import * as path from "path";
 import {findUsages} from "../features/find-usages";
-import "./highlight-element";
+import {HighlightElement} from "./highlight-element";
+import * as fastdom from "fastdom";
 
-interface FindWindowState {
-    selectedIndex?: number;
-    usages?: OmniSharp.Models.DiagnosticLocation[];
+var write = <MethodDecorator>function(target: Object, propertyKey: string | symbol, descriptor: TypedPropertyDescriptor<any>): void {
+    var value = descriptor.value;
+    descriptor.value = function() {
+        fastdom.write(function() {
+            value.apply(target, arguments);
+        });
+    };
 }
 
-interface FindWindowProps {
-    scrollTop: () => number;
-    setScrollTop: (scrollTop: number) => void;
-    findUsages: typeof findUsages;
-}
+export class FindWindowElement extends HTMLDivElement implements WebComponent {
+    private _disposable: CompositeDisposable;
 
-export class FindWindow extends ReactClientComponent<FindWindowProps, FindWindowState> {
-    public displayName = 'FindPaneWindow';
-
-    private model: typeof findUsages;
-
-    constructor(props?: FindWindowProps, context?: any) {
-        super(props, context);
-        this.model = this.props.findUsages;
-        this.state = { usages: this.model.usages, selectedIndex: this.model.selectedIndex };
+    private _selectedIndex: number;
+    public get selectedIndex() {
+        return this._selectedIndex;
     }
 
-    public componentWillMount() {
-        super.componentWillMount();
-        this.disposable.add(this.model.observe
-            .updated
-            .where(z => z.name === "usages")
-            .subscribe(z => this.setState({
-                usages: this.model.usages
-            })));
+    public set selectedIndex(value) {
+        var current = this._list.children[this._selectedIndex];
+        var next = this._list.children[value];
 
-        this.disposable.add(this.model.observe
-            .updated
-            .where(z => z.name === "selectedIndex")
-            .delay(0)
-            .subscribe(z => this.updateStateAndScroll()));
+        current && current.classList.remove('selected');
+        next && next.classList.remove('selected');
+
+        this._selectedIndex = value;
+        this._scrollToItemView();
     }
 
-    public componentDidMount() {
-        super.componentDidMount();
-
-        React.findDOMNode(this).scrollTop = this.props.scrollTop();
-        (<any>React.findDOMNode(this)).onkeydown = (e) => this.keydownPane(e);
+    private _scrollTop: number;
+    public get scrollTop() {
+        return this._scrollTop;
     }
 
-    public componentWillUnmount() {
-        super.componentWillUnmount();
-        (<any>React.findDOMNode(this)).onkeydown = undefined;
+    public set scrollTop(value) {
+        this._scrollTop = value;
+        if (this._container.scrollTop !== value) {
+            this._container.scrollTop = value;
+        }
     }
 
-    private updateStateAndScroll() {
-        this.setState({ selectedIndex: this.model.selectedIndex }, () => this.scrollToItemView());
+    private _usages: OmniSharp.Models.DiagnosticLocation[];
+    public get usages() { return this._usages; }
+    public set usages(usages) {
+
+        if (!this._usages && usages && usages.length) {
+            this._usages = usages;
+            Observable.from(usages)
+                .flatMap(x => Observable.just(x).delay(20))
+                .map((usage, index) => {
+                    var selected = index === this.selectedIndex;
+                    var li = document.createElement('li');
+                    li.classList.add('find-usages');
+                    if (selected) {
+                        li.classList.add('selected');
+                    }
+                    var highlightedText = new HighlightElement();
+                    highlightedText.usage = usage;
+                    li.appendChild(highlightedText);
+
+                    li.onmouseover = () => {
+                        li.onmouseover = null;
+                        highlightedText.enableSemanticHighlighting();
+                    }
+
+                    li.onclick = () => this._gotoUsage(usage, index);
+
+                    var inlineBlock = document.createElement('pre');
+                    inlineBlock.innerText = `${path.basename(usage.FileName) }(${usage.Line},${usage.Column})`;
+                    inlineBlock.classList.add('inline-block');
+                    li.appendChild(inlineBlock);
+
+                    var subtleText = document.createElement('pre');
+                    subtleText.innerText = `${path.dirname(usage.FileName) }`;
+                    subtleText.classList.add('inline-block', 'text-subtle');
+                    li.appendChild(subtleText);
+
+                    this._list.appendChild(li);
+                })
+                .subscribe();
+
+            this._container.appendChild(this._list);
+        }
     }
 
-    private scrollToItemView() {
-        var self = $(React.findDOMNode(this));
+    private _container: HTMLDivElement;
+    private _list: HTMLOListElement;
+
+    public createdCallback() {
+        this._disposable = new CompositeDisposable();
+
+        var div = this._container = document.createElement('div');
+        div.classList.add('error-output-pane'); // className?
+        div.onscroll = (e) => this.scrollTop = (<any>e.currentTarget).scrollTop;
+        div.onkeydown = this._keydownPane;
+        div.tabIndex = -1;
+
+        var ol = this._list = document.createElement('ol');
+        ol.style.cursor = 'pointer';
+
+        this._selectedIndex = 0;
+        this._scrollTop = 0;
+        this.appendChild(this._container);
+    }
+
+    @write
+    public attachedCallback() {
+    }
+
+    public detachedCallback() {
+        this.destory();
+    }
+
+    public destory() {
+        this._disposable.dispose();
+    }
+
+    private _gotoUsage(quickfix: OmniSharp.Models.QuickFix, index: number) {
+        Omni.navigateTo(quickfix);
+        this.selectedIndex = index;
+    }
+
+    private _keydownPane(e: KeyboardEvent) {
+        if (e.key == 'ArrowDown') {
+            atom.commands.dispatch(atom.views.getView(atom.workspace), "omnisharp-atom:next-usage");
+        }
+        else if (e.key == 'ArrowUp') {
+            atom.commands.dispatch(atom.views.getView(atom.workspace), "omnisharp-atom:previous-usage");
+        }
+        else if (e.key == 'Enter') {
+            atom.commands.dispatch(atom.views.getView(atom.workspace), "omnisharp-atom:go-to-usage");
+        }
+    }
+
+    private _scrollToItemView() {
+        var self = $(this);
         var item = self.find(`li.selected`);
         if (!item || !item.position()) return;
 
@@ -77,60 +156,39 @@ export class FindWindow extends ReactClientComponent<FindWindowProps, FindWindow
             pane.scrollBottom(desiredBottom);
     }
 
-    private keydownPane(e: any) {
-        if (e.keyIdentifier == 'Down') {
-            atom.commands.dispatch(atom.views.getView(atom.workspace), "omnisharp-atom:next-usage");
-        }
-        else if (e.keyIdentifier == 'Up') {
-            atom.commands.dispatch(atom.views.getView(atom.workspace), "omnisharp-atom:previous-usage");
-        }
-        else if (e.keyIdentifier == 'Enter') {
-            atom.commands.dispatch(atom.views.getView(atom.workspace), "omnisharp-atom:go-to-usage");
-        }
+    private _updateSelectedItem(index: number) {
+        if (index < 0)
+            index = 0;
+        if (index >= this.usages.length)
+            index = this.usages.length - 1;
+        if (this.selectedIndex !== index)
+            this.selectedIndex = index;
     }
 
-    private gotoUsage(quickfix: OmniSharp.Models.QuickFix, index: number) {
-        Omni.navigateTo(quickfix);
-        this.model.selectedIndex = index;
+    public next() {
+        this._updateSelectedItem(this.selectedIndex + 1);
     }
 
-    public render() {
-        return React.DOM.div({
-            className: 'error-output-pane ' + (this.props['className'] || ''),
-            onScroll: (e) => {
-                this.props.setScrollTop((<any>e.currentTarget).scrollTop);
-            },
-            tabIndex: -1,
-        },
-            React.DOM.ol({
-                style: <any>{ cursor: "pointer" },
-            }, _.map(this.state.usages, (usage: OmniSharp.Models.QuickFix, index) => {
+    public goto() {
+        if (this.usages[this.selectedIndex])
+            Omni.navigateTo(this.usages[this.selectedIndex]);
+    }
 
-                var highlight = React.createElement("omnisharp-highlight-element", {
-                    'data-start-line': usage.Line,
-                    'data-start-column': usage.Column,
-                    'data-end-line': usage.EndLine,
-                    'data-end-column': usage.EndColumn,
-                    'data-line-text': usage.Text,
-                    'data-file-path': usage.FileName,
-                    'data-selected': index === this.state.selectedIndex
-                });
-                return React.DOM.li({
-                    key: `quick-fix-${usage.FileName}-(${usage.Line}-${usage.Column})-(${usage.EndLine}-${usage.EndColumn})-(${usage.Projects.join('-') })`,
-                    className: 'find-usages' + (index === this.state.selectedIndex ? ' selected' : ''),
-                    onClick: (e) => this.gotoUsage(usage, index)
-                },
-                    React.DOM.pre({
-                        className: "text-highlight"
-                    }, highlight),
-                    React.DOM.pre({
-                        className: "inline-block"
-                    }, `${path.basename(usage.FileName) }(${usage.Line},${usage.Column})`),
-                    React.DOM.pre({
-                        className: "text-subtle inline-block"
-                    }, `${path.dirname(usage.FileName) }`)
-                );
-            })
-            ));
+    public previous() {
+        this._updateSelectedItem(this.selectedIndex - 1);
+    }
+
+    public gotoNext() {
+        this._updateSelectedItem(this.selectedIndex + 1);
+        if (this.usages[this.selectedIndex])
+            Omni.navigateTo(this.usages[this.selectedIndex]);
+    }
+
+    public gotoPrevious() {
+        this._updateSelectedItem(this.selectedIndex - 1);
+        if (this.usages[this.selectedIndex])
+            Omni.navigateTo(this.usages[this.selectedIndex]);
     }
 }
+
+(<any>exports).FindWindowElement = (<any>document).registerElement('omnisharp-find-window', { prototype: FindWindowElement.prototype });
