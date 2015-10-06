@@ -10,10 +10,6 @@ class FindUsages implements OmniSharp.IFeature {
     private _dockWindowDisposable: Rx.CompositeDisposable;
     private _currentWindow: FindWindowElement;
 
-    private _usages: OmniSharp.Models.DiagnosticLocation[];
-    private _selectedIndex: number;
-    private _scrollTop: number;
-
     public activate() {
         this.disposable = new CompositeDisposable();
 
@@ -96,29 +92,12 @@ class FindUsages implements OmniSharp.IFeature {
             }
         }));
 
-        this.disposable.add(dock.selectedWindow.where(x => x !== "find").subscribe(() => {
-            this._scrollTop = this._currentWindow.scrollTop;
-            this._selectedIndex = this._currentWindow.selectedIndex;
-            this._usages = this._currentWindow.usages;
-        }));
-
         this.disposable.add(dock.selectedWindow.where(x => x === "find").subscribe(() => {
-            var window: FindWindowElement = this._currentWindow = <any>dock.getWebComponentWindow('find');
-            if (this._usages) {
-                window.usages = this._usages;
-                window.scrollTop = this._scrollTop;
-                window.selectedIndex = this._selectedIndex;
-            }
-        }));
-
-        this.disposable.add(atom.commands.onWillDispatch((event: Event) => {
-            if (_.contains(["omnisharp-atom:toggle-dock", "omnisharp-atom:hide-dock"], event.type)) {
-                var window: FindWindowElement = this._currentWindow = <any>dock.getWebComponentWindow('find');
-                if (this._usages) {
-                    window.usages = this._usages;
-                    window.scrollTop = this._scrollTop;
-                    window.selectedIndex = this._selectedIndex;
-                }
+            var newWindow = dock.getWebComponentWindow('find');
+            if (this._currentWindow && newWindow && newWindow !== this._currentWindow) {
+                var parent = newWindow.parentElement;
+                parent.insertBefore(this._currentWindow, newWindow);
+                newWindow.remove();
             }
         }));
     }

@@ -107,11 +107,27 @@ class DockWindows<T extends IDockWindowButtonsProps> extends ReactClientComponen
     }
 
     private getPanelButtons() {
-        return _.map(this.props.panes, (e) => this.panelButton(e));
+        return _(this.props.panes)
+            .sortBy(z => z.id)
+            .sort((a, b) => {
+                if (a.options.priority === b.options.priority) return 0;
+                if (a.options.priority > b.options.priority) return 1;
+                return -1;
+            })
+            .map(e => this.panelButton(e))
+            .value();
     }
 
     private getButtons() {
-        return _.map(this.props.buttons, (e) => this.button(e));
+        return _(this.props.buttons)
+            .sortBy(z => z.id)
+            .sort((a, b) => {
+                if (a.options.priority === b.options.priority) return 0;
+                if (a.options.priority > b.options.priority) return 1;
+                return -1;
+            })
+            .map(e => this.button(e))
+            .value();
     }
 
     public render() {
@@ -231,8 +247,12 @@ export class DockWindow<T extends IDockWindowProps> extends ReactClientComponent
 
         // Focus the panel!
         this.updateState(() => {
-            var panel: any = React.findDOMNode(this).querySelector('.omnisharp-atom-output.selected');
-            if (panel) panel.focus();
+            var panel: HTMLElement = <any>React.findDOMNode(this);
+
+            if (panel) {
+                var selectedPane: HTMLElement = <any>_.find(panel.children, x => x.classList.contains('selected'));
+                selectedPane.focus();
+            }
 
             this._selectedWindow.onNext(selected);
         });

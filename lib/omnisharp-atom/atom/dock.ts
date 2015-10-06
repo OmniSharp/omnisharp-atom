@@ -176,28 +176,7 @@ class Dock implements OmniSharp.IAtomFeature {
     }
 
     private _update() {
-        // Sort th buttons!
-        this._panes = _(this._panes)
-            .sortBy(z => z.id)
-            .sort((a, b) => {
-                if (a.options.priority === b.options.priority) return 0;
-                if (a.options.priority > b.options.priority) return 1;
-                return -1;
-            })
-            .value();
-
-        this._buttons = _(this._buttons)
-            .sortBy(z => z.id)
-            .sort((a, b) => {
-                if (a.options.priority === b.options.priority) return 0;
-                if (a.options.priority > b.options.priority) return 1;
-                return -1;
-            })
-            .value();
-
         if (this.dock) {
-            this.dock.props.panes.splice(0, this.dock.props.panes.length, ...this._panes);
-            this.dock.props.buttons.splice(0, this.dock.props.buttons.length, ...this._buttons);
             this.dock.forceUpdate();
         }
     }

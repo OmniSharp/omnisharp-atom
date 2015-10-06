@@ -29,22 +29,12 @@ export class FindWindowElement extends HTMLDivElement implements WebComponent {
         var next = this._list.children[value];
 
         current && current.classList.remove('selected');
-        next && next.classList.remove('selected');
+        next && next.classList.add('selected');
+
+        next && (<HighlightElement>next.querySelector('omnisharp-highlight')).enableSemanticHighlighting();
 
         this._selectedIndex = value;
         this._scrollToItemView();
-    }
-
-    private _scrollTop: number;
-    public get scrollTop() {
-        return this._scrollTop;
-    }
-
-    public set scrollTop(value) {
-        this._scrollTop = value;
-        if (this._container.scrollTop !== value) {
-            this._container.scrollTop = value;
-        }
     }
 
     private _usages: OmniSharp.Models.DiagnosticLocation[];
@@ -53,61 +43,65 @@ export class FindWindowElement extends HTMLDivElement implements WebComponent {
 
         if (!this._usages && usages && usages.length) {
             this._usages = usages;
-            Observable.from(usages)
-                .flatMap(x => Observable.just(x).delay(20))
-                .map((usage, index) => {
-                    var selected = index === this.selectedIndex;
-                    var li = document.createElement('li');
-                    li.classList.add('find-usages');
-                    if (selected) {
-                        li.classList.add('selected');
-                    }
+            _.each(usages, (usage, index) => {
+                var selected = index === this.selectedIndex;
+                var li = document.createElement('li');
+                li.classList.add('find-usages');
+                if (selected) {
+                    li.classList.add('selected');
+                }
+
+                _.defer(() => {
                     var highlightedText = new HighlightElement();
                     highlightedText.usage = usage;
-                    li.appendChild(highlightedText);
+                    li.insertBefore(highlightedText, inlineBlock);
 
                     li.onmouseover = () => {
                         li.onmouseover = null;
                         highlightedText.enableSemanticHighlighting();
                     }
 
-                    li.onclick = () => this._gotoUsage(usage, index);
+                    if (selected) {
+                        _.defer(() => highlightedText.enableSemanticHighlighting());
+                    }
+                });
 
-                    var inlineBlock = document.createElement('pre');
-                    inlineBlock.innerText = `${path.basename(usage.FileName) }(${usage.Line},${usage.Column})`;
-                    inlineBlock.classList.add('inline-block');
-                    li.appendChild(inlineBlock);
+                li.onclick = () => this._gotoUsage(usage, index);
 
-                    var subtleText = document.createElement('pre');
-                    subtleText.innerText = `${path.dirname(usage.FileName) }`;
-                    subtleText.classList.add('inline-block', 'text-subtle');
-                    li.appendChild(subtleText);
+                var inlineBlock = document.createElement('pre');
+                inlineBlock.innerText = `${path.basename(usage.FileName) }(${usage.Line},${usage.Column})`;
+                inlineBlock.classList.add('inline-block');
+                li.appendChild(inlineBlock);
 
-                    this._list.appendChild(li);
-                })
-                .subscribe();
+                var subtleText = document.createElement('pre');
+                subtleText.innerText = `${path.dirname(usage.FileName) }`;
+                subtleText.classList.add('inline-block', 'text-subtle');
+                li.appendChild(subtleText);
+
+                fastdom.write(() => this._list.appendChild(li));
+            });
 
             this._container.appendChild(this._list);
         }
     }
 
-    private _container: HTMLDivElement;
     private _list: HTMLOListElement;
+    private _container: HTMLDivElement;
 
     public createdCallback() {
         this._disposable = new CompositeDisposable();
 
         var div = this._container = document.createElement('div');
-        div.classList.add('error-output-pane'); // className?
+        div.classList.add('list'); // className?
         div.onscroll = (e) => this.scrollTop = (<any>e.currentTarget).scrollTop;
-        div.onkeydown = this._keydownPane;
+        this.onkeydown = this._keydownPane;
         div.tabIndex = -1;
+        this.tabIndex = -1;
 
         var ol = this._list = document.createElement('ol');
         ol.style.cursor = 'pointer';
 
         this._selectedIndex = 0;
-        this._scrollTop = 0;
         this.appendChild(this._container);
     }
 
@@ -128,14 +122,14 @@ export class FindWindowElement extends HTMLDivElement implements WebComponent {
         this.selectedIndex = index;
     }
 
-    private _keydownPane(e: KeyboardEvent) {
-        if (e.key == 'ArrowDown') {
+    private _keydownPane(e: any) {
+        if (e.keyIdentifier == 'Down') {
             atom.commands.dispatch(atom.views.getView(atom.workspace), "omnisharp-atom:next-usage");
         }
-        else if (e.key == 'ArrowUp') {
+        else if (e.keyIdentifier == 'Up') {
             atom.commands.dispatch(atom.views.getView(atom.workspace), "omnisharp-atom:previous-usage");
         }
-        else if (e.key == 'Enter') {
+        else if (e.keyIdentifier == 'Enter') {
             atom.commands.dispatch(atom.views.getView(atom.workspace), "omnisharp-atom:go-to-usage");
         }
     }
@@ -161,8 +155,9 @@ export class FindWindowElement extends HTMLDivElement implements WebComponent {
             index = 0;
         if (index >= this.usages.length)
             index = this.usages.length - 1;
-        if (this.selectedIndex !== index)
+        if (this.selectedIndex !== index) {
             this.selectedIndex = index;
+        }
     }
 
     public next() {

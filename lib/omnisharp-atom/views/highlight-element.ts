@@ -94,8 +94,9 @@ export class HighlightElement extends HTMLElement {
         }
     }
 
+    private _checked = false;
     public enableSemanticHighlighting() {
-        if (atom.config.get<boolean>('omnisharp-atom.enhancedHighlighting')) {
+        if (!this._checked && atom.config.get<boolean>('omnisharp-atom.enhancedHighlighting')) {
             var text = this.usage.Text;
 
             request({ filePath: this.usage.FileName, startLine: +this.usage.Line, endLine: +this.usage.EndLine, whitespace: this._whitespace })
@@ -105,8 +106,8 @@ export class HighlightElement extends HTMLElement {
                     (<any>this._grammar).setResponses(response);
                     this.editor.setGrammar(<any>this._grammar);
                 });
-            this.editor.setGrammar(<any>this._grammar);
         }
+        this._checked = true;
     }
 }
 
