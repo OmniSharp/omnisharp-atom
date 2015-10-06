@@ -60,19 +60,11 @@ export class HighlightElement extends HTMLElement {
     // API
     public attachedCallback() {
         var grammars = atom.grammars.getGrammars();
-        var grammar = _.find(grammars, grammar => _.any((<any>grammar).fileTypes, ft => _.endsWith(this.dataset['filePath'], `.${ft}`)));
+        var grammar = this._grammar = _.find(grammars, grammar => _.any((<any>grammar).fileTypes, ft => _.endsWith(this.dataset['filePath'], `.${ft}`)));
 
         var text = this.dataset['lineText'];
         var whitespace = text.length - _.trimLeft(text).length;
-        if (atom.config.get<boolean>('omnisharp-atom.enhancedHighlighting')) {
-            request({ filePath: this.dataset['filePath'], startLine: +this.dataset['startLine'], endLine: +this.dataset['endLine'], whitespace: text.length - _.trimLeft(text).length })
-                .subscribe(response => {
-                    var start = +this.dataset['startLine'];
-                    grammar = getTemporaryGrammar(this.editor, grammar);
-                    (<any>grammar).setResponses(response);
-                    this.editor.setGrammar(<any>grammar);
-                });
-        }
+        this.selected = this.dataset['selected'] === "true";
 
         this.editor.setGrammar(<any>grammar);
         this.editor.setText(_.trimLeft(text));
@@ -83,6 +75,39 @@ export class HighlightElement extends HTMLElement {
 
     public detachedCallback() {
         this.editor.destroy();
+    }
+
+    private _grammar: FirstMate.Grammar;
+    private _grammarConfigured = false;
+
+    private _selected: boolean;
+    public get selected() {
+        return this._selected;
+    }
+
+    public set selected(value) {
+        if (value && !this._grammarConfigured) {
+            this._grammarConfigured = true;
+            if (atom.config.get<boolean>('omnisharp-atom.enhancedHighlighting')) {
+                var text = this.dataset['lineText'];
+                var whitespace = text.length - _.trimLeft(text).length;
+                request({ filePath: this.dataset['filePath'], startLine: +this.dataset['startLine'], endLine: +this.dataset['endLine'], whitespace: whitespace })
+                    .subscribe(response => {
+                        var start = +this.dataset['startLine'];
+                        this._grammar = getTemporaryGrammar(this.editor, this._grammar);
+                        (<any>this._grammar).setResponses(response);
+                        this.editor.setGrammar(<any>this._grammar);
+                    });
+                this.editor.setGrammar(<any>this._grammar);
+            }
+        }
+        this._selected = value;
+    }
+
+    public attributeChangedCallback(attrName, oldVal, newVal) {
+        if (attrName === "data-selected" && oldVal !== newVal) {
+            this.selected = newVal === "true";
+        }
     }
 }
 

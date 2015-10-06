@@ -112,7 +112,8 @@ export class FindWindow extends ReactClientComponent<FindWindowProps, FindWindow
                     'data-end-line': usage.EndLine,
                     'data-end-column': usage.EndColumn,
                     'data-line-text': usage.Text,
-                    'data-file-path': usage.FileName
+                    'data-file-path': usage.FileName,
+                    'data-selected': index === this.state.selectedIndex
                 });
                 return React.DOM.li({
                     key: `quick-fix-${usage.FileName}-(${usage.Line}-${usage.Column})-(${usage.EndLine}-${usage.EndColumn})-(${usage.Projects.join('-') })`,
@@ -130,6 +131,6 @@ export class FindWindow extends ReactClientComponent<FindWindowProps, FindWindow
                     }, `${path.dirname(usage.FileName) }`)
                 );
             })
-                ));
+            ));
     }
 }
