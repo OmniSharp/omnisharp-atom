@@ -4,7 +4,7 @@ import {Observable, AsyncSubject, RefCountDisposable, Disposable, CompositeDispo
 import Solution = require('./client');
 import {AtomProjectTracker} from "./atom-projects";
 import {ObservationClient, CombinationClient} from './composite-client';
-import {findCandidates, DriverState} from "omnisharp-client";
+import {DriverState, candidateFinder} from "omnisharp-client";
 import {GenericSelectListView} from "../omnisharp-atom/views/generic-list-view";
 
 var openSelectList: GenericSelectListView;
@@ -461,7 +461,7 @@ class SolutionManager {
     }
 
     private candidateFinder(directory: string, console: any) {
-        return findCandidates(directory, console)
+        return candidateFinder(directory, console)
             .flatMap(candidates => {
                 var slns = _.filter(candidates, x => _.endsWith(x, '.sln'));
                 if (slns.length > 1) {
