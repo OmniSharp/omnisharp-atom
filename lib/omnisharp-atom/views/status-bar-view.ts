@@ -107,7 +107,7 @@ export class FlameElement extends HTMLAnchorElement implements WebComponent {
         }
 
         if (status.outgoingRequests !== this._state.status.outgoingRequests) {
-            write(() => this._outgoing.innerText = this._state.status.outgoingRequests.toString());
+            write(() => this._outgoing.innerText = this._state.status.outgoingRequests && this._state.status.outgoingRequests.toString() || '0');
         }
 
         this._state.status = status || <any>{};
@@ -193,8 +193,19 @@ export class DiagnosticsElement extends HTMLAnchorElement implements WebComponen
     public updateState(state: typeof DiagnosticsElement.prototype._state) {
         if (!_.isEqual(this._state, state)) {
             this._state = state;
-            write(() => this._errors.innerText = this._state.errorCount.toString());
-            write(() => this._warnings.innerText = this._state.warningCount.toString());
+            write(() => {
+                if (this._state.errorCount) {
+                    this._errors.innerText = this._state.errorCount.toString();
+                } else {
+                    this._errors.innerText = '0';
+                }
+
+                if (this._state.warningCount) {
+                    this._warnings.innerText = this._state.warningCount.toString();
+                } else {
+                    this._warnings.innerText = '0';
+                }
+            });
         }
     }
 

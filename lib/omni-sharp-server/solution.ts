@@ -1,5 +1,5 @@
 import _ = require('lodash');
-import {Observable, Subject, CompositeDisposable} from 'rx';
+import {Observable, Subject, CompositeDisposable, Disposable} from 'rx';
 import {OmnisharpClientV2, DriverState, OmnisharpClientOptions} from "omnisharp-client";
 
 interface SolutionOptions extends OmnisharpClientOptions {
@@ -17,7 +17,10 @@ export class Solution extends OmnisharpClientV2 {
     public index: number;
     public temporary: boolean = false;
     private _solutionDisposable = new CompositeDisposable();
+    public get disposable() { return this._solutionDisposable; }
+
     private repository: Atom.GitRepository;
+    public get isDisposed() { return this._solutionDisposable.isDisposed; }
 
     constructor(options: SolutionOptions) {
         super(options);
@@ -43,6 +46,7 @@ export class Solution extends OmnisharpClientV2 {
     }
 
     public connect(options?) {
+        if (this.isDisposed) return;
         if (this.currentState === DriverState.Connected || this.currentState === DriverState.Connecting) return;
         super.connect(options);
 

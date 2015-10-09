@@ -85,11 +85,10 @@ class SolutionManager {
     }
 
     public disconnect() {
-        this._solutions.forEach(solution => solution.disconnect());
+        this._solutions.forEach(solution => solution.dispose());
     }
 
     public deactivate() {
-        if (this._unitTestMode_) return;
         this._activated = false;
         this._disposable.dispose();
         this.disconnect();
@@ -97,8 +96,6 @@ class SolutionManager {
         this._solutions.clear();
         this._solutionProjects.clear();
         this._findSolutionCache.clear();
-        //this._temporarySolutions.clear();
-        //this._disposableSolutionMap.clear();
     }
 
     public get connected() {
@@ -136,11 +133,17 @@ class SolutionManager {
             candidate = path.dirname(candidate);
         }
 
-        if (this._solutions.has(candidate))
-            return Observable.just(this._solutions.get(candidate));
+        if (this._solutions.has(candidate)) {
+            var solution = this._solutions.get(candidate);
+        } else if (project && this._solutionProjects.has(project)) {
+            var solution = this._solutionProjects.get(project);
+        }
 
-        if (project && this._solutionProjects.has(project)) {
-            return Observable.just(this._solutionProjects.get(project));
+        if (solution && !solution.isDisposed) {
+            return Observable.just(solution);
+        } else if (solution && solution.isDisposed) {
+            var disposer = this._disposableSolutionMap.get(solution);
+            disposer.dispose();
         }
 
         var solution = new Solution({
@@ -154,7 +157,13 @@ class SolutionManager {
 
         this._solutionDisposable.add(cd);
         this._disposableSolutionMap.set(solution, cd);
+
+        solution.disposable.add(Disposable.create(() => {
+            solution.connect = () => this.addSolution(candidate, { temporary, project });
+        }));
+
         cd.add(Disposable.create(() => {
+            this._solutionDisposable.remove(cd);
             _.pull(this._activeSolutions, solution);
             this._solutions.delete(candidate);
 
@@ -226,8 +235,6 @@ class SolutionManager {
     }
 
     private removeSolution(candidate: string) {
-        if (this._unitTestMode_) return;
-
         if (_.endsWith(candidate, '.sln')) {
             candidate = path.dirname(candidate);
         }
@@ -244,7 +251,7 @@ class SolutionManager {
 
         // keep track of the removed solutions
         if (solution) {
-            solution.disconnect();
+            solution.dispose();
             var disposable = this._disposableSolutionMap.get(solution);
             if (disposable) disposable.dispose();
         }
@@ -336,6 +343,10 @@ class SolutionManager {
         var [intersect, solutionValue] = this.getSolutionForUnderlyingPath(location, isCsx);
         p = (<any>editor).omniProject = intersect;
         (<any>editor).__omniClient__ = solutionValue;
+        solutionValue.disposable.add(Disposable.create(() => {
+            delete (<any>editor).omniProject;
+            delete (<any>editor).__omniClient__;
+        }));
 
         if (solutionValue && this._temporarySolutions.has(solutionValue)) {
             this.setupDisposableForTemporarySolution(solutionValue, editor);
@@ -349,6 +360,12 @@ class SolutionManager {
                 var [p, solution, temporary] = z;
                 (<any>editor).omniProject = p;
                 (<any>editor).__omniClient__ = solution;
+
+                solutionValue.disposable.add(Disposable.create(() => {
+                    delete (<any>editor).omniProject;
+                    delete (<any>editor).__omniClient__;
+                }));
+
                 if (temporary) {
                     this.setupDisposableForTemporarySolution(solution, editor);
                 }

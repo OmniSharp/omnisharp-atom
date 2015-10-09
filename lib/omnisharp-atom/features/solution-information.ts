@@ -50,7 +50,7 @@ class SolutionInformation implements OmniSharp.IFeature {
         }));
 
         this.disposable.add(atom.commands.add("atom-workspace", 'omnisharp-atom:stop-server', () => {
-            manager.activeSolutions[this.selectedIndex].disconnect();
+            manager.activeSolutions[this.selectedIndex].dispose();
         }));
 
         this.disposable.add(atom.commands.add("atom-workspace", 'omnisharp-atom:start-server', () => {
@@ -66,7 +66,7 @@ class SolutionInformation implements OmniSharp.IFeature {
                 .subscribe(() => {
                     solution.connect();
                 });
-            solution.disconnect();
+            solution.dispose();
         }));
     }
 
