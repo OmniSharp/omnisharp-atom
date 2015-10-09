@@ -34,12 +34,12 @@ class Omni implements Rx.IDisposable {
     private _activeEditorOrConfigEditor = wrapEditorObservable(Observable.combineLatest(this._activeEditorSubject, this._activeConfigEditorSubject, (editor, config) => editor || config || null));
 
     private _activeProject = this._activeEditorOrConfigEditor
-        .flatMap(editor => manager.getClientForEditor(editor)
+        .flatMap(editor => manager.getSolutionForEditor(editor)
             .flatMap(z => z.model.getProjectForEditor(editor)))
         .shareReplay(1);
 
     private _activeFramework = this._activeEditorOrConfigEditor
-        .flatMapLatest(editor => manager.getClientForEditor(editor)
+        .flatMapLatest(editor => manager.getSolutionForEditor(editor)
             .flatMapLatest(z => z.model.getProjectForEditor(editor)))
         .flatMapLatest(project => project.observe.activeFramework.map(framework => ({ project, framework })))
         .shareReplay(1);
@@ -57,8 +57,8 @@ class Omni implements Rx.IDisposable {
         this.disposable = new CompositeDisposable;
         manager.activate(this._activeEditor);
 
-        // we are only off if all our clients are disconncted or erroed.
-        this.disposable.add(manager.combinationClient.state.subscribe(z => this._isOff = _.all(z, x => x.value === DriverState.Disconnected || x.value === DriverState.Error)));
+        // we are only off if all our solutions are disconncted or erroed.
+        this.disposable.add(manager.combinationSolution.state.subscribe(z => this._isOff = _.all(z, x => x.value === DriverState.Disconnected || x.value === DriverState.Error)));
 
         this._editors = Omni.createTextEditorObservable(this.validGammarNames, this.disposable);
         this._configEditors = Omni.createTextEditorObservable(['JSON'], this.disposable);
@@ -99,10 +99,10 @@ class Omni implements Rx.IDisposable {
             cd.add(editor.onDidStopChanging(_.debounce(() => {
                 /*if (omniChanges.length) {
                 }*/
-                this.request(editor, client => client.updatebuffer({}, { silent: true }));
+                this.request(editor, solution => solution.updatebuffer({}, { silent: true }));
             }, 1000)));
 
-            cd.add(editor.onDidSave(() => this.request(editor, client => client.updatebuffer({ FromDisk: true }, { silent: true }))));
+            cd.add(editor.onDidSave(() => this.request(editor, solution => solution.updatebuffer({ FromDisk: true }, { silent: true }))));
 
             cd.add(editor.onDidDestroy(() => {
                 cd.dispose();
@@ -232,12 +232,12 @@ class Omni implements Rx.IDisposable {
     }
 
     /**
-    * This property can be used to listen to any event that might come across on any clients.
+    * This property can be used to listen to any event that might come across on any solutions.
     * This is a mostly functional replacement for `registerConfiguration`, though there has been
     *     one place where `registerConfiguration` could not be replaced.
     */
     public get listener() {
-        return manager.observationClient;
+        return manager.observationSolution;
     }
 
     /**
@@ -245,27 +245,27 @@ class Omni implements Rx.IDisposable {
     * A good example of this is, for code check errors, to aggregate all errors across all open solutions.
     */
     public get combination() {
-        return manager.combinationClient;
+        return manager.combinationSolution;
     }
 
     /**
-    * This property gets a list of clients as an observable.
-    * NOTE: This property will not emit additions or removals of clients.
+    * This property gets a list of solutions as an observable.
+    * NOTE: This property will not emit additions or removals of solutions.
     */
-    public get clients() {
-        return Observable.defer(() => Observable.from(manager.activeClients));
+    public get solutions() {
+        return Observable.defer(() => Observable.from(manager.activeSolutions));
     }
 
     /**
-    * This method allows us to forget about the entire client model.
+    * This method allows us to forget about the entire solution model.
     * Call this method with a specific editor, or just with a callback to capture the current editor
     *
     * The callback will then issue the request
     * NOTE: This API only exposes the operation Api and doesn't expose the event api, as we are requesting something to happen
     */
-    public request<T>(editor: Atom.TextEditor, callback: (client: OmniSharp.ExtendApi) => Rx.Observable<T> | Rx.IPromise<T>): Rx.Observable<T>;
-    public request<T>(callback: (client: OmniSharp.ExtendApi) => Rx.Observable<T> | Rx.IPromise<T>): Rx.Observable<T>;
-    public request<T>(editor: Atom.TextEditor | ((client: OmniSharp.ExtendApi) => Rx.Observable<T> | Rx.IPromise<T>), callback?: (client: OmniSharp.ExtendApi) => Rx.Observable<T> | Rx.IPromise<T>): Rx.Observable<T> {
+    public request<T>(editor: Atom.TextEditor, callback: (solution: OmniSharp.ExtendApi) => Rx.Observable<T> | Rx.IPromise<T>): Rx.Observable<T>;
+    public request<T>(callback: (solution: OmniSharp.ExtendApi) => Rx.Observable<T> | Rx.IPromise<T>): Rx.Observable<T>;
+    public request<T>(editor: Atom.TextEditor | ((solution: OmniSharp.ExtendApi) => Rx.Observable<T> | Rx.IPromise<T>), callback?: (solution: OmniSharp.ExtendApi) => Rx.Observable<T> | Rx.IPromise<T>): Rx.Observable<T> {
         if (_.isFunction(editor)) {
             callback = <any>editor;
             editor = null;
@@ -275,8 +275,8 @@ class Omni implements Rx.IDisposable {
             editor = atom.workspace.getActiveTextEditor();
         }
 
-        var clientCallback = (client: Solution) => {
-            var r = callback(client.withEditor(<any>editor));
+        var solutionCallback = (solution: Solution) => {
+            var r = callback(solution.withEditor(<any>editor));
             if (helpers.isPromise(r)) {
                 return Observable.fromPromise(<Rx.IPromise<T>>r);
             } else {
@@ -287,13 +287,13 @@ class Omni implements Rx.IDisposable {
         var result: Observable<T>;
 
         if (editor) {
-            result = manager.getClientForEditor(<Atom.TextEditor>editor)
+            result = manager.getSolutionForEditor(<Atom.TextEditor>editor)
                 .where(z => !!z)
-                .flatMap(clientCallback).share();
+                .flatMap(solutionCallback).share();
         } else {
-            result = manager.activeClient.take(1)
+            result = manager.activeSolution.take(1)
                 .where(z => !!z)
-                .flatMap(clientCallback).share();
+                .flatMap(solutionCallback).share();
         }
 
         // Ensure that the underying promise is connected
@@ -304,14 +304,14 @@ class Omni implements Rx.IDisposable {
     }
 
     public getProject(editor: Atom.TextEditor) {
-        return manager.getClientForEditor(editor)
+        return manager.getSolutionForEditor(editor)
             .flatMap(z => z.model.getProjectForEditor(editor))
             .take(1);
     }
 
-    public getClientForProject(project: ProjectViewModel) {
+    public getSolutionForProject(project: ProjectViewModel) {
         return Observable.just(
-            _(manager.activeClients)
+            _(manager.activeSolutions)
             .filter(solution => _.any(solution.model.projects, p => p.name === project.name))
             .first()
         );
@@ -321,7 +321,7 @@ class Omni implements Rx.IDisposable {
     * Allows for views to observe the active model as it changes between editors
     */
     public get activeModel() {
-        return manager.activeClient.map(z => z.model);
+        return manager.activeSolution.map(z => z.model);
     }
 
     public get activeEditor() {
@@ -347,7 +347,7 @@ class Omni implements Rx.IDisposable {
     }
 
     public whenEditorConnected(editor: Atom.TextEditor) {
-        return manager.getClientForEditor(editor)
+        return manager.getSolutionForEditor(editor)
             .flatMap(solution => solution.whenConnected())
             .map(z => editor);
     }
@@ -410,7 +410,7 @@ class Omni implements Rx.IDisposable {
         return outerCd;
     }
 
-    public registerConfiguration(callback: (client: Solution) => void) {
+    public registerConfiguration(callback: (solution: Solution) => void) {
         manager.registerConfiguration(callback);
     }
 }
@@ -443,7 +443,7 @@ function makeOpener(): Rx.IDisposable {
             return editor;
         }
 
-        return manager.activeClient
+        return manager.activeSolution
             .take(1)
             .flatMap(issueRequest)
             .map(setupEditor)

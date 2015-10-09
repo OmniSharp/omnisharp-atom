@@ -14,13 +14,13 @@ class ReloadWorkspace implements OmniSharp.IFeature {
     }
 
     public reloadWorkspace() {
-        return Omni.clients
-            .flatMap(client => {
-                return Observable.from(client.model.projects)
+        return Omni.solutions
+            .flatMap(solution => {
+                return Observable.from(solution.model.projects)
                     .flatMap(x => x.sourceFiles)
                     .observeOn(Scheduler.timeout)
                     .concatMap(file => oexists(file).where(x => !x)
-                        .flatMap(() => client.updatebuffer({ FileName: file, Buffer: '' })));
+                        .flatMap(() => solution.updatebuffer({ FileName: file, Buffer: '' })));
             });
     }
 

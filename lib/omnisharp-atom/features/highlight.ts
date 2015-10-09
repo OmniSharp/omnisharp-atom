@@ -160,7 +160,7 @@ class Highlight implements OmniSharp.IFeature {
                 if (!linesToFetch || !linesToFetch.length)
                     linesToFetch = [];
 
-                return Omni.request(editor, client => client.highlight({
+                return Omni.request(editor, solution => solution.highlight({
                     ProjectNames: projects,
                     Lines: <any>linesToFetch,
                     ExcludeClassifications: [

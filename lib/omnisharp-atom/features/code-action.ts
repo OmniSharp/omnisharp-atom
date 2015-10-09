@@ -16,7 +16,7 @@ class CodeAction implements OmniSharp.IFeature {
         this.disposable.add(Omni.addTextEditorCommand("omnisharp-atom:get-code-actions", () => {
             //store the editor that this was triggered by.
             var editor = atom.workspace.getActiveTextEditor();
-            Omni.request(editor, client => client.getcodeactions(this.getRequest(client)))
+            Omni.request(editor, solution => solution.getcodeactions(this.getRequest(solution)))
                 .subscribe(response => {
                     //pop ui to user.
                     this.view = codeActionsView({
@@ -24,7 +24,7 @@ class CodeAction implements OmniSharp.IFeature {
                         confirmed: (item) => {
                             if (editor && !editor.isDestroyed()) {
                                 var range = editor.getSelectedBufferRange();
-                                Omni.request(editor, client => client.runcodeaction(this.getRequest(client, item.Identifier)))
+                                Omni.request(editor, solution => solution.runcodeaction(this.getRequest(solution, item.Identifier)))
                                     .subscribe((response) => this.applyAllChanges(response.Changes));
                             }
                         }
@@ -54,7 +54,7 @@ class CodeAction implements OmniSharp.IFeature {
 
                 var range = editor.getSelectedBufferRange();
 
-                subscription = Omni.request(editor, client => client.getcodeactions(this.getRequest(client), { silent: true }))
+                subscription = Omni.request(editor, solution => solution.getcodeactions(this.getRequest(solution), { silent: true }))
                     .subscribe(response => {
                         if (response.CodeActions.length > 0) {
                             if (marker) {
@@ -104,9 +104,9 @@ class CodeAction implements OmniSharp.IFeature {
         }));
     }
 
-    private getRequest(client: OmniSharp.ExtendApi): OmniSharp.Models.V2.GetCodeActionsRequest;
-    private getRequest(client: OmniSharp.ExtendApi, codeAction: string): OmniSharp.Models.V2.RunCodeActionRequest;
-    private getRequest(client: OmniSharp.ExtendApi, codeAction?: string) {
+    private getRequest(solution: OmniSharp.ExtendApi): OmniSharp.Models.V2.GetCodeActionsRequest;
+    private getRequest(solution: OmniSharp.ExtendApi, codeAction: string): OmniSharp.Models.V2.RunCodeActionRequest;
+    private getRequest(solution: OmniSharp.ExtendApi, codeAction?: string) {
         var editor = atom.workspace.getActiveTextEditor();
         var range = <any>editor.getSelectedBufferRange();
         var request = <OmniSharp.Models.V2.RunCodeActionRequest>{

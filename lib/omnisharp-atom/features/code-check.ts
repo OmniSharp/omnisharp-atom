@@ -103,13 +103,13 @@ class CodeCheck implements OmniSharp.IFeature {
         this.disposable.add(this._fullCodeCheck
             .concatMap(() => reloadWorkspace.reloadWorkspace()
                 .toArray()
-                .concatMap(x => Omni.clients)
-                .concatMap(client => client.whenConnected()
-                    .tapOnNext(() => client.codecheck({ FileName: null })))
+                .concatMap(x => Omni.solutions)
+                .concatMap(solution => solution.whenConnected()
+                    .tapOnNext(() => solution.codecheck({ FileName: null })))
             )
             .subscribe());
 
-        Omni.registerConfiguration(client => client
+        Omni.registerConfiguration(solution => solution
             .whenConnected()
             .delay(1000)
             .subscribe(() => this._fullCodeCheck.onNext(true)));
@@ -195,7 +195,7 @@ class CodeCheck implements OmniSharp.IFeature {
     }
 
     private _doCodeCheck(editor: Atom.TextEditor) {
-        return Omni.request(editor, client => client.codecheck({}));
+        return Omni.request(editor, solution => solution.codecheck({}));
     };
 
     public doCodeCheck(editor: Atom.TextEditor) {

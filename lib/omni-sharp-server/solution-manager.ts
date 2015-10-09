@@ -27,25 +27,25 @@ class SolutionManager {
     private _activeSearch: Rx.IPromise<any>;
 
     private _activeSolutions: Solution[] = [];
-    public get activeClients() {
+    public get activeSolutions() {
         return this._activeSolutions;
     }
 
     // this solution can be used to observe behavior across all solution.
     private _observation = new SolutionObserver();
-    public get observationClient() {
+    public get observationSolution() {
         return this._observation;
     }
 
     // this solution can be used to aggregate behavior across all solutions
     private _combination = new SolutionAggregateObserver();
-    public get combinationClient() {
+    public get combinationSolution() {
         return this._combination;
     }
 
     private _activeSolution = new BehaviorSubject<Solution>(null);
     private _activeSolutionObserable = this._activeSolution.shareReplay(1).distinctUntilChanged().where(z => !!z);
-    public get activeClient() {
+    public get activeSolution() {
         return this._activeSolutionObserable;
     }
 
@@ -71,7 +71,7 @@ class SolutionManager {
         // create another observable that chnages when we get a new solution.
         this._disposable.add(activeEditor
             .where(z => !!z)
-            .flatMap(z => this.getClientForEditor(z))
+            .flatMap(z => this.getSolutionForEditor(z))
             .subscribe(x => this._activeSolution.onNext(x)));
 
         this._atomProjects.activate();
@@ -254,14 +254,14 @@ class SolutionManager {
         var editor = atom.workspace.getActiveTextEditor();
         var solution: Observable<Solution>;
         if (editor)
-            solution = this.getClientForEditor(editor);
+            solution = this.getSolutionForEditor(editor);
 
         if (solution) return solution;
         // No active text editor
         return Observable.empty<Solution>();
     }
 
-    public getClientForPath(path: string) {
+    public getSolutionForPath(path: string) {
         var solution: Observable<Solution>;
         if (!path)
             // No text editor found
@@ -287,11 +287,11 @@ class SolutionManager {
             });
     }
 
-    public getClientForEditor(editor: Atom.TextEditor) {
-        return this._getClientForEditor(editor).where(() => !editor.isDestroyed());
+    public getSolutionForEditor(editor: Atom.TextEditor) {
+        return this._getSolutionForEditor(editor).where(() => !editor.isDestroyed());
     }
 
-    private _getClientForEditor(editor: Atom.TextEditor) {
+    private _getSolutionForEditor(editor: Atom.TextEditor) {
         var solution: Observable<Solution>;
         if (!editor)
             // No text editor found
@@ -316,7 +316,7 @@ class SolutionManager {
             solution = Observable.just(solutionValue);
 
             if (solutionValue && this._temporarySolutions.has(solutionValue)) {
-                this.setupDisposableForTemporaryClient(solutionValue, editor);
+                this.setupDisposableForTemporarySolution(solutionValue, editor);
             }
 
             return solution;
@@ -338,7 +338,7 @@ class SolutionManager {
         (<any>editor).__omniClient__ = solutionValue;
 
         if (solutionValue && this._temporarySolutions.has(solutionValue)) {
-            this.setupDisposableForTemporaryClient(solutionValue, editor);
+            this.setupDisposableForTemporarySolution(solutionValue, editor);
         }
 
         if (solutionValue)
@@ -350,7 +350,7 @@ class SolutionManager {
                 (<any>editor).omniProject = p;
                 (<any>editor).__omniClient__ = solution;
                 if (temporary) {
-                    this.setupDisposableForTemporaryClient(solution, editor);
+                    this.setupDisposableForTemporarySolution(solution, editor);
                 }
                 return solution;
             });
@@ -507,7 +507,7 @@ class SolutionManager {
             });
     }
 
-    private setupDisposableForTemporaryClient(solution: Solution, editor: Atom.TextEditor) {
+    private setupDisposableForTemporarySolution(solution: Solution, editor: Atom.TextEditor) {
         if (solution && !editor['__setup_temp__'] && this._temporarySolutions.has(solution)) {
             var refCountDisposable = this._temporarySolutions.get(solution);
             var disposable = refCountDisposable.getDisposable();

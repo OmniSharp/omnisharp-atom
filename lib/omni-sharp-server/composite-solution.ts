@@ -7,18 +7,18 @@ import {ViewModel} from './view-model';
 export class SolutionObserver extends OmnisharpObservationClientV2<Solution> {
     model: typeof ViewModel.prototype.observe;
 
-    constructor(clients: Solution[] = []) {
-        super(clients);
+    constructor(solutions: Solution[] = []) {
+        super(solutions);
 
         this.model = {
-            codecheck: this.makeMergeObserable((client: Solution) => client.model.observe.codecheck),
-            output: this.makeMergeObserable((client: Solution) => client.model.observe.output),
-            status: this.makeMergeObserable((client: Solution) => client.model.observe.status),
-            updates: this.makeMergeObserable((client: Solution) => client.model.observe.updates),
-            projectAdded: this.makeMergeObserable((client: Solution) => client.model.observe.projectAdded),
-            projectRemoved: this.makeMergeObserable((client: Solution) => client.model.observe.projectRemoved),
-            projectChanged: this.makeMergeObserable((client: Solution) => client.model.observe.projectChanged),
-            projects: this.makeMergeObserable((client: Solution) => client.model.observe.projects)
+            codecheck: this.makeMergeObserable((solution: Solution) => solution.model.observe.codecheck),
+            output: this.makeMergeObserable((solution: Solution) => solution.model.observe.output),
+            status: this.makeMergeObserable((solution: Solution) => solution.model.observe.status),
+            updates: this.makeMergeObserable((solution: Solution) => solution.model.observe.updates),
+            projectAdded: this.makeMergeObserable((solution: Solution) => solution.model.observe.projectAdded),
+            projectRemoved: this.makeMergeObserable((solution: Solution) => solution.model.observe.projectRemoved),
+            projectChanged: this.makeMergeObserable((solution: Solution) => solution.model.observe.projectChanged),
+            projects: this.makeMergeObserable((solution: Solution) => solution.model.observe.projects)
         };
     }
 }

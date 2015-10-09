@@ -5,9 +5,9 @@ import _ = require('lodash');
 import {Observable, Disposable, CompositeDisposable, Subject} from "rx";
 import {File} from "atom";
 import {ProjectViewModel} from "../../omni-sharp-server/view-model";
-import Client = require("../../omni-sharp-server/client");
+import {Solution} from "../../omni-sharp-server/solution";
 
-function projectLock(solution: Client, project: ProjectViewModel, filePath: string) {
+function projectLock(solution: Solution, project: ProjectViewModel, filePath: string) {
     var disposable = new CompositeDisposable();
     var subject = new Subject<string>();
     var file = new File(filePath),
@@ -58,17 +58,17 @@ class FileMonitor implements OmniSharp.IFeature {
             .map(project => ({ project, filePath: path.join(project.path, "project.lock.json") }))
             .where(({ project, filePath}) => fs.existsSync(filePath))
             .flatMap(({ project, filePath}) =>
-                Omni.getClientForProject(project).map(client => ({ client, project, filePath })))
-            .flatMap(({ client, project, filePath }) => {
+                Omni.getSolutionForProject(project).map(solution => ({ solution, project, filePath })))
+            .flatMap(({ solution, project, filePath }) => {
                 if (this.filesMap.has(project)) {
                     var v = this.filesMap.get(project);
                     v.dispose();
                 }
 
-                var lock = projectLock(client, project, filePath);
+                var lock = projectLock(solution, project, filePath);
                 this.disposable.add(lock);
                 this.filesMap.set(project, lock);
-                return lock.observable.map(path => ({ client, filePath }));
+                return lock.observable.map(path => ({ solution, filePath }));
             })
             .share()
             .pausable(pauser);
@@ -76,10 +76,10 @@ class FileMonitor implements OmniSharp.IFeature {
         this.disposable.add(changes
             .buffer(changes.throttle(1000), () => Observable.timer(1000))
             .subscribe(changes => {
-                _.each(_.groupBy(changes, x => x.client.uniqueId), changes => {
-                    var client = changes[0].client;
+                _.each(_.groupBy(changes, x => x.solution.uniqueId), changes => {
+                    var solution = changes[0].solution;
                     var paths = _.unique(changes.map(x => x.filePath));
-                    client.filesChanged(paths.map(z => ({ FileName: z })));
+                    solution.filesChanged(paths.map(z => ({ FileName: z })));
                 });
             }));
 

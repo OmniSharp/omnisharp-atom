@@ -1,5 +1,5 @@
 import Omni = require('../lib/omni-sharp-server/omni');
-import ClientManager = require('../lib/omni-sharp-server/client-manager');
+import SolutionManager from '../lib/omni-sharp-server/solution-manager';
 import {DriverState} from "omnisharp-client";
 import {Observable} from "rx";
 import {setupFeature} from "./test-helpers";
@@ -12,7 +12,7 @@ describe('OmniSharp Atom', () => {
             waitsForPromise(() =>
                 Observable.fromPromise(atom.workspace.open('simple/project.json'))
                     .flatMap(editor =>
-                        ClientManager.getClientForEditor(editor))
+                        SolutionManager.getSolutionForEditor(editor))
                     .flatMap(x =>
                         x.state.startWith(x.currentState))
                     .where(z =>
@@ -21,7 +21,7 @@ describe('OmniSharp Atom', () => {
                     .toPromise());
 
             runs(() => {
-                expect(ClientManager.connected).toBeTruthy();
+                expect(SolutionManager.connected).toBeTruthy();
             });
         });
 
@@ -35,7 +35,7 @@ describe('OmniSharp Atom', () => {
                     )
                     .flatMap(x => Observable.from(x))
                     .flatMap(editor =>
-                        ClientManager.getClientForEditor(editor))
+                        SolutionManager.getSolutionForEditor(editor))
                     .flatMap(x =>
                         x.state.startWith(x.currentState))
                     .where(z =>
@@ -44,8 +44,8 @@ describe('OmniSharp Atom', () => {
                     .toPromise());
 
             runs(() => {
-                expect(ClientManager.connected).toBeTruthy();
-                expect(ClientManager.activeClients.length).toBe(2);
+                expect(SolutionManager.connected).toBeTruthy();
+                expect(SolutionManager.activeSolutions.length).toBe(2);
             });
         });
     });

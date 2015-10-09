@@ -23,7 +23,7 @@ class CodeFormat implements OmniSharp.IFeature {
         var editor = atom.workspace.getActiveTextEditor();
         if (editor) {
             var buffer = editor.getBuffer();
-            Omni.request(editor, client => {
+            Omni.request(editor, solution => {
                 var request = <OmniSharp.Models.FormatRangeRequest>{
                     Line: 0,
                     Column: 0,
@@ -31,7 +31,7 @@ class CodeFormat implements OmniSharp.IFeature {
                     EndColumn: 0,
                 };
 
-                return client
+                return solution
                     .formatRangePromise(request)
                     .then((data) => Changes.applyChanges(editor, data));
             });
@@ -43,12 +43,12 @@ class CodeFormat implements OmniSharp.IFeature {
         if (editor) {
             editor.insertText(char);
 
-            Omni.request(editor, client => {
+            Omni.request(editor, solution => {
                 var request = <OmniSharp.Models.FormatAfterKeystrokeRequest>{
                     Character: char
                 };
 
-                return client.formatAfterKeystrokePromise(request)
+                return solution.formatAfterKeystrokePromise(request)
                     .then((data) => Changes.applyChanges(editor, data));
             });
         }

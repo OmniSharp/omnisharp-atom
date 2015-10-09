@@ -1,7 +1,7 @@
 import {CompositeDisposable, Disposable, Scheduler, Observable} from "rx";
 import _ = require('lodash');
 import Omni = require('../../omni-sharp-server/omni')
-import Client = require('../../omni-sharp-server/client');
+import {Solution} from '../../omni-sharp-server/solution';
 import React = require('react');
 import {ReactClientComponent} from "./react-client-component";
 import {server} from "../features/server-information";

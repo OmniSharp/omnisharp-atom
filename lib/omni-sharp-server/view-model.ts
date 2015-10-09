@@ -51,13 +51,13 @@ export class ViewModel implements Rx.IDisposable {
 
     private _uniqueId;
     private _disposable = new CompositeDisposable();
-    public get uniqueId() { return this._client.uniqueId; }
+    public get uniqueId() { return this._solution.uniqueId; }
 
-    public get index() { return this._client.index; }
-    public get path() { return this._client.path; }
+    public get index() { return this._solution.index; }
+    public get path() { return this._solution.path; }
     public output: OmniSharp.OutputMessage[] = [];
     public diagnostics: OmniSharp.Models.DiagnosticLocation[] = [];
-    public get state() { return this._client.currentState };
+    public get state() { return this._solution.currentState };
     public packageSources: string[] = [];
     public runtime = '';
     public runtimePath: string;
@@ -77,31 +77,31 @@ export class ViewModel implements Rx.IDisposable {
         projects: Rx.Observable<ProjectViewModel[]>;
     };
 
-    constructor(private _client: Solution) {
-        this._uniqueId = _client.uniqueId;
-        this._updateState(_client.currentState);
+    constructor(private _solution: Solution) {
+        this._uniqueId = _solution.uniqueId;
+        this._updateState(_solution.currentState);
         this._observeProjectEvents();
 
         // Manage our build log for display
-        this._disposable.add(_client.logs.subscribe(event => {
+        this._disposable.add(_solution.logs.subscribe(event => {
             this.output.push(event);
             if (this.output.length > 1000)
                 this.output.shift();
         }));
 
-        this._disposable.add(_client.state.where(z => z === DriverState.Disconnected).subscribe(() => {
+        this._disposable.add(_solution.state.where(z => z === DriverState.Disconnected).subscribe(() => {
             _.each(this.projects.slice(), project => this._projectRemovedStream.onNext(project));
             this.projects = [];
             this.diagnostics = [];
         }));
 
-        var codecheck = this.setupCodecheck(_client);
-        var status = this.setupStatus(_client);
+        var codecheck = this.setupCodecheck(_solution);
+        var status = this.setupStatus(_solution);
         var output = this.output;
         var updates = Observable.ofObjectChanges(this);
-        var msbuild = this.setupMsbuild(_client);
-        var dnx = this.setupDnx(_client);
-        var scriptcs = this.setupScriptCs(_client);
+        var msbuild = this.setupMsbuild(_solution);
+        var dnx = this.setupDnx(_solution);
+        var scriptcs = this.setupScriptCs(_solution);
 
 
         var _projectAddedStream = this._projectAddedStream;
@@ -110,8 +110,8 @@ export class ViewModel implements Rx.IDisposable {
         var projects = Observable.merge(_projectAddedStream, _projectRemovedStream, _projectChangedStream)
             .map(z => this.projects);
 
-        var outputObservable = _client.logs
-            .window(_client.logs.throttle(100), () => Observable.timer(100))
+        var outputObservable = _solution.logs
+            .window(_solution.logs.throttle(100), () => Observable.timer(100))
             .flatMap(x => x.startWith(null).last())
             .map(() => output);
 
@@ -126,46 +126,46 @@ export class ViewModel implements Rx.IDisposable {
             get projectChanged() { return _projectChangedStream; },
         };
 
-        this._disposable.add(_client.state.subscribe(_.bind(this._updateState, this)));
+        this._disposable.add(_solution.state.subscribe(_.bind(this._updateState, this)));
 
         (window['clients'] || (window['clients'] = [])).push(this);  //TEMP
 
-        this._disposable.add(_client.state.where(z => z === DriverState.Connected)
+        this._disposable.add(_solution.state.where(z => z === DriverState.Connected)
             .subscribe(() => {
-                _client.projects({ ExcludeSourceFiles: false });
+                _solution.projects({ ExcludeSourceFiles: false });
 
-                _client.packagesource({ ProjectPath: _client.path })
+                _solution.packagesource({ ProjectPath: _solution.path })
                     .subscribe(response => {
                         this.packageSources = response.Sources;
                     });
             }));
 
         // MSBUILD
-        this._disposable.add(_client.projectAdded
+        this._disposable.add(_solution.projectAdded
             .where(z => z.MsBuildProject != null)
             .map(z => z.MsBuildProject)
             .where(z => !_.any(this.projects, { path: z.Path }))
             .subscribe(project => {
                 this._projectAddedStream.onNext(
-                    new ProjectViewModel(project.AssemblyName, project.Path, _client.path, [{
+                    new ProjectViewModel(project.AssemblyName, project.Path, _solution.path, [{
                         FriendlyName: project.TargetFramework, Name: project.TargetFramework, ShortName: project.TargetFramework
                     }], project.SourceFiles));
             }));
 
-        this._disposable.add(_client.projectRemoved
+        this._disposable.add(_solution.projectRemoved
             .where(z => z.MsBuildProject != null)
             .map(z => z.MsBuildProject)
             .subscribe(project => {
                 this._projectRemovedStream.onNext(_.find(this.projects, { path: project.Path }));
             }));
 
-        this._disposable.add(_client.projectChanged
+        this._disposable.add(_solution.projectChanged
             .where(z => z.MsBuildProject != null)
             .map(z => z.MsBuildProject)
             .subscribe(project => {
                 var current = _.find(this.projects, { path: project.Path });
                 if (current) {
-                    var changed = new ProjectViewModel(project.AssemblyName, project.Path, _client.path, [{
+                    var changed = new ProjectViewModel(project.AssemblyName, project.Path, _solution.path, [{
                         FriendlyName: project.TargetFramework, Name: project.TargetFramework, ShortName: project.TargetFramework
                     }], project.SourceFiles);
                     _.assign(current, changed);
@@ -174,29 +174,29 @@ export class ViewModel implements Rx.IDisposable {
             }));
 
         //DNX
-        this._disposable.add(_client.projectAdded
+        this._disposable.add(_solution.projectAdded
             .where(z => z.DnxProject != null)
             .map(z => z.DnxProject)
             .where(z => !_.any(this.projects, { path: z.Path }))
             .subscribe(project => {
                 this._projectAddedStream.onNext(
-                    new ProjectViewModel(project.Name, project.Path, _client.path, project.Frameworks, project.Configurations, project.Commands, project.SourceFiles));
+                    new ProjectViewModel(project.Name, project.Path, _solution.path, project.Frameworks, project.Configurations, project.Commands, project.SourceFiles));
             }));
 
-        this._disposable.add(_client.projectRemoved
+        this._disposable.add(_solution.projectRemoved
             .where(z => z.DnxProject != null)
             .map(z => z.DnxProject)
             .subscribe(project => {
                 this._projectRemovedStream.onNext(_.find(this.projects, { path: project.Path }));
             }));
 
-        this._disposable.add(_client.projectChanged
+        this._disposable.add(_solution.projectChanged
             .where(z => z.DnxProject != null)
             .map(z => z.DnxProject)
             .subscribe(project => {
                 var current = _.find(this.projects, { path: project.Path });
                 if (current) {
-                    var changed = new ProjectViewModel(project.Name, project.Path, _client.path, project.Frameworks, project.Configurations, project.Commands, project.SourceFiles);
+                    var changed = new ProjectViewModel(project.Name, project.Path, _solution.path, project.Frameworks, project.Configurations, project.Commands, project.SourceFiles);
                     _.assign(current, changed);
                     this._projectChangedStream.onNext(current);
                 }
@@ -263,16 +263,16 @@ export class ViewModel implements Rx.IDisposable {
             project => _.assign(_.find(this.projects, z => z.path === project.path), project)));
     }
 
-    private setupCodecheck(_client: Solution) {
+    private setupCodecheck(_solution: Solution) {
         var codecheck = Observable.merge(
             // Catch global code checks
-            _client.observeCodecheck
+            _solution.observeCodecheck
                 .where(z => !z.request.FileName)
                 .map(z => z.response)
                 .map(z => <OmniSharp.Models.DiagnosticLocation[]>z.QuickFixes),
             // Evict diagnostics from a code check for the given file
             // Then insert the new diagnostics
-            _client.observeCodecheck
+            _solution.observeCodecheck
                 .where(z => !!z.request.FileName)
                 .map((ctx) => {
                     var {request, response} = ctx;
@@ -288,23 +288,23 @@ export class ViewModel implements Rx.IDisposable {
         return codecheck;
     }
 
-    private setupStatus(_client: Solution) {
-        var status = _client.status
+    private setupStatus(_solution: Solution) {
+        var status = _solution.status
             .startWith(<any>{})
             .share();
 
         return status;
     }
 
-    private setupMsbuild(_client: Solution) {
-        var workspace = _client.observeProjects
+    private setupMsbuild(_solution: Solution) {
+        var workspace = _solution.observeProjects
             .where(z => z.response.MSBuild != null)
             .where(z => z.response.MSBuild.Projects.length > 0)
             .map(z => z.response.MSBuild);
 
         this._disposable.add(workspace.subscribe(system => {
             _.each(system.Projects, p => {
-                var project = new ProjectViewModel(p.AssemblyName, p.Path, _client.path, [{
+                var project = new ProjectViewModel(p.AssemblyName, p.Path, _solution.path, [{
                     FriendlyName: p.TargetFramework, Name: p.TargetFramework, ShortName: p.TargetFramework
                 }], p.SourceFiles);
                 this._projectAddedStream.onNext(project);
@@ -313,8 +313,8 @@ export class ViewModel implements Rx.IDisposable {
         return workspace;
     }
 
-    private setupDnx(_client: Solution) {
-        var workspace = _client.observeProjects
+    private setupDnx(_solution: Solution) {
+        var workspace = _solution.observeProjects
             .where(z => z.response.Dnx != null)
             .where(z => z.response.Dnx.Projects.length > 0)
             .map(z => z.response.Dnx);
@@ -324,21 +324,21 @@ export class ViewModel implements Rx.IDisposable {
             this.runtimePath = system.RuntimePath;
 
             _.each(system.Projects, p => {
-                var project = new ProjectViewModel(p.Name, p.Path, _client.path, p.Frameworks, p.Configurations, p.Commands, p.SourceFiles);
+                var project = new ProjectViewModel(p.Name, p.Path, _solution.path, p.Frameworks, p.Configurations, p.Commands, p.SourceFiles);
                 this._projectAddedStream.onNext(project);
             });
         }));
         return workspace;
     }
 
-    private setupScriptCs(_client: Solution) {
-        var context = _client.observeProjects
+    private setupScriptCs(_solution: Solution) {
+        var context = _solution.observeProjects
             .where(z => z.response.ScriptCs != null)
             .where(z => z.response.ScriptCs.CsxFiles.length > 0)
             .map(z => z.response.ScriptCs);
 
         this._disposable.add(context.subscribe(context => {
-            this._projectAddedStream.onNext(new ProjectViewModel("ScriptCs", context.Path, _client.path));
+            this._projectAddedStream.onNext(new ProjectViewModel("ScriptCs", context.Path, _solution.path));
         }));
         return context;
     }

@@ -1,4 +1,4 @@
-import Client = require("../../lib/omni-sharp-server/client");
+import {Solution} from "../../lib/omni-sharp-server/solution";
 import Omni = require('../../lib/omni-sharp-server/omni');
 import {Observable, CompositeDisposable} from "rx";
 import {setupFeature, restoreBuffers, openEditor} from "../test-helpers";
@@ -13,7 +13,7 @@ describe('Command Runner', () => {
         waitsForPromise(() =>
             openEditor('commands/project.json'));
         waitsForPromise(() =>
-            Observable.merge(Omni.clients.map(z => true), Omni.listener.model.projects.map(z => true)).debounce(10000).take(1).toPromise());
+            Observable.merge(Omni.solutions.map(z => true), Omni.listener.model.projects.map(z => true)).debounce(10000).take(1).toPromise());
 
         runs(() => {
             var commands: any = atom.commands;
