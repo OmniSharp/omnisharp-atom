@@ -156,7 +156,7 @@ class CodeCheck implements OmniSharp.IFeature {
         // Cache this result, because the underlying implementation of observe will
         //    create a cache of the last recieved value.  This allows us to pick pick
         //    up from where we left off.
-        var combinationObservable = Omni.combination.observe(z => z.observeCodecheck
+        var combinationObservable = Omni.aggregateListener.observe(z => z.observeCodecheck
             .where(z => !z.request.FileName) // Only select file names
             .map(z => <OmniSharp.Models.DiagnosticLocation[]>z.response.QuickFixes));
 

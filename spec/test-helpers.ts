@@ -5,39 +5,43 @@ import {DriverState} from "omnisharp-client";
 if ((<any>jasmine.getEnv()).defaultTimeoutInterval < 30000) (<any>jasmine.getEnv()).defaultTimeoutInterval = 30000;
 if ((<any>jasmine.getEnv()).defaultTimeoutInterval === 60000) (<any>jasmine.getEnv()).defaultTimeoutInterval = 60000 * 3;
 
-SolutionManager.observationSolution.errors.subscribe(error => console.error(JSON.stringify(error)));
-SolutionManager.observationSolution.events.subscribe(event => console.info(`server event: ${JSON.stringify(event) }`));
-SolutionManager.observationSolution.requests.subscribe(r => console.info(`request: ${JSON.stringify(r) }`));
-SolutionManager.observationSolution.responses.subscribe(r => console.info(`response: ${JSON.stringify(r) }`));
+SolutionManager.solutionObserver.errors.subscribe(error => console.error(JSON.stringify(error)));
+SolutionManager.solutionObserver.events.subscribe(event => console.info(`server event: ${JSON.stringify(event) }`));
+SolutionManager.solutionObserver.requests.subscribe(r => console.info(`request: ${JSON.stringify(r) }`));
+SolutionManager.solutionObserver.responses.subscribe(r => console.info(`response: ${JSON.stringify(r) }`));
 
 export function setupFeature(features: string[], unitTestMode = true) {
     var cd: CompositeDisposable;
     beforeEach(function() {
         cd = new CompositeDisposable();
         SolutionManager._unitTestMode_ = unitTestMode;
+        SolutionManager._kick_in_the_pants_ = true;
 
         atom.config.set('omnisharp-atom:feature-white-list', true);
         atom.config.set('omnisharp-atom:feature-list', features);
 
         waitsForPromise(() => atom.packages.activatePackage('language-csharp')
             .then(() => atom.packages.activatePackage('omnisharp-atom'))
-            .then((pack: Atom.Package) => pack.mainModule._started.toPromise())
+            .then((pack: Atom.Package) => pack.mainModule._activated.toPromise())
         );
     });
 
     afterEach(() => {
         atom.config.set('omnisharp-atom:feature-white-list', undefined);
         atom.config.set('omnisharp-atom:feature-list', undefined);
+        SolutionManager._unitTestMode_ = false;
+        SolutionManager._kick_in_the_pants_ = false;
         cd.dispose();
     });
 }
 
 export function restoreBuffers() {
+    return Disposable.empty;
     var disposable = new CompositeDisposable();
     var buffers = new Map<string, string>();
 
     if (SolutionManager._unitTestMode_) {
-        disposable.add(SolutionManager.observationSolution.responses
+        disposable.add(SolutionManager.solutionObserver.responses
             .where(z =>
                 z.request.FileName && z.request.Buffer)
             .map(z =>

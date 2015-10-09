@@ -5,12 +5,12 @@ import {Observable} from "rx";
 import {setupFeature} from "./test-helpers";
 
 describe('OmniSharp Atom', () => {
-    setupFeature([], false);
+    setupFeature([]);
 
     describe('when the package is activated', () => {
         it('connect', () => {
             waitsForPromise(() =>
-                Observable.fromPromise(atom.workspace.open('simple/project.json'))
+                Observable.fromPromise(atom.workspace.open('simple/code-lens/CodeLens.cs'))
                     .flatMap(editor =>
                         SolutionManager.getSolutionForEditor(editor))
                     .flatMap(x =>
@@ -29,7 +29,7 @@ describe('OmniSharp Atom', () => {
             waitsForPromise(() =>
                 Observable.fromPromise(
                     Promise.all([
-                        atom.workspace.open('simple/project.json'),
+                        atom.workspace.open('simple/code-lens/CodeLens.cs'),
                         atom.workspace.open('simple2/project.json')
                     ])
                     )

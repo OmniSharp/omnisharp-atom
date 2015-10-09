@@ -58,7 +58,7 @@ class Omni implements Rx.IDisposable {
         manager.activate(this._activeEditor);
 
         // we are only off if all our solutions are disconncted or erroed.
-        this.disposable.add(manager.combinationSolution.state.subscribe(z => this._isOff = _.all(z, x => x.value === DriverState.Disconnected || x.value === DriverState.Error)));
+        this.disposable.add(manager.solutionAggregateObserver.state.subscribe(z => this._isOff = _.all(z, x => x.value === DriverState.Disconnected || x.value === DriverState.Error)));
 
         this._editors = Omni.createTextEditorObservable(this.validGammarNames, this.disposable);
         this._configEditors = Omni.createTextEditorObservable(['JSON'], this.disposable);
@@ -237,15 +237,15 @@ class Omni implements Rx.IDisposable {
     *     one place where `registerConfiguration` could not be replaced.
     */
     public get listener() {
-        return manager.observationSolution;
+        return manager.solutionObserver;
     }
 
     /**
     * This property can be used to observe to the aggregate or combined responses to any event.
     * A good example of this is, for code check errors, to aggregate all errors across all open solutions.
     */
-    public get combination() {
-        return manager.combinationSolution;
+    public get aggregateListener() {
+        return manager.solutionAggregateObserver;
     }
 
     /**
@@ -312,8 +312,8 @@ class Omni implements Rx.IDisposable {
     public getSolutionForProject(project: ProjectViewModel) {
         return Observable.just(
             _(manager.activeSolutions)
-            .filter(solution => _.any(solution.model.projects, p => p.name === project.name))
-            .first()
+                .filter(solution => _.any(solution.model.projects, p => p.name === project.name))
+                .first()
         );
     }
 
@@ -322,6 +322,10 @@ class Omni implements Rx.IDisposable {
     */
     public get activeModel() {
         return manager.activeSolution.map(z => z.model);
+    }
+
+    public get activeSolution() {
+        return manager.activeSolution;
     }
 
     public get activeEditor() {
@@ -412,6 +416,10 @@ class Omni implements Rx.IDisposable {
 
     public registerConfiguration(callback: (solution: Solution) => void) {
         manager.registerConfiguration(callback);
+    }
+
+    private get _kick_in_the_pants_() {
+        return manager._kick_in_the_pants_;
     }
 }
 

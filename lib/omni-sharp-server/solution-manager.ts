@@ -10,6 +10,7 @@ import {GenericSelectListView} from "../omnisharp-atom/views/generic-list-view";
 var openSelectList: GenericSelectListView;
 class SolutionManager {
     public _unitTestMode_ = false;
+    public _kick_in_the_pants_ = false;
     private _disposable: CompositeDisposable;
     private _solutionDisposable: CompositeDisposable;
     private _atomProjects: AtomProjectTracker;
@@ -33,13 +34,13 @@ class SolutionManager {
 
     // this solution can be used to observe behavior across all solution.
     private _observation = new SolutionObserver();
-    public get observationSolution() {
+    public get solutionObserver() {
         return this._observation;
     }
 
     // this solution can be used to aggregate behavior across all solutions
     private _combination = new SolutionAggregateObserver();
-    public get combinationSolution() {
+    public get solutionAggregateObserver() {
         return this._combination;
     }
 
@@ -65,7 +66,7 @@ class SolutionManager {
         this._activeSearch = Promise.resolve(undefined);
 
         // monitor atom project paths
-        this.subscribeToAtomProjectTracker();
+        this._subscribeToAtomProjectTracker();
 
         // We use the active editor on omnisharpAtom to
         // create another observable that chnages when we get a new solution.
@@ -107,27 +108,27 @@ class SolutionManager {
         return false;
     }
 
-    private subscribeToAtomProjectTracker() {
+    private _subscribeToAtomProjectTracker() {
         this._disposable.add(this._atomProjects.removed
             .where(z => this._solutions.has(z))
-            .subscribe(project => this.removeSolution(project)));
+            .subscribe(project => this._removeSolution(project)));
 
         this._disposable.add(this._atomProjects.added
             .where(project => !this._solutionProjects.has(project))
             .map(project => {
-                return this.candidateFinder(project, console)
-                    .flatMap(candidates => addCandidatesInOrder(candidates, candidate => this.addSolution(candidate, { project })));
+                return this._candidateFinder(project, console)
+                    .flatMap(candidates => addCandidatesInOrder(candidates, candidate => this._addSolution(candidate, { project })));
             })
             .subscribe(candidateObservable => {
                 this._activeSearch = this._activeSearch.then(() => candidateObservable.toPromise());
             }));
     }
 
-    private findRepositoryForPath(workingPath: string) {
+    private _findRepositoryForPath(workingPath: string) {
         if (atom.project) return _.find(atom.project.getRepositories(), (repo: any) => repo && path.normalize(repo.getWorkingDirectory()) === path.normalize(workingPath));
     }
 
-    private addSolution(candidate: string, {temporary = false, project}: { delay?: number; temporary?: boolean; project?: string; }) {
+    private _addSolution(candidate: string, {temporary = false, project}: { delay?: number; temporary?: boolean; project?: string; }) {
         var projectPath = candidate;
         if (_.endsWith(candidate, '.sln')) {
             candidate = path.dirname(candidate);
@@ -150,7 +151,7 @@ class SolutionManager {
             projectPath: projectPath,
             index: ++this._nextIndex,
             temporary: temporary,
-            repository: this.findRepositoryForPath(candidate)
+            repository: this._findRepositoryForPath(candidate)
         });
 
         var cd = new CompositeDisposable();
@@ -159,7 +160,7 @@ class SolutionManager {
         this._disposableSolutionMap.set(solution, cd);
 
         solution.disposable.add(Disposable.create(() => {
-            solution.connect = () => this.addSolution(candidate, { temporary, project });
+            solution.connect = () => this._addSolution(candidate, { temporary, project });
         }));
 
         cd.add(Disposable.create(() => {
@@ -199,12 +200,12 @@ class SolutionManager {
             _.defer(() => solution.connect());
         }*/
 
-        var result = this.addSolutionSubscriptions(solution, cd);
+        var result = this._addSolutionSubscriptions(solution, cd);
         solution.connect();
         return result;
     }
 
-    private addSolutionSubscriptions(solution: Solution, cd: CompositeDisposable) {
+    private _addSolutionSubscriptions(solution: Solution, cd: CompositeDisposable) {
         var result = new AsyncSubject<Solution>();
         var errorResult = solution.state
             .where(z => z === DriverState.Error)
@@ -234,7 +235,7 @@ class SolutionManager {
         return result;
     }
 
-    private removeSolution(candidate: string) {
+    private _removeSolution(candidate: string) {
         if (_.endsWith(candidate, '.sln')) {
             candidate = path.dirname(candidate);
         }
@@ -257,7 +258,7 @@ class SolutionManager {
         }
     }
 
-    private getSolutionForActiveEditor() {
+    private _getSolutionForActiveEditor() {
         var editor = atom.workspace.getActiveTextEditor();
         var solution: Observable<Solution>;
         if (editor)
@@ -282,12 +283,12 @@ class SolutionManager {
             return Observable.empty<Solution>();
         }
 
-        var [intersect, solutionValue] = this.getSolutionForUnderlyingPath(location, isCsx);
+        var [intersect, solutionValue] = this._getSolutionForUnderlyingPath(location, isCsx);
 
         if (solutionValue)
             return Observable.just(solutionValue);
 
-        return this.findSolutionForUnderlyingPath(location, isCsx)
+        return this._findSolutionForUnderlyingPath(location, isCsx)
             .map(z => {
                 var [p, solution, temporary] = z;
                 return solution;
@@ -299,7 +300,7 @@ class SolutionManager {
     }
 
     private _getSolutionForEditor(editor: Atom.TextEditor) {
-        var solution: Observable<Solution>;
+        var solutionResult: Observable<Solution>;
         if (!editor)
             // No text editor found
             return Observable.empty<Solution>();
@@ -310,23 +311,23 @@ class SolutionManager {
         // Not sure if we should just add properties onto editors...
         // but it works...
         if (p && this._solutions.has(p)) {
-            var solutionValue = this._solutions.get(p);
+            var solution = this._solutions.get(p);
             // If the solution has disconnected, reconnect it
-            if (solutionValue.currentState === DriverState.Disconnected && atom.config.get('omnisharp-atom.autoStartOnCompatibleFile'))
-                solutionValue.connect();
+            if (solution.currentState === DriverState.Disconnected && atom.config.get('omnisharp-atom.autoStartOnCompatibleFile'))
+                solution.connect();
 
             // Client is in an invalid state
-            if (solutionValue.currentState === DriverState.Error) {
+            if (solution.currentState === DriverState.Error) {
                 return Observable.empty<Solution>();
             }
 
-            solution = Observable.just(solutionValue);
+            solutionResult = Observable.just(solution);
 
-            if (solutionValue && this._temporarySolutions.has(solutionValue)) {
-                this.setupDisposableForTemporarySolution(solutionValue, editor);
+            if (solution && this._temporarySolutions.has(solution)) {
+                this._setupDisposableForTemporarySolution(solution, editor);
             }
 
-            return solution;
+            return solutionResult;
         }
 
         var location = editor.getPath();
@@ -340,34 +341,36 @@ class SolutionManager {
             return Observable.empty<Solution>();
         }
 
-        var [intersect, solutionValue] = this.getSolutionForUnderlyingPath(location, isCsx);
+        var [intersect, solution] = this._getSolutionForUnderlyingPath(location, isCsx);
         p = (<any>editor).omniProject = intersect;
-        (<any>editor).__omniClient__ = solutionValue;
-        solutionValue.disposable.add(Disposable.create(() => {
-            delete (<any>editor).omniProject;
-            delete (<any>editor).__omniClient__;
-        }));
-
-        if (solutionValue && this._temporarySolutions.has(solutionValue)) {
-            this.setupDisposableForTemporarySolution(solutionValue, editor);
+        (<any>editor).__omniClient__ = solution;
+        if (solution) {
+            solution.disposable.add(Disposable.create(() => {
+                delete (<any>editor).omniProject;
+                delete (<any>editor).__omniClient__;
+            }));
         }
 
-        if (solutionValue)
-            return Observable.just(solutionValue);
+        if (solution && this._temporarySolutions.has(solution)) {
+            this._setupDisposableForTemporarySolution(solution, editor);
+        }
 
-        return this.findSolutionForUnderlyingPath(location, isCsx)
+        if (solution)
+            return Observable.just(solution);
+
+        return this._findSolutionForUnderlyingPath(location, isCsx)
             .map(z => {
                 var [p, solution, temporary] = z;
                 (<any>editor).omniProject = p;
                 (<any>editor).__omniClient__ = solution;
 
-                solutionValue.disposable.add(Disposable.create(() => {
+                solution.disposable.add(Disposable.create(() => {
                     delete (<any>editor).omniProject;
                     delete (<any>editor).__omniClient__;
                 }));
 
                 if (temporary) {
-                    this.setupDisposableForTemporarySolution(solution, editor);
+                    this._setupDisposableForTemporarySolution(solution, editor);
                 }
                 return solution;
             });
@@ -383,7 +386,7 @@ class SolutionManager {
         }
     }
 
-    private getSolutionForUnderlyingPath(location: string, isCsx: boolean): [string, Solution] {
+    private _getSolutionForUnderlyingPath(location: string, isCsx: boolean): [string, Solution] {
         if (location === undefined) {
             return;
         }
@@ -413,13 +416,13 @@ class SolutionManager {
         return [null, null];
     }
 
-    private findSolutionForUnderlyingPath(location: string, isCsx: boolean): Observable<[string, Solution, boolean]> {
+    private _findSolutionForUnderlyingPath(location: string, isCsx: boolean): Observable<[string, Solution, boolean]> {
         var directory = path.dirname(location);
         var subject = new AsyncSubject<[string, Solution, boolean]>();
 
         if (!this._activated) {
             return this.activatedSubject.take(1)
-                .flatMap(() => this.findSolutionForUnderlyingPath(location, isCsx));
+                .flatMap(() => this._findSolutionForUnderlyingPath(location, isCsx));
         }
 
         if (this._findSolutionCache.has(location)) {
@@ -449,7 +452,7 @@ class SolutionManager {
             }
 
             var newCandidates = _.difference(candidates, fromIterator(this._solutions.keys()));
-            this._activeSearch.then(() => addCandidatesInOrder(newCandidates, candidate => this.addSolution(candidate, { temporary: !project }))
+            this._activeSearch.then(() => addCandidatesInOrder(newCandidates, candidate => this._addSolution(candidate, { temporary: !project }))
                 .subscribeOnCompleted(() => {
                     if (!isCsx) {
                         // Attempt to see if this file is part a solution
@@ -471,13 +474,13 @@ class SolutionManager {
                 }));
         }
 
-        var foundCandidates = this.candidateFinder(directory, console)
+        var foundCandidates = this._candidateFinder(directory, console)
             .subscribe(cb);
 
         return subject;
     }
 
-    private candidateFinder(directory: string, console: any) {
+    private _candidateFinder(directory: string, console: any) {
         return candidateFinder(directory, console)
             .flatMap(candidates => {
                 var slns = _.filter(candidates, x => _.endsWith(x, '.sln'));
@@ -524,14 +527,14 @@ class SolutionManager {
             });
     }
 
-    private setupDisposableForTemporarySolution(solution: Solution, editor: Atom.TextEditor) {
+    private _setupDisposableForTemporarySolution(solution: Solution, editor: Atom.TextEditor) {
         if (solution && !editor['__setup_temp__'] && this._temporarySolutions.has(solution)) {
             var refCountDisposable = this._temporarySolutions.get(solution);
             var disposable = refCountDisposable.getDisposable();
             editor['__setup_temp__'] = true
             editor.onDidDestroy(() => {
                 disposable.dispose();
-                this.removeSolution(solution.path);
+                this._removeSolution(solution.path);
             });
         }
     }
