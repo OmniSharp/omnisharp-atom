@@ -10,7 +10,7 @@ interface ClientOptions extends OmnisharpClientOptions {
 
 import {ViewModel} from "./view-model";
 
-class Client extends OmnisharpClientV2 {
+export class Solution extends OmnisharpClientV2 {
     public model: ViewModel;
     public logs: Observable<OmniSharp.OutputMessage>;
     public path: string;
@@ -117,7 +117,7 @@ class Client extends OmnisharpClientV2 {
         }
 
         if (request['Buffer']) {
-            request['Buffer'] = request['Buffer'].replace(Client._regex, '');
+            request['Buffer'] = request['Buffer'].replace(Solution._regex, '');
         }
 
         return cb();
@@ -164,20 +164,18 @@ class Client extends OmnisharpClientV2 {
     }
 }
 
-export = Client;
-
-for (var key in Client.prototype) {
+for (var key in Solution.prototype) {
     if (_.endsWith(key, 'Promise')) {
         (function() {
             var action = key.replace(/Promise$/, '');
-            var promiseMethod = Client.prototype[key];
-            var observableMethod = Client.prototype[action];
+            var promiseMethod = Solution.prototype[key];
+            var observableMethod = Solution.prototype[action];
 
-            Client.prototype[key] = function(request, options) {
+            Solution.prototype[key] = function(request, options) {
                 return this._fixupRequest(action, request, () => promiseMethod.call(this, request, options));
             };
 
-            Client.prototype[action] = function(request, options) {
+            Solution.prototype[action] = function(request, options) {
                 return this._fixupRequest(action, request, () => observableMethod.call(this, request, options));
             };
         })();

@@ -1,5 +1,5 @@
 import * as _ from "lodash";
-import Client = require('./client');
+import {Solution} from "./solution";
 import {DriverState, OmnisharpClientStatus} from "omnisharp-client";
 import {Observable, Subject, CompositeDisposable} from "rx";
 import {basename, dirname, normalize} from "path";
@@ -77,7 +77,7 @@ export class ViewModel implements Rx.IDisposable {
         projects: Rx.Observable<ProjectViewModel[]>;
     };
 
-    constructor(private _client: Client) {
+    constructor(private _client: Solution) {
         this._uniqueId = _client.uniqueId;
         this._updateState(_client.currentState);
         this._observeProjectEvents();
@@ -263,7 +263,7 @@ export class ViewModel implements Rx.IDisposable {
             project => _.assign(_.find(this.projects, z => z.path === project.path), project)));
     }
 
-    private setupCodecheck(_client: Client) {
+    private setupCodecheck(_client: Solution) {
         var codecheck = Observable.merge(
             // Catch global code checks
             _client.observeCodecheck
@@ -288,7 +288,7 @@ export class ViewModel implements Rx.IDisposable {
         return codecheck;
     }
 
-    private setupStatus(_client: Client) {
+    private setupStatus(_client: Solution) {
         var status = _client.status
             .startWith(<any>{})
             .share();
@@ -296,7 +296,7 @@ export class ViewModel implements Rx.IDisposable {
         return status;
     }
 
-    private setupMsbuild(_client: Client) {
+    private setupMsbuild(_client: Solution) {
         var workspace = _client.observeProjects
             .where(z => z.response.MSBuild != null)
             .where(z => z.response.MSBuild.Projects.length > 0)
@@ -313,7 +313,7 @@ export class ViewModel implements Rx.IDisposable {
         return workspace;
     }
 
-    private setupDnx(_client: Client) {
+    private setupDnx(_client: Solution) {
         var workspace = _client.observeProjects
             .where(z => z.response.Dnx != null)
             .where(z => z.response.Dnx.Projects.length > 0)
@@ -331,7 +331,7 @@ export class ViewModel implements Rx.IDisposable {
         return workspace;
     }
 
-    private setupScriptCs(_client: Client) {
+    private setupScriptCs(_client: Solution) {
         var context = _client.observeProjects
             .where(z => z.response.ScriptCs != null)
             .where(z => z.response.ScriptCs.CsxFiles.length > 0)

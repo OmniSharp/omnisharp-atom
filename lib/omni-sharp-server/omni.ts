@@ -1,6 +1,6 @@
 import {helpers, Observable, ReplaySubject, Subject, CompositeDisposable, BehaviorSubject, Disposable, Scheduler} from 'rx';
-import manager = require("./client-manager");
-import Client = require("./client");
+import manager from "./solution-manager";
+import {Solution} from "./solution";
 import _ = require('lodash');
 import {basename} from "path";
 import {DriverState} from "omnisharp-client";
@@ -275,7 +275,7 @@ class Omni implements Rx.IDisposable {
             editor = atom.workspace.getActiveTextEditor();
         }
 
-        var clientCallback = (client: Client) => {
+        var clientCallback = (client: Solution) => {
             var r = callback(client.withEditor(<any>editor));
             if (helpers.isPromise(r)) {
                 return Observable.fromPromise(<Rx.IPromise<T>>r);
@@ -410,7 +410,7 @@ class Omni implements Rx.IDisposable {
         return outerCd;
     }
 
-    public registerConfiguration(callback: (client: Client) => void) {
+    public registerConfiguration(callback: (client: Solution) => void) {
         manager.registerConfiguration(callback);
     }
 }
@@ -423,12 +423,12 @@ import {TextEditor} from "atom";
 var metadataUri = 'omnisharp://metadata/';
 function makeOpener(): Rx.IDisposable {
     function createEditorView(assemblyName: string, typeName: string) {
-        function issueRequest(solution: Client) {
+        function issueRequest(solution: Solution) {
             return solution.request<any, { Source: string; SourceName: string }>("metadata", { AssemblyName: assemblyName, TypeName: typeName })
                 .map(response => ({ source: response.Source, path: response.SourceName, solution }));
         }
 
-        function setupEditor({solution, path, source}: { solution: Client; source: string; path: string }) {
+        function setupEditor({solution, path, source}: { solution: Solution; source: string; path: string }) {
             var editor = new TextEditor({});
             editor.setText(source);
             editor.onWillInsertText((e) => e.cancel());

@@ -49,7 +49,7 @@ class UpdateProject implements OmniSharp.IAtomFeature {
                         this.adjustTreeView(path, client.path);
                     } else if (this._nagAdjustTreeView) {
                         // notify for adjustment
-                        let notification = atom.notifications.addInfo("Show solution root?", {
+                        let notification = atom.notifications.addInfo("Show solution root?",<any> {
                             detail: `${path}\n-> ${client.path}`,
                             description: 'It appears the solution root is not displayed in the treeview.  Would you like to show the entire solution in the tree view?',
                             buttons: [
@@ -88,7 +88,7 @@ class UpdateProject implements OmniSharp.IAtomFeature {
                 atom.project.addPath(project);
             }
         } else if (this._nagAddExternalProjects) {
-            let notification = atom.notifications.addInfo(`Add external projects?`, {
+            let notification = atom.notifications.addInfo(`Add external projects?`, <any>{
                 detail: paths.join('\n'),
                 description: `We have detected external projects would you like to add them to the treeview?`,
                 buttons: [
@@ -123,7 +123,7 @@ class UpdateProject implements OmniSharp.IAtomFeature {
                 atom.project.removePath(project);
             }
         } else if (this._nagAddExternalProjects) {
-            let notification = atom.notifications.addInfo(`Remove external projects?`, {
+            let notification = atom.notifications.addInfo(`Remove external projects?`, <any>{
                 detail: paths.join('\n'),
                 description: `We have detected external projects have been removed, would you like to remove them from the treeview?`,
                 buttons: [

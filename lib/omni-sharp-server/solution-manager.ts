@@ -1,9 +1,9 @@
 import _ = require('lodash')
 import path = require('path');
 import {Observable, AsyncSubject, RefCountDisposable, Disposable, CompositeDisposable, BehaviorSubject, Scheduler, Subject} from "rx";
-import Solution = require('./client');
+import {Solution} from "./solution";
 import {AtomProjectTracker} from "./atom-projects";
-import {ObservationClient, CombinationClient} from './composite-client';
+import {SolutionObserver, SolutionAggregateObserver} from './composite-solution';
 import {DriverState, candidateFinder} from "omnisharp-client";
 import {GenericSelectListView} from "../omnisharp-atom/views/generic-list-view";
 
@@ -32,13 +32,13 @@ class SolutionManager {
     }
 
     // this solution can be used to observe behavior across all solution.
-    private _observation = new ObservationClient();
+    private _observation = new SolutionObserver();
     public get observationClient() {
         return this._observation;
     }
 
     // this solution can be used to aggregate behavior across all solutions
-    private _combination = new CombinationClient();
+    private _combination = new SolutionAggregateObserver();
     public get combinationClient() {
         return this._combination;
     }
@@ -580,4 +580,4 @@ function fromIterator<T>(iterator: IterableIterator<T>) {
 }
 
 var instance = new SolutionManager();
-export = instance;
+export default instance;
