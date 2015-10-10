@@ -104,7 +104,7 @@ export var provider = [
         scope: 'file',
         lintOnFly: true,
         lint: (editor: Atom.TextEditor) => {
-            if (!_.contains(Omni.validGammarNames, editor.getGrammar().name)) return Promise.resolve([]);
+            if (!_.any(Omni.supportedExtensions, ext => _.endsWith(editor.getPath(), ext))) return Promise.resolve([]);
 
             return codeCheck.doCodeCheck(editor)
                 .flatMap(x => x)
@@ -118,7 +118,7 @@ export var provider = [
         scope: 'project',
         lintOnFly: false,
         lint: (editor: Atom.TextEditor) => {
-            if (!_.contains(Omni.validGammarNames, editor.getGrammar().name)) return Promise.resolve([]);
+            if (!_.any(Omni.supportedExtensions, ext => _.endsWith(editor.getPath(), ext))) return Promise.resolve([]);
 
             return Omni.activeModel
                 .flatMap(x => Observable.from(x.diagnostics))

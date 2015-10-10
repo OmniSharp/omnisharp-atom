@@ -1,4 +1,4 @@
-import {CompositeDisposable, SingleAssignmentDisposable, Disposable} from "rx";
+import {CompositeDisposable, SingleAssignmentDisposable, Disposable, Subject} from "rx";
 import * as _ from 'lodash';
 import Omni = require('../../omni-sharp-server/omni')
 import {DockWindow, DockPane, DockButton, IDockWindowProps, DocPaneOptions, DocButtonOptions} from '../views/dock-window';
@@ -8,7 +8,7 @@ class Dock implements OmniSharp.IAtomFeature {
     private disposable: Rx.CompositeDisposable;
     private view: Element;
     private dock: DockWindow<IDockWindowProps>;
-    private _panes: DockPane<any, any>[] = [];
+    private _panes: DockPane[] = [];
     private _buttons: DockButton[] = [];
 
     public activate() {
@@ -30,11 +30,13 @@ class Dock implements OmniSharp.IAtomFeature {
 
         this.view = p.item.parentElement;
         this.view.classList.add('omnisharp-atom-pane');
-        this.dock = <any> React.render(React.createElement<IDockWindowProps>(DockWindow, {
+        this.dock = <any>React.render(React.createElement<IDockWindowProps>(DockWindow, {
             panes: this._panes,
             buttons: this._buttons,
             panel: p
         }), this.view);
+
+        this.dock.selectedWindow.subscribe(x => this._selectedWindow.onNext(x));
 
         this.disposable.add(Disposable.create(() => {
             React.unmountComponentAtNode(this.view);
@@ -73,6 +75,9 @@ class Dock implements OmniSharp.IAtomFeature {
         this.dock.selectWindow(selected);
     }
 
+    private _selectedWindow = new Subject<string>();
+    public get selectedWindow() { return this._selectedWindow.asObservable(); }
+
     public addWindow<P, S>(id: string, title: string, view: typeof React.Component, props: P, options: DocPaneOptions = { priority: 1000 }, parentDisposable?: Rx.Disposable) {
         var disposable = new SingleAssignmentDisposable();
         var cd = new CompositeDisposable();
@@ -86,7 +91,6 @@ class Dock implements OmniSharp.IAtomFeature {
 
         cd.add(atom.commands.add('atom-workspace', "omnisharp-atom:show-" + id, () => this.selectWindow(id)));
         cd.add(atom.commands.add('atom-workspace', "omnisharp-atom:toggle-" + id, () => this.toggleWindow(id)));
-
 
         if (options.closeable) {
             cd.add(atom.commands.add('atom-workspace', "omnisharp-atom:close-" + id, () => {
@@ -108,6 +112,46 @@ class Dock implements OmniSharp.IAtomFeature {
         this._update();
 
         return <Rx.IDisposable>disposable;
+    }
+
+    public addWebComponentWindow(id: string, title: string, element: string, options: DocPaneOptions = { priority: 1000 }, parentDisposable?: Rx.Disposable) {
+        var disposable = new SingleAssignmentDisposable();
+        var cd = new CompositeDisposable();
+        this.disposable.add(disposable);
+        disposable.setDisposable(cd);
+
+        if (parentDisposable)
+            cd.add(parentDisposable);
+
+        this._panes.push({ id, title, element, options, disposable });
+
+        cd.add(atom.commands.add('atom-workspace', "omnisharp-atom:show-" + id, () => this.selectWindow(id)));
+        cd.add(atom.commands.add('atom-workspace', "omnisharp-atom:toggle-" + id, () => this.toggleWindow(id)));
+
+        if (options.closeable) {
+            cd.add(atom.commands.add('atom-workspace', "omnisharp-atom:close-" + id, () => {
+                this.disposable.remove(disposable);
+                if (this.dock.selected === id) {
+                    this.dock.state.selected = 'output';
+                    this.hide();
+                }
+                disposable.dispose();
+            }));
+        }
+
+        cd.add(Disposable.create(() => {
+            _.remove(this._panes, { id });
+            this.dock.state.selected = 'output';
+            this.dock.forceUpdate();
+        }));
+
+        this._update();
+
+        return <Rx.IDisposable>disposable;
+    }
+
+    public getWebComponentWindow(id: string) {
+        return document.getElementById(`dock-${id}`);
     }
 
     public addButton<T>(id: string, title: string, view: React.HTMLElement, options: DocButtonOptions = { priority: 1000 }, parentDisposable?: Rx.Disposable) {
@@ -132,28 +176,7 @@ class Dock implements OmniSharp.IAtomFeature {
     }
 
     private _update() {
-        // Sort th buttons!
-        this._panes = _(this._panes)
-            .sortBy(z => z.id)
-            .sort((a, b) => {
-                if (a.options.priority === b.options.priority) return 0;
-                if (a.options.priority > b.options.priority) return 1;
-                return -1;
-            })
-            .value();
-
-        this._buttons = _(this._buttons)
-            .sortBy(z => z.id)
-            .sort((a, b) => {
-                if (a.options.priority === b.options.priority) return 0;
-                if (a.options.priority > b.options.priority) return 1;
-                return -1;
-            })
-            .value();
-
         if (this.dock) {
-            this.dock.props.panes = this._panes;
-            this.dock.props.buttons = this._buttons;
             this.dock.forceUpdate();
         }
     }

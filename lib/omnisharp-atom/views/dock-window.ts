@@ -14,7 +14,7 @@ interface IDockWindowState {
 
 export interface IDockWindowProps {
     panel: Atom.Panel;
-    panes: DockPane<any, any>[];
+    panes: DockPane[];
     buttons: DockButton[];
 }
 
@@ -24,7 +24,7 @@ interface IDockWindowButtonsState {
 interface IDockWindowButtonsProps {
     selected: string;
     setSelected: (selected: string) => void;
-    panes: DockPane<any, any>[];
+    panes: DockPane[];
     buttons: DockButton[];
     children: any[];
 }
@@ -36,11 +36,12 @@ export interface DocPaneOptions {
     closeable?: boolean;
 }
 
-export interface DockPane<P, S> {
+export interface DockPane {
     id: string;
     title: string;
-    props: P;
-    view: typeof React.Component;
+    props?: any;
+    view?: typeof React.Component;
+    element?: string;
     options: DocPaneOptions;
     disposable: Rx.IDisposable;
 }
@@ -58,11 +59,12 @@ export interface DockButton {
     disposable: Rx.IDisposable;
 }
 
-export interface DisposableDockPane<P, S> {
+export interface DisposableDockPane {
     id: string;
     title: string;
-    props: P;
-    view: typeof React.Component;
+    props?: any;
+    view?: typeof React.Component;
+    element?: string;
     options: DocPaneOptions;
     disposable: Rx.Disposable;
 }
@@ -74,8 +76,7 @@ class DockWindows<T extends IDockWindowButtonsProps> extends ReactClientComponen
         this.state = {};
     }
 
-    private panelButton({id, title, options, disposable}: DisposableDockPane<any, any>) {
-
+    private panelButton({id, title, options, disposable}: DisposableDockPane) {
         var children = [React.DOM.span({ className: 'text' }, title)];
         if (options.closeable) {
             children.push(React.DOM.span({
@@ -106,11 +107,27 @@ class DockWindows<T extends IDockWindowButtonsProps> extends ReactClientComponen
     }
 
     private getPanelButtons() {
-        return _.map(this.props.panes, (e) => this.panelButton(e));
+        return _(this.props.panes)
+            .sortBy(z => z.id)
+            .sort((a, b) => {
+                if (a.options.priority === b.options.priority) return 0;
+                if (a.options.priority > b.options.priority) return 1;
+                return -1;
+            })
+            .map(e => this.panelButton(e))
+            .value();
     }
 
     private getButtons() {
-        return _.map(this.props.buttons, (e) => this.button(e));
+        return _(this.props.buttons)
+            .sortBy(z => z.id)
+            .sort((a, b) => {
+                if (a.options.priority === b.options.priority) return 0;
+                if (a.options.priority > b.options.priority) return 1;
+                return -1;
+            })
+            .map(e => this.button(e))
+            .value();
     }
 
     public render() {
@@ -119,8 +136,8 @@ class DockWindows<T extends IDockWindowButtonsProps> extends ReactClientComponen
         }, React.DOM.div({ className: 'btn-toolbar pull-left' },
             React.DOM.div({ className: 'btn-group btn-toggle' },
                 this.getPanelButtons())
-            ),
-            React.DOM.div({className:"btn-well pull-right btn-group"},
+        ),
+            React.DOM.div({ className: "btn-well pull-right btn-group" },
                 this.getButtons())
         );
     }
@@ -141,6 +158,9 @@ export class DockWindow<T extends IDockWindowProps> extends ReactClientComponent
         super(props, context);
         this.state = { selected: 'output', fontSize: atom.config.get<number>('editor.fontSize') };
     }
+
+    private _selectedWindow = new Subject<string>();
+    public get selectedWindow() { return this._selectedWindow.asObservable(); }
 
     public componentWillMount() {
         super.componentWillMount();
@@ -227,8 +247,14 @@ export class DockWindow<T extends IDockWindowProps> extends ReactClientComponent
 
         // Focus the panel!
         this.updateState(() => {
-            var panel: any = React.findDOMNode(this).querySelector('.omnisharp-atom-output.selected');
-            if (panel) panel.focus();
+            var panel: HTMLElement = <any>React.findDOMNode(this);
+
+            if (panel) {
+                var selectedPane: HTMLElement = <any>_.find(panel.children, x => x.classList.contains('selected'));
+                selectedPane.focus();
+            }
+
+            this._selectedWindow.onNext(selected);
         });
     }
 
@@ -238,10 +264,15 @@ export class DockWindow<T extends IDockWindowProps> extends ReactClientComponent
             return React.DOM.span({});
 
         if (window) {
-            var props = _.clone(window.props);
-            props.className = (this.isSelected((window.id)) + ' ' + (props.className || ''))
-            props.key = window.id;
-            return React.createElement(window.view, props);
+            if (window.view) {
+                var props = _.clone(window.props);
+                props.className = (this.isSelected((window.id)) + ' ' + (props.className || ''))
+                props.key = window.id;
+                props.id = `dock-${window.id}`;
+                return React.createElement(window.view, props);
+            } else if (window.element) {
+                return React.createElement(window.element, { id: `dock-${window.id}`, key: window.id, className: this.isSelected((window.id)) });
+            }
         }
     }
 
@@ -258,7 +289,7 @@ export class DockWindow<T extends IDockWindowProps> extends ReactClientComponent
         if (fontSize <= 0)
             fontSize = 1;
 
-        var insetProps = <any> {
+        var insetProps = <any>{
             className: "inset-panel font-size-" + fontSize
         };
 
@@ -270,7 +301,6 @@ export class DockWindow<T extends IDockWindowProps> extends ReactClientComponent
             React.createElement(Resizer, {
                 className: 'omnisharp-atom-output-resizer',
                 update: ({top}: { left: number, top: number }) => {
-                    console.log(top);
                     this.tempHeight = -(top);
                     this.setState(<any>{});
                 },
@@ -289,7 +319,7 @@ function makeRxReactEventHandler<T>() {
     var subject = new Subject<T>();
 
     return {
-        handler: <(value: T) => void> subject.onNext.bind(subject),
+        handler: <(value: T) => void>subject.onNext.bind(subject),
         observable: subject.asObservable()
     }
 }

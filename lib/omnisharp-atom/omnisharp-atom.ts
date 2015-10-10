@@ -183,7 +183,7 @@ class OmniSharpAtom {
 
                     var features: { key: string, value: OmniSharp.IFeature }[] = [];
                     _.each(feature, (value: OmniSharp.IFeature, key: string) => {
-                        if (!_.isFunction(value)) {
+                        if (_.isObject(value) && !_.isFunction(value) && !_.isArray(value)) {
                             if (!value.required) {
                                 this.config[key] = {
                                     title: `${value.title}`,
@@ -218,7 +218,7 @@ class OmniSharpAtom {
             this.toggleMenu();
         }
 
-        if (grammar.name === 'C#') {
+        if (_.any(Omni.supportedExtensions, ext => _.endsWith(editor.getPath(), ext))) {
             if (Omni.isOff) {
                 this.toggle();
             }
@@ -227,10 +227,6 @@ class OmniSharpAtom {
                 if (Omni.isOff) {
                     this.toggle();
                 }
-            }
-        } else if (grammar.name === "C# Script File") {
-            if (Omni.isOff) {
-                this.toggle()
             }
         }
     }

@@ -1,26 +1,19 @@
 import {CompositeDisposable, Observable, Subject, Disposable} from "rx";
+import * as _ from "lodash";
 import Omni = require('../../omni-sharp-server/omni');
 import {dock} from "../atom/dock";
-import {FindWindow} from "../views/find-pane-view";
+import {FindWindowElement} from "../views/find-pane-view";
+FindWindowElement;
 
 class FindUsages implements OmniSharp.IFeature {
     private disposable: Rx.CompositeDisposable;
-    private window: Rx.CompositeDisposable;
-    public selectedIndex: number = 0;
-    private scrollTop: number = 0;
-    public usages: OmniSharp.Models.DiagnosticLocation[] = [];
-
-    public observe: {
-        find: Observable<OmniSharp.Models.DiagnosticLocation[]>;
-        open: Observable<boolean>;
-        reset: Observable<boolean>;
-        updated: Observable<Rx.ObjectObserveChange<FindUsages>>;
-    };
+    private _dockWindowDisposable: Rx.CompositeDisposable;
+    private _currentWindow: FindWindowElement;
 
     public activate() {
         this.disposable = new CompositeDisposable();
 
-        var observable = Observable.merge(
+        var find = Observable.merge(
             // Listen to find usages
             Omni.listener.observeFindusages,
             // We also want find implementations, where we found more than one
@@ -31,19 +24,19 @@ class FindUsages implements OmniSharp.IFeature {
             .map(z => <OmniSharp.Models.DiagnosticLocation[]>z.response.QuickFixes || [])
             .share();
 
-        var updated = Observable.ofObjectChanges(this);
+        var open = Omni.listener.requests.where(z => !z.silent && z.command === "findusages").map(() => true);
+        var reset = Omni.listener.requests.where(z => !z.silent && (z.command === "findimplementations" || z.command === "findusages")).map(() => true);
 
-        this.observe = {
-            find: observable,
-            // NOTE: We cannot do the same for find implementations because find implementation
-            //      just goes to the item if only one comes back.
-            open: Omni.listener.requests.where(z => !z.silent && z.command === "findusages").map(() => true),
-            reset: Omni.listener.requests.where(z => !z.silent && (z.command === "findimplementations" || z.command === "findusages")).map(() => true),
-            updated: updated,
-        };
+        this.disposable.add(reset.subscribe(() => {
+            if (this._dockWindowDisposable) this._dockWindowDisposable.dispose();
+            this._dockWindowDisposable = null;
+
+            if (this._currentWindow) this._currentWindow.destory();
+            this._currentWindow = null;
+        }));
 
         this.disposable.add(Omni.addTextEditorCommand("omnisharp-atom:find-usages", () => {
-            Omni.request(client => client.findusages({}));
+            Omni.request(client => client.findusages({ WantWhitespace: true }));
         }));
 
         this.disposable.add(Omni.addTextEditorCommand("omnisharp-atom:go-to-implementation", () => {
@@ -51,88 +44,86 @@ class FindUsages implements OmniSharp.IFeature {
         }));
 
         this.disposable.add(atom.commands.add("atom-workspace", 'omnisharp-atom:next-usage', () => {
-            this.updateSelectedItem(this.selectedIndex + 1);
+            if (this._currentWindow) {
+                this._currentWindow.next();
+            }
         }));
 
         this.disposable.add(atom.commands.add("atom-workspace", 'omnisharp-atom:go-to-usage', () => {
-            if (this.usages[this.selectedIndex])
-                Omni.navigateTo(this.usages[this.selectedIndex]);
+            if (this._currentWindow) {
+                this._currentWindow.goto();
+            }
         }));
 
         this.disposable.add(atom.commands.add("atom-workspace", 'omnisharp-atom:previous-usage', () => {
-            this.updateSelectedItem(this.selectedIndex - 1);
+            if (this._currentWindow) {
+                this._currentWindow.previous();
+            }
         }));
 
         this.disposable.add(atom.commands.add("atom-workspace", 'omnisharp-atom:go-to-next-usage', () => {
-            this.updateSelectedItem(this.selectedIndex + 1);
-            if (this.usages[this.selectedIndex])
-                Omni.navigateTo(this.usages[this.selectedIndex]);
+            if (this._currentWindow) {
+                this._currentWindow.gotoNext();
+            }
         }));
 
         this.disposable.add(atom.commands.add("atom-workspace", 'omnisharp-atom:go-to-previous-usage', () => {
-            this.updateSelectedItem(this.selectedIndex - 1);
-            if (this.usages[this.selectedIndex])
-                Omni.navigateTo(this.usages[this.selectedIndex]);
+            if (this._currentWindow) {
+                this._currentWindow.gotoPrevious();
+            }
         }));
 
-        this.disposable.add(this.observe.find.subscribe(s => {
-            this.usages = s;
-        }));
-
-        this.disposable.add(Observable.merge(findUsages.observe.find.map(z => true), findUsages.observe.open.map(z => true)).subscribe(() => {
+        this.disposable.add(open.delay(1).subscribe(() => {
             this.ensureWindowIsCreated();
             dock.selectWindow("find");
         }));
 
-        this.disposable.add(this.observe.reset.subscribe(() => {
-            this.usages = [];
-            this.scrollTop = 0;
-            this.selectedIndex = 0;
-        }));
+        this.disposable.add(find.subscribe((usages) => {
+            this.ensureWindowIsCreated();
+            dock.selectWindow("find");
 
+            var window: FindWindowElement = this._currentWindow = <any>dock.getWebComponentWindow('find');
+            window.usages = usages;
+        }));
 
         this.disposable.add(Omni.listener.observeFindimplementations.subscribe((data) => {
             if (data.response.QuickFixes.length == 1) {
                 Omni.navigateTo(data.response.QuickFixes[0]);
             }
         }));
-    }
 
-    private updateSelectedItem(index: number) {
-        if (index < 0)
-            index = 0;
-        if (index >= this.usages.length)
-            index = this.usages.length - 1;
-        if (this.selectedIndex !== index)
-            this.selectedIndex = index;
+        this.disposable.add(dock.selectedWindow.where(x => x === "find").subscribe(() => {
+            var newWindow = dock.getWebComponentWindow('find');
+            if (this._currentWindow && newWindow && newWindow !== this._currentWindow) {
+                var parent = newWindow.parentElement;
+                parent.insertBefore(this._currentWindow, newWindow);
+                newWindow.remove();
+            }
+        }));
     }
 
     private ensureWindowIsCreated() {
-        if (!this.window) {
-            this.window = new CompositeDisposable();
-            var windowDisposable = dock.addWindow('find', 'Find', FindWindow, {
-                scrollTop: () => this.scrollTop,
-                setScrollTop: (scrollTop) => this.scrollTop = scrollTop,
-                findUsages: this
-            }, {
-                    priority: 2000,
-                    closeable: true
-                }, this.window);
-            this.window.add(windowDisposable);
-            this.window.add(Disposable.create(() => {
-                this.disposable.remove(this.window);
-                this.window = null;
+        if (!this._dockWindowDisposable) {
+            this._dockWindowDisposable = new CompositeDisposable();
+            var windowDisposable = dock.addWebComponentWindow('find', 'Find', "omnisharp-find-window", {
+                priority: 2000,
+                closeable: true
+            }, this._dockWindowDisposable);
+            this._dockWindowDisposable.add(windowDisposable);
+            this._dockWindowDisposable.add(Disposable.create(() => {
+                this.disposable.remove(this._dockWindowDisposable);
+                this._dockWindowDisposable = null;
+                this._currentWindow = null;
             }));
-            this.disposable.add(this.window);
+            this.disposable.add(this._dockWindowDisposable);
+            this._selectedIndex = 0;
+            this._scrollTop = 0;
+            this._usages = null;
         }
     }
 
     public dispose() {
         this.disposable.dispose();
-    }
-
-    public navigateToSelectedItem() {
-        Omni.navigateTo(this.usages[this.selectedIndex]);
     }
 
     public required = true;
