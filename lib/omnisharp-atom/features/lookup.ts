@@ -161,7 +161,7 @@ class Tooltip implements Rx.Disposable {
 
         var buffer = this.editor.getBuffer();
         // Actually make the program manager query
-        Omni.request(client => client.typelookup({
+        Omni.request(solution => solution.typelookup({
             IncludeDocumentation: true,
             Line: bufferPt.row,
             Column: bufferPt.column

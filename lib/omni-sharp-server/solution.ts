@@ -1,8 +1,8 @@
 import _ = require('lodash');
-import {Observable, Subject, CompositeDisposable} from 'rx';
+import {Observable, Subject, CompositeDisposable, Disposable} from 'rx';
 import {OmnisharpClientV2, DriverState, OmnisharpClientOptions} from "omnisharp-client";
 
-interface ClientOptions extends OmnisharpClientOptions {
+interface SolutionOptions extends OmnisharpClientOptions {
     temporary: boolean;
     repository: Atom.GitRepository;
     index: number;
@@ -10,25 +10,28 @@ interface ClientOptions extends OmnisharpClientOptions {
 
 import {ViewModel} from "./view-model";
 
-class Client extends OmnisharpClientV2 {
+export class Solution extends OmnisharpClientV2 {
     public model: ViewModel;
     public logs: Observable<OmniSharp.OutputMessage>;
     public path: string;
     public index: number;
     public temporary: boolean = false;
-    private _clientDisposable = new CompositeDisposable();
-    private repository: Atom.GitRepository;
+    private _solutionDisposable = new CompositeDisposable();
+    public get disposable() { return this._solutionDisposable; }
 
-    constructor(options: ClientOptions) {
+    private repository: Atom.GitRepository;
+    public get isDisposed() { return this._solutionDisposable.isDisposed; }
+
+    constructor(options: SolutionOptions) {
         super(options);
-        this.configureClient();
+        this.configureSolution();
         this.temporary = options.temporary;
         this.model = new ViewModel(this);
         this.path = options.projectPath;
         this.index = options['index'];
         this.repository = options.repository;
         this.setupRepository();
-        this._clientDisposable.add(this.model);
+        this._solutionDisposable.add(this.model);
     }
 
     public toggle() {
@@ -43,6 +46,7 @@ class Client extends OmnisharpClientV2 {
     }
 
     public connect(options?) {
+        if (this.isDisposed) return;
         if (this.currentState === DriverState.Connected || this.currentState === DriverState.Connecting) return;
         super.connect(options);
 
@@ -60,20 +64,20 @@ class Client extends OmnisharpClientV2 {
 
     public dispose() {
         super.dispose();
-        this._clientDisposable.dispose();
+        this._solutionDisposable.dispose();
     }
 
-    private configureClient() {
+    private configureSolution() {
         this.logs = this.events.map(event => ({
             message: event.Body && event.Body.Message || event.Event || '',
             logLevel: event.Body && event.Body.LogLevel || (event.Type === "error" && 'ERROR') || 'INFORMATION'
         }));
 
-        this._clientDisposable.add(this.errors.subscribe(exception => {
+        this._solutionDisposable.add(this.errors.subscribe(exception => {
             console.error(exception);
         }));
 
-        this._clientDisposable.add(this.responses.subscribe(data => {
+        this._solutionDisposable.add(this.responses.subscribe(data => {
             if (atom.config.get('omnisharp-atom.developerMode')) {
                 console.log("omni:" + data.command, data.request, data.response);
             }
@@ -117,7 +121,7 @@ class Client extends OmnisharpClientV2 {
         }
 
         if (request['Buffer']) {
-            request['Buffer'] = request['Buffer'].replace(Client._regex, '');
+            request['Buffer'] = request['Buffer'].replace(Solution._regex, '');
         }
 
         return cb();
@@ -146,12 +150,12 @@ class Client extends OmnisharpClientV2 {
         if (this.repository) {
             var branchSubject = new Subject<string>();
 
-            this._clientDisposable.add(branchSubject
+            this._solutionDisposable.add(branchSubject
                 .distinctUntilChanged()
                 .subscribe(() => atom.commands.dispatch(atom.views.getView(atom.workspace), 'omnisharp-atom:restart-server')));
-            this._clientDisposable.add(branchSubject);
+            this._solutionDisposable.add(branchSubject);
 
-            this._clientDisposable.add(this.repository.onDidChangeStatuses(() => {
+            this._solutionDisposable.add(this.repository.onDidChangeStatuses(() => {
                 branchSubject.onNext(this.repository['branch']);
             }));
         }
@@ -164,20 +168,18 @@ class Client extends OmnisharpClientV2 {
     }
 }
 
-export = Client;
-
-for (var key in Client.prototype) {
+for (var key in Solution.prototype) {
     if (_.endsWith(key, 'Promise')) {
         (function() {
             var action = key.replace(/Promise$/, '');
-            var promiseMethod = Client.prototype[key];
-            var observableMethod = Client.prototype[action];
+            var promiseMethod = Solution.prototype[key];
+            var observableMethod = Solution.prototype[action];
 
-            Client.prototype[key] = function(request, options) {
+            Solution.prototype[key] = function(request, options) {
                 return this._fixupRequest(action, request, () => promiseMethod.call(this, request, options));
             };
 
-            Client.prototype[action] = function(request, options) {
+            Solution.prototype[action] = function(request, options) {
                 return this._fixupRequest(action, request, () => observableMethod.call(this, request, options));
             };
         })();

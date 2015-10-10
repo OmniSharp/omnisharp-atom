@@ -1,4 +1,4 @@
-import Client = require("../../omni-sharp-server/client");
+import {Solution} from "../../omni-sharp-server/solution";
 import {CompositeDisposable, Disposable, Observable, Subject} from "rx";
 import Omni = require('../../omni-sharp-server/omni');
 import {ProjectViewModel} from "../../omni-sharp-server/view-model";
@@ -34,7 +34,7 @@ class CommandRunner implements OmniSharp.IFeature {
         this.disposable.add(
             Observable.merge(
                 // Get all currently defined projects
-                Omni.clients.flatMap(z => Observable.from(z.model.projects)),
+                Omni.solutions.flatMap(z => Observable.from(z.model.projects)),
                 Omni.listener.model.projectAdded
             ).subscribe(project => this.addCommands(project)));
 
@@ -139,7 +139,7 @@ class CommandRunner implements OmniSharp.IFeature {
     public description = 'Adds command runner to run dnx and other similar commands from within atom.';
 }
 
-export function getDnxExe(solution: Client) {
+export function getDnxExe(solution: Solution) {
     return solution.model.runtimePath + (win32 ? '/bin/dnx.exe' : '/bin/dnx');
 }
 
@@ -160,7 +160,7 @@ export class RunProcess {
     }
 
     public start() {
-        var solution = Omni.getClientForProject(this.project)
+        var solution = Omni.getSolutionForProject(this.project)
             .map(x => normalize(getDnxExe(x)))
             .tapOnNext(() => dock.selectWindow(this.id))
             .subscribe((runtime) => this.bootRuntime(runtime));

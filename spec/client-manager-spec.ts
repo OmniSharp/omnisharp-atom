@@ -1,5 +1,5 @@
-import ClientManager = require('../lib/omni-sharp-server/client-manager');
-import Client = require('../lib/omni-sharp-server/client');
+import SolutionManager from '../lib/omni-sharp-server/solution-manager';
+import {Solution} from '../lib/omni-sharp-server/solution';
 import {Observable} from "rx";
 import {setupFeature, openEditor} from "./test-helpers";
 import {DriverState} from "omnisharp-client";
@@ -10,9 +10,9 @@ describe('OmniSharp Atom', () => {
     setupFeature([], false);
 
     it('Works with single cs files', function() {
-        var c: Client;
+        var c: Solution;
         waitsForPromise(() =>
-            openEditor('single-cs/class.cs').then(({client}) => c = client));
+            openEditor('single-cs/class.cs').then(({solution}) => c = solution));
 
         runs(() => {
             expect(c.currentState).toBe(DriverState.Connected);
@@ -22,7 +22,7 @@ describe('OmniSharp Atom', () => {
     it('shows a list of solutions when it detects many sln files', function() {
         var p: Rx.IPromise<any>;
         waitsForPromise(() =>
-            atom.workspace.open('two-solution/class.cs').then(editor => { p = ClientManager.getClientForEditor(editor).toPromise(); }));
+            atom.workspace.open('two-solution/class.cs').then(editor => { p = SolutionManager.getSolutionForEditor(editor).toPromise(); }));
 
         waitsFor(() => {
             var panels = atom.workspace.getModalPanels();

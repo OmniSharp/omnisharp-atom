@@ -102,7 +102,7 @@ class GoToDefinition implements OmniSharp.IFeature {
         var editor = atom.workspace.getActiveTextEditor();
         if (editor) {
             var word = <any>editor.getWordUnderCursor();
-            Omni.request(editor, client => client.gotodefinition({
+            Omni.request(editor, solution => solution.gotodefinition({
                 WantMetadata: this.wantMetadata
             }))
                 .subscribe((data: OmniSharp.Models.GotoDefinitionResponse) => {
@@ -168,7 +168,7 @@ class GoToDefinition implements OmniSharp.IFeature {
             }
         } else {
             // If enhanced highlighting is off, fallback to the old method.
-            Omni.request(editor, client => client.gotodefinition({
+            Omni.request(editor, solution => solution.gotodefinition({
                 Line: bufferPt.row,
                 Column: bufferPt.column
             })).where(data => !!data.FileName || !!data['MetadataSource'])

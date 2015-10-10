@@ -1,15 +1,16 @@
 import _ = require('lodash')
 import path = require('path');
 import {Observable, AsyncSubject, RefCountDisposable, Disposable, CompositeDisposable, BehaviorSubject, Scheduler, Subject} from "rx";
-import Solution = require('./client');
+import {Solution} from "./solution";
 import {AtomProjectTracker} from "./atom-projects";
-import {ObservationClient, CombinationClient} from './composite-client';
+import {SolutionObserver, SolutionAggregateObserver} from './composite-solution';
 import {DriverState, candidateFinder} from "omnisharp-client";
 import {GenericSelectListView} from "../omnisharp-atom/views/generic-list-view";
 
 var openSelectList: GenericSelectListView;
 class SolutionManager {
     public _unitTestMode_ = false;
+    public _kick_in_the_pants_ = false;
     private _disposable: CompositeDisposable;
     private _solutionDisposable: CompositeDisposable;
     private _atomProjects: AtomProjectTracker;
@@ -26,26 +27,30 @@ class SolutionManager {
     private _nextIndex = 0;
     private _activeSearch: Rx.IPromise<any>;
 
+    // These extensions only support server per folder, unlike normal cs files.
+    private _specialCaseExtensions = ['.csx'/*, '.cake'*/];
+    public get __specialCaseExtensions() { return this._specialCaseExtensions; }
+
     private _activeSolutions: Solution[] = [];
-    public get activeClients() {
+    public get activeSolutions() {
         return this._activeSolutions;
     }
 
     // this solution can be used to observe behavior across all solution.
-    private _observation = new ObservationClient();
-    public get observationClient() {
+    private _observation = new SolutionObserver();
+    public get solutionObserver() {
         return this._observation;
     }
 
     // this solution can be used to aggregate behavior across all solutions
-    private _combination = new CombinationClient();
-    public get combinationClient() {
+    private _combination = new SolutionAggregateObserver();
+    public get solutionAggregateObserver() {
         return this._combination;
     }
 
     private _activeSolution = new BehaviorSubject<Solution>(null);
     private _activeSolutionObserable = this._activeSolution.shareReplay(1).distinctUntilChanged().where(z => !!z);
-    public get activeClient() {
+    public get activeSolution() {
         return this._activeSolutionObserable;
     }
 
@@ -65,13 +70,13 @@ class SolutionManager {
         this._activeSearch = Promise.resolve(undefined);
 
         // monitor atom project paths
-        this.subscribeToAtomProjectTracker();
+        this._subscribeToAtomProjectTracker();
 
         // We use the active editor on omnisharpAtom to
         // create another observable that chnages when we get a new solution.
         this._disposable.add(activeEditor
             .where(z => !!z)
-            .flatMap(z => this.getClientForEditor(z))
+            .flatMap(z => this.getSolutionForEditor(z))
             .subscribe(x => this._activeSolution.onNext(x)));
 
         this._atomProjects.activate();
@@ -85,11 +90,10 @@ class SolutionManager {
     }
 
     public disconnect() {
-        this._solutions.forEach(solution => solution.disconnect());
+        this._solutions.forEach(solution => solution.dispose());
     }
 
     public deactivate() {
-        if (this._unitTestMode_) return;
         this._activated = false;
         this._disposable.dispose();
         this.disconnect();
@@ -97,8 +101,6 @@ class SolutionManager {
         this._solutions.clear();
         this._solutionProjects.clear();
         this._findSolutionCache.clear();
-        //this._temporarySolutions.clear();
-        //this._disposableSolutionMap.clear();
     }
 
     public get connected() {
@@ -110,51 +112,63 @@ class SolutionManager {
         return false;
     }
 
-    private subscribeToAtomProjectTracker() {
+    private _subscribeToAtomProjectTracker() {
         this._disposable.add(this._atomProjects.removed
             .where(z => this._solutions.has(z))
-            .subscribe(project => this.removeSolution(project)));
+            .subscribe(project => this._removeSolution(project)));
 
         this._disposable.add(this._atomProjects.added
             .where(project => !this._solutionProjects.has(project))
             .map(project => {
-                return this.candidateFinder(project, console)
-                    .flatMap(candidates => addCandidatesInOrder(candidates, candidate => this.addSolution(candidate, { project })));
+                return this._candidateFinder(project, console)
+                    .flatMap(candidates => addCandidatesInOrder(candidates, candidate => this._addSolution(candidate, { project })));
             })
             .subscribe(candidateObservable => {
                 this._activeSearch = this._activeSearch.then(() => candidateObservable.toPromise());
             }));
     }
 
-    private findRepositoryForPath(workingPath: string) {
+    private _findRepositoryForPath(workingPath: string) {
         if (atom.project) return _.find(atom.project.getRepositories(), (repo: any) => repo && path.normalize(repo.getWorkingDirectory()) === path.normalize(workingPath));
     }
 
-    private addSolution(candidate: string, {temporary = false, project}: { delay?: number; temporary?: boolean; project?: string; }) {
+    private _addSolution(candidate: string, {temporary = false, project}: { delay?: number; temporary?: boolean; project?: string; }) {
         var projectPath = candidate;
         if (_.endsWith(candidate, '.sln')) {
             candidate = path.dirname(candidate);
         }
 
-        if (this._solutions.has(candidate))
-            return Observable.just(this._solutions.get(candidate));
+        if (this._solutions.has(candidate)) {
+            var solution = this._solutions.get(candidate);
+        } else if (project && this._solutionProjects.has(project)) {
+            var solution = this._solutionProjects.get(project);
+        }
 
-        if (project && this._solutionProjects.has(project)) {
-            return Observable.just(this._solutionProjects.get(project));
+        if (solution && !solution.isDisposed) {
+            return Observable.just(solution);
+        } else if (solution && solution.isDisposed) {
+            var disposer = this._disposableSolutionMap.get(solution);
+            disposer.dispose();
         }
 
         var solution = new Solution({
             projectPath: projectPath,
             index: ++this._nextIndex,
             temporary: temporary,
-            repository: this.findRepositoryForPath(candidate)
+            repository: this._findRepositoryForPath(candidate)
         });
 
         var cd = new CompositeDisposable();
 
         this._solutionDisposable.add(cd);
         this._disposableSolutionMap.set(solution, cd);
+
+        solution.disposable.add(Disposable.create(() => {
+            solution.connect = () => this._addSolution(candidate, { temporary, project });
+        }));
+
         cd.add(Disposable.create(() => {
+            this._solutionDisposable.remove(cd);
             _.pull(this._activeSolutions, solution);
             this._solutions.delete(candidate);
 
@@ -162,7 +176,7 @@ class SolutionManager {
                 this._temporarySolutions.delete(solution);
             }
 
-            if (this._activeSolution.getValue() === solution) {
+            if (!this._activeSolution.isDisposed && this._activeSolution.getValue() === solution) {
                 this._activeSolution.onNext(this._activeSolutions.length ? this._activeSolutions[0] : null);
             }
         }));
@@ -185,17 +199,12 @@ class SolutionManager {
         if (this._activeSolutions.length === 1)
             this._activeSolution.onNext(solution);
 
-        // Auto start, with a little delay
-        /*if (atom.config.get('omnisharp-atom.autoStartOnCompatibleFile')) {
-            _.defer(() => solution.connect());
-        }*/
-
-        var result = this.addSolutionSubscriptions(solution, cd);
+        var result = this._addSolutionSubscriptions(solution, cd);
         solution.connect();
         return result;
     }
 
-    private addSolutionSubscriptions(solution: Solution, cd: CompositeDisposable) {
+    private _addSolutionSubscriptions(solution: Solution, cd: CompositeDisposable) {
         var result = new AsyncSubject<Solution>();
         var errorResult = solution.state
             .where(z => z === DriverState.Error)
@@ -225,9 +234,7 @@ class SolutionManager {
         return result;
     }
 
-    private removeSolution(candidate: string) {
-        if (this._unitTestMode_) return;
-
+    private _removeSolution(candidate: string) {
         if (_.endsWith(candidate, '.sln')) {
             candidate = path.dirname(candidate);
         }
@@ -244,30 +251,30 @@ class SolutionManager {
 
         // keep track of the removed solutions
         if (solution) {
-            solution.disconnect();
+            solution.dispose();
             var disposable = this._disposableSolutionMap.get(solution);
             if (disposable) disposable.dispose();
         }
     }
 
-    private getSolutionForActiveEditor() {
+    private _getSolutionForActiveEditor() {
         var editor = atom.workspace.getActiveTextEditor();
         var solution: Observable<Solution>;
         if (editor)
-            solution = this.getClientForEditor(editor);
+            solution = this.getSolutionForEditor(editor);
 
         if (solution) return solution;
         // No active text editor
         return Observable.empty<Solution>();
     }
 
-    public getClientForPath(path: string) {
+    public getSolutionForPath(path: string) {
         var solution: Observable<Solution>;
         if (!path)
             // No text editor found
             return Observable.empty<Solution>();
 
-        var isCsx = _.endsWith(path, '.csx');
+        var isCsx = _.any(this.__specialCaseExtensions, ext => _.endsWith(path, ext));
 
         var location = path;
         if (!location) {
@@ -275,51 +282,51 @@ class SolutionManager {
             return Observable.empty<Solution>();
         }
 
-        var [intersect, solutionValue] = this.getSolutionForUnderlyingPath(location, isCsx);
+        var [intersect, solutionValue] = this._getSolutionForUnderlyingPath(location, isCsx);
 
         if (solutionValue)
             return Observable.just(solutionValue);
 
-        return this.findSolutionForUnderlyingPath(location, isCsx)
+        return this._findSolutionForUnderlyingPath(location, isCsx)
             .map(z => {
                 var [p, solution, temporary] = z;
                 return solution;
             });
     }
 
-    public getClientForEditor(editor: Atom.TextEditor) {
-        return this._getClientForEditor(editor).where(() => !editor.isDestroyed());
+    public getSolutionForEditor(editor: Atom.TextEditor) {
+        return this._getSolutionForEditor(editor).where(() => !editor.isDestroyed());
     }
 
-    private _getClientForEditor(editor: Atom.TextEditor) {
-        var solution: Observable<Solution>;
+    private _getSolutionForEditor(editor: Atom.TextEditor) {
+        var solutionResult: Observable<Solution>;
         if (!editor)
             // No text editor found
             return Observable.empty<Solution>();
 
-        var isCsx = editor.getGrammar().name === "C# Script File" || _.endsWith(editor.getPath(), '.csx');
+        var isCsx = _.any(this.__specialCaseExtensions, ext => _.endsWith(editor.getPath(), ext));
 
         var p = (<any>editor).omniProject;
         // Not sure if we should just add properties onto editors...
         // but it works...
         if (p && this._solutions.has(p)) {
-            var solutionValue = this._solutions.get(p);
+            var solution = this._solutions.get(p);
             // If the solution has disconnected, reconnect it
-            if (solutionValue.currentState === DriverState.Disconnected && atom.config.get('omnisharp-atom.autoStartOnCompatibleFile'))
-                solutionValue.connect();
+            if (solution.currentState === DriverState.Disconnected && atom.config.get('omnisharp-atom.autoStartOnCompatibleFile'))
+                solution.connect();
 
             // Client is in an invalid state
-            if (solutionValue.currentState === DriverState.Error) {
+            if (solution.currentState === DriverState.Error) {
                 return Observable.empty<Solution>();
             }
 
-            solution = Observable.just(solutionValue);
+            solutionResult = Observable.just(solution);
 
-            if (solutionValue && this._temporarySolutions.has(solutionValue)) {
-                this.setupDisposableForTemporaryClient(solutionValue, editor);
+            if (solution && this._temporarySolutions.has(solution)) {
+                this._setupDisposableForTemporarySolution(solution, editor);
             }
 
-            return solution;
+            return solutionResult;
         }
 
         var location = editor.getPath();
@@ -333,24 +340,43 @@ class SolutionManager {
             return Observable.empty<Solution>();
         }
 
-        var [intersect, solutionValue] = this.getSolutionForUnderlyingPath(location, isCsx);
+        var [intersect, solution] = this._getSolutionForUnderlyingPath(location, isCsx);
         p = (<any>editor).omniProject = intersect;
-        (<any>editor).__omniClient__ = solutionValue;
-
-        if (solutionValue && this._temporarySolutions.has(solutionValue)) {
-            this.setupDisposableForTemporaryClient(solutionValue, editor);
+        (<any>editor).__omniClient__ = solution;
+        var view: HTMLElement = <any>atom.views.getView(editor);
+        view.classList.add('omnisharp-editor');
+        
+        if (solution) {
+            solution.disposable.add(Disposable.create(() => {
+                delete (<any>editor).omniProject;
+                delete (<any>editor).__omniClient__;
+                view.classList.remove('omnisharp-editor');
+            }));
         }
 
-        if (solutionValue)
-            return Observable.just(solutionValue);
+        if (solution && this._temporarySolutions.has(solution)) {
+            this._setupDisposableForTemporarySolution(solution, editor);
+        }
 
-        return this.findSolutionForUnderlyingPath(location, isCsx)
+        if (solution)
+            return Observable.just(solution);
+
+        return this._findSolutionForUnderlyingPath(location, isCsx)
             .map(z => {
                 var [p, solution, temporary] = z;
                 (<any>editor).omniProject = p;
                 (<any>editor).__omniClient__ = solution;
+                var view: HTMLElement = <any>atom.views.getView(editor);
+                view.classList.add('omnisharp-editor');
+
+                solution.disposable.add(Disposable.create(() => {
+                    delete (<any>editor).omniProject;
+                    delete (<any>editor).__omniClient__;
+                    view.classList.remove('omnisharp-editor');
+                }));
+
                 if (temporary) {
-                    this.setupDisposableForTemporaryClient(solution, editor);
+                    this._setupDisposableForTemporarySolution(solution, editor);
                 }
                 return solution;
             });
@@ -366,7 +392,7 @@ class SolutionManager {
         }
     }
 
-    private getSolutionForUnderlyingPath(location: string, isCsx: boolean): [string, Solution] {
+    private _getSolutionForUnderlyingPath(location: string, isCsx: boolean): [string, Solution] {
         if (location === undefined) {
             return;
         }
@@ -396,13 +422,13 @@ class SolutionManager {
         return [null, null];
     }
 
-    private findSolutionForUnderlyingPath(location: string, isCsx: boolean): Observable<[string, Solution, boolean]> {
+    private _findSolutionForUnderlyingPath(location: string, isCsx: boolean): Observable<[string, Solution, boolean]> {
         var directory = path.dirname(location);
         var subject = new AsyncSubject<[string, Solution, boolean]>();
 
         if (!this._activated) {
             return this.activatedSubject.take(1)
-                .flatMap(() => this.findSolutionForUnderlyingPath(location, isCsx));
+                .flatMap(() => this._findSolutionForUnderlyingPath(location, isCsx));
         }
 
         if (this._findSolutionCache.has(location)) {
@@ -432,7 +458,7 @@ class SolutionManager {
             }
 
             var newCandidates = _.difference(candidates, fromIterator(this._solutions.keys()));
-            this._activeSearch.then(() => addCandidatesInOrder(newCandidates, candidate => this.addSolution(candidate, { temporary: !project }))
+            this._activeSearch.then(() => addCandidatesInOrder(newCandidates, candidate => this._addSolution(candidate, { temporary: !project }))
                 .subscribeOnCompleted(() => {
                     if (!isCsx) {
                         // Attempt to see if this file is part a solution
@@ -454,13 +480,13 @@ class SolutionManager {
                 }));
         }
 
-        var foundCandidates = this.candidateFinder(directory, console)
+        var foundCandidates = this._candidateFinder(directory, console)
             .subscribe(cb);
 
         return subject;
     }
 
-    private candidateFinder(directory: string, console: any) {
+    private _candidateFinder(directory: string, console: any) {
         return candidateFinder(directory, console)
             .flatMap(candidates => {
                 var slns = _.filter(candidates, x => _.endsWith(x, '.sln'));
@@ -507,14 +533,14 @@ class SolutionManager {
             });
     }
 
-    private setupDisposableForTemporaryClient(solution: Solution, editor: Atom.TextEditor) {
+    private _setupDisposableForTemporarySolution(solution: Solution, editor: Atom.TextEditor) {
         if (solution && !editor['__setup_temp__'] && this._temporarySolutions.has(solution)) {
             var refCountDisposable = this._temporarySolutions.get(solution);
             var disposable = refCountDisposable.getDisposable();
             editor['__setup_temp__'] = true
             editor.onDidDestroy(() => {
                 disposable.dispose();
-                this.removeSolution(solution.path);
+                this._removeSolution(solution.path);
             });
         }
     }
@@ -580,4 +606,4 @@ function fromIterator<T>(iterator: IterableIterator<T>) {
 }
 
 var instance = new SolutionManager();
-export = instance;
+export default instance;

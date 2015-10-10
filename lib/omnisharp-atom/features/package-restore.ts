@@ -9,7 +9,7 @@ class PackageRestore implements OmniSharp.IFeature {
         this.disposable = new CompositeDisposable();
         this.disposable.add(Omni.eachConfigEditor((editor, cd) => {
             cd.add(editor.getBuffer().onDidSave(() => {
-                Omni.request(client => client.filesChanged([{ FileName: editor.getPath() }]));
+                Omni.request(solution => solution.filesChanged([{ FileName: editor.getPath() }]));
             }));
         }));
     }

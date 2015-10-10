@@ -153,7 +153,7 @@ function getSuggestions(options: RequestOptions): Rx.IPromise<Suggestion[]> {
     if (search === ".")
         search = "";
 
-    if (!results) results = Omni.request(client => client.autocomplete(_.clone(autoCompleteOptions))).toPromise();
+    if (!results) results = Omni.request(solution => solution.autocomplete(_.clone(autoCompleteOptions))).toPromise();
 
     var p = results;
     if (search)
@@ -175,8 +175,8 @@ function dispose() {
 }
 
 export var CompletionProvider = {
-    selector: '.source.cs, .source.csx',
-    disableForSelector: 'source.cs .comment',
+    get selector() { return Omni.grammars.map((x: any) => `.${x.scopeName}`).join(', ') },
+    get disableForSelector() { return Omni.grammars.map((x: any) => `.${x.scopeName} .comment`).join(', ') },
     inclusionPriority: 1,
     suggestionPriority: 10,
     excludeLowerPriority: true,

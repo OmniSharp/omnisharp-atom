@@ -33,8 +33,8 @@ class FindSymbolsView extends OmniSelectListView {
     }
 
     public onFilter(filter : string) : void {
-        Omni.request(client => {
-            return client.findsymbolsPromise({
+        Omni.request(solution => {
+            return solution.findsymbolsPromise({
                 Filter: filter
             });
         });

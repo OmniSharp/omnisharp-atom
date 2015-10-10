@@ -2,7 +2,7 @@ import * as _ from 'lodash';
 import Omni = require('../omni-sharp-server/omni');
 import {Observable, CompositeDisposable} from "rx";
 
-var statefulProperties = ['isOff', 'isConnecting', 'isOn', 'isReady', 'isError'];
+export var statefulProperties = ['isOff', 'isConnecting', 'isOn', 'isReady', 'isError'];
 
 class WorldModel implements Rx.IDisposable {
     private _disposable: CompositeDisposable;

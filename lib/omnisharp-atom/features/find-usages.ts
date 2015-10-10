@@ -43,11 +43,11 @@ class FindUsages implements OmniSharp.IFeature {
         };
 
         this.disposable.add(Omni.addTextEditorCommand("omnisharp-atom:find-usages", () => {
-            Omni.request(client => client.findusages({}));
+            Omni.request(solution => solution.findusages({}));
         }));
 
         this.disposable.add(Omni.addTextEditorCommand("omnisharp-atom:go-to-implementation", () => {
-            Omni.request(client => client.findimplementations({}));
+            Omni.request(solution => solution.findimplementations({}));
         }));
 
         this.disposable.add(atom.commands.add("atom-workspace", 'omnisharp-atom:next-usage', () => {

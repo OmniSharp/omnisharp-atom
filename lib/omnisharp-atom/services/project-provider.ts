@@ -1,7 +1,7 @@
 import * as _ from "lodash";
 import {Observable} from "rx";
 import Omni = require('../../omni-sharp-server/omni');
-import Manager = require("../../omni-sharp-server/client-manager");
+import Manager from "../../omni-sharp-server/solution-manager";
 import {ajax} from "jquery";
 var filter = require('fuzzaldrin').filter;
 
@@ -45,7 +45,7 @@ function fetchFromGithub(source: string, prefix: string, searchPrefix: string): 
     source = _.trim(source, '/').replace('www.', '').replace('https://', '').replace('http://', '').replace(/\/|\:/g, '-');
 
     // Get the file from github
-    var result = ajax(`https://raw.githubusercontent.com/OmniSharp/omnisharp-nuget/resources/resources/${source}/${prefix.toLowerCase() }.json`).then(res => JSON.parse(res));
+    var result = ajax(`https://raw.githubusercontent.com/OmniSharp/omnisharp-nuget/resources/resources/${source}/${prefix.toLowerCase() }.json`).then(res => JSON.parse(res), () => {});
 
     // The non key files have an object layout
     if (prefix !== "_keys") {
@@ -132,7 +132,7 @@ var nugetName: IAutocompleteProvider = {
         }
         var replacement = searchTokens.slice(0, searchTokens.length - 1).join('.');
 
-        return Manager.getClientForEditor(options.editor)
+        return Manager.getSolutionForEditor(options.editor)
         // Get all sources
             .flatMap(z => Observable.from(z.model.packageSources))
             .flatMap(source => {
@@ -187,7 +187,7 @@ var nugetVersion: IAutocompleteProvider = {
         if (versionCache.has(name)) {
             o = versionCache.get(name);
         } else {
-            o = Manager.getClientForEditor(options.editor)
+            o = Manager.getSolutionForEditor(options.editor)
             // Get all sources
                 .flatMap(z => Observable.from(z.model.packageSources))
                 .filter(z => {

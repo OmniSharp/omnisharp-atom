@@ -1,43 +1,47 @@
-import ClientManager = require('../lib/omni-sharp-server/client-manager');
+import SolutionManager from '../lib/omni-sharp-server/solution-manager';
 import {CompositeDisposable, Disposable, Observable} from "rx";
 import {DriverState} from "omnisharp-client";
 
 if ((<any>jasmine.getEnv()).defaultTimeoutInterval < 30000) (<any>jasmine.getEnv()).defaultTimeoutInterval = 30000;
 if ((<any>jasmine.getEnv()).defaultTimeoutInterval === 60000) (<any>jasmine.getEnv()).defaultTimeoutInterval = 60000 * 3;
 
-ClientManager.observationClient.errors.subscribe(error => console.error(JSON.stringify(error)));
-ClientManager.observationClient.events.subscribe(event => console.info(`server event: ${JSON.stringify(event) }`));
-ClientManager.observationClient.requests.subscribe(r => console.info(`request: ${JSON.stringify(r) }`));
-ClientManager.observationClient.responses.subscribe(r => console.info(`response: ${JSON.stringify(r) }`));
+//SolutionManager.solutionObserver.errors.subscribe(error => console.error(JSON.stringify(error)));
+SolutionManager.solutionObserver.events.subscribe(event => console.info(`server event: ${JSON.stringify(event) }`));
+SolutionManager.solutionObserver.requests.subscribe(r => console.info(`request: ${JSON.stringify(r) }`));
+SolutionManager.solutionObserver.responses.subscribe(r => console.info(`response: ${JSON.stringify(r) }`));
 
 export function setupFeature(features: string[], unitTestMode = true) {
     var cd: CompositeDisposable;
     beforeEach(function() {
         cd = new CompositeDisposable();
-        ClientManager._unitTestMode_ = unitTestMode;
+        SolutionManager._unitTestMode_ = unitTestMode;
+        SolutionManager._kick_in_the_pants_ = true;
 
         atom.config.set('omnisharp-atom:feature-white-list', true);
         atom.config.set('omnisharp-atom:feature-list', features);
 
         waitsForPromise(() => atom.packages.activatePackage('language-csharp')
             .then(() => atom.packages.activatePackage('omnisharp-atom'))
-            .then((pack: Atom.Package) => pack.mainModule._started.toPromise())
+            .then((pack: Atom.Package) => pack.mainModule._activated.toPromise())
         );
     });
 
     afterEach(() => {
         atom.config.set('omnisharp-atom:feature-white-list', undefined);
         atom.config.set('omnisharp-atom:feature-list', undefined);
+        SolutionManager._unitTestMode_ = false;
+        SolutionManager._kick_in_the_pants_ = false;
         cd.dispose();
     });
 }
 
 export function restoreBuffers() {
+    return Disposable.empty;
     var disposable = new CompositeDisposable();
     var buffers = new Map<string, string>();
 
-    if (ClientManager._unitTestMode_) {
-        disposable.add(ClientManager.observationClient.responses
+    if (SolutionManager._unitTestMode_) {
+        disposable.add(SolutionManager.solutionObserver.responses
             .where(z =>
                 z.request.FileName && z.request.Buffer)
             .map(z =>
@@ -52,7 +56,7 @@ export function restoreBuffers() {
     return Disposable.create(() => {
         disposable.dispose();
         // Reset the buffers to their original state
-        if (ClientManager._unitTestMode_) {
+        if (SolutionManager._unitTestMode_) {
             var results: Rx.Observable<any>[] = [];
             var iterator = buffers.entries();
             var iteratee = iterator.next();
@@ -60,7 +64,7 @@ export function restoreBuffers() {
                 var [path, buffer] = iteratee.value;
 
                 results.push(
-                    ClientManager.getClientForPath(path)
+                    SolutionManager.getSolutionForPath(path)
                         .map(z => z.updatebuffer({
                             Line: 0,
                             Column: 0,
@@ -78,12 +82,9 @@ export function restoreBuffers() {
 export function openEditor(file: string) {
     return Observable.fromPromise(atom.workspace.open(file))
         .flatMap(editor =>
-            ClientManager.getClientForEditor(editor).map(client => ({
-                editor,
-                client: client
-            }))
+            SolutionManager.getSolutionForEditor(editor).map(solution => ({ editor, solution }))
         )
-        .flatMap(({editor, client}) => client.state.startWith(client.currentState).map(state=> ({ editor, client, state: state })))
+        .flatMap(({editor, solution}) => solution.state.startWith(solution.currentState).map(state=> ({ editor, solution, state: state })))
         .where(z => z.state === DriverState.Connected)
         .take(1)
         .toPromise();
