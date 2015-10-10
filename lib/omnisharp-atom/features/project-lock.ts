@@ -58,7 +58,8 @@ class FileMonitor implements OmniSharp.IFeature {
             .map(project => ({ project, filePath: path.join(project.path, "project.lock.json") }))
             .where(({ project, filePath}) => fs.existsSync(filePath))
             .flatMap(({ project, filePath}) =>
-                Omni.getSolutionForProject(project).map(solution => ({ solution, project, filePath })))
+                Omni.getClientForProject(project).map(client => ({ client, project, filePath })))
+            .where(x => !!x.client)
             .flatMap(({ solution, project, filePath }) => {
                 if (this.filesMap.has(project)) {
                     var v = this.filesMap.get(project);
