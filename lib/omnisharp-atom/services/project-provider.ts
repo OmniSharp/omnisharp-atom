@@ -45,7 +45,7 @@ function fetchFromGithub(source: string, prefix: string, searchPrefix: string): 
     source = _.trim(source, '/').replace('www.', '').replace('https://', '').replace('http://', '').replace(/\/|\:/g, '-');
 
     // Get the file from github
-    var result = ajax(`https://raw.githubusercontent.com/OmniSharp/omnisharp-nuget/resources/resources/${source}/${prefix.toLowerCase() }.json`).then(res => JSON.parse(res));
+    var result = ajax(`https://raw.githubusercontent.com/OmniSharp/omnisharp-nuget/resources/resources/${source}/${prefix.toLowerCase() }.json`).then(res => JSON.parse(res), () => {});
 
     // The non key files have an object layout
     if (prefix !== "_keys") {

@@ -1,12 +1,19 @@
 import * as _ from "lodash";
 import {Solution} from "./solution";
 import {DriverState, OmnisharpClientStatus} from "omnisharp-client";
-import {Observable, Subject, CompositeDisposable} from "rx";
+import {Observable, Subject, ReplaySubject, CompositeDisposable, Disposable} from "rx";
 import {basename, dirname, normalize} from "path";
 
-export class ProjectViewModel implements OmniSharp.IProjectViewModel {
+export class ProjectViewModel implements OmniSharp.IProjectViewModel, Rx.IDisposable {
     public path: string;
-    public activeFramework: OmniSharp.Models.DnxFramework;
+
+    private _subjectActiveFramework = new ReplaySubject<OmniSharp.Models.DnxFramework>(1);
+    private _activeFramework: OmniSharp.Models.DnxFramework;
+    public get activeFramework() { return this._activeFramework; }
+    public set activeFramework(value) {
+        this._activeFramework = value;
+        !this._subjectActiveFramework.isDisposed && this._subjectActiveFramework.onNext(this._activeFramework);
+    }
     public frameworks: OmniSharp.Models.DnxFramework[];
     public observe: {
         activeFramework: Observable<OmniSharp.Models.DnxFramework>;
@@ -33,11 +40,12 @@ export class ProjectViewModel implements OmniSharp.IProjectViewModel {
         this.activeFramework = this.frameworks[0];
 
         this.observe = {
-            activeFramework: Observable.ofObjectChanges(this)
-                .where(z => z.name === "activeFramework")
-                .map(z => this.activeFramework)
-                .shareReplay(1)
+            activeFramework: this._subjectActiveFramework.asObservable()
         };
+    }
+
+    public dispose() {
+        this._subjectActiveFramework.dispose();
     }
 }
 
@@ -47,7 +55,6 @@ export class ViewModel implements Rx.IDisposable {
     public isOn: boolean;
     public isReady: boolean;
     public isError: boolean;
-
 
     private _uniqueId;
     private _disposable = new CompositeDisposable();
@@ -95,14 +102,13 @@ export class ViewModel implements Rx.IDisposable {
             this.diagnostics = [];
         }));
 
-        var codecheck = this.setupCodecheck(_solution);
-        var status = this.setupStatus(_solution);
+        var codecheck = this._setupCodecheck(_solution);
+        var status = this._setupStatus(_solution);
         var output = this.output;
         var updates = Observable.ofObjectChanges(this);
-        var msbuild = this.setupMsbuild(_solution);
-        var dnx = this.setupDnx(_solution);
-        var scriptcs = this.setupScriptCs(_solution);
-
+        var msbuild = this._setupMsbuild(_solution);
+        var dnx = this._setupDnx(_solution);
+        var scriptcs = this._setupScriptCs(_solution);
 
         var _projectAddedStream = this._projectAddedStream;
         var _projectRemovedStream = this._projectRemovedStream;
@@ -201,6 +207,14 @@ export class ViewModel implements Rx.IDisposable {
                     this._projectChangedStream.onNext(current);
                 }
             }));
+
+        this._disposable.add(this._projectAddedStream);
+        this._disposable.add(this._projectChangedStream);
+        this._disposable.add(this._projectRemovedStream);
+
+        this._disposable.add(Disposable.create(() => {
+            _.each(this.projects, x => x.dispose());
+        }));
     }
 
     public dispose() {
@@ -263,7 +277,7 @@ export class ViewModel implements Rx.IDisposable {
             project => _.assign(_.find(this.projects, z => z.path === project.path), project)));
     }
 
-    private setupCodecheck(_solution: Solution) {
+    private _setupCodecheck(_solution: Solution) {
         var codecheck = Observable.merge(
             // Catch global code checks
             _solution.observeCodecheck
@@ -288,7 +302,7 @@ export class ViewModel implements Rx.IDisposable {
         return codecheck;
     }
 
-    private setupStatus(_solution: Solution) {
+    private _setupStatus(_solution: Solution) {
         var status = _solution.status
             .startWith(<any>{})
             .share();
@@ -296,7 +310,7 @@ export class ViewModel implements Rx.IDisposable {
         return status;
     }
 
-    private setupMsbuild(_solution: Solution) {
+    private _setupMsbuild(_solution: Solution) {
         var workspace = _solution.observeProjects
             .where(z => z.response.MSBuild != null)
             .where(z => z.response.MSBuild.Projects.length > 0)
@@ -313,7 +327,7 @@ export class ViewModel implements Rx.IDisposable {
         return workspace;
     }
 
-    private setupDnx(_solution: Solution) {
+    private _setupDnx(_solution: Solution) {
         var workspace = _solution.observeProjects
             .where(z => z.response.Dnx != null)
             .where(z => z.response.Dnx.Projects.length > 0)
@@ -331,7 +345,7 @@ export class ViewModel implements Rx.IDisposable {
         return workspace;
     }
 
-    private setupScriptCs(_solution: Solution) {
+    private _setupScriptCs(_solution: Solution) {
         var context = _solution.observeProjects
             .where(z => z.response.ScriptCs != null)
             .where(z => z.response.ScriptCs.CsxFiles.length > 0)

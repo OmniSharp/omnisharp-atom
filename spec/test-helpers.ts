@@ -5,7 +5,7 @@ import {DriverState} from "omnisharp-client";
 if ((<any>jasmine.getEnv()).defaultTimeoutInterval < 30000) (<any>jasmine.getEnv()).defaultTimeoutInterval = 30000;
 if ((<any>jasmine.getEnv()).defaultTimeoutInterval === 60000) (<any>jasmine.getEnv()).defaultTimeoutInterval = 60000 * 3;
 
-SolutionManager.solutionObserver.errors.subscribe(error => console.error(JSON.stringify(error)));
+//SolutionManager.solutionObserver.errors.subscribe(error => console.error(JSON.stringify(error)));
 SolutionManager.solutionObserver.events.subscribe(event => console.info(`server event: ${JSON.stringify(event) }`));
 SolutionManager.solutionObserver.requests.subscribe(r => console.info(`request: ${JSON.stringify(r) }`));
 SolutionManager.solutionObserver.responses.subscribe(r => console.info(`response: ${JSON.stringify(r) }`));
