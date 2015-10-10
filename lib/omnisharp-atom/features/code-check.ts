@@ -7,6 +7,13 @@ import {CodeCheckOutputWindow, ICodeCheckOutputWindowProps} from '../views/codec
 import {DriverState} from "omnisharp-client";
 import {reloadWorkspace} from "./reload-workspace";
 
+var debounce = function debounce(wait: number, options?: _.DebounceSettings) {
+    return <MethodDecorator>function(target: Object, propertyKey: string, descriptor: TypedPropertyDescriptor<any>) {
+        var value = descriptor.value;
+        descriptor.value = _.debounce(value, wait, options);
+    };
+};
+
 class CodeCheck implements OmniSharp.IFeature {
     private disposable: Rx.CompositeDisposable;
     public observe: {
@@ -51,25 +58,10 @@ class CodeCheck implements OmniSharp.IFeature {
         }));
 
         this.disposable.add(Omni.eachEditor((editor, cd) => {
-            var subject = new Subject<any>();
-
-            var o = subject
-                .debounce(500)
-                .where(() => !editor.isDestroyed())
-                .flatMap(() => this._doCodeCheck(editor))
-                .share();
-
-            cd.add(o.subscribe());
-
-            cd.add(editor.getBuffer().onDidSave(() => !subject.isDisposed && subject.onNext(null)));
-            cd.add(editor.getBuffer().onDidReload(() => !subject.isDisposed && subject.onNext(null)));
-            cd.add(editor.getBuffer().onDidStopChanging(() => !subject.isDisposed && subject.onNext(null)));
+            cd.add(editor.getBuffer().onDidSave(() => this._doCodeCheck(editor)));
+            cd.add(editor.getBuffer().onDidReload(() => this._doCodeCheck(editor)));
+            cd.add(editor.getBuffer().onDidStopChanging(() => this._doCodeCheck(editor)));
         }));
-
-        // Linter is doing this for us!
-        /*this.disposable.add(Omni.switchActiveEditor((editor, cd) => {
-            cd.add(Omni.whenEditorConnected(editor).subscribe(() => this.doCodeCheck(editor)));
-        }));*/
 
         this.disposable.add(this.observe.diagnostics
             .subscribe(diagnostics => {
@@ -96,7 +88,7 @@ class CodeCheck implements OmniSharp.IFeature {
                 .toArray()
                 .concatMap(x => Omni.solutions)
                 .concatMap(solution => solution.whenConnected()
-                    .tapOnNext(() => solution.codecheck({ FileName: null })))
+                    .tapOnNext(() => solution.request('/v2/codecheck', { FileName: null })))
             )
             .subscribe());
 
@@ -147,7 +139,7 @@ class CodeCheck implements OmniSharp.IFeature {
         // Cache this result, because the underlying implementation of observe will
         //    create a cache of the last recieved value.  This allows us to pick
         //    up from where we left off.
-        var combinationObservable = Omni.aggregateListener.model.codecheck;
+        var combinationObservable = Omni.aggregateListener.model.diagnostics;
 
         var diagnostics = Observable.combineLatest( // Combine both the active model and the configuration changes together
             Omni.activeModel.startWith(null), showDiagnosticsForAllSolutions,
@@ -159,11 +151,11 @@ class CodeCheck implements OmniSharp.IFeature {
                 currentlyEnabled = enabled;
 
                 if (enabled) {
-                    return Omni.aggregateListener.model.codecheck
+                    return Omni.aggregateListener.model.diagnostics
                         .debounce(200)
                         .map(data => _.flatten<OmniSharp.Models.DiagnosticLocation>(data.map(x => x.value)));
                 } else if (model) {
-                    return model.observe.codecheck;
+                    return model.observe.diagnostics;
                 }
 
                 return Observable.just(<OmniSharp.Models.DiagnosticLocation[]>[]);
@@ -181,12 +173,11 @@ class CodeCheck implements OmniSharp.IFeature {
         this.disposable.dispose();
     }
 
+    @debounce(500)
     private _doCodeCheck(editor: Atom.TextEditor) {
-        return Omni.request(editor, solution => solution.request('/v2/codecheck', {}));
-    };
-
-    public doCodeCheck(editor: Atom.TextEditor) {
-        return Omni.request(editor, solution => solution.request('/v2/codecheck', {}));
+        if (!editor.isDestroyed()) {
+            Omni.request(editor, solution => solution.updatebuffer({}));
+        }
     }
 
     public required = true;

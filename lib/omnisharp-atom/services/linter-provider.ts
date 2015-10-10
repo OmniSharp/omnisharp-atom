@@ -69,7 +69,7 @@ function hideLinter() {
         panel.style.display = 'none';
 }
 
-export function init() {
+export function init(linter: { getEditorLinter(editor: Atom.TextEditor): { lint(); }; }) {
     var disposable = new CompositeDisposable();
     var cd: CompositeDisposable;
     disposable.add(atom.config.observe('omnisharp-atom.hideLinterInterface', hidden => {
@@ -95,7 +95,22 @@ export function init() {
         }
     }));
 
+    /*disposable.add(Omni.activeModel
+        .flatMap(x => x.observe.diagnostics)
+        .flatMap(() => Omni.activeEditor)
+        .debounce(100)
+        .subscribe(editor => linter.getEditorLinter(editor).lint()));*/
+
     return disposable;
+}
+
+function getNextDiagnostic() {
+    return Omni.activeModel
+        .flatMap(x => x.observe.diagnostics)
+        .take(1)
+        .timeout(500, Omni.activeModel.flatMap(x => Observable.just(x.getDiagnostics())))
+        .flatMap(x => x)
+        .where(z => z.LogLevel !== "Hidden");
 }
 
 export var provider = [
@@ -106,9 +121,9 @@ export var provider = [
         lint: (editor: Atom.TextEditor) => {
             if (!Omni.isValidGrammar(editor.getGrammar())) return Promise.resolve([]);
 
-            return codeCheck.doCodeCheck(editor)
-                .flatMap(x => x)
-                .where(z => z.LogLevel !== "Hidden")
+            var path = editor.getPath();
+            return getNextDiagnostic()
+                .where(x => x.FileName === path)
                 .map(error => mapValues(editor, error))
                 .toArray()
                 .toPromise();
@@ -120,9 +135,7 @@ export var provider = [
         lint: (editor: Atom.TextEditor) => {
             if (!Omni.isValidGrammar(editor.getGrammar())) return Promise.resolve([]);
 
-            return Omni.activeModel
-                .flatMap(x => Observable.from(x.diagnostics))
-                .where(z => z.LogLevel != "Hidden")
+            return getNextDiagnostic()
                 .map(error => mapValues(editor, error))
                 .toArray()
                 .toPromise();

@@ -68,7 +68,7 @@ export class Solution extends OmnisharpClientV2 {
     }
 
     private configureSolution() {
-        this.logs = this.events.map(event => ({
+        this.logs = this.events.where(x => x.Event !== "Diagnostic").map(event => ({
             message: event.Body && event.Body.Message || event.Event || '',
             logLevel: event.Body && event.Body.LogLevel || (event.Type === "error" && 'ERROR') || 'INFORMATION'
         }));

@@ -11,7 +11,7 @@ export class SolutionObserver extends OmnisharpObservationClientV2<Solution> {
         super(solutions);
 
         this.model = {
-            codecheck: this.makeMergeObserable((solution: Solution) => solution.model.observe.codecheck),
+            diagnostics: this.makeMergeObserable((solution: Solution) => solution.model.observe.diagnostics),
             output: this.makeMergeObserable((solution: Solution) => solution.model.observe.output),
             status: this.makeMergeObserable((solution: Solution) => solution.model.observe.status),
             updates: this.makeMergeObserable((solution: Solution) => solution.model.observe.updates),
@@ -24,13 +24,13 @@ export class SolutionObserver extends OmnisharpObservationClientV2<Solution> {
 }
 
 export class SolutionAggregateObserver extends OmnisharpCombinationClientV2<Solution> {
-    model: { codecheck: Observable<{ key: string; value: typeof ViewModel.prototype.observe.codecheck; }[]> };
+    model: { diagnostics: Observable<{ key: string; value: OmniSharp.Models.DiagnosticLocation[]; }[]> };
 
     constructor(solutions: Solution[] = []) {
         super(solutions);
 
         this.model = {
-            codecheck: this.makeCombineObserable((solution: Solution) => solution.model.observe.codecheck)
+            diagnostics: this.makeCombineObserable((solution: Solution) => solution.model.observe.diagnostics)
         };
     }
 }
