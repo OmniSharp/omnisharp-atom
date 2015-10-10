@@ -88,7 +88,9 @@ class SolutionInformation implements OmniSharp.IFeature {
 
     private setupSolutions() {
         var solutions = Observable.ofArrayChanges(manager.activeSolutions)
-            .map(() => manager.activeSolutions.map(z => z.model))
+            .map(() => manager.activeSolutions)
+            .startWith(manager.activeSolutions)
+            .map(x=> x.map(z => z.model))
             .share();
 
         this.disposable.add(solutions.subscribe(o => {

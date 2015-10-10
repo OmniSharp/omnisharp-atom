@@ -6,23 +6,23 @@ import React = require('react');
 import {ReactClientComponent} from "./react-client-component";
 import {server} from "../features/server-information";
 import {solutionInformation} from "../features/solution-information";
-import {world} from '../world';
+import {world, statefulProperties} from '../world';
 import {codeCheck} from "../features/code-check";
 import {OmnisharpClientStatus} from "omnisharp-client";
 import {commandRunner, RunProcess} from "../features/command-runner";
 import {read, write} from "fastdom";
 
 function addClassIfNotContains(icon: HTMLElement, ...cls: string[]) {
-    _.each(cls, cls => {
-        read(() => {
+    read(() => {
+        _.each(cls, cls => {
             if (!icon.classList.contains(cls))
                 write(() => icon.classList.add(cls));
         });
     });
 }
 function removeClassIfContains(icon: HTMLElement, ...cls: string[]) {
-    _.each(cls, cls => {
-        read(() => {
+    read(() => {
+        _.each(cls, cls => {
             if (icon.classList.contains(cls))
                 write(() => icon.classList.remove(cls));
         });
@@ -68,25 +68,25 @@ export class FlameElement extends HTMLAnchorElement implements WebComponent {
         _.assign(this._state, state);
         var icon = this._icon;
 
-        if (this._state.isOff) {
+        if (world.isOff) {
             removeClassIfContains(icon, 'text-subtle');
         } else {
             addClassIfNotContains(icon, 'text-subtle');
         }
 
-        if (this._state.isReady) {
+        if (world.isReady) {
             addClassIfNotContains(icon, 'text-success');
         } else {
             removeClassIfContains(icon, 'text-success');
         }
 
-        if (this._state.isError) {
+        if (world.isError) {
             addClassIfNotContains(icon, 'text-error');
         } else {
             removeClassIfContains(icon, 'text-error');
         }
 
-        if (this._state.isConnecting) {
+        if (world.isConnecting) {
             addClassIfNotContains(icon, 'icon-flame-loading');
             removeClassIfContains(icon, 'icon-flame-processing');
             removeClassIfContains(icon, 'icon-flame-loading');
@@ -100,14 +100,14 @@ export class FlameElement extends HTMLAnchorElement implements WebComponent {
     }
 
     public updateOutgoing(status: typeof FlameElement.prototype._state.status) {
-        if (status.hasOutgoingRequests) {
+        if (status.hasOutgoingRequests && status.outgoingRequests > 0) {
             removeClassIfContains(this._outgoing, 'fade');
         } else {
             addClassIfNotContains(this._outgoing, 'fade');
         }
 
         if (status.outgoingRequests !== this._state.status.outgoingRequests) {
-            write(() => this._outgoing.innerText = this._state.status.outgoingRequests && this._state.status.outgoingRequests.toString() || '0');
+            write(() => this._outgoing.innerText = status.outgoingRequests && status.outgoingRequests.toString() || '0');
         }
 
         this._state.status = status || <any>{};
@@ -300,7 +300,7 @@ export class StatusBarElement extends HTMLElement implements WebComponent, Rx.ID
             .buffer(world.observe.updates.throttle(500), () => Observable.timer(500))
             .subscribe(items => {
                 var updates = _(items)
-                    .filter(item => _.contains(['isOff', 'isConnecting', 'isOn', 'isReady', 'isError'], item.name))
+                    .filter(item => _.contains(statefulProperties, item.name))
                     .value();
 
                 if (updates.length) {
@@ -347,6 +347,8 @@ export class StatusBarElement extends HTMLElement implements WebComponent, Rx.ID
                 var solutionNumber = solutions.length > 1 ? _.trim(server.model && (<any>server.model).index, 'client') : '';
                 this._projectCount.updateSolutionNumber(solutionNumber);
             }));
+
+        _.each(statefulProperties, x => this._state[x] = world[x]);
     }
 
     private _hasValidEditor: boolean = false;
@@ -355,11 +357,11 @@ export class StatusBarElement extends HTMLElement implements WebComponent, Rx.ID
             this._hasValidEditor = hasValidEditor;
         }
 
-        if (this._state.isOn) {
+        if (world.isOn) {
             read(() => this._projectCount.style.display === 'none' && write(() => this._projectCount.style.display = ''));
         }
 
-        if (this._state.isOn && this._hasValidEditor) {
+        if (world.isOn && this._hasValidEditor) {
             this._showOnStateItems();
         } else {
             this._hideOnStateItems();
@@ -367,13 +369,17 @@ export class StatusBarElement extends HTMLElement implements WebComponent, Rx.ID
     }
 
     private _showOnStateItems() {
-        read(() => this._diagnostics.style.display === 'none' && write(() => this._diagnostics.style.display = ''));
-        read(() => this._projectCount.projects.style.display === 'none' && write(() => this._projectCount.projects.style.display = ''));
+        read(() => {
+            this._diagnostics.style.display === 'none' && write(() => this._diagnostics.style.display = '')
+            this._projectCount.projects.style.display === 'none' && write(() => this._projectCount.projects.style.display = '');
+        });
     }
 
     private _hideOnStateItems() {
-        read(() => this._diagnostics.style.display !== 'none' && write(() => this._diagnostics.style.display = 'none'));
-        read(() => this._projectCount.projects.style.display !== 'none' && write(() => this._projectCount.projects.style.display = 'none'));
+        read(() => {
+            this._diagnostics.style.display !== 'none' && write(() => this._diagnostics.style.display = 'none')
+            this._projectCount.projects.style.display !== 'none' && write(() => this._projectCount.projects.style.display = 'none');
+        });
     }
 
     public detachedCallback() {
