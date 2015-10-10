@@ -48,8 +48,8 @@ class CodeLens implements OmniSharp.IFeature {
             var subject = new Subject<boolean>();
 
             cd.add(subject
-                .distinctUntilChanged(x => !!x)
                 .where(x => !!x && !editor.isDestroyed())
+                .distinctUntilChanged(x => !!x)
                 .debounce(500)
                 .flatMapLatest(() => this.updateCodeLens(editor))
                 .subscribe()
@@ -106,7 +106,7 @@ class CodeLens implements OmniSharp.IFeature {
         var updated = new WeakSet<Lens>();
 
         if (editor.isDestroyed()) {
-            return;
+            return Observable.empty<number>();
         }
 
         return Omni.request(editor, solution => solution.currentfilemembersasflat({ Buffer: null, Changes: null }))

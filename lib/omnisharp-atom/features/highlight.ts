@@ -582,31 +582,31 @@ function getAtomStyleForToken(grammar: string, tags: number[], token: OmniSharp.
     }
     switch (token.Kind) {
         case "number":
-            add(`constant.numeric.source.cs`);
+            add(`constant.numeric`);
             break;
         case "struct name":
-            add(`support.constant.numeric.identifier.struct.source.cs`);
+            add(`support.constant.numeric.identifier.struct`);
             break;
         case "enum name":
-            add(`support.constant.numeric.identifier.enum.source.cs`);
+            add(`support.constant.numeric.identifier.enum`);
             break;
         case "identifier":
-            add(`identifier.source.cs`);
+            add(`identifier`);
             break;
         case "class name":
-            add(`support.class.type.identifier.source.cs`);
+            add(`support.class.type.identifier`);
             break;
         case "delegate name":
-            add(`support.class.type.identifier.delegate.source.cs`);
+            add(`support.class.type.identifier.delegate`);
             break;
         case "interface name":
-            add(`support.class.type.identifier.interface.source.cs`);
+            add(`support.class.type.identifier.interface`);
             break;
         case "preprocessor keyword":
-            add(`constant.other.symbo.source.cs`);
+            add(`constant.other.symbo`);
             break;
         case "excluded code":
-            add(`comment.block.source.cs`);
+            add(`comment.block`);
             break;
         default:
             console.log("unhandled Kind " + token.Kind);
@@ -620,8 +620,7 @@ function getAtomStyleForToken(grammar: string, tags: number[], token: OmniSharp.
 }
 
 function setGrammar(grammar: FirstMate.Grammar): FirstMate.Grammar {
-    if (!grammar['omnisharp'] && any(Omni.supportedExtensions, ext => any((<any>grammar).fileTypes, ft => trimLeft(ext, '.') === ft))) {
-        debugger;
+    if (!grammar['omnisharp'] && Omni.isValidGrammar(grammar)) {
         var newGrammar = new Grammar(this, grammar);
         each(grammar, (x, i) => has(grammar, i) && (newGrammar[i] = x));
         grammar = newGrammar;

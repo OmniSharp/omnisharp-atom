@@ -100,11 +100,11 @@ export function init() {
 
 export var provider = [
     {
-        grammarScopes: ['source.cs'],
+        get grammarScopes() { return Omni.grammars.map((x: any) => x.scopeName) },
         scope: 'file',
         lintOnFly: true,
         lint: (editor: Atom.TextEditor) => {
-            if (!_.contains(Omni.validGammarNames, editor.getGrammar().name)) return Promise.resolve([]);
+            if (!Omni.isValidGrammar(editor.getGrammar())) return Promise.resolve([]);
 
             return codeCheck.doCodeCheck(editor)
                 .flatMap(x => x)
@@ -114,11 +114,11 @@ export var provider = [
                 .toPromise();
         }
     }, {
-        grammarScopes: ['source.cs'],
+        get grammarScopes() { return Omni.grammars.map((x: any) => x.scopeName) },
         scope: 'project',
         lintOnFly: false,
         lint: (editor: Atom.TextEditor) => {
-            if (!_.contains(Omni.validGammarNames, editor.getGrammar().name)) return Promise.resolve([]);
+            if (!Omni.isValidGrammar(editor.getGrammar())) return Promise.resolve([]);
 
             return Omni.activeModel
                 .flatMap(x => Observable.from(x.diagnostics))

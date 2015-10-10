@@ -49,9 +49,6 @@ class Omni implements Rx.IDisposable {
     public get isOff() { return this._isOff; }
     public get isOn() { return !this.isOff; }
 
-    private _supportedExtensions = ['.cs', '.csx'/*, '.cake'*/];
-    public get supportedExtensions() { return this._supportedExtensions; }
-
     public activate() {
         var openerDisposable = makeOpener();
         this.disposable = new CompositeDisposable;
@@ -60,12 +57,12 @@ class Omni implements Rx.IDisposable {
         // we are only off if all our solutions are disconncted or erroed.
         this.disposable.add(manager.solutionAggregateObserver.state.subscribe(z => this._isOff = _.all(z, x => x.value === DriverState.Disconnected || x.value === DriverState.Error)));
 
-        this._editors = Omni.createTextEditorObservable(this.supportedExtensions, this.disposable);
+        this._editors = Omni.createTextEditorObservable(this._supportedExtensions, this.disposable);
         this._configEditors = Omni.createTextEditorObservable(['.json'], this.disposable);
 
         this.disposable.add(atom.workspace.observeActivePaneItem((pane: any) => {
             if (pane && pane.getGrammar) {
-                if (_.any(this.supportedExtensions, ext => _.endsWith(pane.getPath(), ext))) {
+                if (_.any(this._supportedExtensions, ext => _.endsWith(pane.getPath(), ext))) {
                     this._activeConfigEditorSubject.onNext(null);
                     this._activeEditorSubject.onNext(pane);
                     return;
@@ -152,7 +149,7 @@ class Omni implements Rx.IDisposable {
                 return;
             };
 
-            if (_.any(this.supportedExtensions, ext => _.endsWith(editor.getPath(), ext))) {
+            if (_.any(this._supportedExtensions, ext => _.endsWith(editor.getPath(), ext))) {
                 event.stopPropagation();
                 event.stopImmediatePropagation();
                 callback(event);
@@ -398,6 +395,19 @@ class Omni implements Rx.IDisposable {
 
     private get _kick_in_the_pants_() {
         return manager._kick_in_the_pants_;
+    }
+
+    private _supportedExtensions = ['.cs', '.csx'/*, '.cake'*/];
+
+    public get grammars() {
+        return _.filter(atom.grammars.getGrammars(),
+            grammar => _.any(this._supportedExtensions,
+                ext => _.any((<any>grammar).fileTypes,
+                    ft => _.trimLeft(ext, '.') === ft)));
+    }
+
+    public isValidGrammar(grammar: FirstMate.Grammar) {
+        return _.any(this._supportedExtensions, ext => _.any((<any>grammar).fileTypes, ft => _.trimLeft(ext, '.') === ft));
     }
 }
 

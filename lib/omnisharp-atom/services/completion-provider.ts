@@ -175,8 +175,8 @@ function dispose() {
 }
 
 export var CompletionProvider = {
-    selector: '.source.cs, .source.csx, .source.cake',
-    disableForSelector: 'source.cs .comment, source.csx .comment, source.cake .comment',
+    get selector() { return Omni.grammars.map((x: any) => `.${x.scopeName}`).join(', ') },
+    get disableForSelector() { return Omni.grammars.map((x: any) => `.${x.scopeName} .comment`).join(', ') },
     inclusionPriority: 1,
     suggestionPriority: 10,
     excludeLowerPriority: true,

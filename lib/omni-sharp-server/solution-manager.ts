@@ -343,10 +343,14 @@ class SolutionManager {
         var [intersect, solution] = this._getSolutionForUnderlyingPath(location, isCsx);
         p = (<any>editor).omniProject = intersect;
         (<any>editor).__omniClient__ = solution;
+        var view: HTMLElement = <any>atom.views.getView(editor);
+        view.classList.add('omnisharp-editor');
+        
         if (solution) {
             solution.disposable.add(Disposable.create(() => {
                 delete (<any>editor).omniProject;
                 delete (<any>editor).__omniClient__;
+                view.classList.remove('omnisharp-editor');
             }));
         }
 
@@ -362,10 +366,13 @@ class SolutionManager {
                 var [p, solution, temporary] = z;
                 (<any>editor).omniProject = p;
                 (<any>editor).__omniClient__ = solution;
+                var view: HTMLElement = <any>atom.views.getView(editor);
+                view.classList.add('omnisharp-editor');
 
                 solution.disposable.add(Disposable.create(() => {
                     delete (<any>editor).omniProject;
                     delete (<any>editor).__omniClient__;
+                    view.classList.remove('omnisharp-editor');
                 }));
 
                 if (temporary) {
