@@ -4,6 +4,11 @@ import {DriverState, OmnisharpClientStatus} from "omnisharp-client";
 import {Observable, Subject, ReplaySubject, CompositeDisposable, Disposable} from "rx";
 import {basename, dirname, normalize} from "path";
 
+
+interface DiagnosticMessage extends OmniSharp.Models.DiagnosticLocation {
+    Clear: boolean;
+}
+
 export class ProjectViewModel implements OmniSharp.IProjectViewModel, Rx.IDisposable {
     public path: string;
 
@@ -277,28 +282,24 @@ export class ViewModel implements Rx.IDisposable {
             project => _.assign(_.find(this.projects, z => z.path === project.path), project)));
     }
 
+
     private _setupCodecheck(_solution: Solution) {
-        var codecheck = Observable.merge(
-            // Catch global code checks
-            _solution.observeCodecheck
-                .where(z => !z.request.FileName)
-                .map(z => z.response)
-                .map(z => <OmniSharp.Models.DiagnosticLocation[]>z.QuickFixes),
-            // Evict diagnostics from a code check for the given file
-            // Then insert the new diagnostics
-            _solution.observeCodecheck
-                .where(z => !!z.request.FileName)
-                .map((ctx) => {
-                    var {request, response} = ctx;
-                    var results = _.filter(this.diagnostics, (fix: OmniSharp.Models.DiagnosticLocation) => request.FileName !== fix.FileName);
-                    results.unshift(...<OmniSharp.Models.DiagnosticLocation[]>response.QuickFixes);
-                    return results;
-                }))
-            .map(data => _.sortBy(data, quickFix => quickFix.LogLevel))
+        var codecheck = _solution.events
+            .where(x => x.Event === "Diagnostic")
+            .map(x => <DiagnosticMessage>x.Body)
+            .tapOnNext(x => {
+                if (x.Clear) {
+                    _.remove(this.diagnostics, z => z.FileName === x.FileName);
+                } else {
+                    this.diagnostics.push(x);
+                }
+            })
+            .debounce(200)
+            .map(x => this.diagnostics = _.sortBy(this.diagnostics, quickFix => quickFix.FileName + '-' + quickFix.LogLevel))
             .startWith([])
             .shareReplay(1);
 
-        this._disposable.add(codecheck.subscribe((data) => this.diagnostics = data));
+        this._disposable.add(codecheck.subscribe());
         return codecheck;
     }
 

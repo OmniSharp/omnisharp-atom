@@ -23,4 +23,14 @@ export class SolutionObserver extends OmnisharpObservationClientV2<Solution> {
     }
 }
 
-export class SolutionAggregateObserver extends OmnisharpCombinationClientV2<Solution> { }
+export class SolutionAggregateObserver extends OmnisharpCombinationClientV2<Solution> {
+    model: { codecheck: Observable<{ key: string; value: typeof ViewModel.prototype.observe.codecheck; }[]> };
+
+    constructor(solutions: Solution[] = []) {
+        super(solutions);
+
+        this.model = {
+            codecheck: this.makeCombineObserable((solution: Solution) => solution.model.observe.codecheck)
+        };
+    }
+}

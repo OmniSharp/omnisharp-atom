@@ -18,8 +18,7 @@ class CodeCheck implements OmniSharp.IFeature {
     public displayDiagnostics: OmniSharp.Models.DiagnosticLocation[] = [];
     public selectedIndex: number = 0;
     private scrollTop: number = 0;
-    private _editorSubjects = new WeakMap<Atom.TextEditor, () => Rx.Observable<OmniSharp.Models.DiagnosticLocation[]>>();
-    private _fullCodeCheck : Subject<any>;
+    private _fullCodeCheck: Subject<any>;
 
     public activate() {
         this.disposable = new CompositeDisposable();
@@ -58,21 +57,13 @@ class CodeCheck implements OmniSharp.IFeature {
                 .debounce(500)
                 .where(() => !editor.isDestroyed())
                 .flatMap(() => this._doCodeCheck(editor))
-                .map(response => response.QuickFixes || [])
                 .share();
-
-            this._editorSubjects.set(editor, () => {
-                var result = o.take(1);
-                subject.onNext(null);
-                return result;
-            });
 
             cd.add(o.subscribe());
 
             cd.add(editor.getBuffer().onDidSave(() => !subject.isDisposed && subject.onNext(null)));
             cd.add(editor.getBuffer().onDidReload(() => !subject.isDisposed && subject.onNext(null)));
             cd.add(editor.getBuffer().onDidStopChanging(() => !subject.isDisposed && subject.onNext(null)));
-            cd.add(Disposable.create(() => this._editorSubjects.delete(editor)));
         }));
 
         // Linter is doing this for us!
@@ -154,26 +145,23 @@ class CodeCheck implements OmniSharp.IFeature {
         })();
 
         // Cache this result, because the underlying implementation of observe will
-        //    create a cache of the last recieved value.  This allows us to pick pick
+        //    create a cache of the last recieved value.  This allows us to pick
         //    up from where we left off.
-        var combinationObservable = Omni.aggregateListener.observe(z => z.observeCodecheck
-            .where(z => !z.request.FileName) // Only select file names
-            .map(z => <OmniSharp.Models.DiagnosticLocation[]>z.response.QuickFixes));
+        var combinationObservable = Omni.aggregateListener.model.codecheck;
 
         var diagnostics = Observable.combineLatest( // Combine both the active model and the configuration changes together
             Omni.activeModel.startWith(null), showDiagnosticsForAllSolutions,
             (model, enabled) => ({ model, enabled }))
-        // If the setting is enabled (and hasn't changed) then we don't need to redo the subscription
+            // If the setting is enabled (and hasn't changed) then we don't need to redo the subscription
             .where(ctx => (!currentlyEnabled && ctx.enabled === currentlyEnabled))
             .flatMapLatest(ctx => {
                 var {enabled, model} = ctx;
                 currentlyEnabled = enabled;
 
                 if (enabled) {
-                    return combinationObservable
-                        .map(z => z.map(z => z.value || [])) // value can be null!
+                    return Omni.aggregateListener.model.codecheck
                         .debounce(200)
-                        .map(data => _.flatten<OmniSharp.Models.DiagnosticLocation>(data));
+                        .map(data => _.flatten<OmniSharp.Models.DiagnosticLocation>(data.map(x => x.value)));
                 } else if (model) {
                     return model.observe.codecheck;
                 }
@@ -182,7 +170,6 @@ class CodeCheck implements OmniSharp.IFeature {
             })
             .startWith([])
             .share();
-
 
         var updated = Observable.ofObjectChanges(this);
         this.observe = { diagnostics, updated };
@@ -195,13 +182,11 @@ class CodeCheck implements OmniSharp.IFeature {
     }
 
     private _doCodeCheck(editor: Atom.TextEditor) {
-        return Omni.request(editor, solution => solution.codecheck({}));
+        return Omni.request(editor, solution => solution.request('/v2/codecheck', {}));
     };
 
     public doCodeCheck(editor: Atom.TextEditor) {
-        if (!this._editorSubjects.has(editor)) return Observable.just<OmniSharp.Models.DiagnosticLocation[]>([]);
-        var callback = this._editorSubjects.get(editor);
-        return callback();
+        return Omni.request(editor, solution => solution.request('/v2/codecheck', {}));
     }
 
     public required = true;
