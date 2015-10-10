@@ -175,8 +175,8 @@ function dispose() {
 }
 
 export var CompletionProvider = {
-    selector: '.source.cs, .source.csx',
-    disableForSelector: 'source.cs .comment',
+    selector: '.source.cs, .source.csx, .source.cake',
+    disableForSelector: 'source.cs .comment, source.csx .comment, source.cake .comment',
     inclusionPriority: 1,
     suggestionPriority: 10,
     excludeLowerPriority: true,

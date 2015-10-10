@@ -228,7 +228,7 @@ class OmniSharpAtom {
             this.toggleMenu();
         }
 
-        if (grammar.name === 'C#') {
+        if (_.any(Omni.supportedExtensions, ext => _.endsWith(editor.getPath(), ext))) {
             if (Omni.isOff) {
                 this.toggle();
             }
@@ -237,10 +237,6 @@ class OmniSharpAtom {
                 if (Omni.isOff) {
                     this.toggle();
                 }
-            }
-        } else if (grammar.name === "C# Script File") {
-            if (Omni.isOff) {
-                this.toggle()
             }
         }
     }
