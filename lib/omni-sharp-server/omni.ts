@@ -55,7 +55,7 @@ class Omni implements Rx.IDisposable {
     public activate() {
         var openerDisposable = makeOpener();
         this.disposable = new CompositeDisposable;
-        manager.activate(this._activeEditor);
+        manager.activate(this._activeEditorOrConfigEditor);
 
         // we are only off if all our solutions are disconncted or erroed.
         this.disposable.add(manager.solutionAggregateObserver.state.subscribe(z => this._isOff = _.all(z, x => x.value === DriverState.Disconnected || x.value === DriverState.Error)));
