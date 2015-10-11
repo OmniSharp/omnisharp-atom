@@ -1,10 +1,10 @@
 import _ = require('lodash');
 import {Observable} from 'rx';
-import {OmnisharpObservationClientV2, OmnisharpObservationClientV1, OmnisharpCombinationClientV2, OmnisharpClientV1} from "omnisharp-client";
+import {aggregates} from "omnisharp-client";
 import {Solution} from "./solution";
 import {ViewModel} from './view-model';
 
-export class SolutionObserver extends OmnisharpObservationClientV2<Solution> {
+export class SolutionObserver extends aggregates.ObservationClientV2<Solution> {
     model: typeof ViewModel.prototype.observe;
 
     constructor(solutions: Solution[] = []) {
@@ -23,14 +23,14 @@ export class SolutionObserver extends OmnisharpObservationClientV2<Solution> {
     }
 }
 
-export class SolutionAggregateObserver extends OmnisharpCombinationClientV2<Solution> {
+export class SolutionAggregateObserver extends aggregates.AggregateClientV2<Solution> {
     model: { diagnostics: Observable<{ key: string; value: OmniSharp.Models.DiagnosticLocation[]; }[]> };
 
     constructor(solutions: Solution[] = []) {
         super(solutions);
 
         this.model = {
-            diagnostics: this.makeCombineObserable((solution: Solution) => solution.model.observe.diagnostics)
+            diagnostics: this.makeAggregateObserable((solution: Solution) => solution.model.observe.diagnostics)
         };
     }
 }

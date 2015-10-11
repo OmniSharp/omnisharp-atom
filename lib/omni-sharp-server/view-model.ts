@@ -151,7 +151,7 @@ export class ViewModel implements Rx.IDisposable {
             }));
 
         // MSBUILD
-        this._disposable.add(_solution.projectAdded
+        this._disposable.add(_solution.observe.projectAdded
             .where(z => z.MsBuildProject != null)
             .map(z => z.MsBuildProject)
             .where(z => !_.any(this.projects, { path: z.Path }))
@@ -162,14 +162,14 @@ export class ViewModel implements Rx.IDisposable {
                     }], project.SourceFiles));
             }));
 
-        this._disposable.add(_solution.projectRemoved
+        this._disposable.add(_solution.observe.projectRemoved
             .where(z => z.MsBuildProject != null)
             .map(z => z.MsBuildProject)
             .subscribe(project => {
                 this._projectRemovedStream.onNext(_.find(this.projects, { path: project.Path }));
             }));
 
-        this._disposable.add(_solution.projectChanged
+        this._disposable.add(_solution.observe.projectChanged
             .where(z => z.MsBuildProject != null)
             .map(z => z.MsBuildProject)
             .subscribe(project => {
@@ -184,7 +184,7 @@ export class ViewModel implements Rx.IDisposable {
             }));
 
         //DNX
-        this._disposable.add(_solution.projectAdded
+        this._disposable.add(_solution.observe.projectAdded
             .where(z => z.DnxProject != null)
             .map(z => z.DnxProject)
             .where(z => !_.any(this.projects, { path: z.Path }))
@@ -193,14 +193,14 @@ export class ViewModel implements Rx.IDisposable {
                     new ProjectViewModel(project.Name, project.Path, _solution.path, project.Frameworks, project.Configurations, project.Commands, project.SourceFiles));
             }));
 
-        this._disposable.add(_solution.projectRemoved
+        this._disposable.add(_solution.observe.projectRemoved
             .where(z => z.DnxProject != null)
             .map(z => z.DnxProject)
             .subscribe(project => {
                 this._projectRemovedStream.onNext(_.find(this.projects, { path: project.Path }));
             }));
 
-        this._disposable.add(_solution.projectChanged
+        this._disposable.add(_solution.observe.projectChanged
             .where(z => z.DnxProject != null)
             .map(z => z.DnxProject)
             .subscribe(project => {
@@ -333,7 +333,7 @@ export class ViewModel implements Rx.IDisposable {
     }
 
     private _setupMsbuild(_solution: Solution) {
-        var workspace = _solution.observeProjects
+        var workspace = _solution.observe.projects
             .where(z => z.response.MSBuild != null)
             .where(z => z.response.MSBuild.Projects.length > 0)
             .map(z => z.response.MSBuild);
@@ -350,7 +350,7 @@ export class ViewModel implements Rx.IDisposable {
     }
 
     private _setupDnx(_solution: Solution) {
-        var workspace = _solution.observeProjects
+        var workspace = _solution.observe.projects
             .where(z => z.response.Dnx != null)
             .where(z => z.response.Dnx.Projects.length > 0)
             .map(z => z.response.Dnx);
@@ -368,7 +368,7 @@ export class ViewModel implements Rx.IDisposable {
     }
 
     private _setupScriptCs(_solution: Solution) {
-        var context = _solution.observeProjects
+        var context = _solution.observe.projects
             .where(z => z.response.ScriptCs != null)
             .where(z => z.response.ScriptCs.CsxFiles.length > 0)
             .map(z => z.response.ScriptCs);
