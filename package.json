@@ -1,7 +1,7 @@
 {
   "name": "omnisharp-atom",
   "main": "./lib/omnisharp-atom/omnisharp-atom",
-  "version": "0.24.14",
+  "version": "0.24.16",
   "description": "Brings the wonderful OmniSharp server to powercharge Atom's C# development experience",
   "keywords": [
     "c#",
@@ -76,7 +76,7 @@
     "lodash": "^3.10.1",
     "merge-stream": "^0.1.7",
     "ntypescript": "1.201509010003.1",
-    "omnisharp-client": "^2.1.9",
+    "omnisharp-client": "^2.1.11",
     "react": "^0.13.3",
     "rimraf": "^2.4.2",
     "rx": "^3.1.2",
