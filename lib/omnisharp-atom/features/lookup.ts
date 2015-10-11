@@ -207,8 +207,8 @@ class Tooltip implements Rx.Disposable {
         var linesClientRect = this.getFromShadowDom(editorView, '.lines')[0].getBoundingClientRect();
         var top = clientY - linesClientRect.top;
         var left = clientX - linesClientRect.left;
-        top += this.editor.displayBuffer.getScrollTop();
-        left += this.editor.displayBuffer.getScrollLeft();
+        top += (<any>this.editor.displayBuffer).getScrollTop();
+        left += (<any>this.editor.displayBuffer).getScrollLeft();
         return { top: top, left: left };
     }
 

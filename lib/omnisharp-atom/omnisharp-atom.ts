@@ -228,7 +228,7 @@ class OmniSharpAtom {
             this.toggleMenu();
         }
 
-        if (_.any(Omni.supportedExtensions, ext => _.endsWith(editor.getPath(), ext))) {
+        if (Omni.isValidGrammar(grammar)) {
             if (Omni.isOff) {
                 this.toggle();
             }
