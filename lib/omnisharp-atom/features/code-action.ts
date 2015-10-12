@@ -34,7 +34,7 @@ class CodeAction implements OmniSharp.IFeature {
 
         this.disposable.add(Omni.switchActiveEditor((editor, cd) => {
             var cd = new CompositeDisposable();
-            cd.add(Omni.listener.observeGetcodeactions
+            cd.add(Omni.listener.getcodeactions
                 .where(z => z.request.FileName === editor.getPath())
                 .where(ctx => ctx.response.CodeActions.length > 0)
                 .subscribe(({response, request}) => {

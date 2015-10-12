@@ -306,7 +306,7 @@ class OmniSharpAtom {
             });
         }));
 
-        this.disposable.add(LinterProvider.init());
+        this.disposable.add(LinterProvider.init(linter));
     }
 
     private configureKeybindings() {

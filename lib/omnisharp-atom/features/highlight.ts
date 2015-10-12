@@ -22,7 +22,7 @@ class Highlight implements OmniSharp.IFeature {
             isObserveRetokenizing(
                 Omni.activeEditor.take(1)
                     .where(x => !!x)
-                    .flatMap(editor => Omni.listener.observeHighlight
+                    .flatMap(editor => Omni.listener.highlight
                         .where(z => z.request.FileName == editor.getPath())
                         .map(z => ({ editor, request: z.request, response: z.response }))
                         .take(1))
@@ -34,7 +34,7 @@ class Highlight implements OmniSharp.IFeature {
 
         this.disposable.add(
             isObserveRetokenizing(
-                Omni.listener.observeHighlight
+                Omni.listener.highlight
                     .map(z => ({ editor: find(this.editors, editor => editor.getPath() === z.request.FileName), request: z.request, response: z.response }))
                     .flatMap(z => Omni.activeEditor.take(1).where(x => x !== z.editor).map(x => z))
             )
@@ -45,7 +45,7 @@ class Highlight implements OmniSharp.IFeature {
         this.disposable.add(isEditorObserveRetokenizing(
             Observable.merge(Omni.activeEditor,
                 Omni.activeFramework
-                    .flatMap(z => Omni.listener.observeHighlight
+                    .flatMap(z => Omni.listener.highlight
                         .where(x => contains(x.request.ProjectNames, `${z.project.name}+${z.framework.ShortName}`))
                         .map(z => ({ editor: find(this.editors, editor => editor.getPath() === z.request.FileName), request: z.request, response: z.response }))
                         .take(1))
@@ -150,7 +150,9 @@ class Highlight implements OmniSharp.IFeature {
 
         disposable.add(issueRequest
             .debounce(DEBOUNCE_TIME)
-            .flatMap(z => Omni.getProject(editor).map(z => z.activeFramework.Name === 'all' ? '' : (z.name + '+' + z.activeFramework.ShortName)).timeout(200, Observable.just('')))
+            .flatMap(z =>
+                Omni.getProject(editor).map(z =>
+                z.activeFramework.Name === 'all' ? '' : (z.name + '+' + z.activeFramework.ShortName)).timeout(200, Observable.just('')))
             .flatMapLatest((framework) => {
                 var projects = [];
                 if (framework)

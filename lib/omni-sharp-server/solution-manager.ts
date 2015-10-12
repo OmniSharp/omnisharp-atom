@@ -1,10 +1,10 @@
 import _ = require('lodash')
 import path = require('path');
 import {Observable, AsyncSubject, RefCountDisposable, Disposable, CompositeDisposable, BehaviorSubject, Scheduler, Subject} from "rx";
-import {Solution} from "./solution";
+import {Solution, SolutionOptions} from "./solution";
 import {AtomProjectTracker} from "./atom-projects";
 import {SolutionObserver, SolutionAggregateObserver} from './composite-solution';
-import {DriverState, candidateFinder} from "omnisharp-client";
+import {DriverState, findCandidates, ProxyManager} from "omnisharp-client";
 import {GenericSelectListView} from "../omnisharp-atom/views/generic-list-view";
 
 var openSelectList: GenericSelectListView;
@@ -14,6 +14,7 @@ class SolutionManager {
     private _disposable: CompositeDisposable;
     private _solutionDisposable: CompositeDisposable;
     private _atomProjects: AtomProjectTracker;
+    private _proxyManager: ProxyManager;
 
     private _configurations = new Set<(solution: Solution) => void>();
     private _solutions = new Map<string, Solution>();
@@ -64,8 +65,12 @@ class SolutionManager {
 
         this._disposable = new CompositeDisposable();
         this._solutionDisposable = new CompositeDisposable();
+
         this._atomProjects = new AtomProjectTracker();
         this._disposable.add(this._atomProjects);
+
+        this._proxyManager = new ProxyManager();
+        this._disposable.add(this._proxyManager);
 
         this._activeSearch = Promise.resolve(undefined);
 
@@ -151,12 +156,13 @@ class SolutionManager {
             disposer.dispose();
         }
 
-        var solution = new Solution({
+        var solution = this._proxyManager.getClient<Solution, SolutionOptions>(Solution, 2, {
             projectPath: projectPath,
             index: ++this._nextIndex,
-            temporary: temporary,
-            repository: this._findRepositoryForPath(candidate)
+            temporary: temporary
         });
+
+        solution.setRepository(this._findRepositoryForPath(candidate));
 
         var cd = new CompositeDisposable();
 
@@ -345,7 +351,7 @@ class SolutionManager {
         (<any>editor).__omniClient__ = solution;
         var view: HTMLElement = <any>atom.views.getView(editor);
         view.classList.add('omnisharp-editor');
-        
+
         if (solution) {
             solution.disposable.add(Disposable.create(() => {
                 delete (<any>editor).omniProject;
@@ -487,7 +493,7 @@ class SolutionManager {
     }
 
     private _candidateFinder(directory: string, console: any) {
-        return candidateFinder(directory, console)
+        return findCandidates(directory, console)
             .flatMap(candidates => {
                 var slns = _.filter(candidates, x => _.endsWith(x, '.sln'));
                 if (slns.length > 1) {

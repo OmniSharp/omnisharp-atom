@@ -34,7 +34,7 @@ class RunTests implements OmniSharp.IFeature {
             get output() { return output; }
         };
 
-        this.disposable.add(Omni.listener.observeGettestcontext.subscribe((data) => {
+        this.disposable.add(Omni.listener.gettestcontext.subscribe((data) => {
             this.ensureWindowIsCreated();
             this.executeTests(data.response);
         }));
@@ -61,7 +61,7 @@ class RunTests implements OmniSharp.IFeature {
     }
 
     private makeRequest(type: TestCommandType) {
-        Omni.request(solution => solution.gettestcontextPromise({
+        Omni.request(solution => solution.gettestcontext({
             Type: <any>type
         }));
     }

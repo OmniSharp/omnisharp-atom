@@ -1,16 +1,15 @@
 import _ = require('lodash');
 import {Observable, Subject, CompositeDisposable, Disposable} from 'rx';
-import {OmnisharpClientV2, DriverState, OmnisharpClientOptions} from "omnisharp-client";
+import {ProxyClientV2, DriverState, OmnisharpClientOptions} from "omnisharp-client";
 
-interface SolutionOptions extends OmnisharpClientOptions {
+export interface SolutionOptions extends OmnisharpClientOptions {
     temporary: boolean;
-    repository: Atom.GitRepository;
     index: number;
 }
 
 import {ViewModel} from "./view-model";
 
-export class Solution extends OmnisharpClientV2 {
+export class Solution extends ProxyClientV2 {
     public model: ViewModel;
     public logs: Observable<OmniSharp.OutputMessage>;
     public path: string;
@@ -22,33 +21,35 @@ export class Solution extends OmnisharpClientV2 {
     private repository: Atom.GitRepository;
     public get isDisposed() { return this._solutionDisposable.isDisposed; }
 
-    constructor(options: SolutionOptions) {
-        super(options);
+    constructor(options: SolutionOptions, _proxy: any) {
+        super(options, _proxy);
         this.configureSolution();
         this.temporary = options.temporary;
         this.model = new ViewModel(this);
         this.path = options.projectPath;
         this.index = options['index'];
-        this.repository = options.repository;
         this.setupRepository();
         this._solutionDisposable.add(this.model);
+
+        this.registerFixup((action, request) => this._fixupRequest(action, request));
+    }
+
+    public setRepository(repository) {
+        this.repository = repository;
     }
 
     public toggle() {
         if (this.currentState === DriverState.Disconnected) {
-            var path = atom && atom.project && atom.project.getPaths()[0];
-            this.connect({
-                projectPath: path
-            });
+            this.connect();
         } else {
             this.disconnect();
         }
     }
 
-    public connect(options?) {
+    public connect() {
         if (this.isDisposed) return;
         if (this.currentState === DriverState.Connected || this.currentState === DriverState.Connecting) return;
-        super.connect(options);
+        super.connect();
 
         this.log("Starting OmniSharp server (pid:" + this.id + ")");
         this.log("OmniSharp Location: " + this.serverPath);
@@ -68,7 +69,7 @@ export class Solution extends OmnisharpClientV2 {
     }
 
     private configureSolution() {
-        this.logs = this.events.map(event => ({
+        this.logs = this.events.where(x => x.Event !== "Diagnostic").map(event => ({
             message: event.Body && event.Body.Message || event.Event || '',
             logLevel: event.Body && event.Body.LogLevel || (event.Type === "error" && 'ERROR') || 'INFORMATION'
         }));
@@ -91,7 +92,7 @@ export class Solution extends OmnisharpClientV2 {
     }
 
     private static _regex = new RegExp(String.fromCharCode(0xFFFD), 'g');
-    private _fixupRequest<TRequest, TResponse>(action: string, request: TRequest, cb: () => Rx.Observable<TResponse>) {
+    private _fixupRequest<TRequest, TResponse>(action: string, request: TRequest) {
         // Only send changes for requests that really need them.
         if (this._currentEditor && _.isObject(request)) {
             var editor = this._currentEditor;
@@ -123,8 +124,6 @@ export class Solution extends OmnisharpClientV2 {
         if (request['Buffer']) {
             request['Buffer'] = request['Buffer'].replace(Solution._regex, '');
         }
-
-        return cb();
     }
 
     public request<TRequest, TResponse>(action: string, request?: TRequest, options?: OmniSharp.RequestOptions): Rx.Observable<TResponse> {
@@ -165,23 +164,5 @@ export class Solution extends OmnisharpClientV2 {
         return this.state.startWith(this.currentState)
             .where(x => x === DriverState.Connected)
             .take(1);
-    }
-}
-
-for (var key in Solution.prototype) {
-    if (_.endsWith(key, 'Promise')) {
-        (function() {
-            var action = key.replace(/Promise$/, '');
-            var promiseMethod = Solution.prototype[key];
-            var observableMethod = Solution.prototype[action];
-
-            Solution.prototype[key] = function(request, options) {
-                return this._fixupRequest(action, request, () => promiseMethod.call(this, request, options));
-            };
-
-            Solution.prototype[action] = function(request, options) {
-                return this._fixupRequest(action, request, () => observableMethod.call(this, request, options));
-            };
-        })();
     }
 }

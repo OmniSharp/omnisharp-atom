@@ -4,6 +4,11 @@ import {DriverState, OmnisharpClientStatus} from "omnisharp-client";
 import {Observable, Subject, ReplaySubject, CompositeDisposable, Disposable} from "rx";
 import {basename, dirname, normalize} from "path";
 
+
+interface DiagnosticMessage extends OmniSharp.Models.DiagnosticLocation {
+    Clear: boolean;
+}
+
 export class ProjectViewModel implements OmniSharp.IProjectViewModel, Rx.IDisposable {
     public path: string;
 
@@ -63,7 +68,6 @@ export class ViewModel implements Rx.IDisposable {
     public get index() { return this._solution.index; }
     public get path() { return this._solution.path; }
     public output: OmniSharp.OutputMessage[] = [];
-    public diagnostics: OmniSharp.Models.DiagnosticLocation[] = [];
     public get state() { return this._solution.currentState };
     public packageSources: string[] = [];
     public runtime = '';
@@ -74,7 +78,7 @@ export class ViewModel implements Rx.IDisposable {
     private _projectChangedStream = new Subject<ProjectViewModel>();
 
     public observe: {
-        codecheck: Rx.Observable<OmniSharp.Models.DiagnosticLocation[]>;
+        diagnostics: Rx.Observable<OmniSharp.Models.DiagnosticLocation[]>;
         output: Rx.Observable<OmniSharp.OutputMessage[]>;
         status: Rx.Observable<OmnisharpClientStatus>;
         updates: Rx.Observable<Rx.ObjectObserveChange<ViewModel>>;
@@ -99,7 +103,7 @@ export class ViewModel implements Rx.IDisposable {
         this._disposable.add(_solution.state.where(z => z === DriverState.Disconnected).subscribe(() => {
             _.each(this.projects.slice(), project => this._projectRemovedStream.onNext(project));
             this.projects = [];
-            this.diagnostics = [];
+            this._diagnosticMap.clear();
         }));
 
         var codecheck = this._setupCodecheck(_solution);
@@ -122,7 +126,7 @@ export class ViewModel implements Rx.IDisposable {
             .map(() => output);
 
         this.observe = {
-            get codecheck() { return codecheck; },
+            get diagnostics() { return codecheck; },
             get output() { return outputObservable; },
             get status() { return status; },
             get updates() { return updates; },
@@ -147,7 +151,7 @@ export class ViewModel implements Rx.IDisposable {
             }));
 
         // MSBUILD
-        this._disposable.add(_solution.projectAdded
+        this._disposable.add(_solution.observe.projectAdded
             .where(z => z.MsBuildProject != null)
             .map(z => z.MsBuildProject)
             .where(z => !_.any(this.projects, { path: z.Path }))
@@ -158,14 +162,14 @@ export class ViewModel implements Rx.IDisposable {
                     }], project.SourceFiles));
             }));
 
-        this._disposable.add(_solution.projectRemoved
+        this._disposable.add(_solution.observe.projectRemoved
             .where(z => z.MsBuildProject != null)
             .map(z => z.MsBuildProject)
             .subscribe(project => {
                 this._projectRemovedStream.onNext(_.find(this.projects, { path: project.Path }));
             }));
 
-        this._disposable.add(_solution.projectChanged
+        this._disposable.add(_solution.observe.projectChanged
             .where(z => z.MsBuildProject != null)
             .map(z => z.MsBuildProject)
             .subscribe(project => {
@@ -180,7 +184,7 @@ export class ViewModel implements Rx.IDisposable {
             }));
 
         //DNX
-        this._disposable.add(_solution.projectAdded
+        this._disposable.add(_solution.observe.projectAdded
             .where(z => z.DnxProject != null)
             .map(z => z.DnxProject)
             .where(z => !_.any(this.projects, { path: z.Path }))
@@ -189,14 +193,14 @@ export class ViewModel implements Rx.IDisposable {
                     new ProjectViewModel(project.Name, project.Path, _solution.path, project.Frameworks, project.Configurations, project.Commands, project.SourceFiles));
             }));
 
-        this._disposable.add(_solution.projectRemoved
+        this._disposable.add(_solution.observe.projectRemoved
             .where(z => z.DnxProject != null)
             .map(z => z.DnxProject)
             .subscribe(project => {
                 this._projectRemovedStream.onNext(_.find(this.projects, { path: project.Path }));
             }));
 
-        this._disposable.add(_solution.projectChanged
+        this._disposable.add(_solution.observe.projectChanged
             .where(z => z.DnxProject != null)
             .map(z => z.DnxProject)
             .subscribe(project => {
@@ -277,28 +281,46 @@ export class ViewModel implements Rx.IDisposable {
             project => _.assign(_.find(this.projects, z => z.path === project.path), project)));
     }
 
-    private _setupCodecheck(_solution: Solution) {
-        var codecheck = Observable.merge(
-            // Catch global code checks
-            _solution.observeCodecheck
-                .where(z => !z.request.FileName)
-                .map(z => z.response)
-                .map(z => <OmniSharp.Models.DiagnosticLocation[]>z.QuickFixes),
-            // Evict diagnostics from a code check for the given file
-            // Then insert the new diagnostics
-            _solution.observeCodecheck
-                .where(z => !!z.request.FileName)
-                .map((ctx) => {
-                    var {request, response} = ctx;
-                    var results = _.filter(this.diagnostics, (fix: OmniSharp.Models.DiagnosticLocation) => request.FileName !== fix.FileName);
-                    results.unshift(...<OmniSharp.Models.DiagnosticLocation[]>response.QuickFixes);
-                    return results;
-                }))
-            .map(data => _.sortBy(data, quickFix => quickFix.LogLevel))
-            .startWith([])
-            .shareReplay(1);
+    public getDiagnostics() {
+        var results = [];
+        this._diagnosticMap.forEach(set => {
+            var values = [];
+            set.forEach(value => values.push(value));
+            results.push(..._.sortBy(values, (x: OmniSharp.Models.DiagnosticLocation) => `${x.Line}-${x.Column}-${x.LogLevel}`));
+        });
+        return results;
+    }
 
-        this._disposable.add(codecheck.subscribe((data) => this.diagnostics = data));
+    public getDiagnosticsFor(path: string) {
+        if (!this._diagnosticMap.has(path)) return [];
+        var values = [];
+        this._diagnosticMap.get(path).forEach(value => values.push(value));
+        return _.sortBy(values, (x: OmniSharp.Models.DiagnosticLocation) => `${x.Line}-${x.Column}-${x.LogLevel}`);
+
+    }
+
+    private _diagnosticMap = new Map<string, Set<OmniSharp.Models.DiagnosticLocation>>();
+
+    private _setupCodecheck(_solution: Solution) {
+        var codecheck = _solution.events
+            .where(x => x.Event === "Diagnostic")
+            .map(x => <DiagnosticMessage>x.Body)
+            .tapOnNext(x => {
+                if (x.Clear && this._diagnosticMap.has(x.FileName)) {
+                    this._diagnosticMap.delete(x.FileName);
+                } else if (!x.Clear) {
+                    if (!this._diagnosticMap.has(x.FileName)) {
+                        this._diagnosticMap.set(x.FileName, new Set<OmniSharp.Models.DiagnosticLocation>());
+                    }
+                    this._diagnosticMap.get(x.FileName).add(x);
+                }
+            })
+            .debounce(200)
+            .map(x => this.getDiagnostics())
+            .startWith([])
+            .share();
+
+        this._disposable.add(codecheck.subscribe());
         return codecheck;
     }
 
@@ -311,7 +333,7 @@ export class ViewModel implements Rx.IDisposable {
     }
 
     private _setupMsbuild(_solution: Solution) {
-        var workspace = _solution.observeProjects
+        var workspace = _solution.observe.projects
             .where(z => z.response.MSBuild != null)
             .where(z => z.response.MSBuild.Projects.length > 0)
             .map(z => z.response.MSBuild);
@@ -328,9 +350,15 @@ export class ViewModel implements Rx.IDisposable {
     }
 
     private _setupDnx(_solution: Solution) {
-        var workspace = _solution.observeProjects
-            .where(z => z.response.Dnx != null)
-            .where(z => z.response.Dnx.Projects.length > 0)
+        var workspace = _solution.observe.projects
+            .where(z => {
+                console.log('z.response.Dnx', z.response.Dnx);
+                return z.response.Dnx != null;
+            })
+            .where(z => {
+                console.log('z.response.Dnx.Projects', z.response.Dnx.Projects);
+                return z.response.Dnx.Projects.length > 0;
+            })
             .map(z => z.response.Dnx);
 
         this._disposable.add(workspace.subscribe(system => {
@@ -346,7 +374,7 @@ export class ViewModel implements Rx.IDisposable {
     }
 
     private _setupScriptCs(_solution: Solution) {
-        var context = _solution.observeProjects
+        var context = _solution.observe.projects
             .where(z => z.response.ScriptCs != null)
             .where(z => z.response.ScriptCs.CsxFiles.length > 0)
             .map(z => z.response.ScriptCs);
