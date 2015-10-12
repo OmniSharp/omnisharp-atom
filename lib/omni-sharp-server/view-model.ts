@@ -68,6 +68,7 @@ export class ViewModel implements Rx.IDisposable {
     public get index() { return this._solution.index; }
     public get path() { return this._solution.path; }
     public output: OmniSharp.OutputMessage[] = [];
+    private diagnostics: OmniSharp.Models.DiagnosticLocation[] = [];
     public get state() { return this._solution.currentState };
     public packageSources: string[] = [];
     public runtime = '';
@@ -103,7 +104,9 @@ export class ViewModel implements Rx.IDisposable {
         this._disposable.add(_solution.state.where(z => z === DriverState.Disconnected).subscribe(() => {
             _.each(this.projects.slice(), project => this._projectRemovedStream.onNext(project));
             this.projects = [];
-            this._diagnosticMap.clear();
+            // CODECHECK v2
+            //this._diagnosticMap.clear();
+            this.diagnostics = [];
         }));
 
         var codecheck = this._setupCodecheck(_solution);
@@ -281,6 +284,7 @@ export class ViewModel implements Rx.IDisposable {
             project => _.assign(_.find(this.projects, z => z.path === project.path), project)));
     }
 
+/* CODECHECK v2
     public getDiagnostics() {
         var results = [];
         this._diagnosticMap.forEach(set => {
@@ -321,6 +325,30 @@ export class ViewModel implements Rx.IDisposable {
             .share();
 
         this._disposable.add(codecheck.subscribe());
+        return codecheck;
+    }*/
+    private _setupCodecheck(_solution: Solution) {
+        var codecheck = Observable.merge(
+            // Catch global code checks
+            _solution.observe.codecheck
+                .where(z => !z.request.FileName)
+                .map(z => z.response)
+                .map(z => <OmniSharp.Models.DiagnosticLocation[]>z.QuickFixes),
+            // Evict diagnostics from a code check for the given file
+            // Then insert the new diagnostics
+            _solution.observe.codecheck
+                .where(z => !!z.request.FileName)
+                .map((ctx) => {
+                    var {request, response} = ctx;
+                    var results = _.filter(this.diagnostics, (fix: OmniSharp.Models.DiagnosticLocation) => request.FileName !== fix.FileName);
+                    results.unshift(...<OmniSharp.Models.DiagnosticLocation[]>response.QuickFixes);
+                    return results;
+                }))
+            .map(data => _.sortBy(data, quickFix => quickFix.LogLevel))
+            .startWith([])
+            .shareReplay(1);
+
+        this._disposable.add(codecheck.subscribe((data) => this.diagnostics = data));
         return codecheck;
     }
 

@@ -57,10 +57,25 @@ class CodeCheck implements OmniSharp.IFeature {
             Omni.navigateTo(this.displayDiagnostics[this.selectedIndex]);
         }));
 
+        /* CODECHECK v2
         this.disposable.add(Omni.eachEditor((editor, cd) => {
             cd.add(editor.getBuffer().onDidSave(() => this._doCodeCheck(editor)));
             cd.add(editor.getBuffer().onDidReload(() => this._doCodeCheck(editor)));
             cd.add(editor.getBuffer().onDidStopChanging(() => this._doCodeCheck(editor)));
+        }));*/
+        this.disposable.add(Omni.eachEditor((editor, cd) => {
+            var subject = new Subject<any>();
+
+            var o = subject
+                .debounce(500)
+                .where(() => !editor.isDestroyed())
+                .subscribe(() => this._doCodeCheck(editor))
+
+            cd.add(o);
+
+            cd.add(editor.getBuffer().onDidSave(() => !subject.isDisposed && subject.onNext(null)));
+            cd.add(editor.getBuffer().onDidReload(() => !subject.isDisposed && subject.onNext(null)));
+            cd.add(editor.getBuffer().onDidStopChanging(() => !subject.isDisposed && subject.onNext(null)));
         }));
 
         this.disposable.add(this.observe.diagnostics
