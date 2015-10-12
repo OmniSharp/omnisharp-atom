@@ -6,7 +6,7 @@ import {Observable, Subject, ReplaySubject, Scheduler, CompositeDisposable, Disp
 var AtomGrammar = require((<any>atom).config.resourcePath + "/node_modules/first-mate/lib/grammar.js");
 var Range: typeof TextBuffer.Range = <any>require('atom').Range;
 
-const DEBOUNCE_TIME = 240/*240*/;
+const DEBOUNCE_TIME = 240;
 
 class Highlight implements OmniSharp.IFeature {
     private disposable: Rx.CompositeDisposable;

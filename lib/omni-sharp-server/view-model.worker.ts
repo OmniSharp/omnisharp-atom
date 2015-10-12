@@ -10,7 +10,7 @@ export default class ViewModelWorker implements Rx.IDisposable {
     private _projectRemovedStream = new Subject<ProjectViewModel<any>>();
     private _projectChangedStream = new Subject<ProjectViewModel<any>>();
 
-    constructor(solution: ClientV2) {
+    constructor(private solution: ClientV2) {
         var cd = this._disposable;
 
         cd.add(solution.state.where(z => z === DriverState.Disconnected).subscribe(() => {
@@ -66,6 +66,19 @@ export default class ViewModelWorker implements Rx.IDisposable {
 
     public dispose() {
         this._disposable.dispose();
+    }
+
+    @materialize
+    public get logs(): Observable<OmniSharp.OutputMessage[]> {
+        var logs = this.solution.events
+            .where(x => x.Event !== "Diagnostic");
+
+        return logs
+            .map(event => ({
+                message: event.Body && event.Body.Message || event.Event || '',
+                logLevel: event.Body && event.Body.LogLevel || (event.Type === "error" && 'ERROR') || 'INFORMATION'
+            }))
+            .buffer(logs.throttle(150), () => Observable.timer(150));
     }
 
     @materialize

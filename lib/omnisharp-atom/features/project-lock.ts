@@ -4,10 +4,10 @@ import Omni = require('../../omni-sharp-server/omni');
 import _ = require('lodash');
 import {Observable, Disposable, CompositeDisposable, Subject} from "rx";
 import {File} from "atom";
-import {ProjectViewModel} from "../../omni-sharp-server/view-model";
+import {ProjectViewModel} from "../../omni-sharp-server/project-view-model";
 import {Solution} from "../../omni-sharp-server/solution";
 
-function projectLock(solution: Solution, project: ProjectViewModel, filePath: string) {
+function projectLock(solution: Solution, project: ProjectViewModel<any>, filePath: string) {
     var disposable = new CompositeDisposable();
     var subject = new Subject<string>();
     var file = new File(filePath),
@@ -34,7 +34,7 @@ function projectLock(solution: Solution, project: ProjectViewModel, filePath: st
 
 class FileMonitor implements OmniSharp.IFeature {
     private disposable: CompositeDisposable;
-    private filesMap = new WeakMap<ProjectViewModel, Rx.IDisposable>();
+    private filesMap = new WeakMap<ProjectViewModel<any>, Rx.IDisposable>();
 
     public activate() {
         this.disposable = new CompositeDisposable();

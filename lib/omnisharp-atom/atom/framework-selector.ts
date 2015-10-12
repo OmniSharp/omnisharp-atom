@@ -1,5 +1,5 @@
 import {CompositeDisposable, Observable, Disposable} from "rx";
-import {ProjectViewModel} from "../../omni-sharp-server/view-model";
+import {ProjectViewModel} from "../../omni-sharp-server/project-view-model";
 import Omni = require('../../omni-sharp-server/omni')
 import {FrameworkSelectorComponent} from '../views/framework-selector-view';
 import React = require('react');
@@ -10,7 +10,7 @@ class FrameworkSelector implements OmniSharp.IAtomFeature {
     private tile: any;
     private statusBar: any;
     private _active = false;
-    public project: ProjectViewModel;
+    public project: ProjectViewModel<any>;
     private _component: FrameworkSelectorComponent;
 
     public activate() {

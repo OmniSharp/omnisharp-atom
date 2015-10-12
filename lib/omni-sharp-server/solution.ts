@@ -11,7 +11,6 @@ import {ViewModel} from "./view-model";
 
 export class Solution extends ProxyClientV2 {
     public model: ViewModel;
-    public logs: Observable<OmniSharp.OutputMessage>;
     public path: string;
     public index: number;
     public temporary: boolean = false;
@@ -69,11 +68,6 @@ export class Solution extends ProxyClientV2 {
     }
 
     private configureSolution() {
-        this.logs = this.events.where(x => x.Event !== "Diagnostic").map(event => ({
-            message: event.Body && event.Body.Message || event.Event || '',
-            logLevel: event.Body && event.Body.LogLevel || (event.Type === "error" && 'ERROR') || 'INFORMATION'
-        }));
-
         this._solutionDisposable.add(this.errors.subscribe(exception => {
             console.error(exception);
         }));

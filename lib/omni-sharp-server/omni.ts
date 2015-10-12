@@ -4,7 +4,7 @@ import {Solution} from "./solution";
 import _ = require('lodash');
 import {basename} from "path";
 import {DriverState} from "omnisharp-client";
-import {ProjectViewModel} from "./view-model";
+import {ProjectViewModel} from "./project-view-model";
 
 // Time we wait to try and do our active switch tasks.
 const DEBOUNCE_TIMEOUT = 100;
@@ -284,7 +284,7 @@ class Omni implements Rx.IDisposable {
             .take(1);
     }
 
-    public getSolutionForProject(project: ProjectViewModel) {
+    public getSolutionForProject(project: ProjectViewModel<any>) {
         return Observable.just(
             _(manager.activeSolutions)
                 .filter(solution => _.any(solution.model.projects, p => p.name === project.name))

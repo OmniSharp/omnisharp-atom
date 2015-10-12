@@ -14,7 +14,7 @@ export class SolutionObserver extends ObservationClientV2<Solution> {
             diagnostics: this.makeMergeObserable((solution) => solution.model.observe.diagnostics),
             output: this.makeMergeObserable((solution) => solution.model.observe.output),
             status: this.makeMergeObserable((solution) => solution.model.observe.status),
-            updates: this.makeMergeObserable((solution) => solution.model.observe.updates),
+            state: this.makeMergeObserable((solution) => solution.model.observe.state),
             projectAdded: this.makeMergeObserable((solution) => solution.model.observe.projectAdded),
             projectRemoved: this.makeMergeObserable((solution) => solution.model.observe.projectRemoved),
             projectChanged: this.makeMergeObserable((solution) => solution.model.observe.projectChanged),

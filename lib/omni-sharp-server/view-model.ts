@@ -36,7 +36,7 @@ export class ViewModel implements Rx.IDisposable {
         diagnostics: Rx.Observable<OmniSharp.Models.DiagnosticLocation[]>;
         output: Rx.Observable<OmniSharp.OutputMessage[]>;
         status: Rx.Observable<OmnisharpClientStatus>;
-        updates: Rx.Observable<Rx.ObjectObserveChange<ViewModel>>;
+        state: Rx.Observable<any>;
         projectAdded: Rx.Observable<ProjectViewModel<any>>;
         projectRemoved: Rx.Observable<ProjectViewModel<any>>;
         projectChanged: Rx.Observable<ProjectViewModel<any>>;
@@ -48,13 +48,6 @@ export class ViewModel implements Rx.IDisposable {
         this._uniqueId = _solution.uniqueId;
         this._updateState(_solution.currentState);
 
-        // Manage our build log for display
-        this._disposable.add(_solution.logs.subscribe(event => {
-            this.output.push(event);
-            if (this.output.length > 1000)
-                this.output.shift();
-        }));
-
         this._disposable.add(_solution.state.where(z => z === DriverState.Disconnected).subscribe(() => {
             this.projects = [];
             // CODECHECK v2
@@ -65,11 +58,14 @@ export class ViewModel implements Rx.IDisposable {
         var codecheck = this._setupCodecheck(_solution);
         var status = this._setupStatus(_solution);
         var output = this.output;
-        var updates = Observable.ofObjectChanges(this);
+        var state = this._stateSubject.asObservable().share();
 
-        var outputObservable = _solution.logs
-            .window(_solution.logs.throttle(100), () => Observable.timer(100))
-            .flatMap(x => x.startWith(null).last())
+        var outputObservable = worker.logs
+            .tapOnNext(events => {
+                output.push(...events);
+                while (output.length > 1000)
+                    output.shift();
+            })
             .map(() => output);
 
         var projectAdded = worker.projectAdded
@@ -105,7 +101,7 @@ export class ViewModel implements Rx.IDisposable {
             get diagnostics() { return codecheck; },
             get output() { return outputObservable; },
             get status() { return status; },
-            get updates() { return updates; },
+            get state() { return state; },
             get projects() { return projects; },
             get projectAdded() { return projectAdded; },
             get projectRemoved() { return projectRemoved; },
@@ -170,12 +166,15 @@ export class ViewModel implements Rx.IDisposable {
         }
     }
 
+    private _stateSubject = new Subject<any>();
     private _updateState(state) {
         this.isOn = state === DriverState.Connecting || state === DriverState.Connected;
         this.isOff = state === DriverState.Disconnected;
         this.isConnecting = state === DriverState.Connecting;
         this.isReady = state === DriverState.Connected;
         this.isError = state === DriverState.Error;
+
+        this._stateSubject.onNext(null);
     }
 
     /* CODECHECK v2

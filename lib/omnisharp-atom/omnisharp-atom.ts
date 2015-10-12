@@ -6,7 +6,6 @@ import fs = require('fs');
 
 // TODO: Remove these at some point to stream line startup.
 import Omni = require('../omni-sharp-server/omni');
-import {world} from './world';
 var win32 = process.platform === "win32";
 
 class OmniSharpAtom {
@@ -62,9 +61,6 @@ class OmniSharpAtom {
                 console.info("Activating omnisharp-atom solution tracking...");
                 Omni.activate();
                 this.disposable.add(Omni);
-
-                world.activate();
-                this.disposable.add(world);
 
                 this._started.onNext(true);
                 this._started.onCompleted();
