@@ -1,10 +1,10 @@
 import _ = require('lodash');
 import {Observable} from 'rx';
-import {aggregates} from "omnisharp-client";
+import {ObservationClientV2, AggregateClientV2} from "omnisharp-client";
 import {Solution} from "./solution";
 import {ViewModel} from './view-model';
 
-export class SolutionObserver extends aggregates.ObservationClientV2<Solution> {
+export class SolutionObserver extends ObservationClientV2<Solution> {
     model: typeof ViewModel.prototype.observe;
 
     constructor(solutions: Solution[] = []) {
@@ -23,7 +23,7 @@ export class SolutionObserver extends aggregates.ObservationClientV2<Solution> {
     }
 }
 
-export class SolutionAggregateObserver extends aggregates.AggregateClientV2<Solution> {
+export class SolutionAggregateObserver extends AggregateClientV2<Solution> {
     model: { diagnostics: Observable<{ key: string; value: OmniSharp.Models.DiagnosticLocation[]; }[]> };
 
     constructor(solutions: Solution[] = []) {

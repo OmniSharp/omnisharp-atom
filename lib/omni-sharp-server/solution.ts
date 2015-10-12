@@ -1,16 +1,15 @@
 import _ = require('lodash');
 import {Observable, Subject, CompositeDisposable, Disposable} from 'rx';
-import {clients, DriverState, OmnisharpClientOptions} from "omnisharp-client";
+import {ProxyClientV2, DriverState, OmnisharpClientOptions} from "omnisharp-client";
 
-interface SolutionOptions extends OmnisharpClientOptions {
+export interface SolutionOptions extends OmnisharpClientOptions {
     temporary: boolean;
-    repository: Atom.GitRepository;
     index: number;
 }
 
 import {ViewModel} from "./view-model";
 
-export class Solution extends clients.ClientV2 {
+export class Solution extends ProxyClientV2 {
     public model: ViewModel;
     public logs: Observable<OmniSharp.OutputMessage>;
     public path: string;
@@ -22,18 +21,21 @@ export class Solution extends clients.ClientV2 {
     private repository: Atom.GitRepository;
     public get isDisposed() { return this._solutionDisposable.isDisposed; }
 
-    constructor(options: SolutionOptions) {
-        super(options);
+    constructor(options: SolutionOptions, _proxy: any) {
+        super(options, _proxy);
         this.configureSolution();
         this.temporary = options.temporary;
         this.model = new ViewModel(this);
         this.path = options.projectPath;
         this.index = options['index'];
-        this.repository = options.repository;
         this.setupRepository();
         this._solutionDisposable.add(this.model);
 
         this.registerFixup((action, request) => this._fixupRequest(action, request));
+    }
+
+    public setRepository(repository) {
+        this.repository = repository;
     }
 
     public toggle() {
