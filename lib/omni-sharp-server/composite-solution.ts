@@ -11,14 +11,14 @@ export class SolutionObserver extends aggregates.ObservationClientV2<Solution> {
         super(solutions);
 
         this.model = {
-            diagnostics: this.makeMergeObserable((solution: Solution) => solution.model.observe.diagnostics),
-            output: this.makeMergeObserable((solution: Solution) => solution.model.observe.output),
-            status: this.makeMergeObserable((solution: Solution) => solution.model.observe.status),
-            updates: this.makeMergeObserable((solution: Solution) => solution.model.observe.updates),
-            projectAdded: this.makeMergeObserable((solution: Solution) => solution.model.observe.projectAdded),
-            projectRemoved: this.makeMergeObserable((solution: Solution) => solution.model.observe.projectRemoved),
-            projectChanged: this.makeMergeObserable((solution: Solution) => solution.model.observe.projectChanged),
-            projects: this.makeMergeObserable((solution: Solution) => solution.model.observe.projects)
+            diagnostics: this.makeMergeObserable((solution) => solution.model.observe.diagnostics),
+            output: this.makeMergeObserable((solution) => solution.model.observe.output),
+            status: this.makeMergeObserable((solution) => solution.model.observe.status),
+            updates: this.makeMergeObserable((solution) => solution.model.observe.updates),
+            projectAdded: this.makeMergeObserable((solution) => solution.model.observe.projectAdded),
+            projectRemoved: this.makeMergeObserable((solution) => solution.model.observe.projectRemoved),
+            projectChanged: this.makeMergeObserable((solution) => solution.model.observe.projectChanged),
+            projects: this.makeMergeObserable((solution) => solution.model.observe.projects)
         };
     }
 }
@@ -30,7 +30,7 @@ export class SolutionAggregateObserver extends aggregates.AggregateClientV2<Solu
         super(solutions);
 
         this.model = {
-            diagnostics: this.makeAggregateObserable((solution: Solution) => solution.model.observe.diagnostics)
+            diagnostics: this.makeAggregateObserable((solution) => solution.model.observe.diagnostics)
         };
     }
 }

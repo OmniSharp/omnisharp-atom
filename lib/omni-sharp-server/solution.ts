@@ -32,6 +32,8 @@ export class Solution extends clients.ClientV2 {
         this.repository = options.repository;
         this.setupRepository();
         this._solutionDisposable.add(this.model);
+
+        this.registerFixup((action, request) => this._fixupRequest(action, request));
     }
 
     public toggle() {
@@ -88,7 +90,7 @@ export class Solution extends clients.ClientV2 {
     }
 
     private static _regex = new RegExp(String.fromCharCode(0xFFFD), 'g');
-    private _fixupRequest<TRequest, TResponse>(action: string, request: TRequest, cb: () => Rx.Observable<TResponse>) {
+    private _fixupRequest<TRequest, TResponse>(action: string, request: TRequest) {
         // Only send changes for requests that really need them.
         if (this._currentEditor && _.isObject(request)) {
             var editor = this._currentEditor;
@@ -120,8 +122,6 @@ export class Solution extends clients.ClientV2 {
         if (request['Buffer']) {
             request['Buffer'] = request['Buffer'].replace(Solution._regex, '');
         }
-
-        return cb();
     }
 
     public request<TRequest, TResponse>(action: string, request?: TRequest, options?: OmniSharp.RequestOptions): Rx.Observable<TResponse> {
@@ -162,23 +162,5 @@ export class Solution extends clients.ClientV2 {
         return this.state.startWith(this.currentState)
             .where(x => x === DriverState.Connected)
             .take(1);
-    }
-}
-
-for (var key in Solution.prototype) {
-    if (_.endsWith(key, 'Promise')) {
-        (function() {
-            var action = key.replace(/Promise$/, '');
-            var promiseMethod = Solution.prototype[key];
-            var observableMethod = Solution.prototype[action];
-
-            Solution.prototype[key] = function(request, options) {
-                return this._fixupRequest(action, request, () => promiseMethod.call(this, request, options));
-            };
-
-            Solution.prototype[action] = function(request, options) {
-                return this._fixupRequest(action, request, () => observableMethod.call(this, request, options));
-            };
-        })();
     }
 }

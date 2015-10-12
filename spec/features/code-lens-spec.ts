@@ -17,7 +17,7 @@ describe('Code Lens', () => {
                 return a;
             });
 
-        var p2 = Omni.listener.observeCurrentfilemembersasflat.debounce(1000).take(1).toPromise();
+        var p2 = Omni.listener.currentfilemembersasflat.debounce(1000).take(1).toPromise();
 
         waitsForPromise(() => Promise.all([p1, p2]));
 
@@ -32,15 +32,15 @@ describe('Code Lens', () => {
 
     it('should handle editor switching', () => {
         var p1 = openEditor('simple/code-lens/CodeLens.cs')
-            .then(() => Omni.listener.observeCurrentfilemembersasflat.debounce(1000).take(1).toPromise())
+            .then(() => Omni.listener.currentfilemembersasflat.debounce(1000).take(1).toPromise())
             .then(() => openEditor('simple/code-lens/CodeLens2.cs'))
-            .then(() => Omni.listener.observeCurrentfilemembersasflat.debounce(1000).take(1).toPromise())
+            .then(() => Omni.listener.currentfilemembersasflat.debounce(1000).take(1).toPromise())
             .then(() => openEditor('simple/code-lens/CodeLens.cs'))
             .then((a: any) => {
                 e = a.editor;
                 return a;
             })
-            .then(() => Omni.listener.observeCurrentfilemembersasflat.debounce(1000).take(1).toPromise());
+            .then(() => Omni.listener.currentfilemembersasflat.debounce(1000).take(1).toPromise());
 
         waitsForPromise(() => p1);
 

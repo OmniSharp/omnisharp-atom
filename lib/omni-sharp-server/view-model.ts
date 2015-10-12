@@ -351,8 +351,14 @@ export class ViewModel implements Rx.IDisposable {
 
     private _setupDnx(_solution: Solution) {
         var workspace = _solution.observe.projects
-            .where(z => z.response.Dnx != null)
-            .where(z => z.response.Dnx.Projects.length > 0)
+            .where(z => {
+                console.log('z.response.Dnx', z.response.Dnx);
+                return z.response.Dnx != null;
+            })
+            .where(z => {
+                console.log('z.response.Dnx.Projects', z.response.Dnx.Projects);
+                return z.response.Dnx.Projects.length > 0;
+            })
             .map(z => z.response.Dnx);
 
         this._disposable.add(workspace.subscribe(system => {

@@ -7,7 +7,7 @@ var filter = require('fuzzaldrin').filter;
 
 var cache = new Map<string, { prefix?: string; results: string[] }>();
 var versionCache = new Map<string, any>();
-Omni.listener.observePackagesource
+Omni.listener.packagesource
     .map(z => z.response.Sources)
     .subscribe((sources: string[]) => {
         _.each(sources, source => {
