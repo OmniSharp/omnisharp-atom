@@ -66,27 +66,30 @@ export class FlameElement extends HTMLAnchorElement implements WebComponent {
 
     public updateState(state: typeof FlameElement.prototype._state) {
         var icon = this._icon;
-        _.each(statefulProperties, x => this._state[x] = state[x]);
+        _.each(statefulProperties, x => {
+            if (_.has(state, x))
+                this._state[x] = state[x];
+        });
 
-        if (state.isOff) {
+        if (this._state.isOff) {
             removeClassIfContains(icon, 'text-subtle');
         } else {
             addClassIfNotContains(icon, 'text-subtle');
         }
 
-        if (state.isReady) {
+        if (this._state.isReady) {
             addClassIfNotContains(icon, 'text-success');
         } else {
             removeClassIfContains(icon, 'text-success');
         }
 
-        if (state.isError) {
+        if (this._state.isError) {
             addClassIfNotContains(icon, 'text-error');
         } else {
             removeClassIfContains(icon, 'text-error');
         }
 
-        if (state.isConnecting) {
+        if (this._state.isConnecting) {
             addClassIfNotContains(icon, 'icon-flame-loading');
             removeClassIfContains(icon, 'icon-flame-processing');
             removeClassIfContains(icon, 'icon-flame-loading');
@@ -296,10 +299,21 @@ export class StatusBarElement extends HTMLElement implements WebComponent, Rx.ID
             })
         }));
 
+        this._disposable.add(Omni.activeModel.subscribe(model => {
+            _.each(statefulProperties, x => {
+                if (_.has(model, x))
+                    this._state[x] = model[x];
+            });
+        }));
+
         this._disposable.add(Omni.activeModel
-            .flatMap(x => x.observe.state.map(z => x))
+            .flatMapLatest(x => x.observe.state.map(z => x))
             .subscribe(model => {
-                _.each(statefulProperties, x => this._state[x] = model[x]);
+                _.each(statefulProperties, x => {
+                    if (_.has(model, x))
+                        this._state[x] = model[x];
+                });
+
                 this._flame.updateState(model);
                 this._updateVisible();
             }));
@@ -336,8 +350,6 @@ export class StatusBarElement extends HTMLElement implements WebComponent, Rx.ID
                 var solutionNumber = solutions.length > 1 ? _.trim(server.model && (<any>server.model).index, 'client') : '';
                 this._projectCount.updateSolutionNumber(solutionNumber);
             }));
-
-        Omni.activeModel.take(1).subscribe(model => _.each(statefulProperties, x => this._state[x] = model[x]));
     }
 
     private _hasValidEditor: boolean = false;
