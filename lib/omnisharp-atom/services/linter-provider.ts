@@ -108,7 +108,8 @@ function getNextDiagnostic() {
     return Omni.activeModel
         .flatMap(x => x.observe.diagnostics)
         .take(1)
-        .timeout(500, Omni.activeModel.flatMap(x => Observable.just(x.getDiagnostics())))
+        // CODECHECK v2
+        .timeout(500, Omni.activeModel.flatMap(x => Observable.just(x.diagnostics)))
         .flatMap(x => x)
         .where(z => z.LogLevel !== "Hidden");
 }

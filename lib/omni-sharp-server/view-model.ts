@@ -68,7 +68,7 @@ export class ViewModel implements Rx.IDisposable {
     public get index() { return this._solution.index; }
     public get path() { return this._solution.path; }
     public output: OmniSharp.OutputMessage[] = [];
-    private diagnostics: OmniSharp.Models.DiagnosticLocation[] = [];
+    public diagnostics: OmniSharp.Models.DiagnosticLocation[] = [];
     public get state() { return this._solution.currentState };
     public packageSources: string[] = [];
     public runtime = '';

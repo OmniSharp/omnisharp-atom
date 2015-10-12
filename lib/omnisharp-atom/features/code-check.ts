@@ -191,7 +191,7 @@ class CodeCheck implements OmniSharp.IFeature {
     @debounce(500)
     private _doCodeCheck(editor: Atom.TextEditor) {
         if (!editor.isDestroyed()) {
-            Omni.request(editor, solution => solution.updatebuffer({}));
+            Omni.request(editor, solution => solution.codecheck({}));
         }
     }
 
