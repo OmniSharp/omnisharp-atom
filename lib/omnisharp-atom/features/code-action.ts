@@ -82,7 +82,7 @@ class CodeAction implements OmniSharp.IFeature {
             cd.add(onDidStopChanging);
 
             cd.add(Observable.combineLatest(onDidChangeCursorPosition, onDidStopChanging, (cursor, changing) => cursor)
-                .observeOn(Scheduler.timeout)
+                .observeOn(Scheduler.async)
                 .debounce(1000)
                 .subscribe(cursor => update(cursor.newBufferPosition)));
 

@@ -12,8 +12,8 @@ var statefulProperties = ['isOff', 'isConnecting', 'isOn', 'isReady', 'isError']
 
 function wrapEditorObservable(observable: Observable<Atom.TextEditor>) {
     return observable
-        .subscribeOn(Scheduler.timeout)
-        .observeOn(Scheduler.timeout)
+        .subscribeOn(Scheduler.async)
+        .observeOn(Scheduler.async)
         .debounce(DEBOUNCE_TIMEOUT)
         .where(editor => !editor || !editor.isDestroyed());
 }
