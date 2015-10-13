@@ -1,7 +1,4 @@
 import _ = require('lodash');
-//import spacePenViews = require('atom-space-pen-views')
-//var $ = spacePenViews.jQuery;
-import $ = require('jquery');
 import {CompositeDisposable, Observable, Disposable, Subject, Scheduler} from "rx";
 import Omni = require('../../omni-sharp-server/omni');
 import {DriverState} from "omnisharp-client";
