@@ -2,13 +2,10 @@ import {CompositeDisposable, Disposable, Scheduler, Observable} from "rx";
 import _ = require('lodash');
 import Omni = require('../../omni-sharp-server/omni')
 import {Solution} from '../../omni-sharp-server/solution';
-import React = require('react');
-import {ReactClientComponent} from "./react-client-component";
-import {server} from "../features/server-information";
-import {solutionInformation} from "../features/solution-information";
-import {codeCheck} from "../features/code-check";
 import {OmnisharpClientStatus} from "omnisharp-client";
-import {commandRunner, RunProcess} from "../features/command-runner";
+import {server} from "../atom/server-information";
+import {solutionInformation} from "../atom/solution-information";
+import {commandRunner, RunProcess} from "../atom/command-runner";
 import {read, write} from "fastdom";
 
 function addClassIfNotContains(icon: HTMLElement, ...cls: string[]) {
@@ -294,7 +291,7 @@ export class StatusBarElement extends HTMLElement implements WebComponent, Rx.ID
     }
 
     public attachedCallback() {
-        this._disposable.add(codeCheck.observe.diagnostics.subscribe(diagnostics => {
+        this._disposable.add(Omni.diagnostics.subscribe(diagnostics => {
             var counts = _.countBy(diagnostics, quickFix => quickFix.LogLevel);
 
             this._diagnostics.updateState({

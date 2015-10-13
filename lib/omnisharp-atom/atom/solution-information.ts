@@ -8,7 +8,6 @@ import manager from "../../omni-sharp-server/solution-manager";
 import {DriverState} from "omnisharp-client";
 import React = require('react');
 import $ = require('jquery');
-import {codeCheck} from "./code-check";
 
 class SolutionInformation implements OmniSharp.IFeature {
     private disposable: CompositeDisposable;

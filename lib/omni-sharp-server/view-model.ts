@@ -52,7 +52,6 @@ export class ViewModel implements VMViewState, Rx.IDisposable {
     constructor(private _solution: Solution) {
         this._uniqueId = _solution.uniqueId;
         this._updateState(_solution.currentState);
-        this._observeProjectEvents();
 
         // Manage our build log for display
         this._disposable.add(_solution.logs.subscribe(event => {
@@ -84,18 +83,18 @@ export class ViewModel implements VMViewState, Rx.IDisposable {
             .flatMap(x => x.startWith(null).last())
             .map(() => output);
 
-        var state =
+        var state = this._stateStream.share();
 
-            this.observe = {
-                get codecheck() { return codecheck; },
-                get output() { return outputObservable; },
-                get status() { return status; },
-                get state() { return state; },
-                get projects() { return projects; },
-                get projectAdded() { return _projectAddedStream; },
-                get projectRemoved() { return _projectRemovedStream; },
-                get projectChanged() { return _projectChangedStream; },
-            };
+        this.observe = {
+            get codecheck() { return codecheck; },
+            get output() { return outputObservable; },
+            get status() { return status; },
+            get state() { return state; },
+            get projects() { return projects; },
+            get projectAdded() { return _projectAddedStream; },
+            get projectRemoved() { return _projectRemovedStream; },
+            get projectChanged() { return _projectChangedStream; },
+        };
 
         this._disposable.add(_solution.state.subscribe(_.bind(this._updateState, this)));
 
@@ -119,8 +118,8 @@ export class ViewModel implements VMViewState, Rx.IDisposable {
             var projects = projectViewModelFactory(projectInformation, _solution.projectPath);
             _.each(projects, project => {
                 if (!_.any(this.projects, { path: project.path })) {
-                    this._projectAddedStream.onNext(project);
                     this.projects.push(project);
+                    this._projectAddedStream.onNext(project);
                 }
             });
         }));
@@ -130,8 +129,8 @@ export class ViewModel implements VMViewState, Rx.IDisposable {
             _.each(projects, project => {
                 var found: ProjectViewModel<any> = _.find(this.projects, { path: project.path });
                 if (found) {
-                    this._projectRemovedStream.onNext(project);
                     _.pull(this.projects, found);
+                    this._projectRemovedStream.onNext(project);
                 }
             });
         }));
@@ -155,8 +154,8 @@ export class ViewModel implements VMViewState, Rx.IDisposable {
                     found.update(project);
                     this._projectChangedStream.onNext(project);
                 } else {
-                    this._projectAddedStream.onNext(project);
                     this.projects.push(project);
+                    this._projectAddedStream.onNext(project);
                 }
             });
         }));
@@ -180,14 +179,14 @@ export class ViewModel implements VMViewState, Rx.IDisposable {
     }
 
     public getProjectForPath(path: string) {
-        var o: Observable<ProjectViewModel<any>>;
         if (this.isOn && this.projects.length) {
-            o = Observable.just<ProjectViewModel<any>>(_.find(this.projects, x => _.startsWith(path, x.path))).where(z => !!z);
-        } else {
-            o = this._projectAddedStream.where(x => _.startsWith(path, x.path)).take(1);
+            var project = _.find(this.projects, x => x.filesSet.has(path));
+            if (project) {
+                return Observable.just(project);
+            }
         }
 
-        return o;
+        return this.observe.projectAdded.where(x => _.startsWith(path, x.path)).take(1);
     }
 
     public getProjectContainingEditor(editor: Atom.TextEditor) {
@@ -195,19 +194,18 @@ export class ViewModel implements VMViewState, Rx.IDisposable {
     }
 
     public getProjectContainingFile(path: string) {
-        var o: Observable<ProjectViewModel<any>>;
         if (this.isOn && this.projects.length) {
-            o = Observable.just<ProjectViewModel<any>>(_.find(this.projects, x =>
-                _.contains(x.sourceFiles, normalize(path))))
-                .take(1)
-                .defaultIfEmpty(null);
+            var project = _.find(this.projects, x => _.contains(x.sourceFiles, normalize(path)));
+            if (project) {
+                return Observable.just(project);
+            }
+            return Observable.just(null);
         } else {
-            o = this._projectAddedStream
+            return this.observe.projectAdded
                 .where(x => _.contains(x.sourceFiles, normalize(path)))
                 .take(1)
                 .defaultIfEmpty(null);
         }
-        return o;
     }
 
     private _updateState(state) {
@@ -218,18 +216,6 @@ export class ViewModel implements VMViewState, Rx.IDisposable {
         this.isError = state === DriverState.Error;
 
         this._stateStream.onNext(this);
-    }
-
-    private _observeProjectEvents() {
-        this._disposable.add(this._projectAddedStream
-            .where(z => !_.any(this.projects, { path: z.path }))
-            .subscribe(project => this.projects.push(project)));
-
-        this._disposable.add(this._projectRemovedStream.subscribe(
-            project => _.pull(this.projects, _.find(this.projects, z => z.path === project.path))));
-
-        this._disposable.add(this._projectChangedStream.subscribe(
-            project => _.assign(_.find(this.projects, z => z.path === project.path), project)));
     }
 
     private _setupCodecheck(_solution: Solution) {

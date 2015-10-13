@@ -57,11 +57,13 @@ class FrameworkSelector implements OmniSharp.IAtomFeature {
 
         this.disposable.add(Omni.activeEditor
             .where(z => !z)
-            .subscribe(() => this.view.style.display = 'none'));
+            .subscribe(() =>
+                this.view.style.display = 'none'));
 
         this.disposable.add(Omni.activeProject
             .where(z => z.frameworks.length === 1)
-            .subscribe(() => this.view.style.display = 'none'));
+            .subscribe(() =>
+                this.view.style.display = 'none'));
 
         this.disposable.add(Omni.activeProject
             .subscribe(project => {

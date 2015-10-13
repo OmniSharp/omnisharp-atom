@@ -43,9 +43,12 @@ class Omni implements Rx.IDisposable {
 
     private _activeFramework = this._activeEditorOrConfigEditor
         .flatMapLatest(editor => manager.getSolutionForEditor(editor)
-            .flatMapLatest(z => z.model.getProjectForEditor(editor)))
+            .flatMap(z => z.model.getProjectForEditor(editor)))
         .flatMapLatest(project => project.observe.activeFramework.map(framework => ({ project, framework })))
         .shareReplay(1);
+
+    private _diagnostics : Observable<OmniSharp.Models.DiagnosticLocation[]>;
+    public get diagnostics() { return this._diagnostics; }
 
     private _isOff = true;
 
@@ -111,6 +114,39 @@ class Omni implements Rx.IDisposable {
             this._activeEditorSubject.onNext(null);
             this._activeConfigEditorSubject.onNext(null);
         }));
+
+        // Cache this result, because the underlying implementation of observe will
+        //    create a cache of the last recieved value.  This allows us to pick pick
+        //    up from where we left off.
+        var combinationObservable = this.aggregateListener.observe(z => z.model.observe.codecheck);
+
+        let showDiagnosticsForAllSolutions = new ReplaySubject<boolean>(1);
+        this.disposable.add(atom.config.observe("omnisharp-atom.showDiagnosticsForAllSolutions", function(enabled) {
+            showDiagnosticsForAllSolutions.onNext(enabled);
+        }));
+
+        this.disposable.add(showDiagnosticsForAllSolutions);
+
+        this._diagnostics = Observable.combineLatest( // Combine both the active model and the configuration changes together
+            this.activeModel.startWith(null), showDiagnosticsForAllSolutions, showDiagnosticsForAllSolutions.skip(1).startWith(atom.config.get<boolean>("omnisharp-atom.showDiagnosticsForAllSolutions")),
+            (model, enabled, wasEnabled) => ({ model, enabled, wasEnabled }))
+            // If the setting is enabled (and hasn't changed) then we don't need to redo the subscription
+            .where(ctx => (!(ctx.enabled && ctx.wasEnabled === ctx.enabled)))
+            .flatMapLatest(ctx => {
+                var {enabled, model} = ctx;
+
+                if (enabled) {
+                    return combinationObservable
+                        .debounce(200)
+                        .map(data => _.flatten<OmniSharp.Models.DiagnosticLocation>(data));
+                } else if (model) {
+                    return model.observe.codecheck;
+                }
+
+                return Observable.just(<OmniSharp.Models.DiagnosticLocation[]>[]);
+            })
+            .startWith([])
+            .share();
     }
 
     public dispose() {

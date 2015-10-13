@@ -3,7 +3,7 @@ import {basename} from "path";
 import Omni = require('../../omni-sharp-server/omni')
 import React = require('react');
 import {ReactClientComponent} from "./react-client-component";
-import {solutionInformation} from "../features/solution-information";
+import {solutionInformation} from "../atom/solution-information";
 import {ViewModel} from "../../omni-sharp-server/view-model";
 import {DriverState} from "omnisharp-client";
 import $ = require('jquery');

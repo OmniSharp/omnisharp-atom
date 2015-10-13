@@ -5,7 +5,7 @@ import React = require('react');
 import {each, delay, any, endsWith, filter} from "lodash";
 import * as fs from "fs";
 import * as path from "path";
-import {solutionInformation} from "../features/solution-information";
+import {solutionInformation} from "../atom/solution-information";
 
 var readdir = Observable.fromNodeCallback(fs.readdir);
 var stat = Observable.fromNodeCallback(fs.stat);

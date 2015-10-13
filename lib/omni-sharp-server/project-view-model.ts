@@ -11,12 +11,15 @@ const projectFactories: { [key: string]: { new (project: any, solutionPath: stri
 const supportedProjectTypes = _.keys(projectFactories);
 export function projectViewModelFactory(omnisharpProject: OmniSharp.Models.ProjectInformationResponse, solutionPath: string) {
     var projectTypes = _.filter(supportedProjectTypes, type => _.has(omnisharpProject, type));
+    var missing = _.difference(_.keys(omnisharpProject), supportedProjectTypes);
+    if (missing.length) {
+        console.log(`Missing factory for project type ${missing}`);
+    }
+
     var results: ProjectViewModel<any>[] = []
     _.each(projectTypes, projectType => {
         if (projectType && projectFactories[projectType]) {
             results.push(new projectFactories[projectType](omnisharpProject[projectType], solutionPath));
-        } else if (!!omnisharpProject[projectType]) {
-            console.log(`Missing factory for project type ${_.keys(omnisharpProject) }`);
         }
     });
     return results;
@@ -53,6 +56,7 @@ export abstract class ProjectViewModel<T> implements OmniSharp.IProjectViewModel
     constructor(project: T, solutionPath: string) {
         this.solutionPath = solutionPath;
         this.init(project);
+        this.observe = { activeFramework: this._subjectActiveFramework };
     }
 
     private _name: string;
@@ -67,9 +71,21 @@ export abstract class ProjectViewModel<T> implements OmniSharp.IProjectViewModel
     public get solutionPath() { return this._solutionPath; }
     public set solutionPath(value) { this._solutionPath = value; }
 
-    private _sourceFiles: string[];
+    private _sourceFiles: string[] = [];
     public get sourceFiles() { return this._sourceFiles; }
-    public set sourceFiles(value) { this._sourceFiles = value; }
+    public set sourceFiles(value) {
+        this._sourceFiles = value || [];
+        if (this._filesSet) this._filesSet = null;
+    }
+
+    private _filesSet: Set<string>;
+    public get filesSet() {
+        if (!this._filesSet) {
+            this._filesSet = new Set<string>();
+            _.each(this._sourceFiles, file => this._filesSet.add(file));
+        }
+        return this._filesSet;
+    }
 
     private _subjectActiveFramework = new ReplaySubject<OmniSharp.Models.DnxFramework>(1);
     private _activeFramework: OmniSharp.Models.DnxFramework;
@@ -90,11 +106,11 @@ export abstract class ProjectViewModel<T> implements OmniSharp.IProjectViewModel
 
     private _configurations: string[] = [];
     public get configurations() { return this._configurations; }
-    public set configurations(value) { this._configurations = value; }
+    public set configurations(value) { this._configurations = value || []; }
 
     private _commands: { [key: string]: string } = {};
     public get commands() { return this._commands; }
-    public set commands(value) { this._commands = value; }
+    public set commands(value) { this._commands = value || {}; }
 
     public observe: {
         activeFramework: Observable<OmniSharp.Models.DnxFramework>;

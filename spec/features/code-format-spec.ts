@@ -28,7 +28,7 @@ describe('Code Format', () => {
         var request: OmniSharp.Models.FormatRangeRequest;
         var response: OmniSharp.Models.FormatRangeResponse;
 
-        var responsePromise = Omni.listener.observeFormatRange
+        var responsePromise = Omni.listener.formatRange
             .tapOnNext(r => request = r.request)
             .tapOnNext(r => response = r.response)
             .take(1)
@@ -39,7 +39,7 @@ describe('Code Format', () => {
                 e = editor;
                 codeFormat.format();
 
-                var observable = Omni.listener.observeFormatRange
+                var observable = Omni.listener.formatRange
                     .tapOnNext(r =>
                         request = r.request)
                     .take(1)

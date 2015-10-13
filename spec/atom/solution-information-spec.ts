@@ -3,7 +3,7 @@ import {Observable, CompositeDisposable} from "rx";
 import {setupFeature, restoreBuffers, openEditor} from "../test-helpers";
 
 describe('Solution Information', () => {
-    setupFeature(['features/solution-information']);
+    setupFeature(['atom/solution-information']);
 
     it('adds commands', () => {
         var disposable = new CompositeDisposable();
