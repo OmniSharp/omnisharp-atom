@@ -38,10 +38,10 @@ class SignatureHelp implements OmniSharp.IFeature {
 
         var shouldContinue = Observable.zip(
             Omni.listener.signatureHelp,
-            Omni.listener.signatureHelp.skip(1),
-            (current, previous) => ({ current, previous }))
-            .map(ctx => {
-                var {current, previous} = ctx;
+            Omni.listener.signatureHelp.skip(1).startWith(null),
+            (current, previous) => {
+                if (previous === null) return true;
+
                 if (!current.response || !current.response.Signatures || current.response.Signatures.length === 0) {
                     return false;
                 }
@@ -54,7 +54,11 @@ class SignatureHelp implements OmniSharp.IFeature {
 
                 return true;
             })
-            .startWith(true);
+            .shareReplay(1);
+
+        this.disposable.add(shouldContinue
+            .where(z => !z)
+            .subscribe(() => this._bubble && this._bubble.dispose()));
 
         this.disposable.add(Omni.switchActiveEditor((editor, cd) => {
             cd.add(issueRequest
@@ -63,17 +67,13 @@ class SignatureHelp implements OmniSharp.IFeature {
                         Line: position.row,
                         Column: position.column,
                     }))
-                        .flatMap(x => shouldContinue.where(z => z).take(1).map(z => x))
+                        .flatMapLatest(x => shouldContinue.where(z => z).map(z => x))
                         .flatMap(response => {
                             if (response && response.Signatures && response.Signatures.length > 0) {
                                 if (!this._bubble) {
-                                    var disposable = editor.onDidChangeCursorPosition(
-                                        //_.debounce(
-                                            event => {
-                                                issueRequest.onNext(event.newBufferPosition);
-                                            }
-                                            //, 200)
-                                        );
+                                    var disposable = editor.onDidChangeCursorPosition(event => {
+                                        issueRequest.onNext(event.newBufferPosition);
+                                    });
                                     cd.add(disposable);
 
                                     var disposer = Disposable.create(() => {
