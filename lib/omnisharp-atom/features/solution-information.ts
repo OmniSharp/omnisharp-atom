@@ -51,10 +51,12 @@ class SolutionInformation implements OmniSharp.IFeature {
 
         this.disposable.add(atom.commands.add("atom-workspace", 'omnisharp-atom:stop-server', () => {
             manager.activeSolutions[this.selectedIndex].dispose();
+            _.defer(() => this.updateSelectedItem(this.selectedIndex));
         }));
 
         this.disposable.add(atom.commands.add("atom-workspace", 'omnisharp-atom:start-server', () => {
             manager.activeSolutions[this.selectedIndex].connect();
+            _.defer(() => this.updateSelectedItem(this.selectedIndex));
         }));
 
         this.disposable.add(atom.commands.add("atom-workspace", 'omnisharp-atom:restart-server', () => {
@@ -65,8 +67,10 @@ class SolutionInformation implements OmniSharp.IFeature {
                 .delay(500)
                 .subscribe(() => {
                     solution.connect();
+                    _.defer(() => this.updateSelectedItem(this.selectedIndex));
                 });
             solution.dispose();
+            _.defer(() => this.updateSelectedItem(this.selectedIndex));
         }));
     }
 

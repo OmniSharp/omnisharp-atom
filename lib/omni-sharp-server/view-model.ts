@@ -46,14 +46,6 @@ export class ViewModel implements Rx.IDisposable {
     constructor(private _solution: Solution) {
         var worker = this._worker = _solution.getWorker<ViewModelWorker>(__dirname, 'view-model.worker');
         this._uniqueId = _solution.uniqueId;
-        this._updateState(_solution.currentState);
-
-        this._disposable.add(_solution.state.where(z => z === DriverState.Disconnected).subscribe(() => {
-            this.projects = [];
-            // CODECHECK v2
-            //this._diagnosticMap.clear();
-            this.diagnostics = [];
-        }));
 
         var codecheck = this._setupCodecheck(_solution);
         var status = this._setupStatus(_solution);
@@ -68,6 +60,8 @@ export class ViewModel implements Rx.IDisposable {
             })
             .map(() => output);
 
+        this._disposable.add(outputObservable.subscribe());
+
         var projectAdded = worker.projectAdded
             .map(projectFromProxy)
             .tapOnNext(project => this.projects.push(project))
@@ -76,7 +70,7 @@ export class ViewModel implements Rx.IDisposable {
         var projectRemoved = worker.projectRemoved
             .map(projectFromProxy)
             .tapOnNext(project => {
-                var p = _.find(this.projects, { path: p.path });
+                var p = _.find(this.projects, { path: project.path });
                 if (p) _.pull(this.projects, p);
             })
             .share();
@@ -84,7 +78,7 @@ export class ViewModel implements Rx.IDisposable {
         var projectChanged = worker.projectChanged
             .map(projectFromProxy)
             .tapOnNext(project => {
-                var p = _.find(this.projects, { path: p.path });
+                var p = _.find(this.projects, { path: project.path });
                 if (p) p.update(project);
             })
             .share();
@@ -112,6 +106,15 @@ export class ViewModel implements Rx.IDisposable {
 
         (window['clients'] || (window['clients'] = [])).push(this);  //TEMP
 
+        this._disposable.add(_solution.state
+            .where(z => z === DriverState.Disconnected)
+            .subscribe(() => {
+                this.projects = [];
+                // CODECHECK v2
+                //this._diagnosticMap.clear();
+                this.diagnostics = [];
+            }));
+
         this._disposable.add(_solution.state.where(z => z === DriverState.Connected)
             .subscribe(() => {
                 _solution.projects({ ExcludeSourceFiles: false });
@@ -124,6 +127,7 @@ export class ViewModel implements Rx.IDisposable {
 
         this._disposable.add(Disposable.create(() => {
             _.each(this.projects, x => x.dispose());
+            this._updateState(DriverState.Disconnected);
         }));
     }
 

@@ -93,7 +93,7 @@ export class FlameElement extends HTMLAnchorElement implements WebComponent {
             addClassIfNotContains(icon, 'icon-flame-loading');
             removeClassIfContains(icon, 'icon-flame-processing');
             removeClassIfContains(icon, 'icon-flame-loading');
-        } else if (this._state.status.hasOutgoingRequests) {
+        } else if (this._state.status.hasOutgoingRequests && this._state.status.outgoingRequests > 0) {
             addClassIfNotContains(icon, 'icon-flame-processing');
             removeClassIfContains(icon, 'icon-flame-loading');
         } else {
@@ -285,11 +285,11 @@ export class StatusBarElement extends HTMLElement implements WebComponent, Rx.ID
         diagnostics.syncClick = () => this.doCodeCheck();
         diagnostics.style.display = 'none';
 
-        this._disposable = new CompositeDisposable();
         this._state = { status: <any>{} };
     }
 
     public attachedCallback() {
+        this._disposable = new CompositeDisposable();
         this._disposable.add(codeCheck.observe.diagnostics.subscribe(diagnostics => {
             var counts = _.countBy(diagnostics, quickFix => quickFix.LogLevel);
 
