@@ -57,6 +57,7 @@ export abstract class ProjectViewModel<T> implements OmniSharp.IProjectViewModel
         this.solutionPath = solutionPath;
         this.init(project);
         this.observe = { activeFramework: this._subjectActiveFramework };
+        this._subjectActiveFramework.onNext(this._frameworks[0]);
     }
 
     private _name: string;
@@ -123,6 +124,7 @@ export abstract class ProjectViewModel<T> implements OmniSharp.IProjectViewModel
         this.solutionPath = other.solutionPath;
         this.sourceFiles = other.sourceFiles;
         this.frameworks = other.frameworks;
+        this.activeFramework = this._activeFramework;
         this.configurations = other.configurations
         this.commands = other.commands;
     }

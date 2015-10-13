@@ -35,6 +35,7 @@ class FrameworkSelector implements OmniSharp.IAtomFeature {
         this.view.classList.add('inline-block');
         this.view.classList.add('framework-selector');
         this.view.style.display = 'none';
+        
         if (atom.config.get('grammar-selector.showOnRightSideOfStatusBar')) {
             var tile = this.statusBar.addRightTile({
                 item: this.view,
@@ -57,20 +58,28 @@ class FrameworkSelector implements OmniSharp.IAtomFeature {
 
         this.disposable.add(Omni.activeEditor
             .where(z => !z)
-            .subscribe(() =>
-                this.view.style.display = 'none'));
+            .subscribe(() => this.view.style.display = 'none'));
 
         this.disposable.add(Omni.activeProject
             .where(z => z.frameworks.length === 1)
-            .subscribe(() =>
-                this.view.style.display = 'none'));
+            .subscribe(() => this.view.style.display = 'none'));
 
         this.disposable.add(Omni.activeProject
             .subscribe(project => {
                 this.view.style.display = '';
-                this.project = project;
+
                 var {frameworks, activeFramework} = project;
+                this.project = project;
                 this._component.setState({ frameworks: frameworks, activeFramework });
+            }));
+
+        this.disposable.add(Omni.activeFramework
+            .subscribe(ctx => {
+                this.view.style.display = '';
+
+                var {project, framework} = ctx;
+                this.project = project;
+                this._component.setState({ frameworks: project.frameworks, activeFramework: framework });
             }));
     }
 
