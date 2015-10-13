@@ -4,7 +4,7 @@ import {Observable, AsyncSubject, RefCountDisposable, Disposable, CompositeDispo
 import {Solution} from "./solution";
 import {AtomProjectTracker} from "./atom-projects";
 import {SolutionObserver, SolutionAggregateObserver} from './composite-solution';
-import {DriverState, candidateFinder} from "omnisharp-client";
+import {DriverState, findCandidates} from "omnisharp-client";
 import {GenericSelectListView} from "../omnisharp-atom/views/generic-list-view";
 
 var openSelectList: GenericSelectListView;
@@ -345,7 +345,7 @@ class SolutionManager {
         (<any>editor).__omniClient__ = solution;
         var view: HTMLElement = <any>atom.views.getView(editor);
         view.classList.add('omnisharp-editor');
-        
+
         if (solution) {
             solution.disposable.add(Disposable.create(() => {
                 delete (<any>editor).omniProject;
@@ -487,7 +487,7 @@ class SolutionManager {
     }
 
     private _candidateFinder(directory: string, console: any) {
-        return candidateFinder(directory, console)
+        return findCandidates(directory, console)
             .flatMap(candidates => {
                 var slns = _.filter(candidates, x => _.endsWith(x, '.sln'));
                 if (slns.length > 1) {

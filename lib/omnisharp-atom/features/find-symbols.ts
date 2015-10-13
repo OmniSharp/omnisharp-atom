@@ -13,7 +13,7 @@ class FindSymbols implements OmniSharp.IFeature {
             this.view = new FindSymbolsView();
         }));
 
-        this.disposable.add(Omni.listener.observeFindsymbols.subscribe((data) => {
+        this.disposable.add(Omni.listener.findsymbols.subscribe((data) => {
             this.view.addToList(data.response.QuickFixes);
         }));
     }

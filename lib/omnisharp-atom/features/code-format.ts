@@ -32,8 +32,8 @@ class CodeFormat implements OmniSharp.IFeature {
                 };
 
                 return solution
-                    .formatRangePromise(request)
-                    .then((data) => Changes.applyChanges(editor, data));
+                    .formatRange(request)
+                    .flatMap((data) => Changes.applyChanges(editor, data));
             });
         }
     }
@@ -48,8 +48,8 @@ class CodeFormat implements OmniSharp.IFeature {
                     Character: char
                 };
 
-                return solution.formatAfterKeystrokePromise(request)
-                    .then((data) => Changes.applyChanges(editor, data));
+                return solution.formatAfterKeystroke(request)
+                    .flatMap((data) => Changes.applyChanges(editor, data));
             });
         }
         event.preventDefault();

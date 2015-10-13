@@ -6,7 +6,6 @@ import fs = require('fs');
 
 // TODO: Remove these at some point to stream line startup.
 import Omni = require('../omni-sharp-server/omni');
-import {world} from './world';
 var win32 = process.platform === "win32";
 
 class OmniSharpAtom {
@@ -38,11 +37,7 @@ class OmniSharpAtom {
         var featureList = atom.config.get<string[]>('omnisharp-atom:feature-list');
 
         var whiteListUndefined = (typeof whiteList === 'undefined');
-
-        var started = Observable.concat( // Concat is important here, atom features need to be bootstrapped first.
-            this.getFeatures(featureList, whiteList, "atom"),
-            this.getFeatures(featureList, whiteList, "features")
-        ).filter(l => {
+        var filter = (l: { file:string; load: () => Observable<{key:string; value: OmniSharp.IFeature }>}) => {
             if (typeof whiteList === 'undefined') {
                 return true;
             }
@@ -52,7 +47,12 @@ class OmniSharpAtom {
             } else {
                 return !_.contains(featureList, l.file);
             }
-        })
+        };
+
+        var started = Observable.concat( // Concat is important here, atom features need to be bootstrapped first.
+            this.getFeatures(featureList, whiteList, "atom"),
+            this.getFeatures(featureList, whiteList, "features")
+        ).filter(filter)
             .concatMap(z => z.load())
             .toArray()
             .share();
@@ -62,9 +62,6 @@ class OmniSharpAtom {
                 console.info("Activating omnisharp-atom solution tracking...");
                 Omni.activate();
                 this.disposable.add(Omni);
-
-                world.activate();
-                this.disposable.add(world);
 
                 this._started.onNext(true);
                 this._started.onCompleted();

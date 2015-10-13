@@ -1,7 +1,7 @@
 import {CompositeDisposable, Observable} from "rx";
 import * as _ from 'lodash';
 import Omni = require('../../omni-sharp-server/omni');
-import {ProjectViewModel} from "../../omni-sharp-server/view-model";
+import {ProjectViewModel} from "../../omni-sharp-server/project-view-model";
 
 class UpdateProject implements OmniSharp.IAtomFeature {
     private disposable: Rx.CompositeDisposable;
@@ -81,7 +81,7 @@ class UpdateProject implements OmniSharp.IAtomFeature {
         atom.project.setPaths(<any>newPaths);
     }
 
-    private handleProjectAdded(projects: ProjectViewModel[]) {
+    private handleProjectAdded(projects: ProjectViewModel<any>[]) {
         var paths = _.unique(projects.map(z => z.path));
         if (this._autoAddExternalProjects) {
             for (var project of paths) {
@@ -116,7 +116,7 @@ class UpdateProject implements OmniSharp.IAtomFeature {
 
     private _notifications: { [key: string]: Atom.Notification } = {};
 
-    private handleProjectRemoved(projects: ProjectViewModel[]) {
+    private handleProjectRemoved(projects: ProjectViewModel<any>[]) {
         var paths = _.unique(projects.map(z => z.path));
         if (this._autoAddExternalProjects) {
             for (var project of paths) {

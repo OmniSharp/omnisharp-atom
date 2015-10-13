@@ -5,7 +5,6 @@ import Omni = require('../../omni-sharp-server/omni');
 import React = require('react');
 import {ReactClientComponent} from "./react-client-component";
 import {findUsages} from "../features/find-usages";
-import {world} from "../world";
 
 interface IDockWindowState {
     selected?: string;

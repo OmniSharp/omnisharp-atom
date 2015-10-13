@@ -1,7 +1,7 @@
 import {Solution} from "../../omni-sharp-server/solution";
 import {CompositeDisposable, Disposable, Observable, Subject} from "rx";
 import Omni = require('../../omni-sharp-server/omni');
-import {ProjectViewModel} from "../../omni-sharp-server/view-model";
+import {ProjectViewModel} from "../../omni-sharp-server/project-view-model";
 import {any, each, contains, pull} from "lodash";
 import {spawn, ChildProcess} from "child_process";
 import {CommandOutputWindow} from '../views/command-output-window';
@@ -20,7 +20,7 @@ if (win32) {
 
 class CommandRunner implements OmniSharp.IFeature {
     private disposable: Rx.CompositeDisposable;
-    private _projectMap = new WeakMap<ProjectViewModel, Rx.CompositeDisposable>();
+    private _projectMap = new WeakMap<ProjectViewModel<any>, Rx.CompositeDisposable>();
 
     private _watchProcesses: RunProcess[] = [];
     public get processes() { return this._watchProcesses; }
@@ -86,7 +86,7 @@ class CommandRunner implements OmniSharp.IFeature {
         this.disposable.add(restart);
     }
 
-    private addCommands(project: ProjectViewModel) {
+    private addCommands(project: ProjectViewModel<any>) {
         if (any(project.commands)) {
             var cd = new CompositeDisposable();
             this._projectMap.set(project, cd);
@@ -98,7 +98,7 @@ class CommandRunner implements OmniSharp.IFeature {
         }
     }
 
-    private addCommand(project: ProjectViewModel, command: string, content: string) {
+    private addCommand(project: ProjectViewModel<any>, command: string, content: string) {
         //--server Kestrel
         //--server Microsoft.AspNet.Server.WebListener
         var daemon = any(daemonFlags, cnt => contains(content, cnt));
@@ -109,7 +109,7 @@ class CommandRunner implements OmniSharp.IFeature {
         }
     }
 
-    private daemonProcess(project: ProjectViewModel, command: string) {
+    private daemonProcess(project: ProjectViewModel<any>, command: string) {
         var process = new RunProcess(project, command, true);
         this._watchProcesses.push(process);
         this._processesChanged.onNext(this.processes);
@@ -125,7 +125,7 @@ class CommandRunner implements OmniSharp.IFeature {
         process.start();
     }
 
-    private runProcess(project: ProjectViewModel, command: string) {
+    private runProcess(project: ProjectViewModel<any>, command: string) {
         var process = new RunProcess(project, command);
         process.start();
     }
@@ -151,7 +151,7 @@ export class RunProcess {
     private id: string;
     private process: any;
 
-    constructor(public project: ProjectViewModel, private command: string, private watch: boolean = false) {
+    constructor(public project: ProjectViewModel<any>, private command: string, private watch: boolean = false) {
         this.id = `${this.project.name}${this.command}`;
         this.disposable.add(dock.addWindow(this.id, `${this.project.name} ${this.watch ? '--watch' : ''} ${this.command}`, CommandOutputWindow, this, {
             closeable: true,

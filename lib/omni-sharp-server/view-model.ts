@@ -3,53 +3,17 @@ import {Solution} from "./solution";
 import {DriverState, OmnisharpClientStatus} from "omnisharp-client";
 import {Observable, Subject, ReplaySubject, CompositeDisposable, Disposable} from "rx";
 import {basename, dirname, normalize} from "path";
+import {ProjectViewModel, projectViewModelFactory, workspaceViewModelFactory} from "./project-view-model";
 
-export class ProjectViewModel implements OmniSharp.IProjectViewModel, Rx.IDisposable {
-    public path: string;
-
-    private _subjectActiveFramework = new ReplaySubject<OmniSharp.Models.DnxFramework>(1);
-    private _activeFramework: OmniSharp.Models.DnxFramework;
-    public get activeFramework() { return this._activeFramework; }
-    public set activeFramework(value) {
-        this._activeFramework = value;
-        !this._subjectActiveFramework.isDisposed && this._subjectActiveFramework.onNext(this._activeFramework);
-    }
-    public frameworks: OmniSharp.Models.DnxFramework[];
-    public observe: {
-        activeFramework: Observable<OmniSharp.Models.DnxFramework>;
-    };
-
-    constructor(
-        public name: string,
-        path: string,
-        public solutionPath: string,
-        frameworks: OmniSharp.Models.DnxFramework[] = [],
-        public configurations: string[] = [],
-        public commands: { [key: string]: string } = <any>{},
-        public sourceFiles?: string[]
-    ) {
-        this.path = dirname(path);
-        this.sourceFiles = (sourceFiles || []).map(normalize);
-
-        this.frameworks = [{
-            FriendlyName: 'All',
-            Name: 'all',
-            ShortName: 'all'
-        }].concat(frameworks);
-
-        this.activeFramework = this.frameworks[0];
-
-        this.observe = {
-            activeFramework: this._subjectActiveFramework.asObservable()
-        };
-    }
-
-    public dispose() {
-        this._subjectActiveFramework.dispose();
-    }
+export interface VMViewState {
+    isOff: boolean;
+    isConnecting: boolean;
+    isOn: boolean;
+    isReady: boolean;
+    isError: boolean;
 }
 
-export class ViewModel implements Rx.IDisposable {
+export class ViewModel implements VMViewState, Rx.IDisposable {
     public isOff: boolean;
     public isConnecting: boolean;
     public isOn: boolean;
@@ -68,20 +32,21 @@ export class ViewModel implements Rx.IDisposable {
     public packageSources: string[] = [];
     public runtime = '';
     public runtimePath: string;
-    public projects: ProjectViewModel[] = [];
-    private _projectAddedStream = new Subject<ProjectViewModel>();
-    private _projectRemovedStream = new Subject<ProjectViewModel>();
-    private _projectChangedStream = new Subject<ProjectViewModel>();
+    public projects: ProjectViewModel<any>[] = [];
+    private _projectAddedStream = new Subject<ProjectViewModel<any>>();
+    private _projectRemovedStream = new Subject<ProjectViewModel<any>>();
+    private _projectChangedStream = new Subject<ProjectViewModel<any>>();
+    private _stateStream = new Subject<ViewModel>();
 
     public observe: {
         codecheck: Rx.Observable<OmniSharp.Models.DiagnosticLocation[]>;
         output: Rx.Observable<OmniSharp.OutputMessage[]>;
         status: Rx.Observable<OmnisharpClientStatus>;
-        updates: Rx.Observable<Rx.ObjectObserveChange<ViewModel>>;
-        projectAdded: Rx.Observable<ProjectViewModel>;
-        projectRemoved: Rx.Observable<ProjectViewModel>;
-        projectChanged: Rx.Observable<ProjectViewModel>;
-        projects: Rx.Observable<ProjectViewModel[]>;
+        state: Rx.Observable<ViewModel>;
+        projectAdded: Rx.Observable<ProjectViewModel<any>>;
+        projectRemoved: Rx.Observable<ProjectViewModel<any>>;
+        projectChanged: Rx.Observable<ProjectViewModel<any>>;
+        projects: Rx.Observable<ProjectViewModel<any>[]>;
     };
 
     constructor(private _solution: Solution) {
@@ -105,32 +70,32 @@ export class ViewModel implements Rx.IDisposable {
         var codecheck = this._setupCodecheck(_solution);
         var status = this._setupStatus(_solution);
         var output = this.output;
-        var updates = Observable.ofObjectChanges(this);
-        var msbuild = this._setupMsbuild(_solution);
-        var dnx = this._setupDnx(_solution);
-        var scriptcs = this._setupScriptCs(_solution);
 
-        var _projectAddedStream = this._projectAddedStream;
-        var _projectRemovedStream = this._projectRemovedStream;
-        var _projectChangedStream = this._projectChangedStream;
+        var _projectAddedStream = this._projectAddedStream.share();
+        var _projectRemovedStream = this._projectRemovedStream.share();
+        var _projectChangedStream = this._projectChangedStream.share();
         var projects = Observable.merge(_projectAddedStream, _projectRemovedStream, _projectChangedStream)
-            .map(z => this.projects);
+            .debounce(200)
+            .map(z => this.projects)
+            .share();
 
         var outputObservable = _solution.logs
             .window(_solution.logs.throttle(100), () => Observable.timer(100))
             .flatMap(x => x.startWith(null).last())
             .map(() => output);
 
-        this.observe = {
-            get codecheck() { return codecheck; },
-            get output() { return outputObservable; },
-            get status() { return status; },
-            get updates() { return updates; },
-            get projects() { return projects; },
-            get projectAdded() { return _projectAddedStream; },
-            get projectRemoved() { return _projectRemovedStream; },
-            get projectChanged() { return _projectChangedStream; },
-        };
+        var state =
+
+            this.observe = {
+                get codecheck() { return codecheck; },
+                get output() { return outputObservable; },
+                get status() { return status; },
+                get state() { return state; },
+                get projects() { return projects; },
+                get projectAdded() { return _projectAddedStream; },
+                get projectRemoved() { return _projectRemovedStream; },
+                get projectChanged() { return _projectChangedStream; },
+            };
 
         this._disposable.add(_solution.state.subscribe(_.bind(this._updateState, this)));
 
@@ -146,67 +111,55 @@ export class ViewModel implements Rx.IDisposable {
                     });
             }));
 
-        // MSBUILD
-        this._disposable.add(_solution.projectAdded
-            .where(z => z.MsBuildProject != null)
-            .map(z => z.MsBuildProject)
-            .where(z => !_.any(this.projects, { path: z.Path }))
-            .subscribe(project => {
-                this._projectAddedStream.onNext(
-                    new ProjectViewModel(project.AssemblyName, project.Path, _solution.path, [{
-                        FriendlyName: project.TargetFramework, Name: project.TargetFramework, ShortName: project.TargetFramework
-                    }], project.SourceFiles));
-            }));
+        this._disposable.add(_solution.state.where(z => z === DriverState.Disconnected).subscribe(() => {
+            _.each(this.projects.slice(), project => this._projectRemovedStream.onNext(project));
+        }));
 
-        this._disposable.add(_solution.projectRemoved
-            .where(z => z.MsBuildProject != null)
-            .map(z => z.MsBuildProject)
-            .subscribe(project => {
-                this._projectRemovedStream.onNext(_.find(this.projects, { path: project.Path }));
-            }));
-
-        this._disposable.add(_solution.projectChanged
-            .where(z => z.MsBuildProject != null)
-            .map(z => z.MsBuildProject)
-            .subscribe(project => {
-                var current = _.find(this.projects, { path: project.Path });
-                if (current) {
-                    var changed = new ProjectViewModel(project.AssemblyName, project.Path, _solution.path, [{
-                        FriendlyName: project.TargetFramework, Name: project.TargetFramework, ShortName: project.TargetFramework
-                    }], project.SourceFiles);
-                    _.assign(current, changed);
-                    this._projectChangedStream.onNext(current);
+        this._disposable.add(_solution.observe.projectAdded.subscribe(projectInformation => {
+            var projects = projectViewModelFactory(projectInformation, _solution.projectPath);
+            _.each(projects, project => {
+                if (!_.any(this.projects, { path: project.path })) {
+                    this._projectAddedStream.onNext(project);
+                    this.projects.push(project);
                 }
-            }));
+            });
+        }));
 
-        //DNX
-        this._disposable.add(_solution.projectAdded
-            .where(z => z.DnxProject != null)
-            .map(z => z.DnxProject)
-            .where(z => !_.any(this.projects, { path: z.Path }))
-            .subscribe(project => {
-                this._projectAddedStream.onNext(
-                    new ProjectViewModel(project.Name, project.Path, _solution.path, project.Frameworks, project.Configurations, project.Commands, project.SourceFiles));
-            }));
-
-        this._disposable.add(_solution.projectRemoved
-            .where(z => z.DnxProject != null)
-            .map(z => z.DnxProject)
-            .subscribe(project => {
-                this._projectRemovedStream.onNext(_.find(this.projects, { path: project.Path }));
-            }));
-
-        this._disposable.add(_solution.projectChanged
-            .where(z => z.DnxProject != null)
-            .map(z => z.DnxProject)
-            .subscribe(project => {
-                var current = _.find(this.projects, { path: project.Path });
-                if (current) {
-                    var changed = new ProjectViewModel(project.Name, project.Path, _solution.path, project.Frameworks, project.Configurations, project.Commands, project.SourceFiles);
-                    _.assign(current, changed);
-                    this._projectChangedStream.onNext(current);
+        this._disposable.add(_solution.observe.projectRemoved.subscribe(projectInformation => {
+            var projects = projectViewModelFactory(projectInformation, _solution.projectPath);
+            _.each(projects, project => {
+                var found: ProjectViewModel<any> = _.find(this.projects, { path: project.path });
+                if (found) {
+                    this._projectRemovedStream.onNext(project);
+                    _.pull(this.projects, found);
                 }
-            }));
+            });
+        }));
+
+        this._disposable.add(_solution.observe.projectChanged.subscribe(projectInformation => {
+            var projects = projectViewModelFactory(projectInformation, _solution.projectPath);
+            _.each(projects, project => {
+                var found: ProjectViewModel<any> = _.find(this.projects, { path: project.path });
+                if (found) {
+                    found.update(project);
+                    this._projectChangedStream.onNext(project);
+                }
+            });
+        }));
+
+        this._disposable.add(_solution.observe.projects.subscribe(context => {
+            var projects = workspaceViewModelFactory(context.response, _solution.projectPath);
+            _.each(projects, project => {
+                var found: ProjectViewModel<any> = _.find(this.projects, { path: project.path });
+                if (found) {
+                    found.update(project);
+                    this._projectChangedStream.onNext(project);
+                } else {
+                    this._projectAddedStream.onNext(project);
+                    this.projects.push(project);
+                }
+            });
+        }));
 
         this._disposable.add(this._projectAddedStream);
         this._disposable.add(this._projectChangedStream);
@@ -227,9 +180,9 @@ export class ViewModel implements Rx.IDisposable {
     }
 
     public getProjectForPath(path: string) {
-        var o: Observable<ProjectViewModel>;
+        var o: Observable<ProjectViewModel<any>>;
         if (this.isOn && this.projects.length) {
-            o = Observable.just<ProjectViewModel>(_.find(this.projects, x => _.startsWith(path, x.path))).where(z => !!z);
+            o = Observable.just<ProjectViewModel<any>>(_.find(this.projects, x => _.startsWith(path, x.path))).where(z => !!z);
         } else {
             o = this._projectAddedStream.where(x => _.startsWith(path, x.path)).take(1);
         }
@@ -242,9 +195,9 @@ export class ViewModel implements Rx.IDisposable {
     }
 
     public getProjectContainingFile(path: string) {
-        var o: Observable<ProjectViewModel>;
+        var o: Observable<ProjectViewModel<any>>;
         if (this.isOn && this.projects.length) {
-            o = Observable.just<ProjectViewModel>(_.find(this.projects, x =>
+            o = Observable.just<ProjectViewModel<any>>(_.find(this.projects, x =>
                 _.contains(x.sourceFiles, normalize(path))))
                 .take(1)
                 .defaultIfEmpty(null);
@@ -263,6 +216,8 @@ export class ViewModel implements Rx.IDisposable {
         this.isConnecting = state === DriverState.Connecting;
         this.isReady = state === DriverState.Connected;
         this.isError = state === DriverState.Error;
+
+        this._stateStream.onNext(this);
     }
 
     private _observeProjectEvents() {
@@ -280,13 +235,13 @@ export class ViewModel implements Rx.IDisposable {
     private _setupCodecheck(_solution: Solution) {
         var codecheck = Observable.merge(
             // Catch global code checks
-            _solution.observeCodecheck
+            _solution.observe.codecheck
                 .where(z => !z.request.FileName)
                 .map(z => z.response)
                 .map(z => <OmniSharp.Models.DiagnosticLocation[]>z.QuickFixes),
             // Evict diagnostics from a code check for the given file
             // Then insert the new diagnostics
-            _solution.observeCodecheck
+            _solution.observe.codecheck
                 .where(z => !!z.request.FileName)
                 .map((ctx) => {
                     var {request, response} = ctx;
@@ -308,52 +263,5 @@ export class ViewModel implements Rx.IDisposable {
             .share();
 
         return status;
-    }
-
-    private _setupMsbuild(_solution: Solution) {
-        var workspace = _solution.observeProjects
-            .where(z => z.response.MSBuild != null)
-            .where(z => z.response.MSBuild.Projects.length > 0)
-            .map(z => z.response.MSBuild);
-
-        this._disposable.add(workspace.subscribe(system => {
-            _.each(system.Projects, p => {
-                var project = new ProjectViewModel(p.AssemblyName, p.Path, _solution.path, [{
-                    FriendlyName: p.TargetFramework, Name: p.TargetFramework, ShortName: p.TargetFramework
-                }], p.SourceFiles);
-                this._projectAddedStream.onNext(project);
-            });
-        }));
-        return workspace;
-    }
-
-    private _setupDnx(_solution: Solution) {
-        var workspace = _solution.observeProjects
-            .where(z => z.response.Dnx != null)
-            .where(z => z.response.Dnx.Projects.length > 0)
-            .map(z => z.response.Dnx);
-
-        this._disposable.add(workspace.subscribe(system => {
-            this.runtime = basename(system.RuntimePath);
-            this.runtimePath = system.RuntimePath;
-
-            _.each(system.Projects, p => {
-                var project = new ProjectViewModel(p.Name, p.Path, _solution.path, p.Frameworks, p.Configurations, p.Commands, p.SourceFiles);
-                this._projectAddedStream.onNext(project);
-            });
-        }));
-        return workspace;
-    }
-
-    private _setupScriptCs(_solution: Solution) {
-        var context = _solution.observeProjects
-            .where(z => z.response.ScriptCs != null)
-            .where(z => z.response.ScriptCs.CsxFiles.length > 0)
-            .map(z => z.response.ScriptCs);
-
-        this._disposable.add(context.subscribe(context => {
-            this._projectAddedStream.onNext(new ProjectViewModel("ScriptCs", context.Path, _solution.path));
-        }));
-        return context;
     }
 }

@@ -18,7 +18,7 @@ class Rename implements OmniSharp.IFeature {
             this.rename();
         }));
 
-        this.disposable.add(Omni.listener.observeRename.subscribe((data) => {
+        this.disposable.add(Omni.listener.rename.subscribe((data) => {
             this.applyAllChanges(data.response.Changes);
         }));
     }

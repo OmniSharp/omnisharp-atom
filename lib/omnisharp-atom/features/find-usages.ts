@@ -22,9 +22,9 @@ class FindUsages implements OmniSharp.IFeature {
 
         var observable = Observable.merge(
             // Listen to find usages
-            Omni.listener.observeFindusages,
+            Omni.listener.findusages,
             // We also want find implementations, where we found more than one
-            Omni.listener.observeFindimplementations
+            Omni.listener.findimplementations
                 .where(z => z.response.QuickFixes && z.response.QuickFixes.length > 1)
         )
             // For the UI we only need the qucik fixes.
@@ -91,7 +91,7 @@ class FindUsages implements OmniSharp.IFeature {
         }));
 
 
-        this.disposable.add(Omni.listener.observeFindimplementations.subscribe((data) => {
+        this.disposable.add(Omni.listener.findimplementations.subscribe((data) => {
             if (data.response.QuickFixes.length == 1) {
                 Omni.navigateTo(data.response.QuickFixes[0]);
             }

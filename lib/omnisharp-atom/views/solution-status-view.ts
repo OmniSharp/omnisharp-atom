@@ -49,13 +49,13 @@ export class SolutionStatusCard<T extends ICardProps> extends ReactClientCompone
         if (this.state.model.uniqueId !== nextState.model.uniqueId && this.updatesDisposable) {
             this.disposable.remove(this.updatesDisposable);
             this.updatesDisposable.dispose();
-            this.updatesDisposable = nextState.model.observe.updates.debounce(500).subscribe(() => this.setState(<any>{}));
+            this.updatesDisposable = nextState.model.observe.state.debounce(500).subscribe(() => this.setState(<any>{}));
         }
     }
 
     public componentDidMount() {
         super.componentDidMount();
-        this.updatesDisposable = this.state.model.observe.updates.debounce(500).subscribe(() => this.setState(<any>{}));
+        this.updatesDisposable = this.state.model.observe.state.debounce(500).subscribe(() => this.setState(<any>{}));
         this.disposable.add(this.updatesDisposable);
         this.verifyPosition();
     }

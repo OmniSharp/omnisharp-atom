@@ -30,7 +30,6 @@ declare module OmniSharp {
     }
 
     interface ExtendApi extends OmniSharp.Api.V2 {
-        v1: OmniSharp.Api.V1;
         request<TRequest, TResponse>(path: string, request: TRequest): Rx.Observable<TResponse>;
         path: string;
         whenConnected(): Rx.Observable<any>;

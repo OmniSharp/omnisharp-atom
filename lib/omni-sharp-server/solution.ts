@@ -1,6 +1,6 @@
 import _ = require('lodash');
 import {Observable, Subject, CompositeDisposable, Disposable} from 'rx';
-import {OmnisharpClientV2, DriverState, OmnisharpClientOptions} from "omnisharp-client";
+import {ClientV2, DriverState, OmnisharpClientOptions} from "omnisharp-client";
 
 interface SolutionOptions extends OmnisharpClientOptions {
     temporary: boolean;
@@ -10,7 +10,7 @@ interface SolutionOptions extends OmnisharpClientOptions {
 
 import {ViewModel} from "./view-model";
 
-export class Solution extends OmnisharpClientV2 {
+export class Solution extends ClientV2 {
     public model: ViewModel;
     public logs: Observable<OmniSharp.OutputMessage>;
     public path: string;
@@ -37,18 +37,16 @@ export class Solution extends OmnisharpClientV2 {
     public toggle() {
         if (this.currentState === DriverState.Disconnected) {
             var path = atom && atom.project && atom.project.getPaths()[0];
-            this.connect({
-                projectPath: path
-            });
+            this.connect();
         } else {
             this.disconnect();
         }
     }
 
-    public connect(options?) {
+    public connect() {
         if (this.isDisposed) return;
         if (this.currentState === DriverState.Connected || this.currentState === DriverState.Connecting) return;
-        super.connect(options);
+        super.connect();
 
         this.log("Starting OmniSharp server (pid:" + this.id + ")");
         this.log("OmniSharp Location: " + this.serverPath);
