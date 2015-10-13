@@ -20,13 +20,8 @@
 /// <reference path="typings/node/node.d.ts" />
 /// <reference path="typings/q/Q.d.ts" />
 /// <reference path="typings/react/react.d.ts" />
+/// <reference path="typings/xml2js/xml2js.d.ts" />
 /// <reference path="typings/semver/semver.d.ts" />
-
-declare module chai {
-    interface Assert {
-        isAbove(valueToCheck: number, valueToBeAbove: number, message?: string);
-    }
-}
 
 declare module _ {
     interface LoDashStatic {

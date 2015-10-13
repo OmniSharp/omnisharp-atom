@@ -518,11 +518,20 @@ body atom-text-editor.autocomplete-active {
     }
 }
 atom-text-editor::shadow.autocomplete-active .linter-highlight{
-        display:none;
+    display:none;
+}
+
+atom-overlay.signature-help {
+    pointer-events: none;
 }
 
 omnisharp-signature-help {
     bottom: 0;
     position: relative !important;
     opacity: 1 !important;
+    pointer-events: all;
+    
+    .tooltip-inner {
+        text-align: left !important;
+    }
 }
