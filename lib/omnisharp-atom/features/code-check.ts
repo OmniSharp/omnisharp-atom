@@ -136,9 +136,7 @@ class CodeCheck implements OmniSharp.IFeature {
     };
 
     public doCodeCheck(editor: Atom.TextEditor) {
-        if (!this._editorSubjects.has(editor)) return Observable.just<OmniSharp.Models.DiagnosticLocation[]>([]);
-        var callback = this._editorSubjects.get(editor);
-        return callback();
+        this._doCodeCheck(editor);
     }
 
     public required = true;

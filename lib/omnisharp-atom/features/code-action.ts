@@ -51,6 +51,7 @@ class CodeAction implements OmniSharp.IFeature {
             var word, marker: Atom.Marker, subscription: Rx.Disposable;
             var makeLightbulbRequest = (position: TextBuffer.Point) => {
                 if (subscription) subscription.dispose();
+                if (editor && editor.isDestroyed()) return;
 
                 var range = editor.getSelectedBufferRange();
 
