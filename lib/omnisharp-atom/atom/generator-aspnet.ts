@@ -70,7 +70,7 @@ class GeneratorAspnet implements OmniSharp.IFeature {
         this.disposable = new CompositeDisposable();
 
         this.disposable.add(atom.commands.add('atom-workspace', 'omnisharp-atom:new-project', () =>
-            this.run("aspnet:app --useCurrentDirectory")
+            this.run("aspnet:app --createInDirectory")
                 .then((messages: Yeoman.IMessages) => {
                     var allMessages = messages.skip
                         .concat(messages.create)
@@ -78,9 +78,7 @@ class GeneratorAspnet implements OmniSharp.IFeature {
                         .concat(messages.force);
 
                     return Observable.from(['Startup.cs', 'Program.cs', '.cs'])
-                        .concatMap(file => {
-                            return filter(allMessages, message => endsWith(message, file))
-                        })
+                        .concatMap(file =>  filter(allMessages, message => endsWith(message, file)))
                         .take(1)
                         .map(file => path.join(messages.cwd, file))
                         .toPromise();

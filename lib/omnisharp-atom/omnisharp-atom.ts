@@ -10,8 +10,6 @@ var win32 = process.platform === "win32";
 
 class OmniSharpAtom {
     private disposable: Rx.CompositeDisposable;
-    private menu: EventKit.Disposable;
-
     // Internal: Used by unit testing to make sure the plugin is completely activated.
     private _started: AsyncSubject<boolean>;
     private _activated: AsyncSubject<boolean>;
@@ -68,23 +66,6 @@ class OmniSharpAtom {
             });
     }
 
-    private _packageDir: string;
-    public getPackageDir() {
-        if (!this._packageDir) {
-            console.info(`getPackageDirPaths: ${atom.packages.getPackageDirPaths() }`);
-            this._packageDir = _.find(atom.packages.getPackageDirPaths(), function(packagePath) {
-                console.info(`packagePath ${packagePath} exists: ${fs.existsSync(path.join(packagePath, "omnisharp-atom")) }`);
-                return fs.existsSync(path.join(packagePath, "omnisharp-atom"));
-            });
-
-            // Fallback, this is for unit testing on travis mainly
-            if (!this._packageDir) {
-                this._packageDir = path.resolve(__dirname, '../../..');
-            }
-        }
-        return this._packageDir;
-    }
-
     public getFeatures(folder: string) {
         var whiteList = atom.config.get<boolean>("omnisharp-atom:feature-white-list");
         var featureList = atom.config.get<string[]>('omnisharp-atom:feature-list');
@@ -92,7 +73,7 @@ class OmniSharpAtom {
 
         console.info(`Getting features for '${folder}'...`);
 
-        var packageDir = this.getPackageDir();
+        var packageDir = Omni.packageDir;
         var featureDir = `${packageDir}/omnisharp-atom/lib/omnisharp-atom/${folder}`;
 
         function loadFeature(file: string) {
@@ -101,10 +82,10 @@ class OmniSharpAtom {
             return result;//_.values(result).filter(feature => !_.isFunction(feature));
         }
 
-        return Observable.fromNodeCallback(fs.readdir)(featureDir)
+        return Observable.fromNodeCallback<string[], string>(fs.readdir)(featureDir)
             .flatMap(files => Observable.from(files))
             .where(file => /\.js$/.test(file))
-            .flatMap(file => Observable.fromNodeCallback(fs.stat)(`${featureDir}/${file}`).map(stat => ({ file, stat })))
+            .flatMap(file => Observable.fromNodeCallback<fs.Stats, string>(fs.stat)(`${featureDir}/${file}`).map(stat => ({ file, stat })))
             .where(z => !z.stat.isDirectory())
             .map(z => ({
                 file: `${folder}/${path.basename(z.file) }`.replace(/\.js$/, ''),
@@ -240,10 +221,6 @@ class OmniSharpAtom {
             return; //short out, if setting to not auto start is enabled
         }
 
-        if (Omni.isOn && !this.menu) {
-            this.toggleMenu();
-        }
-
         if (Omni.isValidGrammar(grammar)) {
             if (Omni.isOff) {
                 this.toggle();
@@ -257,25 +234,11 @@ class OmniSharpAtom {
         }
     }
 
-    private toggleMenu() {
-        var menuJsonFile = this.getPackageDir() + "/omnisharp-atom/menus/omnisharp-menu.json";
-        var menuJson = JSON.parse(fs.readFileSync(menuJsonFile, 'utf8'));
-        this.menu = atom.menu.add(menuJson.menu);
-        this.disposable.add(this.menu);
-    }
-
     public toggle() {
         if (Omni.isOff) {
             Omni.connect();
-            this.toggleMenu();
         } else if (Omni.isOn) {
             Omni.disconnect();
-
-            if (this.menu) {
-                this.disposable.remove(this.menu);
-                this.menu.dispose();
-                this.menu = null;
-            }
         }
     }
 
@@ -326,7 +289,7 @@ class OmniSharpAtom {
     }
 
     private configureKeybindings() {
-        var omnisharpFileNew = this.getPackageDir() + "/omnisharp-atom/keymaps/omnisharp-file-new.cson";
+        var omnisharpFileNew = Omni.packageDir + "/omnisharp-atom/keymaps/omnisharp-file-new.cson";
         this.disposable.add(atom.config.observe("omnisharp-atom.enableAdvancedFileNew", (enabled) => {
             if (enabled) {
                 atom.keymaps.loadKeymap(omnisharpFileNew);
@@ -336,7 +299,7 @@ class OmniSharpAtom {
         }));
 
         var disposable: EventKit.Disposable;
-        var omnisharpAdvancedFileNew = this.getPackageDir() + "/omnisharp-atom/keymaps/omnisharp-advanced-file-new.cson";
+        var omnisharpAdvancedFileNew = Omni.packageDir + "/omnisharp-atom/keymaps/omnisharp-advanced-file-new.cson";
         this.disposable.add(atom.config.observe("omnisharp-atom.useAdvancedFileNew", (enabled) => {
             if (enabled) {
                 atom.keymaps.loadKeymap(omnisharpAdvancedFileNew);

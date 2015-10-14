@@ -5,6 +5,9 @@ import _ = require('lodash');
 import {basename} from "path";
 import {DriverState} from "omnisharp-client";
 import {ProjectViewModel} from "./project-view-model";
+import {ViewModel} from "./view-model";
+import * as fs from "fs";
+import * as path from "path";
 
 // Time we wait to try and do our active switch tasks.
 const DEBOUNCE_TIMEOUT = 100;
@@ -47,7 +50,7 @@ class Omni implements Rx.IDisposable {
         .flatMapLatest(project => project.observe.activeFramework.map(framework => ({ project, framework })))
         .shareReplay(1);
 
-    private _diagnostics : Observable<OmniSharp.Models.DiagnosticLocation[]>;
+    private _diagnostics: Observable<OmniSharp.Models.DiagnosticLocation[]>;
     public get diagnostics() { return this._diagnostics; }
 
     private _isOff = true;
@@ -338,8 +341,44 @@ class Omni implements Rx.IDisposable {
         return manager.activeSolution.map(z => z.model);
     }
 
+    public switchActiveModel(callback: (model: ViewModel, cd: CompositeDisposable) => void): Rx.IDisposable {
+        var outerCd = new CompositeDisposable();
+        outerCd.add(this.activeModel.where(z => !!z).subscribe(model => {
+            var cd = new CompositeDisposable();
+            outerCd.add(cd);
+
+            cd.add(this.activeModel.where(active => active !== model)
+                .subscribe(() => {
+                    outerCd.remove(cd);
+                    cd.dispose();
+                }));
+
+            callback(model, cd);
+        }));
+
+        return outerCd;
+    }
+
     public get activeSolution() {
         return manager.activeSolution;
+    }
+
+    public switchActiveSolution(callback: (solution: Solution, cd: CompositeDisposable) => void): Rx.IDisposable {
+        var outerCd = new CompositeDisposable();
+        outerCd.add(this.activeSolution.where(z => !!z).subscribe(solution => {
+            var cd = new CompositeDisposable();
+            outerCd.add(cd);
+
+            cd.add(this.activeSolution.where(active => active !== solution)
+                .subscribe(() => {
+                    outerCd.remove(cd);
+                    cd.dispose();
+                }));
+
+            callback(solution, cd);
+        }));
+
+        return outerCd;
     }
 
     public get activeEditor() {
@@ -374,8 +413,44 @@ class Omni implements Rx.IDisposable {
         return this._activeConfigEditor;
     }
 
+    public switchActiveConfigEditor(callback: (editor: Atom.TextEditor, cd: CompositeDisposable) => void): Rx.IDisposable {
+        var outerCd = new CompositeDisposable();
+        outerCd.add(this.activeConfigEditor.where(z => !!z).subscribe(editor => {
+            var cd = new CompositeDisposable();
+            outerCd.add(cd);
+
+            cd.add(this.activeConfigEditor.where(active => active !== editor)
+                .subscribe(() => {
+                    outerCd.remove(cd);
+                    cd.dispose();
+                }));
+
+            callback(editor, cd);
+        }));
+
+        return outerCd;
+    }
+
     public get activeEditorOrConfigEditor() {
         return this._activeEditorOrConfigEditor;
+    }
+
+    public switchActiveEditorOrConfigEditor(callback: (editor: Atom.TextEditor, cd: CompositeDisposable) => void): Rx.IDisposable {
+        var outerCd = new CompositeDisposable();
+        outerCd.add(this.activeEditorOrConfigEditor.where(z => !!z).subscribe(editor => {
+            var cd = new CompositeDisposable();
+            outerCd.add(cd);
+
+            cd.add(this.activeEditorOrConfigEditor.where(active => active !== editor)
+                .subscribe(() => {
+                    outerCd.remove(cd);
+                    cd.dispose();
+                }));
+
+            callback(editor, cd);
+        }));
+
+        return outerCd;
     }
 
     public get activeProject() {
@@ -447,6 +522,23 @@ class Omni implements Rx.IDisposable {
 
     public isValidGrammar(grammar: FirstMate.Grammar) {
         return _.any(this._supportedExtensions, ext => _.any((<any>grammar).fileTypes, ft => _.trimLeft(ext, '.') === ft));
+    }
+
+    private _packageDir: string;
+    public get packageDir() {
+        if (!this._packageDir) {
+            console.info(`getPackageDirPaths: ${atom.packages.getPackageDirPaths() }`);
+            this._packageDir = _.find(atom.packages.getPackageDirPaths(), function(packagePath) {
+                console.info(`packagePath ${packagePath} exists: ${fs.existsSync(path.join(packagePath, "omnisharp-atom")) }`);
+                return fs.existsSync(path.join(packagePath, "omnisharp-atom"));
+            });
+
+            // Fallback, this is for unit testing on travis mainly
+            if (!this._packageDir) {
+                this._packageDir = path.resolve(__dirname, '../../..');
+            }
+        }
+        return this._packageDir;
     }
 }
 

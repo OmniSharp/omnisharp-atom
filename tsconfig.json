@@ -45,6 +45,7 @@
         "lib/omnisharp-atom/atom/feature-buttons.ts",
         "lib/omnisharp-atom/atom/framework-selector.ts",
         "lib/omnisharp-atom/atom/generator-aspnet.ts",
+        "lib/omnisharp-atom/atom/menu.ts",
         "lib/omnisharp-atom/atom/server-information.ts",
         "lib/omnisharp-atom/atom/settings-button.ts",
         "lib/omnisharp-atom/atom/solution-information.ts",

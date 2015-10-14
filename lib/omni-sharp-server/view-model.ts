@@ -223,16 +223,17 @@ export class ViewModel implements VMViewState, Rx.IDisposable {
             // Catch global code checks
             _solution.observe.codecheck
                 .where(z => !z.request.FileName)
-                .map(z => z.response)
-                .map(z => <OmniSharp.Models.DiagnosticLocation[]>z.QuickFixes),
+                .map(z => z.response || <any>{})
+                .map(z => <OmniSharp.Models.DiagnosticLocation[]>z.QuickFixes || []),
             // Evict diagnostics from a code check for the given file
             // Then insert the new diagnostics
             _solution.observe.codecheck
                 .where(z => !!z.request.FileName)
                 .map((ctx) => {
                     var {request, response} = ctx;
+                    if (!response) response = <any>{};
                     var results = _.filter(this.diagnostics, (fix: OmniSharp.Models.DiagnosticLocation) => request.FileName !== fix.FileName);
-                    results.unshift(...<OmniSharp.Models.DiagnosticLocation[]>response.QuickFixes);
+                    results.unshift(...<OmniSharp.Models.DiagnosticLocation[]>response.QuickFixes || []);
                     return results;
                 }))
             .map(data => _.sortBy(data, quickFix => quickFix.LogLevel))
