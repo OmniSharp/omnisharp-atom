@@ -145,6 +145,7 @@ class CodeAction implements OmniSharp.IFeature {
         }
         if (tab) {
             tab.classList.remove('preview-tab');
+            (<any>tab).isPreviewTab = false;
         }
 
         Observable.from(changes)
@@ -158,6 +159,7 @@ class CodeAction implements OmniSharp.IFeature {
                     }
                     if (tab) {
                         tab.classList.remove('preview-tab');
+                        (<any>tab).isPreviewTab = false;
                     }
                     Changes.applyChanges(editor, change);
                 }))

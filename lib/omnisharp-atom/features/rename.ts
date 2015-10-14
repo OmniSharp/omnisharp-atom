@@ -50,8 +50,9 @@ class Rename implements OmniSharp.IFeature {
         }
         if (tab) {
             tab.classList.remove('preview-tab');
+            (<any>tab).isPreviewTab = false;
         }
-        
+
         return Observable.from(changes)
             .concatMap(change => atom.workspace.open(change.FileName, undefined)
                 .then(editor => {
@@ -63,6 +64,7 @@ class Rename implements OmniSharp.IFeature {
                     }
                     if (tab) {
                         tab.classList.remove('preview-tab');
+                        (<any>tab).isPreviewTab = false;
                     }
                     Changes.applyChanges(editor, change);
                 }))
