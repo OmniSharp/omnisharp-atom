@@ -18,7 +18,7 @@ class ReloadWorkspace implements OmniSharp.IFeature {
             .flatMap(solution => {
                 return Observable.from(solution.model.projects)
                     .flatMap(x => x.sourceFiles)
-                    .observeOn(Scheduler.timeout)
+                    .observeOn(Scheduler.async)
                     .concatMap(file => oexists(file).where(x => !x)
                         .flatMap(() => solution.updatebuffer({ FileName: file, Buffer: '' })));
             });

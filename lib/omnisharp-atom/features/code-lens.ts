@@ -107,7 +107,7 @@ class CodeLens implements OmniSharp.IFeature {
         }
 
         return Omni.request(editor, solution => solution.currentfilemembersasflat({ Buffer: null, Changes: null }))
-            .observeOn(Scheduler.timeout)
+            .observeOn(Scheduler.async)
             .where(fileMembers => !!fileMembers)
             .flatMap(fileMembers => Observable.from(fileMembers))
             .concatMap(fileMember => {
@@ -181,7 +181,7 @@ export class Lens implements Rx.IDisposable {
         this._path = _editor.getPath();
 
         this._updateObservable = this._update
-            .observeOn(Scheduler.timeout)
+            .observeOn(Scheduler.async)
             .where(x => !!x)
             .flatMap(() => Omni.request(this._editor, solution =>
                 solution.findusages({ FileName: this._path, Column: this._member.Column + 1, Line: this._member.Line, Buffer: null, Changes: null }, { silent: true })))
