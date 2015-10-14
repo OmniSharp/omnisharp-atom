@@ -136,10 +136,32 @@ class CodeAction implements OmniSharp.IFeature {
     }
 
     public applyAllChanges(changes: OmniSharp.Models.ModifiedFileResponse[]) {
-        return _.each(changes, (change) => {
-            atom.workspace.open(change.FileName, undefined)
-                .then((editor) => { Changes.applyChanges(editor, change); })
-        });
+        var pane: HTMLElement = <any>atom.views.getView(atom.workspace.getActivePane());
+        var title = pane.querySelector('.title.temp');
+        var tab = pane.querySelector('.preview-tab.active');
+
+        if (title) {
+            title.classList.remove('temp');
+        }
+        if (tab) {
+            tab.classList.remove('preview-tab');
+        }
+
+        Observable.from(changes)
+            .concatMap(change => atom.workspace.open(change.FileName, undefined)
+                .then(editor => {
+                    var pane: HTMLElement = <any>atom.views.getView(atom.workspace.getActivePane());
+                    var title = pane.querySelector('.title.temp');
+                    var tab = pane.querySelector('.preview-tab.active');
+                    if (title) {
+                        title.classList.remove('temp');
+                    }
+                    if (tab) {
+                        tab.classList.remove('preview-tab');
+                    }
+                    Changes.applyChanges(editor, change);
+                }))
+            .subscribe();
     }
 
     public required = true;

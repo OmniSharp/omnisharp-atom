@@ -171,10 +171,7 @@ class Omni implements Rx.IDisposable {
     }
 
     public navigateTo(response: { FileName: string; Line: number; Column: number; }) {
-        atom.workspace.open(response.FileName, <any>{ initialLine: response.Line, initialColumn: response.Column })
-            .then((editor) => {
-                editor.setCursorBufferPosition([response.Line && response.Line, response.Column && response.Column])
-            });
+        return Observable.fromPromise(atom.workspace.open(response.FileName, <any>{ initialLine: response.Line, initialColumn: response.Column }));
     }
 
     public getFrameworks(projects: string[]): string {

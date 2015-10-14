@@ -88,7 +88,7 @@ class GeneratorAspnet implements OmniSharp.IFeature {
                         atom.commands.dispatch(atom.views.getView(atom.workspace), 'omnisharp-atom:restart-server');
                     }
 
-                    atom.workspace.open(file);
+                    return atom.workspace.open(file);
                 })
         ));
         this.disposable.add(atom.commands.add('atom-workspace', 'omnisharp-atom:new-class', () => this.run("aspnet:Class")));

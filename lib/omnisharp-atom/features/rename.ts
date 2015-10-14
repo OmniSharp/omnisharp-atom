@@ -1,5 +1,5 @@
 import _ = require('lodash')
-import {CompositeDisposable} from "rx";
+import {CompositeDisposable, Observable} from "rx";
 import RenameView = require('../views/rename-view')
 import Omni = require('../../omni-sharp-server/omni');
 import Changes = require('../services/apply-changes')
@@ -41,10 +41,32 @@ class Rename implements OmniSharp.IFeature {
     }
 
     public applyAllChanges(changes: OmniSharp.Models.ModifiedFileResponse[]) {
-        return _.each(changes, (change) => {
-            atom.workspace.open(change.FileName, undefined)
-                .then((editor) => { Changes.applyChanges(editor, change); })
-        });
+        var pane: HTMLElement = <any>atom.views.getView(atom.workspace.getActivePane());
+        var title = pane.querySelector('.title.temp');
+        var tab = pane.querySelector('.preview-tab.active');
+
+        if (title) {
+            title.classList.remove('temp');
+        }
+        if (tab) {
+            tab.classList.remove('preview-tab');
+        }
+        
+        return Observable.from(changes)
+            .concatMap(change => atom.workspace.open(change.FileName, undefined)
+                .then(editor => {
+                    var pane: HTMLElement = <any>atom.views.getView(atom.workspace.getActivePane());
+                    var title = pane.querySelector('.title.temp');
+                    var tab = pane.querySelector('.preview-tab.active');
+                    if (title) {
+                        title.classList.remove('temp');
+                    }
+                    if (tab) {
+                        tab.classList.remove('preview-tab');
+                    }
+                    Changes.applyChanges(editor, change);
+                }))
+            .subscribe();
     }
 
     public required = true;
