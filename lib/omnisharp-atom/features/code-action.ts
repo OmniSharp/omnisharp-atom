@@ -16,17 +16,18 @@ class CodeAction implements OmniSharp.IFeature {
         this.disposable.add(Omni.addTextEditorCommand("omnisharp-atom:get-code-actions", () => {
             //store the editor that this was triggered by.
             var editor = atom.workspace.getActiveTextEditor();
-            Omni.request(editor, solution => solution.getcodeactions(this.getRequest(solution)))
-                .subscribe(response => {
+            this.getCodeActionsRequest(editor)
+                .subscribe(ctx => {
+                    var {request, response} = ctx;
                     //pop ui to user.
                     this.view = codeActionsView({
                         items: response.CodeActions,
                         confirmed: (item) => {
-                            if (editor && !editor.isDestroyed()) {
-                                var range = editor.getSelectedBufferRange();
-                                Omni.request(editor, solution => solution.runcodeaction(this.getRequest(solution, item.Identifier)))
-                                    .subscribe((response) => applyAllChanges(response.Changes));
-                            }
+                            if (!editor || editor.isDestroyed()) return;
+
+                            var range = editor.getSelectedBufferRange();
+                            this.runCodeActionRequest(editor, request, item.Identifier)
+                                .subscribe((response) => applyAllChanges(response.Changes));
                         }
                     }, editor);
                 });
@@ -51,12 +52,13 @@ class CodeAction implements OmniSharp.IFeature {
             var word, marker: Atom.Marker, subscription: Rx.Disposable;
             var makeLightbulbRequest = (position: TextBuffer.Point) => {
                 if (subscription) subscription.dispose();
-                if (editor && editor.isDestroyed()) return;
+                if (!editor || editor.isDestroyed()) return;
 
                 var range = editor.getSelectedBufferRange();
 
-                subscription = Omni.request(editor, solution => solution.getcodeactions(this.getRequest(solution), { silent: true }))
-                    .subscribe(response => {
+                this.getCodeActionsRequest(editor, true)
+                    .subscribe(ctx => {
+                        var {response} = ctx;
                         if (response.CodeActions.length > 0) {
                             if (marker) {
                                 marker.destroy();
@@ -105,10 +107,25 @@ class CodeAction implements OmniSharp.IFeature {
         }));
     }
 
-    private getRequest(solution: OmniSharp.ExtendApi): OmniSharp.Models.V2.GetCodeActionsRequest;
-    private getRequest(solution: OmniSharp.ExtendApi, codeAction: string): OmniSharp.Models.V2.RunCodeActionRequest;
-    private getRequest(solution: OmniSharp.ExtendApi, codeAction?: string) {
-        var editor = atom.workspace.getActiveTextEditor();
+    private getCodeActionsRequest(editor: Atom.TextEditor, silent = true) {
+        if (!editor || editor.isDestroyed) return null;
+
+        var request = this.getRequest(editor);
+        return Omni.request(editor, solution => solution.getcodeactions(request))
+            .map(response => ({ response, request }));
+    }
+
+    private runCodeActionRequest(editor: Atom.TextEditor, getRequest: OmniSharp.Models.V2.GetCodeActionsRequest, codeAction: string) {
+        if (!editor || editor.isDestroyed) return null;
+
+        var request = this.getRequest(editor, codeAction);
+        request.Selection = getRequest.Selection;
+        return Omni.request(editor, solution => solution.runcodeaction(request));
+    }
+
+    private getRequest(editor: Atom.TextEditor): OmniSharp.Models.V2.GetCodeActionsRequest;
+    private getRequest(editor: Atom.TextEditor, codeAction: string): OmniSharp.Models.V2.RunCodeActionRequest;
+    private getRequest(editor: Atom.TextEditor, codeAction?: string) {
         var range = <any>editor.getSelectedBufferRange();
         var request = <OmniSharp.Models.V2.RunCodeActionRequest>{
             WantsTextChanges: true,

@@ -33,7 +33,7 @@ class CodeFormat implements OmniSharp.IFeature {
 
                 return solution
                     .formatRange(request)
-                    .map((data) => applyChanges(editor, data));
+                    .tapOnNext((data) => applyChanges(editor, data));
             });
         }
     }
@@ -49,7 +49,7 @@ class CodeFormat implements OmniSharp.IFeature {
                 };
 
                 return solution.formatAfterKeystroke(request)
-                    .map((data) => applyChanges(editor, data));
+                    .tapOnNext((data) => applyChanges(editor, data));
             });
         }
         event.preventDefault();
