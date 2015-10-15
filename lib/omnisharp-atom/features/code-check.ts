@@ -14,7 +14,7 @@ class CodeCheck implements OmniSharp.IFeature {
     public selectedIndex: number = 0;
     private scrollTop: number = 0;
     private _editorSubjects = new WeakMap<Atom.TextEditor, () => Rx.Observable<OmniSharp.Models.DiagnosticLocation[]>>();
-    private _fullCodeCheck : Subject<any>;
+    private _fullCodeCheck: Subject<any>;
 
     public activate() {
         this.disposable = new CompositeDisposable();
@@ -90,7 +90,20 @@ class CodeCheck implements OmniSharp.IFeature {
             codeCheck: this
         }));
 
-        this.disposable.add(Omni.listener.packageRestoreFinished.subscribe(() => this.doFullCodeCheck()));
+        var started = 0, finished = 0;
+        this.disposable.add(Observable.combineLatest(
+            Omni.listener.packageRestoreStarted.map(x => started++),
+            Omni.listener.packageRestoreFinished.map(x => finished++),
+            (s, f) => s === f)
+            .where(r => r)
+            .debounce(2000)
+            .subscribe(() => {
+                started = 0;
+                finished = 0;
+                this.doFullCodeCheck();
+            }));
+
+        this.disposable.add(Omni.listener.packageRestoreFinished.debounce(3000).subscribe(() => this.doFullCodeCheck()));
         this.disposable.add(atom.commands.add('atom-workspace', 'omnisharp-atom:code-check', () => this.doFullCodeCheck()));
 
         this.disposable.add(this._fullCodeCheck
