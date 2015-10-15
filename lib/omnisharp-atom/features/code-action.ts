@@ -2,7 +2,7 @@ import _ = require('lodash');
 import {CompositeDisposable, Subject, Observable, Scheduler} from "rx";
 import Omni = require('../../omni-sharp-server/omni')
 import SpacePen = require('atom-space-pen-views');
-import Changes = require('../services/apply-changes');
+import {changes} from '../services/apply-changes';
 import codeActionsView from "../views/code-actions-view";
 
 class CodeAction implements OmniSharp.IFeature {
@@ -25,7 +25,7 @@ class CodeAction implements OmniSharp.IFeature {
                             if (editor && !editor.isDestroyed()) {
                                 var range = editor.getSelectedBufferRange();
                                 Omni.request(editor, solution => solution.runcodeaction(this.getRequest(solution, item.Identifier)))
-                                    .subscribe((response) => this.applyAllChanges(response.Changes));
+                                    .subscribe((response) => changes.applyAllChanges(response.Changes));
                             }
                         }
                     }, editor);
@@ -133,37 +133,6 @@ class CodeAction implements OmniSharp.IFeature {
 
     public dispose() {
         this.disposable.dispose();
-    }
-
-    public applyAllChanges(changes: OmniSharp.Models.ModifiedFileResponse[]) {
-        var pane: HTMLElement = <any>atom.views.getView(atom.workspace.getActivePane());
-        var title = pane.querySelector('.title.temp');
-        var tab = pane.querySelector('.preview-tab.active');
-
-        if (title) {
-            title.classList.remove('temp');
-        }
-        if (tab) {
-            tab.classList.remove('preview-tab');
-            (<any>tab).isPreviewTab = false;
-        }
-
-        Observable.from(changes)
-            .concatMap(change => atom.workspace.open(change.FileName, undefined)
-                .then(editor => {
-                    var pane: HTMLElement = <any>atom.views.getView(atom.workspace.getActivePane());
-                    var title = pane.querySelector('.title.temp');
-                    var tab = pane.querySelector('.preview-tab.active');
-                    if (title) {
-                        title.classList.remove('temp');
-                    }
-                    if (tab) {
-                        tab.classList.remove('preview-tab');
-                        (<any>tab).isPreviewTab = false;
-                    }
-                    Changes.applyChanges(editor, change);
-                }))
-            .subscribe();
     }
 
     public required = true;

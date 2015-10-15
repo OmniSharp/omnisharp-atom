@@ -1,8 +1,8 @@
 import _ = require('lodash')
 import {CompositeDisposable, Observable} from "rx";
-import RenameView = require('../views/rename-view')
+import RenameView = require('../views/rename-view');
 import Omni = require('../../omni-sharp-server/omni');
-import Changes = require('../services/apply-changes')
+import {changes} from '../services/apply-changes';
 
 class Rename implements OmniSharp.IFeature {
     private disposable: Rx.CompositeDisposable;
@@ -19,7 +19,7 @@ class Rename implements OmniSharp.IFeature {
         }));
 
         this.disposable.add(Omni.listener.rename.subscribe((data) => {
-            this.applyAllChanges(data.response.Changes);
+            changes.applyAllChanges(data.response.Changes);
         }));
     }
 
@@ -38,37 +38,6 @@ class Rename implements OmniSharp.IFeature {
             });
         }
         return this.renameView.configure(wordToRename);
-    }
-
-    public applyAllChanges(changes: OmniSharp.Models.ModifiedFileResponse[]) {
-        var pane: HTMLElement = <any>atom.views.getView(atom.workspace.getActivePane());
-        var title = pane.querySelector('.title.temp');
-        var tab = pane.querySelector('.preview-tab.active');
-
-        if (title) {
-            title.classList.remove('temp');
-        }
-        if (tab) {
-            tab.classList.remove('preview-tab');
-            (<any>tab).isPreviewTab = false;
-        }
-
-        return Observable.from(changes)
-            .concatMap(change => atom.workspace.open(change.FileName, undefined)
-                .then(editor => {
-                    var pane: HTMLElement = <any>atom.views.getView(atom.workspace.getActivePane());
-                    var title = pane.querySelector('.title.temp');
-                    var tab = pane.querySelector('.preview-tab.active');
-                    if (title) {
-                        title.classList.remove('temp');
-                    }
-                    if (tab) {
-                        tab.classList.remove('preview-tab');
-                        (<any>tab).isPreviewTab = false;
-                    }
-                    Changes.applyChanges(editor, change);
-                }))
-            .subscribe();
     }
 
     public required = true;

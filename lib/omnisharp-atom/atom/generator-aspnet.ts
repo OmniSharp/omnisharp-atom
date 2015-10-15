@@ -6,6 +6,7 @@ import {each, delay, any, endsWith, filter} from "lodash";
 import * as fs from "fs";
 import * as path from "path";
 import {solutionInformation} from "../atom/solution-information";
+import {DriverState} from "omnisharp-client";
 
 var readdir = Observable.fromNodeCallback(fs.readdir);
 var stat = Observable.fromNodeCallback(fs.stat);
@@ -78,19 +79,19 @@ class GeneratorAspnet implements OmniSharp.IFeature {
                         .concat(messages.force);
 
                     return Observable.from(['Startup.cs', 'Program.cs', '.cs'])
-                        .concatMap(file =>  filter(allMessages, message => endsWith(message, file)))
+                        .concatMap(file => filter(allMessages, message => endsWith(message, file)))
                         .take(1)
                         .map(file => path.join(messages.cwd, file))
                         .toPromise();
                 })
-                .then(file => {
+                .then(file => atom.workspace.open(file))
+                .then(() => Observable.timer(2000).toPromise())
+                .then(() => {
                     if (solutionInformation.solutions.length) {
                         atom.commands.dispatch(atom.views.getView(atom.workspace), 'omnisharp-atom:restart-server');
                     }
+                })));
 
-                    return atom.workspace.open(file);
-                })
-        ));
         this.disposable.add(atom.commands.add('atom-workspace', 'omnisharp-atom:new-class', () => this.run("aspnet:Class")));
 
         each(commands, command => {
