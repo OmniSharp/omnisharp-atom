@@ -2,7 +2,7 @@ import _ = require('lodash');
 import {CompositeDisposable, Subject, Observable, Scheduler} from "rx";
 import Omni = require('../../omni-sharp-server/omni')
 import SpacePen = require('atom-space-pen-views');
-import {changes} from '../services/apply-changes';
+import {applyAllChanges} from '../services/apply-changes';
 import codeActionsView from "../views/code-actions-view";
 
 class CodeAction implements OmniSharp.IFeature {
@@ -25,7 +25,7 @@ class CodeAction implements OmniSharp.IFeature {
                             if (editor && !editor.isDestroyed()) {
                                 var range = editor.getSelectedBufferRange();
                                 Omni.request(editor, solution => solution.runcodeaction(this.getRequest(solution, item.Identifier)))
-                                    .subscribe((response) => changes.applyAllChanges(response.Changes));
+                                    .subscribe((response) => applyAllChanges(response.Changes));
                             }
                         }
                     }, editor);

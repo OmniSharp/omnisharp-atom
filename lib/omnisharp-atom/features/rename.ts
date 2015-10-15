@@ -2,7 +2,7 @@ import _ = require('lodash')
 import {CompositeDisposable, Observable} from "rx";
 import RenameView = require('../views/rename-view');
 import Omni = require('../../omni-sharp-server/omni');
-import {changes} from '../services/apply-changes';
+import {applyAllChanges} from '../services/apply-changes';
 
 class Rename implements OmniSharp.IFeature {
     private disposable: Rx.CompositeDisposable;
@@ -19,7 +19,7 @@ class Rename implements OmniSharp.IFeature {
         }));
 
         this.disposable.add(Omni.listener.rename.subscribe((data) => {
-            changes.applyAllChanges(data.response.Changes);
+            applyAllChanges(data.response.Changes);
         }));
     }
 
