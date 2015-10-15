@@ -108,15 +108,15 @@ class CodeAction implements OmniSharp.IFeature {
     }
 
     private getCodeActionsRequest(editor: Atom.TextEditor, silent = true) {
-        if (!editor || editor.isDestroyed) return null;
+        if (!editor || editor.isDestroyed) return Observable.empty<{ request: OmniSharp.Models.V2.GetCodeActionsRequest; response: OmniSharp.Models.V2.GetCodeActionsResponse }>();
 
         var request = this.getRequest(editor);
         return Omni.request(editor, solution => solution.getcodeactions(request))
-            .map(response => ({ response, request }));
+            .map(response => ({ request, response }));
     }
 
     private runCodeActionRequest(editor: Atom.TextEditor, getRequest: OmniSharp.Models.V2.GetCodeActionsRequest, codeAction: string) {
-        if (!editor || editor.isDestroyed) return null;
+        if (!editor || editor.isDestroyed) return Observable.empty<OmniSharp.Models.V2.RunCodeActionResponse>();
 
         var request = this.getRequest(editor, codeAction);
         request.Selection = getRequest.Selection;

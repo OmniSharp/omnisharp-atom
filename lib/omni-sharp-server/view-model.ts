@@ -160,6 +160,14 @@ export class ViewModel implements VMViewState, Rx.IDisposable {
             });
         }));
 
+        this._disposable.add(_solution.observe.projects
+            .where(z => z.response.Dnx != null && z.response.Dnx.Projects.length > 0)
+            .map(z => z.response.Dnx)
+            .subscribe(system => {
+                this.runtime = basename(system.RuntimePath);
+                this.runtimePath = system.RuntimePath;
+            }));
+
         this._disposable.add(this._projectAddedStream);
         this._disposable.add(this._projectChangedStream);
         this._disposable.add(this._projectRemovedStream);
