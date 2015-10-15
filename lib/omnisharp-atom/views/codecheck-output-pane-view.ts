@@ -30,17 +30,14 @@ export class CodeCheckOutputWindow<T extends ICodeCheckOutputWindowProps> extend
 
     public componentWillMount() {
         super.componentWillMount();
-        this.disposable.add(this.model.observe
-            .updated
-            .where(z => z.name === "displayDiagnostics")
+        this.disposable.add(Omni.diagnostics
+            .delay(1)
             .subscribe(z => this.setState({
                 diagnostics: this.model.displayDiagnostics
             })));
 
-        this.disposable.add(this.model.observe
-            .updated
-            .where(z => z.name === "selectedIndex")
-            .delay(0)
+        this.disposable.add(Omni.diagnostics
+            .delay(2)
             .subscribe(z => this.updateStateAndScroll()));
     }
 

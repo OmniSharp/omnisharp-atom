@@ -1,8 +1,8 @@
 import _ = require('lodash')
-import {CompositeDisposable} from "rx";
-import RenameView = require('../views/rename-view')
+import {CompositeDisposable, Observable} from "rx";
+import RenameView = require('../views/rename-view');
 import Omni = require('../../omni-sharp-server/omni');
-import Changes = require('../services/apply-changes')
+import {applyAllChanges} from '../services/apply-changes';
 
 class Rename implements OmniSharp.IFeature {
     private disposable: Rx.CompositeDisposable;
@@ -18,8 +18,8 @@ class Rename implements OmniSharp.IFeature {
             this.rename();
         }));
 
-        this.disposable.add(Omni.listener.observeRename.subscribe((data) => {
-            this.applyAllChanges(data.response.Changes);
+        this.disposable.add(Omni.listener.rename.subscribe((data) => {
+            applyAllChanges(data.response.Changes);
         }));
     }
 
@@ -38,13 +38,6 @@ class Rename implements OmniSharp.IFeature {
             });
         }
         return this.renameView.configure(wordToRename);
-    }
-
-    public applyAllChanges(changes: OmniSharp.Models.ModifiedFileResponse[]) {
-        return _.each(changes, (change) => {
-            atom.workspace.open(change.FileName, undefined)
-                .then((editor) => { Changes.applyChanges(editor, change); })
-        });
     }
 
     public required = true;

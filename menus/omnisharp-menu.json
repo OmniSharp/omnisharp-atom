@@ -2,6 +2,7 @@
   "menu": [{
     "label": "&OmniSharp",
     "submenu": [
+      { "label": "New Project", "command": "omnisharp-atom:new-project" },
       { "label": "Toggle", "command": "omnisharp-atom:toggle" },
       { "label": "Find Usages", "command": "omnisharp-atom:find-usages" },
       { "label": "Go to Definition", "command": "omnisharp-atom:go-to-definition" },

@@ -2,7 +2,7 @@ import _ = require('lodash');
 import {CompositeDisposable, Subject, Observable, Scheduler} from "rx";
 import Omni = require('../../omni-sharp-server/omni')
 import SpacePen = require('atom-space-pen-views');
-import Changes = require('../services/apply-changes');
+import {applyAllChanges} from '../services/apply-changes';
 import codeActionsView from "../views/code-actions-view";
 
 class CodeAction implements OmniSharp.IFeature {
@@ -16,17 +16,18 @@ class CodeAction implements OmniSharp.IFeature {
         this.disposable.add(Omni.addTextEditorCommand("omnisharp-atom:get-code-actions", () => {
             //store the editor that this was triggered by.
             var editor = atom.workspace.getActiveTextEditor();
-            Omni.request(editor, solution => solution.getcodeactions(this.getRequest(solution)))
-                .subscribe(response => {
+            this.getCodeActionsRequest(editor)
+                .subscribe(ctx => {
+                    var {request, response} = ctx;
                     //pop ui to user.
                     this.view = codeActionsView({
                         items: response.CodeActions,
                         confirmed: (item) => {
-                            if (editor && !editor.isDestroyed()) {
-                                var range = editor.getSelectedBufferRange();
-                                Omni.request(editor, solution => solution.runcodeaction(this.getRequest(solution, item.Identifier)))
-                                    .subscribe((response) => this.applyAllChanges(response.Changes));
-                            }
+                            if (!editor || editor.isDestroyed()) return;
+
+                            var range = editor.getSelectedBufferRange();
+                            this.runCodeActionRequest(editor, request, item.Identifier)
+                                .subscribe((response) => applyAllChanges(response.Changes));
                         }
                     }, editor);
                 });
@@ -34,7 +35,7 @@ class CodeAction implements OmniSharp.IFeature {
 
         this.disposable.add(Omni.switchActiveEditor((editor, cd) => {
             var cd = new CompositeDisposable();
-            cd.add(Omni.listener.observeGetcodeactions
+            cd.add(Omni.listener.getcodeactions
                 .where(z => z.request.FileName === editor.getPath())
                 .where(ctx => ctx.response.CodeActions.length > 0)
                 .subscribe(({response, request}) => {
@@ -51,11 +52,13 @@ class CodeAction implements OmniSharp.IFeature {
             var word, marker: Atom.Marker, subscription: Rx.Disposable;
             var makeLightbulbRequest = (position: TextBuffer.Point) => {
                 if (subscription) subscription.dispose();
+                if (!editor || editor.isDestroyed()) return;
 
                 var range = editor.getSelectedBufferRange();
 
-                subscription = Omni.request(editor, solution => solution.getcodeactions(this.getRequest(solution), { silent: true }))
-                    .subscribe(response => {
+                this.getCodeActionsRequest(editor, true)
+                    .subscribe(ctx => {
+                        var {response} = ctx;
                         if (response.CodeActions.length > 0) {
                             if (marker) {
                                 marker.destroy();
@@ -81,7 +84,7 @@ class CodeAction implements OmniSharp.IFeature {
             cd.add(onDidStopChanging);
 
             cd.add(Observable.combineLatest(onDidChangeCursorPosition, onDidStopChanging, (cursor, changing) => cursor)
-                .observeOn(Scheduler.timeout)
+                .observeOn(Scheduler.async)
                 .debounce(1000)
                 .subscribe(cursor => update(cursor.newBufferPosition)));
 
@@ -104,10 +107,25 @@ class CodeAction implements OmniSharp.IFeature {
         }));
     }
 
-    private getRequest(solution: OmniSharp.ExtendApi): OmniSharp.Models.V2.GetCodeActionsRequest;
-    private getRequest(solution: OmniSharp.ExtendApi, codeAction: string): OmniSharp.Models.V2.RunCodeActionRequest;
-    private getRequest(solution: OmniSharp.ExtendApi, codeAction?: string) {
-        var editor = atom.workspace.getActiveTextEditor();
+    private getCodeActionsRequest(editor: Atom.TextEditor, silent = true) {
+        if (!editor || editor.isDestroyed) return Observable.empty<{ request: OmniSharp.Models.V2.GetCodeActionsRequest; response: OmniSharp.Models.V2.GetCodeActionsResponse }>();
+
+        var request = this.getRequest(editor);
+        return Omni.request(editor, solution => solution.getcodeactions(request))
+            .map(response => ({ request, response }));
+    }
+
+    private runCodeActionRequest(editor: Atom.TextEditor, getRequest: OmniSharp.Models.V2.GetCodeActionsRequest, codeAction: string) {
+        if (!editor || editor.isDestroyed) return Observable.empty<OmniSharp.Models.V2.RunCodeActionResponse>();
+
+        var request = this.getRequest(editor, codeAction);
+        request.Selection = getRequest.Selection;
+        return Omni.request(editor, solution => solution.runcodeaction(request));
+    }
+
+    private getRequest(editor: Atom.TextEditor): OmniSharp.Models.V2.GetCodeActionsRequest;
+    private getRequest(editor: Atom.TextEditor, codeAction: string): OmniSharp.Models.V2.RunCodeActionRequest;
+    private getRequest(editor: Atom.TextEditor, codeAction?: string) {
         var range = <any>editor.getSelectedBufferRange();
         var request = <OmniSharp.Models.V2.RunCodeActionRequest>{
             WantsTextChanges: true,
@@ -132,13 +150,6 @@ class CodeAction implements OmniSharp.IFeature {
 
     public dispose() {
         this.disposable.dispose();
-    }
-
-    public applyAllChanges(changes: OmniSharp.Models.ModifiedFileResponse[]) {
-        return _.each(changes, (change) => {
-            atom.workspace.open(change.FileName, undefined)
-                .then((editor) => { Changes.applyChanges(editor, change); })
-        });
     }
 
     public required = true;

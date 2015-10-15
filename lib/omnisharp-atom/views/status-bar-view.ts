@@ -2,14 +2,10 @@ import {CompositeDisposable, Disposable, Scheduler, Observable} from "rx";
 import _ = require('lodash');
 import Omni = require('../../omni-sharp-server/omni')
 import {Solution} from '../../omni-sharp-server/solution';
-import React = require('react');
-import {ReactClientComponent} from "./react-client-component";
-import {server} from "../features/server-information";
-import {solutionInformation} from "../features/solution-information";
-import {world, statefulProperties} from '../world';
-import {codeCheck} from "../features/code-check";
 import {OmnisharpClientStatus} from "omnisharp-client";
-import {commandRunner, RunProcess} from "../features/command-runner";
+import {server} from "../atom/server-information";
+import {solutionInformation} from "../atom/solution-information";
+import {commandRunner, RunProcess} from "../atom/command-runner";
 import {read, write} from "fastdom";
 
 function addClassIfNotContains(icon: HTMLElement, ...cls: string[]) {
@@ -36,6 +32,14 @@ interface StatusBarState {
     isReady?: boolean;
     isError?: boolean;
     status?: OmnisharpClientStatus;
+}
+
+function updateState(self, state) {
+    _.each(Omni.viewModelStatefulProperties, x => {
+        if (_.has(state, x)) {
+            self[x] = state[x];
+        }
+    });
 }
 
 export class FlameElement extends HTMLAnchorElement implements WebComponent {
@@ -65,28 +69,28 @@ export class FlameElement extends HTMLAnchorElement implements WebComponent {
     }
 
     public updateState(state: typeof FlameElement.prototype._state) {
-        _.assign(this._state, state);
+        updateState(this._state, state);
         var icon = this._icon;
 
-        if (world.isOff) {
+        if (this._state.isOff) {
             removeClassIfContains(icon, 'text-subtle');
         } else {
             addClassIfNotContains(icon, 'text-subtle');
         }
 
-        if (world.isReady) {
+        if (this._state.isReady) {
             addClassIfNotContains(icon, 'text-success');
         } else {
             removeClassIfContains(icon, 'text-success');
         }
 
-        if (world.isError) {
+        if (this._state.isError) {
             addClassIfNotContains(icon, 'text-error');
         } else {
             removeClassIfContains(icon, 'text-error');
         }
 
-        if (world.isConnecting) {
+        if (this._state.isConnecting) {
             addClassIfNotContains(icon, 'icon-flame-loading');
             removeClassIfContains(icon, 'icon-flame-processing');
             removeClassIfContains(icon, 'icon-flame-loading');
@@ -287,7 +291,7 @@ export class StatusBarElement extends HTMLElement implements WebComponent, Rx.ID
     }
 
     public attachedCallback() {
-        this._disposable.add(codeCheck.observe.diagnostics.subscribe(diagnostics => {
+        this._disposable.add(Omni.diagnostics.subscribe(diagnostics => {
             var counts = _.countBy(diagnostics, quickFix => quickFix.LogLevel);
 
             this._diagnostics.updateState({
@@ -296,23 +300,12 @@ export class StatusBarElement extends HTMLElement implements WebComponent, Rx.ID
             })
         }));
 
-        this._disposable.add(world.observe.updates
-            .buffer(world.observe.updates.throttle(500), () => Observable.timer(500))
-            .subscribe(items => {
-                var updates = _(items)
-                    .filter(item => _.contains(statefulProperties, item.name))
-                    .value();
-
-                if (updates.length) {
-                    var update = {};
-                    _.each(updates, item => {
-                        update[item.name] = world[item.name];
-                    });
-                    this._flame.updateState(update);
-                    _.assign(this._state, update);
+        this._disposable.add(Observable.merge(Omni.activeModel, Omni.activeModel.flatMap(x => x.observe.state))
+            .subscribe(model => {
+                    this._flame.updateState(model);
+                    updateState(this._state, model);
 
                     this._updateVisible();
-                }
             }));
 
         this._disposable.add(server.observe.projects
@@ -347,8 +340,6 @@ export class StatusBarElement extends HTMLElement implements WebComponent, Rx.ID
                 var solutionNumber = solutions.length > 1 ? _.trim(server.model && (<any>server.model).index, 'client') : '';
                 this._projectCount.updateSolutionNumber(solutionNumber);
             }));
-
-        _.each(statefulProperties, x => this._state[x] = world[x]);
     }
 
     private _hasValidEditor: boolean = false;
@@ -357,11 +348,11 @@ export class StatusBarElement extends HTMLElement implements WebComponent, Rx.ID
             this._hasValidEditor = hasValidEditor;
         }
 
-        if (world.isOn) {
+        if (this._state.isOn) {
             read(() => this._projectCount.style.display === 'none' && write(() => this._projectCount.style.display = ''));
         }
 
-        if (world.isOn && this._hasValidEditor) {
+        if (this._state.isOn && this._hasValidEditor) {
             this._showOnStateItems();
         } else {
             this._hideOnStateItems();

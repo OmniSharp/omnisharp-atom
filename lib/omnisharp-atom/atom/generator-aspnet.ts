@@ -5,7 +5,8 @@ import React = require('react');
 import {each, delay, any, endsWith, filter} from "lodash";
 import * as fs from "fs";
 import * as path from "path";
-import {solutionInformation} from "../features/solution-information";
+import {solutionInformation} from "../atom/solution-information";
+import {DriverState} from "omnisharp-client";
 
 var readdir = Observable.fromNodeCallback(fs.readdir);
 var stat = Observable.fromNodeCallback(fs.stat);
@@ -69,35 +70,38 @@ class GeneratorAspnet implements OmniSharp.IFeature {
     public activate() {
         this.disposable = new CompositeDisposable();
 
-        this.disposable.add(atom.commands.add('atom-workspace', 'omnisharp-atom:new-project', () =>
-            this.run("aspnet:app --useCurrentDirectory")
-                .then((messages: Yeoman.IMessages) => {
-                    var allMessages = messages.skip
-                        .concat(messages.create)
-                        .concat(messages.identical)
-                        .concat(messages.force);
+        this.disposable.add(atom.commands.add('atom-workspace', 'omnisharp-atom:new-project', () => this.newProject()));
+        this.disposable.add(atom.commands.add('atom-workspace', 'c#:new-project', () => this.newProject()));
 
-                    return Observable.from(['Startup.cs', 'Program.cs', '.cs'])
-                        .concatMap(file => {
-                            return filter(allMessages, message => endsWith(message, file))
-                        })
-                        .take(1)
-                        .map(file => path.join(messages.cwd, file))
-                        .toPromise();
-                })
-                .then(file => {
-                    if (solutionInformation.solutions.length) {
-                        atom.commands.dispatch(atom.views.getView(atom.workspace), 'omnisharp-atom:restart-server');
-                    }
-
-                    atom.workspace.open(file);
-                })
-        ));
         this.disposable.add(atom.commands.add('atom-workspace', 'omnisharp-atom:new-class', () => this.run("aspnet:Class")));
+        this.disposable.add(atom.commands.add('atom-workspace', 'C#:new-class', () => this.run("aspnet:Class")));
 
         each(commands, command => {
             this.disposable.add(atom.commands.add('atom-workspace', `omnisharp-atom:aspnet-${command}`, () => this.run(`aspnet:${command}`)));
         })
+    }
+
+    private newProject() {
+        this.run("aspnet:app --createInDirectory")
+            .then((messages: Yeoman.IMessages) => {
+                var allMessages = messages.skip
+                    .concat(messages.create)
+                    .concat(messages.identical)
+                    .concat(messages.force);
+
+                return Observable.from(['Startup.cs', 'Program.cs', '.cs'])
+                    .concatMap(file => filter(allMessages, message => endsWith(message, file)))
+                    .take(1)
+                    .map(file => path.join(messages.cwd, file))
+                    .toPromise();
+            })
+            .then(file => atom.workspace.open(file))
+            .then(() => Observable.timer(2000).toPromise())
+            .then(() => {
+                if (solutionInformation.solutions.length) {
+                    atom.commands.dispatch(atom.views.getView(atom.workspace), 'omnisharp-atom:restart-server');
+                }
+            });
     }
 
     private run(command: string) {

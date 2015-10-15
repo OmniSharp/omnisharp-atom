@@ -4,7 +4,7 @@ import _ = require('lodash')
 import Omni = require('../../omni-sharp-server/omni')
 import React = require('react');
 import {ReactClientComponent} from "./react-client-component";
-import {server} from '../features/server-information';
+import {server} from '../atom/server-information';
 
 interface IOutputWindowState {
     output: OmniSharp.OutputMessage[];

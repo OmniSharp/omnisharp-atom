@@ -1,6 +1,6 @@
 import {CompositeDisposable} from "rx";
 import Omni = require('../../omni-sharp-server/omni')
-import Changes = require('../services/apply-changes');
+import {applyChanges} from '../services/apply-changes';
 
 class CodeFormat implements OmniSharp.IFeature {
     private disposable: Rx.CompositeDisposable;
@@ -32,8 +32,8 @@ class CodeFormat implements OmniSharp.IFeature {
                 };
 
                 return solution
-                    .formatRangePromise(request)
-                    .then((data) => Changes.applyChanges(editor, data));
+                    .formatRange(request)
+                    .tapOnNext((data) => applyChanges(editor, data));
             });
         }
     }
@@ -48,8 +48,8 @@ class CodeFormat implements OmniSharp.IFeature {
                     Character: char
                 };
 
-                return solution.formatAfterKeystrokePromise(request)
-                    .then((data) => Changes.applyChanges(editor, data));
+                return solution.formatAfterKeystroke(request)
+                    .tapOnNext((data) => applyChanges(editor, data));
             });
         }
         event.preventDefault();

@@ -1,5 +1,5 @@
 import {CompositeDisposable, Observable, Disposable} from "rx";
-import {ProjectViewModel} from "../../omni-sharp-server/view-model";
+import {ProjectViewModel} from "../../omni-sharp-server/project-view-model";
 import Omni = require('../../omni-sharp-server/omni')
 import {FrameworkSelectorComponent} from '../views/framework-selector-view';
 import React = require('react');
@@ -10,7 +10,7 @@ class FrameworkSelector implements OmniSharp.IAtomFeature {
     private tile: any;
     private statusBar: any;
     private _active = false;
-    public project: ProjectViewModel;
+    public project: ProjectViewModel<any>;
     private _component: FrameworkSelectorComponent;
 
     public activate() {
@@ -35,6 +35,7 @@ class FrameworkSelector implements OmniSharp.IAtomFeature {
         this.view.classList.add('inline-block');
         this.view.classList.add('framework-selector');
         this.view.style.display = 'none';
+        
         if (atom.config.get('grammar-selector.showOnRightSideOfStatusBar')) {
             var tile = this.statusBar.addRightTile({
                 item: this.view,
@@ -66,9 +67,19 @@ class FrameworkSelector implements OmniSharp.IAtomFeature {
         this.disposable.add(Omni.activeProject
             .subscribe(project => {
                 this.view.style.display = '';
-                this.project = project;
+
                 var {frameworks, activeFramework} = project;
+                this.project = project;
                 this._component.setState({ frameworks: frameworks, activeFramework });
+            }));
+
+        this.disposable.add(Omni.activeFramework
+            .subscribe(ctx => {
+                this.view.style.display = '';
+
+                var {project, framework} = ctx;
+                this.project = project;
+                this._component.setState({ frameworks: project.frameworks, activeFramework: framework });
             }));
     }
 

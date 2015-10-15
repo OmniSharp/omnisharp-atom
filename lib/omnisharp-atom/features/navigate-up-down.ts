@@ -15,8 +15,8 @@ class Navigate implements OmniSharp.IFeature {
             return this.navigateDown();
         }));
 
-        this.disposable.add(Omni.listener.observeNavigateup.subscribe((data) => this.navigateTo(data.response)));
-        this.disposable.add(Omni.listener.observeNavigatedown.subscribe((data) => this.navigateTo(data.response)));
+        this.disposable.add(Omni.listener.navigateup.subscribe((data) => this.navigateTo(data.response)));
+        this.disposable.add(Omni.listener.navigatedown.subscribe((data) => this.navigateTo(data.response)));
     }
 
     public dispose() {

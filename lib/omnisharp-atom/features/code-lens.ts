@@ -1,7 +1,4 @@
 import _ = require('lodash');
-//import spacePenViews = require('atom-space-pen-views')
-//var $ = spacePenViews.jQuery;
-import $ = require('jquery');
 import {CompositeDisposable, Observable, Disposable, Subject, Scheduler} from "rx";
 import Omni = require('../../omni-sharp-server/omni');
 import {DriverState} from "omnisharp-client";
@@ -110,10 +107,10 @@ class CodeLens implements OmniSharp.IFeature {
         }
 
         return Omni.request(editor, solution => solution.currentfilemembersasflat({ Buffer: null, Changes: null }))
-            .observeOn(Scheduler.timeout)
+            .observeOn(Scheduler.async)
             .where(fileMembers => !!fileMembers)
             .flatMap(fileMembers => Observable.from(fileMembers))
-            .flatMap(fileMember => {
+            .concatMap(fileMember => {
                 var range: TextBuffer.Range = <any>editor.getBuffer().rangeForRow(fileMember.Line, false);
                 var marker: Atom.Marker = (<any>editor).markBufferRange(range, { invalidate: 'inside' });
 
@@ -184,7 +181,7 @@ export class Lens implements Rx.IDisposable {
         this._path = _editor.getPath();
 
         this._updateObservable = this._update
-            .observeOn(Scheduler.timeout)
+            .observeOn(Scheduler.async)
             .where(x => !!x)
             .flatMap(() => Omni.request(this._editor, solution =>
                 solution.findusages({ FileName: this._path, Column: this._member.Column + 1, Line: this._member.Line, Buffer: null, Changes: null }, { silent: true })))

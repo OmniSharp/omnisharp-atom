@@ -84,12 +84,11 @@ class Dock implements OmniSharp.IAtomFeature {
 
         this._panes.push({ id, title, view, props, options, disposable });
 
-        cd.add(atom.commands.add('atom-workspace', "omnisharp-atom:show-" + id, () => this.selectWindow(id)));
-        cd.add(atom.commands.add('atom-workspace', "omnisharp-atom:toggle-" + id, () => this.toggleWindow(id)));
-
+        cd.add(atom.commands.add('atom-workspace', "omnisharp-dock:show-" + _.kebabCase(title), () => this.selectWindow(id)));
+        cd.add(atom.commands.add('atom-workspace', "omnisharp-dock:toggle-" + _.kebabCase(title), () => this.toggleWindow(id)));
 
         if (options.closeable) {
-            cd.add(atom.commands.add('atom-workspace', "omnisharp-atom:close-" + id, () => {
+            cd.add(atom.commands.add('atom-workspace', "omnisharp-dock:close-" + id, () => {
                 this.disposable.remove(disposable);
                 if (this.dock.selected === id) {
                     this.dock.state.selected = 'output';

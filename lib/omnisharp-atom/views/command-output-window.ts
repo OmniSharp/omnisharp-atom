@@ -3,8 +3,6 @@ import _ = require('lodash')
 import Omni = require('../../omni-sharp-server/omni')
 import React = require('react');
 import {ReactClientComponent} from "./react-client-component";
-import {world} from '../world';
-
 
 interface ICommandOutputWindowState {
     output: { message: string }[];

@@ -13,14 +13,20 @@ class NotificationHandler implements OmniSharp.IFeature {
 
         this.packageRestoreNotification = new PackageRestoreNotification();
 
-        this.disposable.add(Omni.listener.packageRestoreStarted.subscribe(this.packageRestoreNotification.handlePackageRestoreStarted));
-        this.disposable.add(Omni.listener.packageRestoreFinished.subscribe(this.packageRestoreNotification.handlePackageRestoreFinished));
-        this.disposable.add(Omni.listener.unresolvedDependencies.subscribe(this.packageRestoreNotification.handleUnresolvedDependencies));
+        this.disposable.add(Omni.listener.packageRestoreStarted.subscribe(e =>
+            this.packageRestoreNotification.handlePackageRestoreStarted(e)));
+            
+        this.disposable.add(Omni.listener.packageRestoreFinished.subscribe(e =>
+            this.packageRestoreNotification.handlePackageRestoreFinished(e)));
+
+        this.disposable.add(Omni.listener.unresolvedDependencies.subscribe(e =>
+            this.packageRestoreNotification.handleUnresolvedDependencies(e)));
+
         this.disposable.add(Omni.listener.events
             .where(z => z.Event === "log")
-            .where(z => z.Body.Name === "OmniSharp.AspNet5.PackagesRestoreTool")
+            .where(z => z.Body.Name === "OmniSharp.Dnx.PackagesRestoreTool")
             .where(z => z.Body.Message.startsWith('Installing'))
-            .subscribe(this.packageRestoreNotification.handleEvents));
+            .subscribe(e => this.packageRestoreNotification.handleEvents(e)));
     }
 
     public dispose() {

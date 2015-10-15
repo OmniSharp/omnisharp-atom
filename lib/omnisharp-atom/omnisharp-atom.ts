@@ -6,13 +6,10 @@ import fs = require('fs');
 
 // TODO: Remove these at some point to stream line startup.
 import Omni = require('../omni-sharp-server/omni');
-import {world} from './world';
 var win32 = process.platform === "win32";
 
 class OmniSharpAtom {
     private disposable: Rx.CompositeDisposable;
-    private menu: EventKit.Disposable;
-
     // Internal: Used by unit testing to make sure the plugin is completely activated.
     private _started: AsyncSubject<boolean>;
     private _activated: AsyncSubject<boolean>;
@@ -27,35 +24,12 @@ class OmniSharpAtom {
         this.configureKeybindings();
 
         this.disposable.add(atom.commands.add('atom-workspace', 'omnisharp-atom:toggle', () => this.toggle()));
-        this.disposable.add(atom.commands.add('atom-workspace', 'omnisharp-atom:settings', () => atom.workspace.open('atom://config/packages/omnisharp-atom')
+        this.disposable.add(atom.commands.add('atom-workspace', 'omnisharp-atom:settings', () => atom.workspace.open('atom://config/packages')
             .then(tab => {
                 if (tab && tab.getURI && tab.getURI() !== 'atom://config/packages/omnisharp-atom') {
                     atom.workspace.open('atom://config/packages/omnisharp-atom');
                 }
             })));
-
-        var whiteList = atom.config.get<boolean>("omnisharp-atom:feature-white-list");
-        var featureList = atom.config.get<string[]>('omnisharp-atom:feature-list');
-
-        var whiteListUndefined = (typeof whiteList === 'undefined');
-
-        var started = Observable.concat( // Concat is important here, atom features need to be bootstrapped first.
-            this.getFeatures(featureList, whiteList, "atom"),
-            this.getFeatures(featureList, whiteList, "features")
-        ).filter(l => {
-            if (typeof whiteList === 'undefined') {
-                return true;
-            }
-
-            if (whiteList) {
-                return _.contains(featureList, l.file);
-            } else {
-                return !_.contains(featureList, l.file);
-            }
-        })
-            .concatMap(z => z.load())
-            .toArray()
-            .share();
 
         require('atom-package-deps').install('omnisharp-atom')
             .then(() => {
@@ -63,116 +37,42 @@ class OmniSharpAtom {
                 Omni.activate();
                 this.disposable.add(Omni);
 
-                world.activate();
-                this.disposable.add(world);
-
                 this._started.onNext(true);
                 this._started.onCompleted();
-            });
+            })
+            .then(() => this.loadFeatures(this.getFeatures("atom").delay(2000)).toPromise())
+            .then(() => {
+                var startingObservable = Omni.activeSolution
+                    .where(z => !!z)
+                    .take(1);
 
-            var startingObservable = Omni.activeSolution
-                .where(z => !!z)
-                .take(1);
+                if (Omni['_kick_in_the_pants_']) {
+                    startingObservable = Observable.just(null);
+                }
 
-            if (Omni['_kick_in_the_pants_']) {
-                startingObservable = Observable.just(null);
-            }
-
-        // Only activate features once we have a solution!
-        this.disposable.add(startingObservable
-            .flatMap(() => started)
-            .subscribe(features => {
-                console.info("Activating omnisharp-atom...");
-                (<any>atom.config).setSchema('omnisharp-atom', {
-                    type: 'object',
-                    properties: this.config
-                });
-
-                var deferred = [];
-                _.each(features, f => {
-                    var {key, value} = f;
-
-                    // Whitelist is used for unit testing, we don't want the config to make changes here
-                    if (whiteListUndefined && _.has(this.config, key)) {
-                        var configKey = `omnisharp-atom.${key}`;
-                        var enableDisposable: Rx.IDisposable, disableDisposable: Rx.IDisposable;
-                        this.disposable.add(atom.config.observe(configKey, enabled => {
-                            if (!enabled) {
-                                if (disableDisposable) {
-                                    disableDisposable.dispose();
-                                    this.disposable.remove(disableDisposable);
-                                    disableDisposable = null;
-                                }
-
-                                try { value.dispose(); } catch (ex) { }
-
-                                enableDisposable = atom.commands.add('atom-workspace', `omnisharp-atom:enable-${_.kebabCase(key) }`, () => atom.config.set(configKey, true));
-                                this.disposable.add(enableDisposable);
-                            } else {
-                                if (enableDisposable) {
-                                    enableDisposable.dispose();
-                                    this.disposable.remove(disableDisposable);
-                                    enableDisposable = null;
-                                }
-
-                                value.activate();
-
-                                if (_.isFunction(value['attach'])) {
-                                    if (deferred)
-                                        deferred.push(() => value['attach']());
-                                    else
-                                        value['attach']();
-                                }
-
-                                disableDisposable = atom.commands.add('atom-workspace', `omnisharp-atom:disable-${_.kebabCase(key) }`, () => atom.config.set(configKey, false));
-                                this.disposable.add(disableDisposable);
-                            }
+                // Only activate features once we have a solution!
+                this.disposable.add(startingObservable
+                    .flatMap(() => this.loadFeatures(this.getFeatures("features")))
+                    .subscribeOnCompleted(() => {
+                        this.disposable.add(atom.workspace.observeTextEditors((editor: Atom.TextEditor) => {
+                            this.detectAutoToggleGrammar(editor);
                         }));
 
-                        this.disposable.add(atom.commands.add('atom-workspace', `omnisharp-atom:toggle-${_.kebabCase(key) }`, () => atom.config.set(configKey, !atom.config.get(configKey))));
-                    } else {
-                        value.activate();
+                        this._activated.onNext(true);
+                        this._activated.onCompleted();
+                    }));
 
-                        if (_.isFunction(value['attach'])) {
-                            deferred.push(() => value['attach']());
-                        }
-                    }
-
-                    this.disposable.add(Disposable.create(() => { try { value.dispose() } catch (ex) { } }));
-                });
-                _.each(deferred, x => x());
-                deferred = null;
-
-                this.disposable.add(atom.workspace.observeTextEditors((editor: Atom.TextEditor) => {
-                    this.detectAutoToggleGrammar(editor);
-                }));
-
-                this._activated.onNext(true);
-                this._activated.onCompleted();
-            }));
-    }
-
-    private _packageDir: string;
-    public getPackageDir() {
-        if (!this._packageDir) {
-            console.info(`getPackageDirPaths: ${atom.packages.getPackageDirPaths() }`);
-            this._packageDir = _.find(atom.packages.getPackageDirPaths(), function(packagePath) {
-                console.info(`packagePath ${packagePath} exists: ${fs.existsSync(path.join(packagePath, "omnisharp-atom")) }`);
-                return fs.existsSync(path.join(packagePath, "omnisharp-atom"));
             });
-
-            // Fallback, this is for unit testing on travis mainly
-            if (!this._packageDir) {
-                this._packageDir = path.resolve(__dirname, '../../..');
-            }
-        }
-        return this._packageDir;
     }
 
-    public getFeatures(featureList: string[], whiteList: boolean, folder: string) {
+    public getFeatures(folder: string) {
+        var whiteList = atom.config.get<boolean>("omnisharp-atom:feature-white-list");
+        var featureList = atom.config.get<string[]>('omnisharp-atom:feature-list');
+        var whiteListUndefined = (typeof whiteList === 'undefined');
+
         console.info(`Getting features for '${folder}'...`);
 
-        var packageDir = this.getPackageDir();
+        var packageDir = Omni.packageDir;
         var featureDir = `${packageDir}/omnisharp-atom/lib/omnisharp-atom/${folder}`;
 
         function loadFeature(file: string) {
@@ -181,17 +81,17 @@ class OmniSharpAtom {
             return result;//_.values(result).filter(feature => !_.isFunction(feature));
         }
 
-        return Observable.fromNodeCallback(fs.readdir)(featureDir)
+        return Observable.fromNodeCallback<string[], string>(fs.readdir)(featureDir)
             .flatMap(files => Observable.from(files))
             .where(file => /\.js$/.test(file))
-            .flatMap(file => Observable.fromNodeCallback(fs.stat)(`${featureDir}/${file}`).map(stat => ({ file, stat })))
+            .flatMap(file => Observable.fromNodeCallback<fs.Stats, string>(fs.stat)(`${featureDir}/${file}`).map(stat => ({ file, stat })))
             .where(z => !z.stat.isDirectory())
             .map(z => ({
                 file: `${folder}/${path.basename(z.file) }`.replace(/\.js$/, ''),
                 load: () => {
                     var feature = loadFeature(z.file);
 
-                    var features: { key: string, value: OmniSharp.IFeature }[] = [];
+                    var features: { key: string, activate: () => () => void }[] = [];
                     _.each(feature, (value: OmniSharp.IFeature, key: string) => {
                         if (!_.isFunction(value)) {
                             if (!value.required) {
@@ -201,16 +101,112 @@ class OmniSharpAtom {
                                     type: 'boolean',
                                     default: (_.has(value, 'default') ? value.default : true)
                                 };
-                                //OmniSharpAtom.config.features.default[key] = (_.has(value, 'default') ? value.default : true);
                             }
 
-                            features.push({ key, value });
+                            features.push({
+                                key, activate: () => {
+                                    return this.activateFeature(whiteListUndefined, key, value);
+                                }
+                            });
                         }
                     });
 
-                    return Observable.from<{ key: string, value: OmniSharp.IFeature }>(features);
+                    return Observable.from<{ key: string, activate: () => () => void }>(features);
                 }
+            }))
+            .filter(l => {
+                if (typeof whiteList === 'undefined') {
+                    return true;
+                }
+
+                if (whiteList) {
+                    return _.contains(featureList, l.file);
+                } else {
+                    return !_.contains(featureList, l.file);
+                }
+            });
+    }
+
+    public loadFeatures(features: Observable<{ file: string; load: () => Observable<{ key: string, activate: () => () => void }> }>) {
+        return features
+            .concatMap(z => z.load())
+            .toArray()
+            .concatMap(x => x)
+            .map(f => f.activate())
+            .where(x => !!x)
+            .toArray()
+            .tapOnCompleted(() => {
+                (<any>atom.config).setSchema('omnisharp-atom', {
+                    type: 'object',
+                    properties: this.config
+                });
+            })
+            .concatMap(x => x)
+            .tapOnNext(x => x());
+    }
+
+    public activateFeature(whiteListUndefined, key: string, value: OmniSharp.IFeature) {
+        var result: () => void = null;
+        var firstRun = true;
+
+        // Whitelist is used for unit testing, we don't want the config to make changes here
+        if (whiteListUndefined && _.has(this.config, key)) {
+            var configKey = `omnisharp-atom.${key}`;
+            var enableDisposable: Rx.IDisposable, disableDisposable: Rx.IDisposable;
+            this.disposable.add(atom.config.observe(configKey, enabled => {
+                if (!enabled) {
+                    if (disableDisposable) {
+                        disableDisposable.dispose();
+                        this.disposable.remove(disableDisposable);
+                        disableDisposable = null;
+                    }
+
+                    try { value.dispose(); } catch (ex) { }
+
+                    enableDisposable = atom.commands.add('atom-workspace', `omnisharp-feature:enable-${_.kebabCase(key) }`, () => atom.config.set(configKey, true));
+                    this.disposable.add(enableDisposable);
+                } else {
+                    if (enableDisposable) {
+                        enableDisposable.dispose();
+                        this.disposable.remove(disableDisposable);
+                        enableDisposable = null;
+                    }
+
+                    console.info(`Activating feature '${key}'...`);
+                    value.activate();
+
+                    if (_.isFunction(value['attach'])) {
+                        if (firstRun)
+                            result = () => {
+                                console.info(`Attaching feature '${key}'...`);
+                                value['attach']();
+                            };
+                        else {
+                            console.info(`Attaching feature '${key}'...`);
+                            value['attach']();
+                        }
+                    }
+
+                    disableDisposable = atom.commands.add('atom-workspace', `omnisharp-feature:disable-${_.kebabCase(key) }`, () => atom.config.set(configKey, false));
+                    this.disposable.add(disableDisposable);
+                }
+                firstRun = false;
             }));
+
+            this.disposable.add(atom.commands.add('atom-workspace', `omnisharp-feature:toggle-${_.kebabCase(key) }`, () => atom.config.set(configKey, !atom.config.get(configKey))));
+        } else {
+            value.activate();
+
+            if (_.isFunction(value['attach'])) {
+                result = () => {
+                    console.info(`Attaching feature '${key}'...`);
+                    value['attach']();
+                };
+            }
+        }
+
+        this.disposable.add(Disposable.create(() => { try { value.dispose() } catch (ex) { } }));
+        return result;
     }
 
     private detectAutoToggleGrammar(editor: Atom.TextEditor) {
@@ -222,10 +218,6 @@ class OmniSharpAtom {
     private detectGrammar(editor: Atom.TextEditor, grammar: FirstMate.Grammar) {
         if (!atom.config.get('omnisharp-atom.autoStartOnCompatibleFile')) {
             return; //short out, if setting to not auto start is enabled
-        }
-
-        if (Omni.isOn && !this.menu) {
-            this.toggleMenu();
         }
 
         if (Omni.isValidGrammar(grammar)) {
@@ -241,25 +233,11 @@ class OmniSharpAtom {
         }
     }
 
-    private toggleMenu() {
-        var menuJsonFile = this.getPackageDir() + "/omnisharp-atom/menus/omnisharp-menu.json";
-        var menuJson = JSON.parse(fs.readFileSync(menuJsonFile, 'utf8'));
-        this.menu = atom.menu.add(menuJson.menu);
-        this.disposable.add(this.menu);
-    }
-
     public toggle() {
         if (Omni.isOff) {
             Omni.connect();
-            this.toggleMenu();
         } else if (Omni.isOn) {
             Omni.disconnect();
-
-            if (this.menu) {
-                this.disposable.remove(this.menu);
-                this.menu.dispose();
-                this.menu = null;
-            }
         }
     }
 
@@ -310,7 +288,7 @@ class OmniSharpAtom {
     }
 
     private configureKeybindings() {
-        var omnisharpFileNew = this.getPackageDir() + "/omnisharp-atom/keymaps/omnisharp-file-new.cson";
+        var omnisharpFileNew = Omni.packageDir + "/omnisharp-atom/keymaps/omnisharp-file-new.cson";
         this.disposable.add(atom.config.observe("omnisharp-atom.enableAdvancedFileNew", (enabled) => {
             if (enabled) {
                 atom.keymaps.loadKeymap(omnisharpFileNew);
@@ -320,7 +298,7 @@ class OmniSharpAtom {
         }));
 
         var disposable: EventKit.Disposable;
-        var omnisharpAdvancedFileNew = this.getPackageDir() + "/omnisharp-atom/keymaps/omnisharp-advanced-file-new.cson";
+        var omnisharpAdvancedFileNew = Omni.packageDir + "/omnisharp-atom/keymaps/omnisharp-advanced-file-new.cson";
         this.disposable.add(atom.config.observe("omnisharp-atom.useAdvancedFileNew", (enabled) => {
             if (enabled) {
                 atom.keymaps.loadKeymap(omnisharpAdvancedFileNew);

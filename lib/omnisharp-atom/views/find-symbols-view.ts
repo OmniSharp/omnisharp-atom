@@ -3,11 +3,11 @@ import Omni = require('../../omni-sharp-server/omni');
 
 class FindSymbolsView extends OmniSelectListView {
 
-     constructor() {
-            super("Find Symbols");
+    constructor() {
+        super("Find Symbols");
 
-            this.setMaxItems(50);
-        }
+        this.setMaxItems(50);
+    }
 
     public viewForItem(item) {
         return '<li>' +
@@ -16,7 +16,7 @@ class FindSymbolsView extends OmniSelectListView {
             '<span>' + item.Text + '</span>' +
             '</span>' +
             '<br/>' +
-            '<span class="filename">'+ atom.project.relativizePath(item.FileName)[1] + ':' + item.Line + '</span>' +
+            '<span class="filename">' + atom.project.relativizePath(item.FileName)[1] + ':' + item.Line + '</span>' +
             '</li>';
     }
 
@@ -32,12 +32,8 @@ class FindSymbolsView extends OmniSelectListView {
         return null;
     }
 
-    public onFilter(filter : string) : void {
-        Omni.request(solution => {
-            return solution.findsymbolsPromise({
-                Filter: filter
-            });
-        });
+    public onFilter(filter: string): void {
+        Omni.request(solution =>  solution.findsymbols({ Filter: filter }));
     }
 
     public getMinQueryLength() {

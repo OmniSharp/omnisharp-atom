@@ -3,10 +3,10 @@ import Omni = require('../../lib/omni-sharp-server/omni');
 import {Observable, CompositeDisposable} from "rx";
 import {setupFeature, restoreBuffers, openEditor} from "../test-helpers";
 var win32 = process.platform === "win32";
-import {getDnxExe} from "../../lib/omnisharp-atom/features/command-runner";
+import {getDnxExe} from "../../lib/omnisharp-atom/atom/command-runner";
 
 describe('Command Runner', () => {
-    setupFeature(['features/command-runner']);
+    setupFeature(['atom/command-runner']);
 
     it('adds commands', () => {
         var disposable = new CompositeDisposable();

@@ -106,8 +106,12 @@ export var provider = [
         lint: (editor: Atom.TextEditor) => {
             if (!Omni.isValidGrammar(editor.getGrammar())) return Promise.resolve([]);
 
-            return codeCheck.doCodeCheck(editor)
+            codeCheck.doCodeCheck(editor);
+            var path = editor.getPath();
+            return Omni.diagnostics
+                .take(1)
                 .flatMap(x => x)
+                .where(z =>z.FileName === path)
                 .where(z => z.LogLevel !== "Hidden")
                 .map(error => mapValues(editor, error))
                 .toArray()

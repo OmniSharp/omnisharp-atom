@@ -1,6 +1,6 @@
 import _ = require('lodash');
 import {Observable, Subject, CompositeDisposable, Disposable} from 'rx';
-import {OmnisharpClientV2, DriverState, OmnisharpClientOptions} from "omnisharp-client";
+import {ClientV2, DriverState, OmnisharpClientOptions} from "omnisharp-client";
 
 interface SolutionOptions extends OmnisharpClientOptions {
     temporary: boolean;
@@ -10,7 +10,7 @@ interface SolutionOptions extends OmnisharpClientOptions {
 
 import {ViewModel} from "./view-model";
 
-export class Solution extends OmnisharpClientV2 {
+export class Solution extends ClientV2 {
     public model: ViewModel;
     public logs: Observable<OmniSharp.OutputMessage>;
     public path: string;
@@ -32,23 +32,23 @@ export class Solution extends OmnisharpClientV2 {
         this.repository = options.repository;
         this.setupRepository();
         this._solutionDisposable.add(this.model);
+
+        this.registerFixup((action: string, request: any, options?: OmniSharp.RequestOptions) => this._fixupRequest(action, request));
     }
 
     public toggle() {
         if (this.currentState === DriverState.Disconnected) {
             var path = atom && atom.project && atom.project.getPaths()[0];
-            this.connect({
-                projectPath: path
-            });
+            this.connect();
         } else {
             this.disconnect();
         }
     }
 
-    public connect(options?) {
+    public connect() {
         if (this.isDisposed) return;
         if (this.currentState === DriverState.Connected || this.currentState === DriverState.Connecting) return;
-        super.connect(options);
+        super.connect();
 
         this.log("Starting OmniSharp server (pid:" + this.id + ")");
         this.log("OmniSharp Location: " + this.serverPath);
@@ -91,7 +91,7 @@ export class Solution extends OmnisharpClientV2 {
     }
 
     private static _regex = new RegExp(String.fromCharCode(0xFFFD), 'g');
-    private _fixupRequest<TRequest, TResponse>(action: string, request: TRequest, cb: () => Rx.Observable<TResponse>) {
+    private _fixupRequest<TRequest, TResponse>(action: string, request: TRequest) {
         // Only send changes for requests that really need them.
         if (this._currentEditor && _.isObject(request)) {
             var editor = this._currentEditor;
@@ -123,8 +123,6 @@ export class Solution extends OmnisharpClientV2 {
         if (request['Buffer']) {
             request['Buffer'] = request['Buffer'].replace(Solution._regex, '');
         }
-
-        return cb();
     }
 
     public request<TRequest, TResponse>(action: string, request?: TRequest, options?: OmniSharp.RequestOptions): Rx.Observable<TResponse> {
@@ -165,23 +163,5 @@ export class Solution extends OmnisharpClientV2 {
         return this.state.startWith(this.currentState)
             .where(x => x === DriverState.Connected)
             .take(1);
-    }
-}
-
-for (var key in Solution.prototype) {
-    if (_.endsWith(key, 'Promise')) {
-        (function() {
-            var action = key.replace(/Promise$/, '');
-            var promiseMethod = Solution.prototype[key];
-            var observableMethod = Solution.prototype[action];
-
-            Solution.prototype[key] = function(request, options) {
-                return this._fixupRequest(action, request, () => promiseMethod.call(this, request, options));
-            };
-
-            Solution.prototype[action] = function(request, options) {
-                return this._fixupRequest(action, request, () => observableMethod.call(this, request, options));
-            };
-        })();
     }
 }

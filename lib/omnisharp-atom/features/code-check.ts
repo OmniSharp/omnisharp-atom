@@ -9,21 +9,15 @@ import {reloadWorkspace} from "./reload-workspace";
 
 class CodeCheck implements OmniSharp.IFeature {
     private disposable: Rx.CompositeDisposable;
-    public observe: {
-        diagnostics: Observable<OmniSharp.Models.DiagnosticLocation[]>;
-        updated: Observable<Rx.ObjectObserveChange<CodeCheck>>;
-    };
 
-    private diagnostics: OmniSharp.Models.DiagnosticLocation[] = [];
     public displayDiagnostics: OmniSharp.Models.DiagnosticLocation[] = [];
     public selectedIndex: number = 0;
     private scrollTop: number = 0;
     private _editorSubjects = new WeakMap<Atom.TextEditor, () => Rx.Observable<OmniSharp.Models.DiagnosticLocation[]>>();
-    private _fullCodeCheck : Subject<any>;
+    private _fullCodeCheck: Subject<any>;
 
     public activate() {
         this.disposable = new CompositeDisposable();
-        this.setup();
 
         this._fullCodeCheck = new Subject<any>();
         this.disposable.add(this._fullCodeCheck);
@@ -80,13 +74,12 @@ class CodeCheck implements OmniSharp.IFeature {
             cd.add(Omni.whenEditorConnected(editor).subscribe(() => this.doCodeCheck(editor)));
         }));*/
 
-        this.disposable.add(this.observe.diagnostics
+        this.disposable.add(Omni.diagnostics
             .subscribe(diagnostics => {
-                this.diagnostics = diagnostics;
                 this.displayDiagnostics = this.filterOnlyWarningsAndErrors(diagnostics);
             }));
 
-        this.disposable.add(this.observe.diagnostics.subscribe(s => {
+        this.disposable.add(Omni.diagnostics.subscribe(s => {
             this.scrollTop = 0;
             this.selectedIndex = 0;
         }));
@@ -97,7 +90,20 @@ class CodeCheck implements OmniSharp.IFeature {
             codeCheck: this
         }));
 
-        this.disposable.add(Omni.listener.packageRestoreFinished.subscribe(() => this.doFullCodeCheck()));
+        var started = 0, finished = 0;
+        this.disposable.add(Observable.combineLatest(
+            Omni.listener.packageRestoreStarted.map(x => started++),
+            Omni.listener.packageRestoreFinished.map(x => finished++),
+            (s, f) => s === f)
+            .where(r => r)
+            .debounce(2000)
+            .subscribe(() => {
+                started = 0;
+                finished = 0;
+                this.doFullCodeCheck();
+            }));
+
+        this.disposable.add(Omni.listener.packageRestoreFinished.debounce(3000).subscribe(() => this.doFullCodeCheck()));
         this.disposable.add(atom.commands.add('atom-workspace', 'omnisharp-atom:code-check', () => this.doFullCodeCheck()));
 
         this.disposable.add(this._fullCodeCheck
@@ -134,62 +140,6 @@ class CodeCheck implements OmniSharp.IFeature {
             this.selectedIndex = index;
     }
 
-    private setup() {
-        /**
-        * monitor configuration
-        */
-        var showDiagnosticsForAllSolutions = (() => {
-            // Get a subject that will give us the state of the value right away.
-            let subject = new ReplaySubject<boolean>(1);
-            this.disposable.add(subject.subscribe(x => currentlyEnabled = x));
-            subject.onNext(atom.config.get<boolean>("omnisharp-atom.showDiagnosticsForAllSolutions"));
-
-            this.disposable.add(atom.config.onDidChange("omnisharp-atom.showDiagnosticsForAllSolutions", function() {
-                let enabled = atom.config.get<boolean>("omnisharp-atom.showDiagnosticsForAllSolutions");
-                subject.onNext(enabled);
-            }));
-
-            this.disposable.add(subject);
-            return <Observable<boolean>>subject;
-        })();
-
-        // Cache this result, because the underlying implementation of observe will
-        //    create a cache of the last recieved value.  This allows us to pick pick
-        //    up from where we left off.
-        var combinationObservable = Omni.aggregateListener.observe(z => z.observeCodecheck
-            .where(z => !z.request.FileName) // Only select file names
-            .map(z => <OmniSharp.Models.DiagnosticLocation[]>z.response.QuickFixes));
-
-        var diagnostics = Observable.combineLatest( // Combine both the active model and the configuration changes together
-            Omni.activeModel.startWith(null), showDiagnosticsForAllSolutions,
-            (model, enabled) => ({ model, enabled }))
-        // If the setting is enabled (and hasn't changed) then we don't need to redo the subscription
-            .where(ctx => (!currentlyEnabled && ctx.enabled === currentlyEnabled))
-            .flatMapLatest(ctx => {
-                var {enabled, model} = ctx;
-                currentlyEnabled = enabled;
-
-                if (enabled) {
-                    return combinationObservable
-                        .map(z => z.map(z => z.value || [])) // value can be null!
-                        .debounce(200)
-                        .map(data => _.flatten<OmniSharp.Models.DiagnosticLocation>(data));
-                } else if (model) {
-                    return model.observe.codecheck;
-                }
-
-                return Observable.just(<OmniSharp.Models.DiagnosticLocation[]>[]);
-            })
-            .startWith([])
-            .share();
-
-
-        var updated = Observable.ofObjectChanges(this);
-        this.observe = { diagnostics, updated };
-
-        this.disposable.add(diagnostics.subscribe(items => this.diagnostics = items));
-    }
-
     public dispose() {
         this.disposable.dispose();
     }
@@ -199,9 +149,7 @@ class CodeCheck implements OmniSharp.IFeature {
     };
 
     public doCodeCheck(editor: Atom.TextEditor) {
-        if (!this._editorSubjects.has(editor)) return Observable.just<OmniSharp.Models.DiagnosticLocation[]>([]);
-        var callback = this._editorSubjects.get(editor);
-        return callback();
+        this._doCodeCheck(editor);
     }
 
     public required = true;

@@ -12,7 +12,7 @@
 /// <reference path="typingsTemp/space-pen/space-pen.d.ts" />
 /// <reference path="typingsTemp/status-bar/status-bar.d.ts" />
 /// <reference path="typingsTemp/text-buffer/text-buffer.d.ts" />
-/// <reference path="node_modules/rx/ts/rx.all.d.ts" />
+/// <reference path="node_modules/rx/ts/rx.all.es6.d.ts" />
 /// <reference path="node_modules/omnisharp-client/omnisharp-client.d.ts" />
 /// <reference path="typings/bluebird/bluebird.d.ts" />
 /// <reference path="typings/jquery/jquery.d.ts" />
@@ -20,13 +20,8 @@
 /// <reference path="typings/node/node.d.ts" />
 /// <reference path="typings/q/Q.d.ts" />
 /// <reference path="typings/react/react.d.ts" />
+/// <reference path="typings/xml2js/xml2js.d.ts" />
 /// <reference path="typings/semver/semver.d.ts" />
-
-declare module chai {
-    interface Assert {
-        isAbove(valueToCheck: number, valueToBeAbove: number, message?: string);
-    }
-}
 
 declare module _ {
     interface LoDashStatic {

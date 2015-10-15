@@ -34,7 +34,7 @@ class RunTests implements OmniSharp.IFeature {
             get output() { return output; }
         };
 
-        this.disposable.add(Omni.listener.observeGettestcontext.subscribe((data) => {
+        this.disposable.add(Omni.listener.gettestcontext.subscribe((data) => {
             this.ensureWindowIsCreated();
             this.executeTests(data.response);
         }));
@@ -61,9 +61,7 @@ class RunTests implements OmniSharp.IFeature {
     }
 
     private makeRequest(type: TestCommandType) {
-        Omni.request(solution => solution.gettestcontextPromise({
-            Type: <any>type
-        }));
+        Omni.request(solution => solution.gettestcontext({ Type: <any>type }));
     }
 
     private executeTests(response: OmniSharp.Models.GetTestCommandResponse) {
@@ -77,7 +75,7 @@ class RunTests implements OmniSharp.IFeature {
         });
 
         child.stderr.on('data', (data) => {
-            this.testResults.push({message: data, logLevel: 'fail' });
+            this.testResults.push({ message: data, logLevel: 'fail' });
         });
 
         dock.selectWindow('test-output');
@@ -90,9 +88,9 @@ class RunTests implements OmniSharp.IFeature {
             var windowDisposable = dock.addWindow('test-output', 'Test output', TestResultsWindow, {
                 runTests: this
             }, {
-                priority: 2000,
-                closeable: true
-            }, this.window);
+                    priority: 2000,
+                    closeable: true
+                }, this.window);
             this.window.add(windowDisposable);
             this.window.add(Disposable.create(() => {
                 this.disposable.remove(this.window);

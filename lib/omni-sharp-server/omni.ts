@@ -4,15 +4,19 @@ import {Solution} from "./solution";
 import _ = require('lodash');
 import {basename} from "path";
 import {DriverState} from "omnisharp-client";
-import {ProjectViewModel} from "./view-model";
+import {ProjectViewModel} from "./project-view-model";
+import {ViewModel} from "./view-model";
+import * as fs from "fs";
+import * as path from "path";
 
 // Time we wait to try and do our active switch tasks.
 const DEBOUNCE_TIMEOUT = 100;
+var statefulProperties = ['isOff', 'isConnecting', 'isOn', 'isReady', 'isError'];
 
 function wrapEditorObservable(observable: Observable<Atom.TextEditor>) {
     return observable
-        .subscribeOn(Scheduler.timeout)
-        .observeOn(Scheduler.timeout)
+        .subscribeOn(Scheduler.async)
+        .observeOn(Scheduler.async)
         .debounce(DEBOUNCE_TIMEOUT)
         .where(editor => !editor || !editor.isDestroyed());
 }
@@ -22,6 +26,8 @@ class Omni implements Rx.IDisposable {
 
     private _editors: Observable<Atom.TextEditor>;
     private _configEditors: Observable<Atom.TextEditor>;
+
+    public get viewModelStatefulProperties() { return statefulProperties }
 
     private _activeEditorSubject = new BehaviorSubject<Atom.TextEditor>(null);
     private _activeEditor = wrapEditorObservable(this._activeEditorSubject)
@@ -34,15 +40,18 @@ class Omni implements Rx.IDisposable {
     private _activeEditorOrConfigEditor = wrapEditorObservable(Observable.combineLatest(this._activeEditorSubject, this._activeConfigEditorSubject, (editor, config) => editor || config || null));
 
     private _activeProject = this._activeEditorOrConfigEditor
-        .flatMap(editor => manager.getSolutionForEditor(editor)
+        .flatMapLatest(editor => manager.getSolutionForEditor(editor)
             .flatMap(z => z.model.getProjectForEditor(editor)))
         .shareReplay(1);
 
     private _activeFramework = this._activeEditorOrConfigEditor
         .flatMapLatest(editor => manager.getSolutionForEditor(editor)
-            .flatMapLatest(z => z.model.getProjectForEditor(editor)))
+            .flatMap(z => z.model.getProjectForEditor(editor)))
         .flatMapLatest(project => project.observe.activeFramework.map(framework => ({ project, framework })))
         .shareReplay(1);
+
+    private _diagnostics: Observable<OmniSharp.Models.DiagnosticLocation[]>;
+    public get diagnostics() { return this._diagnostics; }
 
     private _isOff = true;
 
@@ -108,6 +117,39 @@ class Omni implements Rx.IDisposable {
             this._activeEditorSubject.onNext(null);
             this._activeConfigEditorSubject.onNext(null);
         }));
+
+        // Cache this result, because the underlying implementation of observe will
+        //    create a cache of the last recieved value.  This allows us to pick pick
+        //    up from where we left off.
+        var combinationObservable = this.aggregateListener.observe(z => z.model.observe.codecheck);
+
+        let showDiagnosticsForAllSolutions = new ReplaySubject<boolean>(1);
+        this.disposable.add(atom.config.observe("omnisharp-atom.showDiagnosticsForAllSolutions", function(enabled) {
+            showDiagnosticsForAllSolutions.onNext(enabled);
+        }));
+
+        this.disposable.add(showDiagnosticsForAllSolutions);
+
+        this._diagnostics = Observable.combineLatest( // Combine both the active model and the configuration changes together
+            this.activeModel.startWith(null), showDiagnosticsForAllSolutions, showDiagnosticsForAllSolutions.skip(1).startWith(atom.config.get<boolean>("omnisharp-atom.showDiagnosticsForAllSolutions")),
+            (model, enabled, wasEnabled) => ({ model, enabled, wasEnabled }))
+            // If the setting is enabled (and hasn't changed) then we don't need to redo the subscription
+            .where(ctx => (!(ctx.enabled && ctx.wasEnabled === ctx.enabled)))
+            .flatMapLatest(ctx => {
+                var {enabled, model} = ctx;
+
+                if (enabled) {
+                    return combinationObservable
+                        .debounce(200)
+                        .map(data => _.flatten<OmniSharp.Models.DiagnosticLocation>(data));
+                } else if (model) {
+                    return model.observe.codecheck;
+                }
+
+                return Observable.just(<OmniSharp.Models.DiagnosticLocation[]>[]);
+            })
+            .startWith([])
+            .share();
     }
 
     public dispose() {
@@ -129,10 +171,7 @@ class Omni implements Rx.IDisposable {
     }
 
     public navigateTo(response: { FileName: string; Line: number; Column: number; }) {
-        atom.workspace.open(response.FileName, <any>{ initialLine: response.Line, initialColumn: response.Column })
-            .then((editor) => {
-                editor.setCursorBufferPosition([response.Line && response.Line, response.Column && response.Column])
-            });
+        return Observable.fromPromise(atom.workspace.open(response.FileName, <any>{ initialLine: response.Line, initialColumn: response.Column }));
     }
 
     public getFrameworks(projects: string[]): string {
@@ -284,7 +323,7 @@ class Omni implements Rx.IDisposable {
             .take(1);
     }
 
-    public getSolutionForProject(project: ProjectViewModel) {
+    public getSolutionForProject(project: ProjectViewModel<any>) {
         return Observable.just(
             _(manager.activeSolutions)
                 .filter(solution => _.any(solution.model.projects, p => p.name === project.name))
@@ -299,8 +338,44 @@ class Omni implements Rx.IDisposable {
         return manager.activeSolution.map(z => z.model);
     }
 
+    public switchActiveModel(callback: (model: ViewModel, cd: CompositeDisposable) => void): Rx.IDisposable {
+        var outerCd = new CompositeDisposable();
+        outerCd.add(this.activeModel.where(z => !!z).subscribe(model => {
+            var cd = new CompositeDisposable();
+            outerCd.add(cd);
+
+            cd.add(this.activeModel.where(active => active !== model)
+                .subscribe(() => {
+                    outerCd.remove(cd);
+                    cd.dispose();
+                }));
+
+            callback(model, cd);
+        }));
+
+        return outerCd;
+    }
+
     public get activeSolution() {
         return manager.activeSolution;
+    }
+
+    public switchActiveSolution(callback: (solution: Solution, cd: CompositeDisposable) => void): Rx.IDisposable {
+        var outerCd = new CompositeDisposable();
+        outerCd.add(this.activeSolution.where(z => !!z).subscribe(solution => {
+            var cd = new CompositeDisposable();
+            outerCd.add(cd);
+
+            cd.add(this.activeSolution.where(active => active !== solution)
+                .subscribe(() => {
+                    outerCd.remove(cd);
+                    cd.dispose();
+                }));
+
+            callback(solution, cd);
+        }));
+
+        return outerCd;
     }
 
     public get activeEditor() {
@@ -335,8 +410,44 @@ class Omni implements Rx.IDisposable {
         return this._activeConfigEditor;
     }
 
+    public switchActiveConfigEditor(callback: (editor: Atom.TextEditor, cd: CompositeDisposable) => void): Rx.IDisposable {
+        var outerCd = new CompositeDisposable();
+        outerCd.add(this.activeConfigEditor.where(z => !!z).subscribe(editor => {
+            var cd = new CompositeDisposable();
+            outerCd.add(cd);
+
+            cd.add(this.activeConfigEditor.where(active => active !== editor)
+                .subscribe(() => {
+                    outerCd.remove(cd);
+                    cd.dispose();
+                }));
+
+            callback(editor, cd);
+        }));
+
+        return outerCd;
+    }
+
     public get activeEditorOrConfigEditor() {
         return this._activeEditorOrConfigEditor;
+    }
+
+    public switchActiveEditorOrConfigEditor(callback: (editor: Atom.TextEditor, cd: CompositeDisposable) => void): Rx.IDisposable {
+        var outerCd = new CompositeDisposable();
+        outerCd.add(this.activeEditorOrConfigEditor.where(z => !!z).subscribe(editor => {
+            var cd = new CompositeDisposable();
+            outerCd.add(cd);
+
+            cd.add(this.activeEditorOrConfigEditor.where(active => active !== editor)
+                .subscribe(() => {
+                    outerCd.remove(cd);
+                    cd.dispose();
+                }));
+
+            callback(editor, cd);
+        }));
+
+        return outerCd;
     }
 
     public get activeProject() {
@@ -408,6 +519,23 @@ class Omni implements Rx.IDisposable {
 
     public isValidGrammar(grammar: FirstMate.Grammar) {
         return _.any(this._supportedExtensions, ext => _.any((<any>grammar).fileTypes, ft => _.trimLeft(ext, '.') === ft));
+    }
+
+    private _packageDir: string;
+    public get packageDir() {
+        if (!this._packageDir) {
+            console.info(`getPackageDirPaths: ${atom.packages.getPackageDirPaths() }`);
+            this._packageDir = _.find(atom.packages.getPackageDirPaths(), function(packagePath) {
+                console.info(`packagePath ${packagePath} exists: ${fs.existsSync(path.join(packagePath, "omnisharp-atom")) }`);
+                return fs.existsSync(path.join(packagePath, "omnisharp-atom"));
+            });
+
+            // Fallback, this is for unit testing on travis mainly
+            if (!this._packageDir) {
+                this._packageDir = path.resolve(__dirname, '../../..');
+            }
+        }
+        return this._packageDir;
     }
 }
 
