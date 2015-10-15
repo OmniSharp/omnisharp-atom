@@ -53,8 +53,7 @@ class OmniSharpAtom {
                 // Only activate features once we have a solution!
                 this.disposable.add(startingObservable
                     .flatMap(() => this.loadFeatures(this.getFeatures("features")))
-                    .subscribe(features => {
-
+                    .subscribeOnCompleted(() => {
                         this.disposable.add(atom.workspace.observeTextEditors((editor: Atom.TextEditor) => {
                             this.detectAutoToggleGrammar(editor);
                         }));
@@ -136,7 +135,7 @@ class OmniSharpAtom {
             .map(f => f.activate())
             .where(x => !!x)
             .toArray()
-            .tapOnNext(() => {
+            .tapOnCompleted(() => {
                 (<any>atom.config).setSchema('omnisharp-atom', {
                     type: 'object',
                     properties: this.config
