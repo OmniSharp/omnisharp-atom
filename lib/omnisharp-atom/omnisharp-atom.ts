@@ -163,7 +163,7 @@ class OmniSharpAtom {
 
                     try { value.dispose(); } catch (ex) { }
 
-                    enableDisposable = atom.commands.add('atom-workspace', `omnisharp-atom:enable-${_.kebabCase(key) }`, () => atom.config.set(configKey, true));
+                    enableDisposable = atom.commands.add('atom-workspace', `omnisharp-feature:enable-${_.kebabCase(key) }`, () => atom.config.set(configKey, true));
                     this.disposable.add(enableDisposable);
                 } else {
                     if (enableDisposable) {
@@ -187,13 +187,13 @@ class OmniSharpAtom {
                         }
                     }
 
-                    disableDisposable = atom.commands.add('atom-workspace', `omnisharp-atom:disable-${_.kebabCase(key) }`, () => atom.config.set(configKey, false));
+                    disableDisposable = atom.commands.add('atom-workspace', `omnisharp-feature:disable-${_.kebabCase(key) }`, () => atom.config.set(configKey, false));
                     this.disposable.add(disableDisposable);
                 }
                 firstRun = false;
             }));
 
-            this.disposable.add(atom.commands.add('atom-workspace', `omnisharp-atom:toggle-${_.kebabCase(key) }`, () => atom.config.set(configKey, !atom.config.get(configKey))));
+            this.disposable.add(atom.commands.add('atom-workspace', `omnisharp-feature:toggle-${_.kebabCase(key) }`, () => atom.config.set(configKey, !atom.config.get(configKey))));
         } else {
             value.activate();
 
