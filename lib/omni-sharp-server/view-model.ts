@@ -2,8 +2,9 @@ import * as _ from "lodash";
 import {Solution} from "./solution";
 import {DriverState, OmnisharpClientStatus} from "omnisharp-client";
 import {Observable, Subject, ReplaySubject, CompositeDisposable, Disposable} from "rx";
-import {basename, dirname, normalize} from "path";
+import {basename, dirname, normalize, join} from "path";
 import {ProjectViewModel, projectViewModelFactory, workspaceViewModelFactory} from "./project-view-model";
+var win32 = process.platform === "win32";
 
 export interface VMViewState {
     isOff: boolean;
@@ -165,7 +166,17 @@ export class ViewModel implements VMViewState, Rx.IDisposable {
             .map(z => z.response.Dnx)
             .subscribe(system => {
                 this.runtime = basename(system.RuntimePath);
-                this.runtimePath = system.RuntimePath;
+
+                var path = normalize(system.RuntimePath);
+                if (win32) {
+                    var processHome = normalize(process.env.HOME);
+                    // Handles the case where home path does not have a trailing slash.
+                    if (_.startsWith(path, processHome)) {
+                        path = path.replace(processHome, '');
+                        path = join(processHome, path);
+                    }
+                }
+                this.runtimePath = path;
             }));
 
         this._disposable.add(this._projectAddedStream);

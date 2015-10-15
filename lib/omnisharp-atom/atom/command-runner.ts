@@ -7,7 +7,7 @@ import {spawn, ChildProcess} from "child_process";
 import {CommandOutputWindow} from '../views/command-output-window';
 import * as readline from "readline";
 import {dock} from "../atom/dock";
-import {normalize} from "path";
+import {normalize, join, dirname} from "path";
 
 var win32 = process.platform === "win32";
 
@@ -140,7 +140,7 @@ class CommandRunner implements OmniSharp.IFeature {
 }
 
 export function getDnxExe(solution: Solution) {
-    return solution.model.runtimePath + (win32 ? '/bin/dnx.exe' : '/bin/dnx');
+    return join(solution.model.runtimePath, win32 ? '/bin/dnx.exe' : '/bin/dnx');
 }
 
 export class RunProcess {
@@ -188,7 +188,7 @@ export class RunProcess {
         this.started = true;
 
         var process = this.process = spawn(runtime, args, {
-            cwd: this.project.path,
+            cwd: dirname(this.project.path),
             env,
             stdio: 'pipe'
         });
