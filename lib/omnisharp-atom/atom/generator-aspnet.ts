@@ -77,25 +77,28 @@ class GeneratorAspnet implements OmniSharp.IFeature {
         this.disposable.add(atom.commands.add('atom-workspace', 'C#:new-class', () => this.run("aspnet:Class")));
 
         each(commands, command => {
-            this.disposable.add(atom.commands.add('atom-workspace', `omnisharp-atom:aspnet-${command}`, () => this.run(`aspnet:${command}`)));
+            this.disposable.add(atom.commands.add('atom-workspace', `omnisharp-atom:aspnet-${command}`, () => this.loadCsFile(this.run(`aspnet:${command}`))));
         })
     }
 
-    private newProject() {
-        this.run("aspnet:app --createInDirectory")
-            .then((messages: Yeoman.IMessages) => {
-                var allMessages = messages.skip
-                    .concat(messages.create)
-                    .concat(messages.identical)
-                    .concat(messages.force);
+    private loadCsFile(promise: Promise<any>) {
+        return promise.then((messages: Yeoman.IMessages) => {
+            var allMessages = messages.skip
+                .concat(messages.create)
+                .concat(messages.identical)
+                .concat(messages.force);
 
-                return Observable.from(['Startup.cs', 'Program.cs', '.cs'])
-                    .concatMap(file => filter(allMessages, message => endsWith(message, file)))
-                    .take(1)
-                    .map(file => path.join(messages.cwd, file))
-                    .toPromise();
-            })
-            .then(file => atom.workspace.open(file))
+            return Observable.from(['Startup.cs', 'Program.cs', '.cs'])
+                .concatMap(file => filter(allMessages, message => endsWith(message, file)))
+                .take(1)
+                .map(file => path.join(messages.cwd, file))
+                .toPromise();
+        })
+        .then(file => atom.workspace.open(file));
+    }
+
+    private newProject() {
+        return this.loadCsFile(this.run("aspnet:app --createInDirectory"))
             .then(() => Observable.timer(2000).toPromise())
             .then(() => {
                 if (solutionInformation.solutions.length) {

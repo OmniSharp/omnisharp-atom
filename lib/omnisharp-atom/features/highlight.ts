@@ -193,7 +193,7 @@ class Highlight implements OmniSharp.IFeature {
             issueRequest.onNext(true);
         }));
 
-        disposable.add(Omni.whenEditorConnected(editor).delay(1000).subscribe(() => {
+        disposable.add(Omni.whenEditorConnected(editor).delay(1000).subscribeOnCompleted(() => {
             issueRequest.onNext(true);
         }));
     }
