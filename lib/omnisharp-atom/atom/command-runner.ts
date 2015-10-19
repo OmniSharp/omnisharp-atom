@@ -11,7 +11,11 @@ import {normalize, join, dirname} from "path";
 
 var win32 = process.platform === "win32";
 
-var daemonFlags = ['Microsoft.AspNet.Hosting'];
+var daemonFlags = [
+    'Microsoft.AspNet.Hosting', // Old (pre beta 8)
+    'Microsoft.AspNet.Server.Kestrel', // New post beta8
+    'Microsoft.AspNet.Server.WebListener'
+];
 if (win32) {
     var env = <typeof process.env>{};
 } else {
