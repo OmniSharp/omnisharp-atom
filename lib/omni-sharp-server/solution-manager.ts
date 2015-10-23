@@ -28,7 +28,7 @@ class SolutionManager {
     private _activeSearch: Rx.IPromise<any>;
 
     // These extensions only support server per folder, unlike normal cs files.
-    private _specialCaseExtensions = ['.csx'/*, '.cake'*/];
+    private _specialCaseExtensions = ['.csx', '.cake'];
     public get __specialCaseExtensions() { return this._specialCaseExtensions; }
 
     private _activeSolutions: Solution[] = [];
@@ -274,7 +274,7 @@ class SolutionManager {
             // No text editor found
             return Observable.empty<Solution>();
 
-        var isCsx = _.any(this.__specialCaseExtensions, ext => _.endsWith(path, ext));
+        var isFolderPerFile = _.any(this.__specialCaseExtensions, ext => _.endsWith(path, ext));
 
         var location = path;
         if (!location) {
@@ -282,12 +282,12 @@ class SolutionManager {
             return Observable.empty<Solution>();
         }
 
-        var [intersect, solutionValue] = this._getSolutionForUnderlyingPath(location, isCsx);
+        var [intersect, solutionValue] = this._getSolutionForUnderlyingPath(location, isFolderPerFile);
 
         if (solutionValue)
             return Observable.just(solutionValue);
 
-        return this._findSolutionForUnderlyingPath(location, isCsx)
+        return this._findSolutionForUnderlyingPath(location, isFolderPerFile)
             .map(z => {
                 var [p, solution, temporary] = z;
                 return solution;
@@ -304,7 +304,7 @@ class SolutionManager {
             // No text editor found
             return Observable.empty<Solution>();
 
-        var isCsx = _.any(this.__specialCaseExtensions, ext => _.endsWith(editor.getPath(), ext));
+        var isFolderPerFile = _.any(this.__specialCaseExtensions, ext => _.endsWith(editor.getPath(), ext));
 
         var p = (<any>editor).omniProject;
         // Not sure if we should just add properties onto editors...
@@ -340,7 +340,7 @@ class SolutionManager {
             return Observable.empty<Solution>();
         }
 
-        var [intersect, solution] = this._getSolutionForUnderlyingPath(location, isCsx);
+        var [intersect, solution] = this._getSolutionForUnderlyingPath(location, isFolderPerFile);
         p = (<any>editor).omniProject = intersect;
         (<any>editor).__omniClient__ = solution;
         var view: HTMLElement = <any>atom.views.getView(editor);
@@ -361,7 +361,7 @@ class SolutionManager {
         if (solution)
             return Observable.just(solution);
 
-        return this._findSolutionForUnderlyingPath(location, isCsx)
+        return this._findSolutionForUnderlyingPath(location, isFolderPerFile)
             .map(z => {
                 var [p, solution, temporary] = z;
                 (<any>editor).omniProject = p;
@@ -392,12 +392,12 @@ class SolutionManager {
         }
     }
 
-    private _getSolutionForUnderlyingPath(location: string, isCsx: boolean): [string, Solution] {
+    private _getSolutionForUnderlyingPath(location: string, isFolderPerFile: boolean): [string, Solution] {
         if (location === undefined) {
             return;
         }
 
-        if (isCsx) {
+        if (isFolderPerFile) {
             // CSX are special, and need a solution per directory.
             var directory = path.dirname(location);
             if (this._solutions.has(directory))
@@ -411,7 +411,7 @@ class SolutionManager {
             }
         }
 
-        if (!isCsx) {
+        if (!isFolderPerFile) {
             // Attempt to see if this file is part a solution
             var r = this._isPartOfSolution(location, (intersect, solution) => <[string, Solution]>[solution.path, solution]);
             if (r) {
@@ -422,13 +422,13 @@ class SolutionManager {
         return [null, null];
     }
 
-    private _findSolutionForUnderlyingPath(location: string, isCsx: boolean): Observable<[string, Solution, boolean]> {
+    private _findSolutionForUnderlyingPath(location: string, isFolderPerFile: boolean): Observable<[string, Solution, boolean]> {
         var directory = path.dirname(location);
         var subject = new AsyncSubject<[string, Solution, boolean]>();
 
         if (!this._activated) {
             return this.activatedSubject.take(1)
-                .flatMap(() => this._findSolutionForUnderlyingPath(location, isCsx));
+                .flatMap(() => this._findSolutionForUnderlyingPath(location, isFolderPerFile));
         }
 
         if (this._findSolutionCache.has(location)) {
@@ -447,7 +447,7 @@ class SolutionManager {
                 return;
             }
 
-            if (!isCsx) {
+            if (!isFolderPerFile) {
                 // Attempt to see if this file is part a solution
                 var r = this._isPartOfSolution(location, (intersect, solution) => {
                     subject.onNext([solution.path, solution, false]); // The boolean means this solution is temporary.
@@ -460,7 +460,7 @@ class SolutionManager {
             var newCandidates = _.difference(candidates, fromIterator(this._solutions.keys()));
             this._activeSearch.then(() => addCandidatesInOrder(newCandidates, candidate => this._addSolution(candidate, { temporary: !project }))
                 .subscribeOnCompleted(() => {
-                    if (!isCsx) {
+                    if (!isFolderPerFile) {
                         // Attempt to see if this file is part a solution
                         var r = this._isPartOfSolution(location, (intersect, solution) => {
                             subject.onNext([solution.path, solution, false]); // The boolean means this solution is temporary.
@@ -487,7 +487,9 @@ class SolutionManager {
     }
 
     private _candidateFinder(directory: string, console: any) {
-        return findCandidates(directory, console)
+        return findCandidates(directory, console, {
+            solutionIndependentSourceFilesToSearch: this.__specialCaseExtensions
+        })
             .flatMap(candidates => {
                 var slns = _.filter(candidates, x => _.endsWith(x, '.sln'));
                 if (slns.length > 1) {

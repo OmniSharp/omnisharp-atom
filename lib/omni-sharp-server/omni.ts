@@ -508,7 +508,7 @@ class Omni implements Rx.IDisposable {
         return manager._kick_in_the_pants_;
     }
 
-    private _supportedExtensions = ['.cs', '.csx'/*, '.cake'*/];
+    private _supportedExtensions = ['.cs', '.csx', '.cake'];
 
     public get grammars() {
         return _.filter(atom.grammars.getGrammars(),
