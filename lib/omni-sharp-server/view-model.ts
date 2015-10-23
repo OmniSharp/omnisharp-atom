@@ -169,7 +169,7 @@ export class ViewModel implements VMViewState, Rx.IDisposable {
 
                 var path = normalize(system.RuntimePath);
                 if (win32) {
-                    var processHome = normalize(process.env.HOME);
+                    var processHome = normalize(process.env.HOME || process.env.USERPROFILE);
                     // Handles the case where home path does not have a trailing slash.
                     if (_.startsWith(path, processHome)) {
                         path = path.replace(processHome, '');
