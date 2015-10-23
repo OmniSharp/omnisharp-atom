@@ -33,7 +33,7 @@ describe('Command Runner', () => {
         });
 
         if (win32) {
-            expect(result).toBe('abc/bin/dnx.exe');
+            expect(result).toBe('abc\\bin\\dnx.exe');
         } else {
             expect(result).toBe('abc/bin/dnx');
         }
