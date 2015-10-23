@@ -90,7 +90,12 @@ export abstract class ProjectViewModel<T> implements OmniSharp.IProjectViewModel
 
     private _subjectActiveFramework = new ReplaySubject<OmniSharp.Models.DnxFramework>(1);
     private _activeFramework: OmniSharp.Models.DnxFramework;
-    public get activeFramework() { return this._activeFramework; }
+    public get activeFramework() {
+        if (!this._activeFramework) {
+            this._activeFramework = this.frameworks[0];
+        }
+        return this._activeFramework;
+     }
     public set activeFramework(value) {
         this._activeFramework = value;
         !this._subjectActiveFramework.isDisposed && this._subjectActiveFramework.onNext(this._activeFramework);
