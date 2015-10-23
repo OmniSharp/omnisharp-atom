@@ -158,6 +158,10 @@ class SolutionManager {
             repository: this._findRepositoryForPath(candidate)
         });
 
+        if (_.any(this.__specialCaseExtensions, ext => _.endsWith(candidate, ext))) {
+            solution.isFolderPerFile = true;
+        }
+
         var cd = new CompositeDisposable();
 
         this._solutionDisposable.add(cd);
@@ -382,13 +386,16 @@ class SolutionManager {
             });
     }
 
-    private _isPartOfSolution<T>(location: string, cb: (intersect: string, solution: Solution) => T) {
+    private _isPartOfAnyActiveSolution<T>(location: string, cb: (intersect: string, solution: Solution) => T) {
         for (var solution of this._activeSolutions) {
+            // We don't check for folder based solutions
+            if (solution.isFolderPerFile) continue;
+
             var paths = solution.model.projects.map(z => z.path);
-            var intersect = intersectPath(location, paths);
-            if (intersect) {
-                return cb(intersect, solution);
-            }
+                var intersect = this._intersectPathMethod(location, paths);
+                if (intersect) {
+                    return cb(intersect, solution);
+                }
         }
     }
 
@@ -405,7 +412,7 @@ class SolutionManager {
 
             return [null, null];
         } else {
-            var intersect = intersectPath(location, fromIterator(this._solutions.keys()));
+            var intersect = this._intersectPath(location);
             if (intersect) {
                 return [intersect, this._solutions.get(intersect)];
             }
@@ -413,7 +420,7 @@ class SolutionManager {
 
         if (!isFolderPerFile) {
             // Attempt to see if this file is part a solution
-            var r = this._isPartOfSolution(location, (intersect, solution) => <[string, Solution]>[solution.path, solution]);
+            var r = this._isPartOfAnyActiveSolution(location, (intersect, solution) => <[string, Solution]>[solution.path, solution]);
             if (r) {
                 return r;
             }
@@ -438,7 +445,7 @@ class SolutionManager {
         this._findSolutionCache.set(location, subject);
         subject.tapOnCompleted(() => this._findSolutionCache.delete(location));
 
-        var project = intersectPath(directory, this._atomProjects.paths);
+        var project = this._intersectAtomProjectPath(directory);
         var cb = (candidates: string[]) => {
             // We only want to search for solutions after the main solutions have been processed.
             // We can get into this race condition if the user has windows that were opened previously.
@@ -449,7 +456,7 @@ class SolutionManager {
 
             if (!isFolderPerFile) {
                 // Attempt to see if this file is part a solution
-                var r = this._isPartOfSolution(location, (intersect, solution) => {
+                var r = this._isPartOfAnyActiveSolution(location, (intersect, solution) => {
                     subject.onNext([solution.path, solution, false]); // The boolean means this solution is temporary.
                     subject.onCompleted();
                     return true;
@@ -462,7 +469,7 @@ class SolutionManager {
                 .subscribeOnCompleted(() => {
                     if (!isFolderPerFile) {
                         // Attempt to see if this file is part a solution
-                        var r = this._isPartOfSolution(location, (intersect, solution) => {
+                        var r = this._isPartOfAnyActiveSolution(location, (intersect, solution) => {
                             subject.onNext([solution.path, solution, false]); // The boolean means this solution is temporary.
                             subject.onCompleted();
                             return;
@@ -470,7 +477,7 @@ class SolutionManager {
                         if (r) return;
                     }
 
-                    var intersect = intersectPath(location, fromIterator(this._solutions.keys())) || intersectPath(location, this._atomProjects.paths);
+                    var intersect = this._intersectPath(location) || this._intersectAtomProjectPath(location);
                     if (intersect) {
                         subject.onNext([intersect, this._solutions.get(intersect), !project]); // The boolean means this solution is temporary.
                     } else {
@@ -488,7 +495,7 @@ class SolutionManager {
 
     private _candidateFinder(directory: string, console: any) {
         return findCandidates(directory, console, {
-            solutionIndependentSourceFilesToSearch: this.__specialCaseExtensions
+            solutionIndependentSourceFilesToSearch: this.__specialCaseExtensions.map(z => '*' + z)
         })
             .flatMap(candidates => {
                 var slns = _.filter(candidates, x => _.endsWith(x, '.sln'));
@@ -551,20 +558,31 @@ class SolutionManager {
         this._configurations.add(callback);
         this._solutions.forEach(solution => callback(solution));
     }
-}
 
-function intersectPath(location: string, paths: string[]): string {
-    var segments = location.split(path.sep);
-    var mappedLocations = segments.map((loc, index) => {
-        return _.take(segments, index + 1).join(path.sep);
-    });
+    private _intersectPathMethod(location: string, paths?: string[]) {
+        var validSolutionPaths = paths;
 
-    // Look for the closest match first.
-    mappedLocations.reverse();
+        var segments = location.split(path.sep);
+        var mappedLocations = segments.map((loc, index) => {
+            return _.take(segments, index + 1).join(path.sep);
+        });
 
-    var intersect = (<any>_<string[]>(mappedLocations)).intersection(paths).first();
-    if (intersect) {
-        return intersect;
+        // Look for the closest match first.
+        mappedLocations.reverse();
+
+        var intersect: string = (<any>_<string[]>(mappedLocations)).intersection(validSolutionPaths).first();
+        if (intersect) {
+            return intersect;
+        }
+    }
+
+    private _intersectPath(location: string) {
+        return this._intersectPathMethod(location, fromIterator(this._solutions.entries())
+            .filter(z => !z[1].isFolderPerFile).map(z => z[0]));
+    }
+
+    private _intersectAtomProjectPath(location: string) {
+        return this._intersectPathMethod(location, this._atomProjects.paths);
     }
 }
 

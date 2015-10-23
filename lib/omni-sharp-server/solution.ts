@@ -22,6 +22,10 @@ export class Solution extends ClientV2 {
     private repository: Atom.GitRepository;
     public get isDisposed() { return this._solutionDisposable.isDisposed; }
 
+    private _isFolderPerFile = false;
+    public get isFolderPerFile() { return this._isFolderPerFile; }
+    public set isFolderPerFile(value) { this._isFolderPerFile = value; }
+
     constructor(options: SolutionOptions) {
         super(options);
         this.configureSolution();
