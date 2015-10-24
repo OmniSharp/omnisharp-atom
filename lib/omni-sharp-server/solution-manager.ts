@@ -28,7 +28,7 @@ class SolutionManager {
     private _activeSearch: Rx.IPromise<any>;
 
     // These extensions only support server per folder, unlike normal cs files.
-    private _specialCaseExtensions = ['.csx'/*, '.cake'*/];
+    private _specialCaseExtensions = ['.csx', '.cake'];
     public get __specialCaseExtensions() { return this._specialCaseExtensions; }
 
     private _activeSolutions: Solution[] = [];
@@ -121,7 +121,7 @@ class SolutionManager {
             .where(project => !this._solutionProjects.has(project))
             .map(project => {
                 return this._candidateFinder(project, console)
-                    .flatMap(candidates => addCandidatesInOrder(candidates, candidate => this._addSolution(candidate, { project })));
+                    .flatMap(candidates => addCandidatesInOrder(candidates, (candidate, isProject) => this._addSolution(candidate, isProject, { project })));
             })
             .subscribe(candidateObservable => {
                 this._activeSearch = this._activeSearch.then(() => candidateObservable.toPromise());
@@ -132,7 +132,7 @@ class SolutionManager {
         if (atom.project) return _.find(atom.project.getRepositories(), (repo: any) => repo && path.normalize(repo.getWorkingDirectory()) === path.normalize(workingPath));
     }
 
-    private _addSolution(candidate: string, {temporary = false, project}: { delay?: number; temporary?: boolean; project?: string; }) {
+    private _addSolution(candidate: string, isProject: boolean, {temporary = false, project}: { delay?: number; temporary?: boolean; project?: string; }) {
         var projectPath = candidate;
         if (_.endsWith(candidate, '.sln')) {
             candidate = path.dirname(candidate);
@@ -158,13 +158,17 @@ class SolutionManager {
             repository: this._findRepositoryForPath(candidate)
         });
 
+        if (!isProject) {
+            solution.isFolderPerFile = true;
+        }
+
         var cd = new CompositeDisposable();
 
         this._solutionDisposable.add(cd);
         this._disposableSolutionMap.set(solution, cd);
 
         solution.disposable.add(Disposable.create(() => {
-            solution.connect = () => this._addSolution(candidate, { temporary, project });
+            solution.connect = () => this._addSolution(candidate, isProject, { temporary, project });
         }));
 
         cd.add(Disposable.create(() => {
@@ -274,7 +278,7 @@ class SolutionManager {
             // No text editor found
             return Observable.empty<Solution>();
 
-        var isCsx = _.any(this.__specialCaseExtensions, ext => _.endsWith(path, ext));
+        var isFolderPerFile = _.any(this.__specialCaseExtensions, ext => _.endsWith(path, ext));
 
         var location = path;
         if (!location) {
@@ -282,12 +286,12 @@ class SolutionManager {
             return Observable.empty<Solution>();
         }
 
-        var [intersect, solutionValue] = this._getSolutionForUnderlyingPath(location, isCsx);
+        var [intersect, solutionValue] = this._getSolutionForUnderlyingPath(location, isFolderPerFile);
 
         if (solutionValue)
             return Observable.just(solutionValue);
 
-        return this._findSolutionForUnderlyingPath(location, isCsx)
+        return this._findSolutionForUnderlyingPath(location, isFolderPerFile)
             .map(z => {
                 var [p, solution, temporary] = z;
                 return solution;
@@ -304,7 +308,7 @@ class SolutionManager {
             // No text editor found
             return Observable.empty<Solution>();
 
-        var isCsx = _.any(this.__specialCaseExtensions, ext => _.endsWith(editor.getPath(), ext));
+        var isFolderPerFile = _.any(this.__specialCaseExtensions, ext => _.endsWith(editor.getPath(), ext));
 
         var p = (<any>editor).omniProject;
         // Not sure if we should just add properties onto editors...
@@ -340,7 +344,7 @@ class SolutionManager {
             return Observable.empty<Solution>();
         }
 
-        var [intersect, solution] = this._getSolutionForUnderlyingPath(location, isCsx);
+        var [intersect, solution] = this._getSolutionForUnderlyingPath(location, isFolderPerFile);
         p = (<any>editor).omniProject = intersect;
         (<any>editor).__omniClient__ = solution;
         var view: HTMLElement = <any>atom.views.getView(editor);
@@ -361,7 +365,7 @@ class SolutionManager {
         if (solution)
             return Observable.just(solution);
 
-        return this._findSolutionForUnderlyingPath(location, isCsx)
+        return this._findSolutionForUnderlyingPath(location, isFolderPerFile)
             .map(z => {
                 var [p, solution, temporary] = z;
                 (<any>editor).omniProject = p;
@@ -382,22 +386,25 @@ class SolutionManager {
             });
     }
 
-    private _isPartOfSolution<T>(location: string, cb: (intersect: string, solution: Solution) => T) {
+    private _isPartOfAnyActiveSolution<T>(location: string, cb: (intersect: string, solution: Solution) => T) {
         for (var solution of this._activeSolutions) {
+            // We don't check for folder based solutions
+            if (solution.isFolderPerFile) continue;
+
             var paths = solution.model.projects.map(z => z.path);
-            var intersect = intersectPath(location, paths);
+            var intersect = this._intersectPathMethod(location, paths);
             if (intersect) {
                 return cb(intersect, solution);
             }
         }
     }
 
-    private _getSolutionForUnderlyingPath(location: string, isCsx: boolean): [string, Solution] {
+    private _getSolutionForUnderlyingPath(location: string, isFolderPerFile: boolean): [string, Solution] {
         if (location === undefined) {
             return;
         }
 
-        if (isCsx) {
+        if (isFolderPerFile) {
             // CSX are special, and need a solution per directory.
             var directory = path.dirname(location);
             if (this._solutions.has(directory))
@@ -405,15 +412,15 @@ class SolutionManager {
 
             return [null, null];
         } else {
-            var intersect = intersectPath(location, fromIterator(this._solutions.keys()));
+            var intersect = this._intersectPath(location);
             if (intersect) {
                 return [intersect, this._solutions.get(intersect)];
             }
         }
 
-        if (!isCsx) {
+        if (!isFolderPerFile) {
             // Attempt to see if this file is part a solution
-            var r = this._isPartOfSolution(location, (intersect, solution) => <[string, Solution]>[solution.path, solution]);
+            var r = this._isPartOfAnyActiveSolution(location, (intersect, solution) => <[string, Solution]>[solution.path, solution]);
             if (r) {
                 return r;
             }
@@ -422,13 +429,13 @@ class SolutionManager {
         return [null, null];
     }
 
-    private _findSolutionForUnderlyingPath(location: string, isCsx: boolean): Observable<[string, Solution, boolean]> {
+    private _findSolutionForUnderlyingPath(location: string, isFolderPerFile: boolean): Observable<[string, Solution, boolean]> {
         var directory = path.dirname(location);
         var subject = new AsyncSubject<[string, Solution, boolean]>();
 
         if (!this._activated) {
             return this.activatedSubject.take(1)
-                .flatMap(() => this._findSolutionForUnderlyingPath(location, isCsx));
+                .flatMap(() => this._findSolutionForUnderlyingPath(location, isFolderPerFile));
         }
 
         if (this._findSolutionCache.has(location)) {
@@ -438,8 +445,8 @@ class SolutionManager {
         this._findSolutionCache.set(location, subject);
         subject.tapOnCompleted(() => this._findSolutionCache.delete(location));
 
-        var project = intersectPath(directory, this._atomProjects.paths);
-        var cb = (candidates: string[]) => {
+        var project = this._intersectAtomProjectPath(directory);
+        var cb = (candidates: { path: string; isProject: boolean }[]) => {
             // We only want to search for solutions after the main solutions have been processed.
             // We can get into this race condition if the user has windows that were opened previously.
             if (!this._activated) {
@@ -447,9 +454,9 @@ class SolutionManager {
                 return;
             }
 
-            if (!isCsx) {
+            if (!isFolderPerFile) {
                 // Attempt to see if this file is part a solution
-                var r = this._isPartOfSolution(location, (intersect, solution) => {
+                var r = this._isPartOfAnyActiveSolution(location, (intersect, solution) => {
                     subject.onNext([solution.path, solution, false]); // The boolean means this solution is temporary.
                     subject.onCompleted();
                     return true;
@@ -457,12 +464,12 @@ class SolutionManager {
                 if (r) return;
             }
 
-            var newCandidates = _.difference(candidates, fromIterator(this._solutions.keys()));
-            this._activeSearch.then(() => addCandidatesInOrder(newCandidates, candidate => this._addSolution(candidate, { temporary: !project }))
+            var newCandidates = _.difference(candidates.map(z => z.path), fromIterator(this._solutions.keys())).map(z => _.find(candidates, { path: z }));
+            this._activeSearch.then(() => addCandidatesInOrder(newCandidates, (candidate, isProject) => this._addSolution(candidate, isProject, { temporary: !project }))
                 .subscribeOnCompleted(() => {
-                    if (!isCsx) {
+                    if (!isFolderPerFile) {
                         // Attempt to see if this file is part a solution
-                        var r = this._isPartOfSolution(location, (intersect, solution) => {
+                        var r = this._isPartOfAnyActiveSolution(location, (intersect, solution) => {
                             subject.onNext([solution.path, solution, false]); // The boolean means this solution is temporary.
                             subject.onCompleted();
                             return;
@@ -470,9 +477,11 @@ class SolutionManager {
                         if (r) return;
                     }
 
-                    var intersect = intersectPath(location, fromIterator(this._solutions.keys())) || intersectPath(location, this._atomProjects.paths);
+                    var intersect = this._intersectPath(location) || this._intersectAtomProjectPath(location);
                     if (intersect) {
-                        subject.onNext([intersect, this._solutions.get(intersect), !project]); // The boolean means this solution is temporary.
+                        if (this._solutions.has(intersect)) {
+                            subject.onNext([intersect, this._solutions.get(intersect), !project]); // The boolean means this solution is temporary.
+                        }
                     } else {
                         subject.onError('Could not find a solution for location ' + location);
                     }
@@ -487,20 +496,22 @@ class SolutionManager {
     }
 
     private _candidateFinder(directory: string, console: any) {
-        return findCandidates(directory, console)
+        return findCandidates.withCandidates(directory, console, {
+            solutionIndependentSourceFilesToSearch: this.__specialCaseExtensions.map(z => '*' + z)
+        })
             .flatMap(candidates => {
-                var slns = _.filter(candidates, x => _.endsWith(x, '.sln'));
+                var slns = _.filter(candidates, x => _.endsWith(x.path, '.sln'));
                 if (slns.length > 1) {
                     var items = _.difference(candidates, slns);
-                    var asyncResult = new AsyncSubject<string[]>();
+                    var asyncResult = new AsyncSubject<typeof candidates>();
                     asyncResult.onNext(items);
 
                     // handle multiple solutions.
                     var listView = new GenericSelectListView('',
-                        slns.map(x => ({ displayName: x, name: x })),
+                        slns.map(x => ({ displayName: x.path, name: x.path })),
                         (result: any) => {
                             items.unshift(result);
-                            _.each(candidates, x => this._candidateFinderCache.add(x));
+                            _.each(candidates, x => this._candidateFinderCache.add(x.path));
 
                             asyncResult.onCompleted();
                         },
@@ -514,7 +525,7 @@ class SolutionManager {
                     // Show the view
                     if (openSelectList) {
                         openSelectList.onClosed.subscribe(() => {
-                            if (!_.any(slns, x => this._candidateFinderCache.has(x)))
+                            if (!_.any(slns, x => this._candidateFinderCache.has(x.path)))
                                 _.defer(() => listView.toggle());
                             else
                                 asyncResult.onCompleted();
@@ -549,45 +560,56 @@ class SolutionManager {
         this._configurations.add(callback);
         this._solutions.forEach(solution => callback(solution));
     }
-}
 
-function intersectPath(location: string, paths: string[]): string {
-    var segments = location.split(path.sep);
-    var mappedLocations = segments.map((loc, index) => {
-        return _.take(segments, index + 1).join(path.sep);
-    });
+    private _intersectPathMethod(location: string, paths?: string[]) {
+        var validSolutionPaths = paths;
 
-    // Look for the closest match first.
-    mappedLocations.reverse();
+        var segments = location.split(path.sep);
+        var mappedLocations = segments.map((loc, index) => {
+            return _.take(segments, index + 1).join(path.sep);
+        });
 
-    var intersect = (<any>_<string[]>(mappedLocations)).intersection(paths).first();
-    if (intersect) {
-        return intersect;
+        // Look for the closest match first.
+        mappedLocations.reverse();
+
+        var intersect: string = (<any>_<string[]>(mappedLocations)).intersection(validSolutionPaths).first();
+        if (intersect) {
+            return intersect;
+        }
+    }
+
+    private _intersectPath(location: string) {
+        return this._intersectPathMethod(location, fromIterator(this._solutions.entries())
+            .filter(z => !z[1].isFolderPerFile).map(z => z[0]));
+    }
+
+    private _intersectAtomProjectPath(location: string) {
+        return this._intersectPathMethod(location, this._atomProjects.paths);
     }
 }
 
-function addCandidatesInOrder(candidates: string[], cb: (candidate: string) => Rx.Observable<Solution>) {
+function addCandidatesInOrder(candidates: { path: string; isProject: boolean; }[], cb: (candidate: string, isProject: boolean) => Rx.Observable<Solution>) {
     var asyncSubject = new AsyncSubject();
 
     if (!candidates.length) {
-        asyncSubject.onNext(candidates)
+        asyncSubject.onNext(candidates);
         asyncSubject.onCompleted();
         return asyncSubject;
     }
 
     var cds = candidates.slice();
-
     var candidate = cds.shift();
-    var handleCandidate = (candidate: string) => {
-        cb(candidate).subscribeOnCompleted(() => {
-            if (cds.length) {
-                candidate = cds.shift();
-                handleCandidate(candidate);
-            } else {
-                asyncSubject.onNext(candidates)
-                asyncSubject.onCompleted();
-            }
-        })
+    var handleCandidate = (candidate: { path: string; isProject: boolean; }) => {
+        cb(candidate.path, candidate.isProject)
+            .subscribeOnCompleted(() => {
+                if (cds.length) {
+                    candidate = cds.shift();
+                    handleCandidate(candidate);
+                } else {
+                    asyncSubject.onNext(candidates)
+                    asyncSubject.onCompleted();
+                }
+            })
     }
     handleCandidate(candidate);
     return asyncSubject.asObservable();
