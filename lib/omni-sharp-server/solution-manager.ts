@@ -28,7 +28,7 @@ class SolutionManager {
     private _activeSearch: Rx.IPromise<any>;
 
     // These extensions only support server per folder, unlike normal cs files.
-    private _specialCaseExtensions = ['.csx', '.cake'];
+    private _specialCaseExtensions = ['.csx', /*'.cake'*/];
     public get __specialCaseExtensions() { return this._specialCaseExtensions; }
 
     private _activeSolutions: Solution[] = [];
