@@ -121,7 +121,7 @@ class SolutionManager {
             .where(project => !this._solutionProjects.has(project))
             .map(project => {
                 return this._candidateFinder(project, console)
-                    .flatMap(candidates => addCandidatesInOrder(candidates, candidate => this._addSolution(candidate, { project })));
+                    .flatMap(candidates => addCandidatesInOrder(candidates, (candidate, isProject) => this._addSolution(candidate, isProject, { project })));
             })
             .subscribe(candidateObservable => {
                 this._activeSearch = this._activeSearch.then(() => candidateObservable.toPromise());
@@ -132,7 +132,7 @@ class SolutionManager {
         if (atom.project) return _.find(atom.project.getRepositories(), (repo: any) => repo && path.normalize(repo.getWorkingDirectory()) === path.normalize(workingPath));
     }
 
-    private _addSolution(candidate: string, {temporary = false, project}: { delay?: number; temporary?: boolean; project?: string; }) {
+    private _addSolution(candidate: string, isProject: boolean, {temporary = false, project}: { delay?: number; temporary?: boolean; project?: string; }) {
         var projectPath = candidate;
         if (_.endsWith(candidate, '.sln')) {
             candidate = path.dirname(candidate);
@@ -158,7 +158,7 @@ class SolutionManager {
             repository: this._findRepositoryForPath(candidate)
         });
 
-        if (_.any(this.__specialCaseExtensions, ext => _.endsWith(candidate, ext))) {
+        if (!isProject) {
             solution.isFolderPerFile = true;
         }
 
@@ -168,7 +168,7 @@ class SolutionManager {
         this._disposableSolutionMap.set(solution, cd);
 
         solution.disposable.add(Disposable.create(() => {
-            solution.connect = () => this._addSolution(candidate, { temporary, project });
+            solution.connect = () => this._addSolution(candidate, isProject, { temporary, project });
         }));
 
         cd.add(Disposable.create(() => {
@@ -392,10 +392,10 @@ class SolutionManager {
             if (solution.isFolderPerFile) continue;
 
             var paths = solution.model.projects.map(z => z.path);
-                var intersect = this._intersectPathMethod(location, paths);
-                if (intersect) {
-                    return cb(intersect, solution);
-                }
+            var intersect = this._intersectPathMethod(location, paths);
+            if (intersect) {
+                return cb(intersect, solution);
+            }
         }
     }
 
@@ -446,7 +446,7 @@ class SolutionManager {
         subject.tapOnCompleted(() => this._findSolutionCache.delete(location));
 
         var project = this._intersectAtomProjectPath(directory);
-        var cb = (candidates: string[]) => {
+        var cb = (candidates: { path: string; isProject: boolean }[]) => {
             // We only want to search for solutions after the main solutions have been processed.
             // We can get into this race condition if the user has windows that were opened previously.
             if (!this._activated) {
@@ -464,8 +464,8 @@ class SolutionManager {
                 if (r) return;
             }
 
-            var newCandidates = _.difference(candidates, fromIterator(this._solutions.keys()));
-            this._activeSearch.then(() => addCandidatesInOrder(newCandidates, candidate => this._addSolution(candidate, { temporary: !project }))
+            var newCandidates = _.difference(candidates.map(z => z.path), fromIterator(this._solutions.keys())).map(z => _.find(candidates, { path: z }));
+            this._activeSearch.then(() => addCandidatesInOrder(newCandidates, (candidate, isProject) => this._addSolution(candidate, isProject, { temporary: !project }))
                 .subscribeOnCompleted(() => {
                     if (!isFolderPerFile) {
                         // Attempt to see if this file is part a solution
@@ -479,7 +479,9 @@ class SolutionManager {
 
                     var intersect = this._intersectPath(location) || this._intersectAtomProjectPath(location);
                     if (intersect) {
-                        subject.onNext([intersect, this._solutions.get(intersect), !project]); // The boolean means this solution is temporary.
+                        if (this._solutions.has(intersect)) {
+                            subject.onNext([intersect, this._solutions.get(intersect), !project]); // The boolean means this solution is temporary.
+                        }
                     } else {
                         subject.onError('Could not find a solution for location ' + location);
                     }
@@ -494,22 +496,22 @@ class SolutionManager {
     }
 
     private _candidateFinder(directory: string, console: any) {
-        return findCandidates(directory, console, {
+        return findCandidates.withCandidates(directory, console, {
             solutionIndependentSourceFilesToSearch: this.__specialCaseExtensions.map(z => '*' + z)
         })
             .flatMap(candidates => {
-                var slns = _.filter(candidates, x => _.endsWith(x, '.sln'));
+                var slns = _.filter(candidates, x => _.endsWith(x.path, '.sln'));
                 if (slns.length > 1) {
                     var items = _.difference(candidates, slns);
-                    var asyncResult = new AsyncSubject<string[]>();
+                    var asyncResult = new AsyncSubject<typeof candidates>();
                     asyncResult.onNext(items);
 
                     // handle multiple solutions.
                     var listView = new GenericSelectListView('',
-                        slns.map(x => ({ displayName: x, name: x })),
+                        slns.map(x => ({ displayName: x.path, name: x.path })),
                         (result: any) => {
                             items.unshift(result);
-                            _.each(candidates, x => this._candidateFinderCache.add(x));
+                            _.each(candidates, x => this._candidateFinderCache.add(x.path));
 
                             asyncResult.onCompleted();
                         },
@@ -523,7 +525,7 @@ class SolutionManager {
                     // Show the view
                     if (openSelectList) {
                         openSelectList.onClosed.subscribe(() => {
-                            if (!_.any(slns, x => this._candidateFinderCache.has(x)))
+                            if (!_.any(slns, x => this._candidateFinderCache.has(x.path)))
                                 _.defer(() => listView.toggle());
                             else
                                 asyncResult.onCompleted();
@@ -586,28 +588,28 @@ class SolutionManager {
     }
 }
 
-function addCandidatesInOrder(candidates: string[], cb: (candidate: string) => Rx.Observable<Solution>) {
+function addCandidatesInOrder(candidates: { path: string; isProject: boolean; }[], cb: (candidate: string, isProject: boolean) => Rx.Observable<Solution>) {
     var asyncSubject = new AsyncSubject();
 
     if (!candidates.length) {
-        asyncSubject.onNext(candidates)
+        asyncSubject.onNext(candidates);
         asyncSubject.onCompleted();
         return asyncSubject;
     }
 
     var cds = candidates.slice();
-
     var candidate = cds.shift();
-    var handleCandidate = (candidate: string) => {
-        cb(candidate).subscribeOnCompleted(() => {
-            if (cds.length) {
-                candidate = cds.shift();
-                handleCandidate(candidate);
-            } else {
-                asyncSubject.onNext(candidates)
-                asyncSubject.onCompleted();
-            }
-        })
+    var handleCandidate = (candidate: { path: string; isProject: boolean; }) => {
+        cb(candidate.path, candidate.isProject)
+            .subscribeOnCompleted(() => {
+                if (cds.length) {
+                    candidate = cds.shift();
+                    handleCandidate(candidate);
+                } else {
+                    asyncSubject.onNext(candidates)
+                    asyncSubject.onCompleted();
+                }
+            })
     }
     handleCandidate(candidate);
     return asyncSubject.asObservable();
