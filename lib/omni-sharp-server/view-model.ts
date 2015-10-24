@@ -165,18 +165,23 @@ export class ViewModel implements VMViewState, Rx.IDisposable {
             .where(z => z.response.Dnx != null && z.response.Dnx.Projects.length > 0)
             .map(z => z.response.Dnx)
             .subscribe(system => {
-                this.runtime = basename(system.RuntimePath);
+                if (system.RuntimePath) {
+                    this.runtime = basename(system.RuntimePath);
 
-                var path = normalize(system.RuntimePath);
-                if (win32) {
-                    var processHome = normalize(process.env.HOME || process.env.USERPROFILE);
-                    // Handles the case where home path does not have a trailing slash.
-                    if (_.startsWith(path, processHome)) {
-                        path = path.replace(processHome, '');
-                        path = join(processHome, path);
+                    var path = normalize(system.RuntimePath);
+                    if (win32) {
+                        var home = process.env.HOME || process.env.USERPROFILE;
+                        if (home && home.trim()) {
+                            var processHome = normalize(home);
+                            // Handles the case where home path does not have a trailing slash.
+                            if (_.startsWith(path, processHome)) {
+                                path = path.replace(processHome, '');
+                                path = join(processHome, path);
+                            }
+                        }
                     }
+                    this.runtimePath = path;
                 }
-                this.runtimePath = path;
             }));
 
         this._disposable.add(this._projectAddedStream);

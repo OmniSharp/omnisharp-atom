@@ -312,8 +312,7 @@ class Omni implements Rx.IDisposable {
 
         // Ensure that the underying promise is connected
         //   (if we don't subscribe to the reuslt of the request, which is not a requirement).
-        result.subscribeOnCompleted(() => { });
-
+        result.subscribe();
         return result;
     }
 
