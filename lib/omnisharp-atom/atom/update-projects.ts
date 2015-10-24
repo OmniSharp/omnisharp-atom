@@ -2,6 +2,9 @@ import {CompositeDisposable, Observable} from "rx";
 import * as _ from 'lodash';
 import Omni = require('../../omni-sharp-server/omni');
 import {ProjectViewModel} from "../../omni-sharp-server/project-view-model";
+import * as fs from "fs";
+var stat = Observable.fromNodeCallback(fs.stat);
+import {dirname} from "path";
 
 class UpdateProject implements OmniSharp.IAtomFeature {
     private disposable: Rx.CompositeDisposable;
@@ -49,7 +52,7 @@ class UpdateProject implements OmniSharp.IAtomFeature {
                         this.adjustTreeView(path, solution.path);
                     } else if (this._nagAdjustTreeView) {
                         // notify for adjustment
-                        let notification = atom.notifications.addInfo("Show solution root?",<any> {
+                        let notification = atom.notifications.addInfo("Show solution root?", <any>{
                             detail: `${path}\n-> ${solution.path}`,
                             description: 'It appears the solution root is not displayed in the treeview.  Would you like to show the entire solution in the tree view?',
                             buttons: [
@@ -81,71 +84,88 @@ class UpdateProject implements OmniSharp.IAtomFeature {
         atom.project.setPaths(<any>newPaths);
     }
 
-    private handleProjectAdded(projects: ProjectViewModel<any>[]) {
-        var paths = _.unique(projects.map(z => z.path));
-        if (this._autoAddExternalProjects) {
-            for (var project of paths) {
-                atom.project.addPath(project);
-            }
-        } else if (this._nagAddExternalProjects) {
-            let notification = atom.notifications.addInfo(`Add external projects?`, <any>{
-                detail: paths.join('\n'),
-                description: `We have detected external projects would you like to add them to the treeview?`,
-                buttons: [
-                    {
-                        text: 'Okay',
-                        className: 'btn-success',
-                        onDidClick: () => {
-                            for (var project of paths) {
-                                atom.project.addPath(project);
-                            }
+    private getProjectDirectories(projects: ProjectViewModel<any>[]) {
+        return Observable.from(_.unique(projects.map(z => z.path)))
+            .flatMap(project => stat(project).map(stat => ({ stat, project })))
+            .map(({project, stat}) => {
+                if (stat.isDirectory()) {
+                    return project;
+                } else {
+                    return dirname(project);
+                }
+            })
+            .toArray();
+    }
 
-                            notification.dismiss();
-                        }
-                    }, {
-                        text: 'Dismiss',
-                        onDidClick: () => {
-                            notification.dismiss();
-                        }
+    private handleProjectAdded(projects: ProjectViewModel<any>[]) {
+        this.getProjectDirectories(projects)
+            .subscribe(paths => {
+                if (this._autoAddExternalProjects) {
+                    for (var project of paths) {
+                        atom.project.addPath(project);
                     }
-                ],
-                dismissable: true
+                } else if (this._nagAddExternalProjects) {
+                    let notification = atom.notifications.addInfo(`Add external projects?`, <any>{
+                        detail: paths.join('\n'),
+                        description: `We have detected external projects would you like to add them to the treeview?`,
+                        buttons: [
+                            {
+                                text: 'Okay',
+                                className: 'btn-success',
+                                onDidClick: () => {
+                                    for (var project of paths) {
+                                        atom.project.addPath(project);
+                                    }
+
+                                    notification.dismiss();
+                                }
+                            }, {
+                                text: 'Dismiss',
+                                onDidClick: () => {
+                                    notification.dismiss();
+                                }
+                            }
+                        ],
+                        dismissable: true
+                    });
+                }
             });
-        }
     }
 
     private _notifications: { [key: string]: Atom.Notification } = {};
 
     private handleProjectRemoved(projects: ProjectViewModel<any>[]) {
-        var paths = _.unique(projects.map(z => z.path));
-        if (this._autoAddExternalProjects) {
-            for (var project of paths) {
-                atom.project.removePath(project);
-            }
-        } else if (this._nagAddExternalProjects) {
-            let notification = atom.notifications.addInfo(`Remove external projects?`, <any>{
-                detail: paths.join('\n'),
-                description: `We have detected external projects have been removed, would you like to remove them from the treeview?`,
-                buttons: [
-                    {
-                        text: 'Okay',
-                        className: 'btn-success',
-                        onDidClick: () => {
-                            for (var project of paths) {
-                                atom.project.removePath(project);
-                            }
-                            notification.dismiss();
-                        }
-                    }, {
-                        text: 'Dismiss',
-                        onDidClick: () => {
-                            notification.dismiss();
-                        }
+        this.getProjectDirectories(projects)
+            .subscribe(paths => {
+                if (this._autoAddExternalProjects) {
+                    for (var project of paths) {
+                        atom.project.removePath(project);
                     }
-                ],
-                dismissable: true
+                } else if (this._nagAddExternalProjects) {
+                    let notification = atom.notifications.addInfo(`Remove external projects?`, <any>{
+                        detail: paths.join('\n'),
+                        description: `We have detected external projects have been removed, would you like to remove them from the treeview?`,
+                        buttons: [
+                            {
+                                text: 'Okay',
+                                className: 'btn-success',
+                                onDidClick: () => {
+                                    for (var project of paths) {
+                                        atom.project.removePath(project);
+                                    }
+                                    notification.dismiss();
+                                }
+                            }, {
+                                text: 'Dismiss',
+                                onDidClick: () => {
+                                    notification.dismiss();
+                                }
+                            }
+                        ],
+                        dismissable: true
+                    });
+                }
             });
-        }
     }
 
     public attach() { }
