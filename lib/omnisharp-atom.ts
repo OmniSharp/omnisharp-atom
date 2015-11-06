@@ -416,6 +416,12 @@ class OmniSharpAtom {
             descrption: "Request symbol metadata from the server, when using go-to-definition.  This is disabled by default on Linux, due to issues with Roslyn on Mono.",
             type: "boolean",
             default: win32
+        },
+        altGotoDefinition: {
+            title: 'Alt Go To Definition',
+            descrption: 'Use the alt key instead of the ctrl/cmd key for goto defintion mouse over.',
+            type: 'boolean',
+            default: false
         }
     };
 }
