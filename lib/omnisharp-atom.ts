@@ -18,6 +18,8 @@ class OmniSharpAtom {
         this._started = new AsyncSubject<boolean>();
         this._activated = new AsyncSubject<boolean>();
 
+        this._start = new ReplaySubject<boolean>();
+
         this.configureKeybindings();
 
         this.disposable.add(atom.commands.add("atom-workspace", "omnisharp-atom:toggle", () => this.toggle()));
@@ -54,7 +56,7 @@ class OmniSharpAtom {
                 this._started.onNext(true);
                 this._started.onCompleted();
             })
-            .then(() => this.loadFeatures(this.getFeatures("atom").delay(2000)).toPromise())
+            .then(() => this.loadFeatures(this.getFeatures("atom").delay(Omni['_kick_in_the_pants_'] ? 0 : 2000)).toPromise())
             .then(() => {
                 let startingObservable = Omni.activeSolution
                     .where(z => !!z)
@@ -68,7 +70,8 @@ class OmniSharpAtom {
 
                 // Only activate features once we have a solution!
                 this.disposable.add(startingObservable
-                    .flatMap(() => this.loadFeatures(this.getFeatures("features")))
+                    .flatMap(() =>
+                        this.loadFeatures(this.getFeatures("features")))
                     .subscribeOnCompleted(() => {
                         this.disposable.add(atom.workspace.observeTextEditors((editor: Atom.TextEditor) => {
                             this.detectAutoToggleGrammar(editor);
@@ -79,6 +82,12 @@ class OmniSharpAtom {
                     }));
 
             });
+        this.disposable.add(this._start);
+    }
+
+    private _start: Subject<boolean>;
+    public start() {
+        this._start.onNext(true);
     }
 
     public getFeatures(folder: string) {
@@ -208,6 +217,7 @@ class OmniSharpAtom {
                 }
                 firstRun = false;
             }));
+
 
             this.disposable.add(atom.commands.add("atom-workspace", `omnisharp-feature:toggle-${_.kebabCase(key)}`, () => atom.config.set(configKey, !atom.config.get(configKey))));
         } else {

@@ -60,6 +60,7 @@
         "./lib/features/run-tests.ts",
         "./lib/features/signature-help.ts",
         "./lib/omnisharp-atom.ts",
+        "./lib/omnisharp-atom/services/apply-changes.ts",
         "./lib/omnisharp.ts",
         "./lib/server/atom-projects.ts",
         "./lib/server/composite-solution.ts",
