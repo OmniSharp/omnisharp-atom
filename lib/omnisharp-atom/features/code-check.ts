@@ -1,11 +1,9 @@
-import {OmniSharp} from "omnisharp-client";
+import {OmniSharp, OmniSharpAtom} from "../../omnisharp.d.ts";
 import * as _ from "lodash";
-import {CompositeDisposable, Observable, ReplaySubject, Subject, Disposable} from "@reactivex/rxjs";
+import {CompositeDisposable, Observable, Subject, Disposable} from "@reactivex/rxjs";
 import Omni from "../../omni-sharp-server/omni";
-const currentlyEnabled = false;
 import {dock} from "../atom/dock";
-import {CodeCheckOutputWindow, ICodeCheckOutputWindowProps} from "../views/codecheck-output-pane-view";
-import {DriverState} from "omnisharp-client";
+import {CodeCheckOutputWindow} from "../views/codecheck-output-pane-view";
 import {reloadWorkspace} from "./reload-workspace";
 
 class CodeCheck implements OmniSharpAtom.IFeature {

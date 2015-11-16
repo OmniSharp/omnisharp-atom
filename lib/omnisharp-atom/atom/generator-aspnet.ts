@@ -1,13 +1,9 @@
-import {CompositeDisposable, Disposable} from "../../Disposable";
+import {OmniSharpAtom} from "../../omnisharp.d.ts";
+import {CompositeDisposable} from "../../Disposable";
 import {Observable} from "@reactivex/rxjs";
 import {each, endsWith, filter} from "lodash";
-import * as fs from "fs";
 import * as path from "path";
 import {solutionInformation} from "../atom/solution-information";
-import {fromNodeCallback} from "../../fromCallback";
-
-const readdir = fromNodeCallback(fs.readdir);
-const stat = fromNodeCallback(fs.stat);
 
 // TODO: Make sure it stays in sync with
 const commands = [
@@ -76,7 +72,7 @@ class GeneratorAspnet implements OmniSharpAtom.IFeature {
 
         each(commands, command => {
             this.disposable.add(atom.commands.add("atom-workspace", `omnisharp-atom:aspnet-${command}`, () => this.loadCsFile(this.run(`aspnet:${command}`))));
-        })
+        });
     }
 
     private loadCsFile(promise: Promise<any>) {

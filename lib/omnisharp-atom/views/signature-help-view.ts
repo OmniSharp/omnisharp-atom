@@ -1,4 +1,4 @@
-import {OmniSharp} from "omnisharp-client";
+import {OmniSharp, OmniSharpAtom} from "../../omnisharp.d.ts";
 import {read, write} from "fastdom";
 import * as _ from "lodash";
 

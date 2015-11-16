@@ -1,5 +1,5 @@
 import * as _ from "lodash";
-import {OmniSharp} from "omnisharp-client";
+import {OmniSharp, OmniSharpAtom} from "../omnisharp.d.ts";
 import {Solution} from "./solution";
 import {DriverState, OmnisharpClientStatus} from "omnisharp-client";
 import {IDisposable, CompositeDisposable, Disposable} from "../Disposable";
@@ -31,7 +31,7 @@ export class ViewModel implements VMViewState, IDisposable {
     public get path() { return this._solution.path; }
     public output: OmniSharpAtom.OutputMessage[] = [];
     public diagnostics: OmniSharp.Models.DiagnosticLocation[] = [];
-    public get state() { return this._solution.currentState };
+    public get state() { return this._solution.currentState; };
     public packageSources: string[] = [];
     public runtime = "";
     public runtimePath: string;
@@ -76,13 +76,13 @@ export class ViewModel implements VMViewState, IDisposable {
         const _projectAddedStream = this._projectAddedStream.share();
         const _projectRemovedStream = this._projectRemovedStream.share();
         const _projectChangedStream = this._projectChangedStream.share();
-        const projects = Observable.merge(_projectAddedStream, _projectRemovedStream, _projectChangedStream)
+        const projectsObservable = Observable.merge(_projectAddedStream, _projectRemovedStream, _projectChangedStream)
             .debounceTime(200)
             .map(z => this.projects)
             .share();
 
         const outputObservable = _solution.logs
-            .window(_solution.logs.throttleTime(100), () => Observable.timer(100))
+            .window(_solution.logs.throttleTime(100).delay(100))
             .mergeMap(x => x.startWith(null).last())
             .map(() => output);
 
@@ -93,7 +93,7 @@ export class ViewModel implements VMViewState, IDisposable {
             get output() { return outputObservable; },
             get status() { return status; },
             get state() { return state; },
-            get projects() { return projects; },
+            get projects() { return projectsObservable; },
             get projectAdded() { return _projectAddedStream; },
             get projectRemoved() { return _projectRemovedStream; },
             get projectChanged() { return _projectChangedStream; },
@@ -101,7 +101,9 @@ export class ViewModel implements VMViewState, IDisposable {
 
         this._disposable.add(_solution.state.subscribe(_.bind(this._updateState, this)));
 
+        /* tslint:disable */
         (window["clients"] || (window["clients"] = [])).push(this);  //TEMP
+        /* tslint:enable */
 
         this._disposable.add(_solution.state.filter(z => z === DriverState.Connected)
             .subscribe(() => {
@@ -170,7 +172,7 @@ export class ViewModel implements VMViewState, IDisposable {
                 if (system.RuntimePath) {
                     this.runtime = basename(system.RuntimePath);
 
-                    const path = normalize(system.RuntimePath);
+                    let path = normalize(system.RuntimePath);
                     if (win32) {
                         const home = process.env.HOME || process.env.USERPROFILE;
                         if (home && home.trim()) {
@@ -234,7 +236,7 @@ export class ViewModel implements VMViewState, IDisposable {
         }
     }
 
-    private _updateState(state) {
+    private _updateState(state: DriverState) {
         this.isOn = state === DriverState.Connecting || state === DriverState.Connected;
         this.isOff = state === DriverState.Disconnected;
         this.isConnecting = state === DriverState.Connecting;
@@ -249,7 +251,7 @@ export class ViewModel implements VMViewState, IDisposable {
             // Catch global code checks
             _solution.observe.codecheck
                 .filter(z => !z.request.FileName)
-                .map(z => z.response || <any>{})
+                .map(z => z.response || <OmniSharp.Models.QuickFixResponse>{})
                 .map(z => <OmniSharp.Models.DiagnosticLocation[]>z.QuickFixes || []),
             // Evict diagnostics from a code check for the given file
             // Then insert the new diagnostics
@@ -263,7 +265,8 @@ export class ViewModel implements VMViewState, IDisposable {
                 }))
             .map(data => _.sortBy(data, quickFix => quickFix.LogLevel))
             .startWith([])
-            .shareReplay(1);
+            .publishReplay(1)
+            .refCount();
 
         this._disposable.add(codecheck.subscribe((data) => this.diagnostics = data));
         return codecheck;

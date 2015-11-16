@@ -1,5 +1,4 @@
 {
-  "version": "1.5.0-beta",
   "compilerOptions": {
     "target": "es6",
     "module": "es6",
@@ -11,7 +10,6 @@
     "preserveConstEnums": true,
     "experimentalDecorators": true
   },
-  "moduleResolution": "node",
   "formatCodeOptions": {
     "indentSize": 4,
     "tabSize": 4,
@@ -34,7 +32,7 @@
     "./lib/**/*.ts",
     "!./lib/**/*.d.ts",
     "./tsd.d.ts",
-    "./lib/omnisharpatom.d.ts",
+    "./lib/omnisharp.d.ts",
     "./lib/typings.d.ts"
   ],
   "files": [

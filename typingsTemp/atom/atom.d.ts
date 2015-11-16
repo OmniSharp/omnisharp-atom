@@ -13229,7 +13229,7 @@ declare module "atom" {
 
 //${content}
 declare module "fs-plus" {
-    import fs = require("fs");
+    import * as fs from "fs";
     export = fs;
 }
 

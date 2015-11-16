@@ -1,5 +1,7 @@
 import {Observable} from "@reactivex/rxjs";
 import {OmniSharp} from "omnisharp-client";
+export {OmniSharp} from "omnisharp-client";
+
 
 export module OmniSharpAtom {
     interface IFeature {

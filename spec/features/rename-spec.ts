@@ -1,7 +1,7 @@
 import Omni from "../../lib/omni-sharp-server/omni";
 import {Observable, CompositeDisposable} from "@reactivex/rxjs";
 import {setupFeature, restoreBuffers, openEditor} from "../test-helpers";
-import RenameView = require("../../lib/omnisharp-atom/views/rename-view");
+import * as RenameView from "../../lib/omnisharp-atom/views/rename-view";
 const a = require("atom");
 const Range: typeof TextBuffer.Range = a.Range;
 

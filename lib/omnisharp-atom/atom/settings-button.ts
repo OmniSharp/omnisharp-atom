@@ -1,12 +1,10 @@
-import {CompositeDisposable, Disposable, IDisposable} from "../../Disposable";
-import Omni from "../../omni-sharp-server/omni";
-import * as StatusBarComponent from "../views/status-bar-view";
+import {OmniSharpAtom} from "../../omnisharp.d.ts";
+import {CompositeDisposable, IDisposable} from "../../Disposable";
 import * as React from "react";
 import {dock} from "../atom/dock";
 
 class SettingsButton implements OmniSharpAtom.IFeature {
     private disposable: CompositeDisposable;
-    private _active = false;
 
     public activate() {
         this.disposable = new CompositeDisposable();

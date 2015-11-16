@@ -1,5 +1,5 @@
-import {OmniSharp} from "omnisharp-client";
-import {CompositeDisposable} from "@reactivex/rxjs";
+import {OmniSharp, OmniSharpAtom} from "../../omnisharp.d.ts";
+import {CompositeDisposable} from "../../Disposable";
 import Omni from "../../omni-sharp-server/omni";
 import {applyChanges} from "../services/apply-changes";
 
@@ -63,4 +63,4 @@ class CodeFormat implements OmniSharpAtom.IFeature {
     public title = "Code Format";
     public description = "Support for code formatting.";
 }
-export const codeFormat = new CodeFormat
+export const codeFormat = new CodeFormat;

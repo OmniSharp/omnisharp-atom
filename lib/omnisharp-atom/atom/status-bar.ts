@@ -1,12 +1,10 @@
+import {OmniSharpAtom} from "../../omnisharp.d.ts";
 import {CompositeDisposable, Disposable} from "../../Disposable";
-import Omni from "../../omni-sharp-server/omni";
 import {StatusBarElement} from "../views/status-bar-view";
-import * as React from "react";
 
 class StatusBar implements OmniSharpAtom.IAtomFeature {
     private disposable: CompositeDisposable;
     private view: StatusBarElement;
-    private tile: any;
     private statusBar: any;
     private _active = false;
 

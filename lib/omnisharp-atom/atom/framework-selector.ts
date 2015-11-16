@@ -1,4 +1,4 @@
-import {OmniSharp} from "omnisharp-client";
+import {OmniSharp, OmniSharpAtom} from "../../omnisharp.d.ts";
 import {CompositeDisposable, Disposable} from "../../Disposable";
 import {ProjectViewModel} from "../../omni-sharp-server/project-view-model";
 import Omni from "../../omni-sharp-server/omni";
@@ -8,7 +8,6 @@ import * as React from "react";
 class FrameworkSelector implements OmniSharpAtom.IAtomFeature {
     private disposable: CompositeDisposable;
     private view: HTMLSpanElement;
-    private tile: any;
     private statusBar: any;
     private _active = false;
     public project: ProjectViewModel<any>;
@@ -90,7 +89,7 @@ class FrameworkSelector implements OmniSharpAtom.IAtomFeature {
     public setActiveFramework(framework: OmniSharp.Models.DnxFramework) {
         if (this.project) {
             this.project.activeFramework = framework;
-            this._component.setState({ activeFramework: framework })
+            this._component.setState({ activeFramework: framework });
         }
     }
 

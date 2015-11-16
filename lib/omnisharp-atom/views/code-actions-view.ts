@@ -1,4 +1,4 @@
-import SpacePen = require("atom-space-pen-views");
+import * as SpacePen from "atom-space-pen-views";
 
 export interface SelectListViewOptions<T> {
     items: T[];

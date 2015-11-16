@@ -1,15 +1,17 @@
-import {OmniSharp} from "omnisharp-client";
+import {OmniSharp, OmniSharpAtom} from "../../omnisharp.d.ts";
 import * as _ from "lodash";
-import {CompositeDisposable, Observable} from "@reactivex/rxjs";
+import {CompositeDisposable} from "../../Disposable";
+import {Observable, Subscription} from "@reactivex/rxjs";
 import Omni from "../../omni-sharp-server/omni";
-import $ = require("jquery");
+import * as $ from "jquery";
+/* tslint:disable:variable-name */
 const Range: typeof TextBuffer.Range = require("atom").Range;
+/* tslint:enable:variable-name */
 const identifierRegex = /^identifier|identifier$|\.identifier\./;
 
 class GoToDefinition implements OmniSharpAtom.IFeature {
     private disposable: CompositeDisposable;
-    private exprTypeTimeout = null;
-    private marker = null;
+    private marker: any = null;
     private enhancedHighlighting: boolean;
     private wantMetadata: boolean;
 
@@ -29,8 +31,8 @@ class GoToDefinition implements OmniSharpAtom.IFeature {
             const keyup = Observable.merge(
                 Observable.fromEvent<any>(view[0], "focus"),
                 Observable.fromEvent<any>(view[0], "blur"),
-                Observable.fromEventPattern(x => { (<any>atom.getCurrentWindow()).on("focus", x) }, x => { (<any>atom.getCurrentWindow()).removeListener("focus", x) }),
-                Observable.fromEventPattern(x => { (<any>atom.getCurrentWindow()).on("blur", x) }, x => { (<any>atom.getCurrentWindow()).removeListener("blur", x) }),
+                Observable.fromEventPattern(x => { (<any>atom.getCurrentWindow()).on("focus", x); }, x => { (<any>atom.getCurrentWindow()).removeListener("focus", x); }),
+                Observable.fromEventPattern(x => { (<any>atom.getCurrentWindow()).on("blur", x); }, x => { (<any>atom.getCurrentWindow()).removeListener("blur", x); }),
                 Observable.fromEvent<KeyboardEvent>(view[0], "keyup")
                     .filter(x => x.which === 17 || x.which === 224 || x.which === 93 || x.which === 91)
             )
@@ -52,19 +54,19 @@ class GoToDefinition implements OmniSharpAtom.IFeature {
                     .startWith(editor.getCursorBufferPosition())
                     .map(bufferPt => ({ bufferPt, range: this.getWordRange(editor, bufferPt) }))
                     .filter(z => !!z.range)
-                    .distinctUntilChanged(x => x, (current, next) => current.range.isEqual(<any>next.range)));
+                    .distinctUntilChanged((current, next) => current.range.isEqual(<any>next.range)));
 
             editor.onDidDestroy(() => cd.dispose());
 
-            const eventDisposable: Disposable;
+            let eventDisposable: Subscription<any>;
             cd.add(atom.config.observe("omnisharp-atom.enhancedHighlighting", (enabled: boolean) => {
                 this.enhancedHighlighting = enabled;
                 if (eventDisposable) {
-                    eventDisposable.dispose();
+                    eventDisposable.unsubscribe();
                     cd.remove(eventDisposable);
                 }
 
-                const observable = specialKeyDown;
+                let observable = specialKeyDown;
                 if (!enabled) {
                     observable = observable.debounceTime(200);
                 }
@@ -110,7 +112,9 @@ class GoToDefinition implements OmniSharpAtom.IFeature {
                     if (data.FileName != null) {
                         Omni.navigateTo(data);
                     } else if (data.MetadataSource) {
+                        /* tslint:disable:variable-name */
                         const {AssemblyName, TypeName} = data.MetadataSource;
+                        /* tslint:enable:variable-name */
                         atom.workspace.open(`omnisharp://metadata/${AssemblyName}/${TypeName}`, <any>{
                             initialLine: data.Line,
                             initialColumn: data.Column,
@@ -123,29 +127,20 @@ class GoToDefinition implements OmniSharpAtom.IFeature {
         }
     }
 
-    private clearExprTypeTimeout() {
-        if (this.exprTypeTimeout) {
-            clearTimeout(this.exprTypeTimeout);
-            this.exprTypeTimeout = null;
-        }
-    }
-
     private getWordRange(editor: Atom.TextEditor, bufferPt: TextBuffer.Point): TextBuffer.Range {
         const buffer = editor.getBuffer();
-        const startColumn = bufferPt.column;
-        const endColumn = bufferPt.column;
         const line = buffer.getLines()[bufferPt.row];
+        let startColumn = bufferPt.column;
+        let endColumn = bufferPt.column;
 
         if (!/[A-Z_0-9]/i.test(line[bufferPt.column])) {
             if (this.marker) this.removeMarker();
             return;
         }
 
-        while (startColumn > 0 && /[A-Z_0-9]/i.test(line[--startColumn])) {
-        }
+        while (startColumn > 0 && /[A-Z_0-9]/i.test(line[--startColumn])) { /* */        }
 
-        while (endColumn < line.length && /[A-Z_0-9]/i.test(line[++endColumn])) {
-        }
+        while (endColumn < line.length && /[A-Z_0-9]/i.test(line[++endColumn])) { /* */         }
 
         return new Range([bufferPt.row, startColumn + 1], [bufferPt.row, endColumn]);
     }
@@ -159,7 +154,7 @@ class GoToDefinition implements OmniSharpAtom.IFeature {
         const addMark = () => {
             this.removeMarker();
             this.marker = editor.markBufferRange(wordRange);
-            const decoration = editor.decorateMarker(this.marker, { type: "highlight", class: "gotodefinition-underline" });
+            editor.decorateMarker(this.marker, { type: "highlight", class: "gotodefinition-underline" });
         };
 
         if (this.enhancedHighlighting) {
@@ -172,16 +167,16 @@ class GoToDefinition implements OmniSharpAtom.IFeature {
             Omni.request(editor, solution => solution.gotodefinition({
                 Line: bufferPt.row,
                 Column: bufferPt.column
-            })).filter(data => !!data.FileName || !!data["MetadataSource"])
+            })).filter(data => !!data.FileName || !!data.MetadataSource)
                 .subscribe(data => addMark());
         }
     }
 
-    private pixelPositionFromMouseEvent(editor: Atom.TextEditor, editorView, event: MouseEvent) {
+    private pixelPositionFromMouseEvent(editor: Atom.TextEditor, editorView: any, event: MouseEvent) {
         const clientX = event.clientX, clientY = event.clientY;
         const linesClientRect = this.getFromShadowDom(editorView, ".lines")[0].getBoundingClientRect();
-        const top = clientY - linesClientRect.top;
-        const left = clientX - linesClientRect.left;
+        let top = clientY - linesClientRect.top;
+        let left = clientX - linesClientRect.left;
         top += (<any>editor).getScrollTop();
         left += (<any>editor).getScrollLeft();
         return { top: top, left: left };

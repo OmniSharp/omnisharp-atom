@@ -1,14 +1,15 @@
-import {OmniSharp} from "omnisharp-client";
-import {CompositeDisposable, Observable, Disposable, Subject} from "@reactivex/rxjs";
+import {OmniSharp, OmniSharpAtom} from "../../omnisharp.d.ts";
+import {CompositeDisposable, Disposable, IDisposable} from "../../Disposable";
+import {Observable, Subject} from "@reactivex/rxjs";
 import Omni from "../../omni-sharp-server/omni";
 import * as _ from "lodash";
 import {SignatureView} from "../views/signature-help-view";
 
 interface IDecoration {
-    destroy();
+    destroy(): void;
     getMarker(): Atom.Marker;
-    getProperties(): any
-    setProperties(props: any);
+    getProperties(): any;
+    setProperties(props: any): void;
 }
 
 class SignatureHelp implements OmniSharpAtom.IFeature {
@@ -55,7 +56,8 @@ class SignatureHelp implements OmniSharpAtom.IFeature {
 
                 return true;
             })
-            .shareReplay(1);
+            .publishReplay(1)
+            .refCount();
 
         this.disposable.add(shouldContinue
             .filter(z => !z)
@@ -116,7 +118,6 @@ class SignatureBubble implements IDisposable {
     private _decoration: IDecoration;
     private _disposable = new CompositeDisposable();
     private _element: SignatureView;
-    private _path: string;
     private _marker: Atom.Marker;
     private _position: TextBuffer.Point;
     private _member: OmniSharp.Models.SignatureHelp;
@@ -130,7 +131,7 @@ class SignatureBubble implements IDisposable {
 
         this._disposable.add(Disposable.create(() => {
             editorView.classList.remove("signature-help-active");
-        }))
+        }));
 
         this._disposable.add(
             atom.commands.add("atom-text-editor:not(.autocomplete-active).signature-help-active",

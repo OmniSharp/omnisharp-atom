@@ -1,11 +1,11 @@
-import {CompositeDisposable} from "@reactivex/rxjs";
+import {OmniSharpAtom} from "../../omnisharp.d.ts";
+import {CompositeDisposable} from "../../Disposable";
 import Omni from "../../omni-sharp-server/omni";
-import FindSymbolsView = require("../views/find-symbols-view");
+import * as FindSymbolsView from "../views/find-symbols-view";
 
 class FindSymbols implements OmniSharpAtom.IFeature {
     private disposable: CompositeDisposable;
     private view: FindSymbolsView;
-    private editor: Atom.TextEditor;
 
     public activate() {
         this.disposable = new CompositeDisposable();

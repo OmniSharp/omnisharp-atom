@@ -1,6 +1,6 @@
-import {OmniSharp} from "omnisharp-client";
-import SpacePen = require("atom-space-pen-views");
-import $ = require("jquery");
+import {OmniSharp, OmniSharpAtom} from "../../omnisharp.d.ts";
+import * as SpacePen from "atom-space-pen-views";
+import * as $ from "jquery";
 
 class OmniSelectListView extends SpacePen.SelectListView {
     public panel: Atom.Panel;

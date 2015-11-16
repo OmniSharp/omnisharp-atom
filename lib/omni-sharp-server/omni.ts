@@ -1,4 +1,4 @@
-import {OmniSharp} from "omnisharp-client";
+import {OmniSharp, OmniSharpAtom} from "../omnisharp.d.ts";
 import {CompositeDisposable, Disposable, IDisposable} from "../Disposable";
 import {Observable, ReplaySubject, Subject, BehaviorSubject, Scheduler} from "@reactivex/rxjs";
 import manager from "./solution-manager";
@@ -200,6 +200,7 @@ class Omni implements IDisposable {
         });
     }
 
+    /* tslint:disable:member-ordering */
     private static createTextEditorObservable(extensions: string[], disposable: CompositeDisposable) {
         const editors: Atom.TextEditor[] = [];
         const subject = new Subject<Atom.TextEditor>();
@@ -222,7 +223,6 @@ class Omni implements IDisposable {
 
         disposable.add(atom.workspace.observeTextEditors((editor: Atom.TextEditor) => {
             const cb = () => {
-                const p = editor.getPath();
                 if (_.any(extensions, ext => _.endsWith(editor.getPath(), ext))) {
                     editors.push(editor);
                     if (!subject.unsubscribe) subject.next(editor);
@@ -248,6 +248,7 @@ class Omni implements IDisposable {
 
         return Observable.merge(subject, Observable.defer(() => Observable.from(editors))).delay(50);
     }
+    /* tslint:enable:member-ordering */
 
     /**
      * This property can be used to listen to any event that might come across on any solutions.

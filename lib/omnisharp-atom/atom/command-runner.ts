@@ -1,4 +1,4 @@
-import {OmniSharp} from "omnisharp-client";
+import {OmniSharpAtom} from "../../omnisharp.d.ts";
 import {Solution} from "../../omni-sharp-server/solution";
 import {CompositeDisposable, Disposable} from "../../Disposable";
 import {Observable, Subject} from "@reactivex/rxjs";
@@ -65,16 +65,16 @@ class CommandRunner implements OmniSharpAtom.IFeature {
                 }
             }));
 
-        this.disposable.add(Omni.eachEditor((editor, cd) => {
-            cd.add(editor.onDidSave(() => restart.next(editor)));
-            cd.add(editor.getBuffer().onDidReload(() => restart.next(editor)));
-        }));
-
         const processes = this._processesChanged = new Subject<RunProcess[]>();
         this.observe = { processes };
 
         // Auto restart the process if a file changes for a project that applies
         const restart = new Subject<Atom.TextEditor>();
+
+        this.disposable.add(Omni.eachEditor((editor, cd) => {
+            cd.add(editor.onDidSave(() => restart.next(editor)));
+            cd.add(editor.getBuffer().onDidReload(() => restart.next(editor)));
+        }));
 
         this.disposable.add(restart
             .filter(z => !!this._watchProcesses.length)
@@ -158,7 +158,7 @@ export class RunProcess {
     private id: string;
     private process: any;
 
-    constructor(public project: ProjectViewModel<any>, private command: string, private watch: boolean = false) {
+    constructor(public project: ProjectViewModel<any>, private command: string, private watch = false) {
         this.id = `${this.project.name}${this.command}`;
         this.disposable.add(dock.addWindow(this.id, `${this.project.name} ${this.watch ? "--watch" : ""} ${this.command}`, CommandOutputWindow, this, {
             closeable: true,
@@ -176,7 +176,7 @@ export class RunProcess {
     }
 
     public stop() {
-        try { this.process.kill(); } catch (e) { }
+        try { this.process.kill(); } catch (e) { /* */ }
     }
 
     private bootRuntime(runtime: string) {
@@ -252,4 +252,4 @@ export class RunProcess {
     }
 }
 
-export const commandRunner = new CommandRunner
+export const commandRunner = new CommandRunner;

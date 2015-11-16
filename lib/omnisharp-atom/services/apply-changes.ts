@@ -1,4 +1,4 @@
-import {OmniSharp} from "omnisharp-client";
+import {OmniSharp, OmniSharpAtom} from "../../omnisharp.d.ts";
 const Range = require("atom").Range;
 import {Observable} from "@reactivex/rxjs";
 

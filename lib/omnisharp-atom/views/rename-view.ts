@@ -1,4 +1,4 @@
-import spacePenViews = require("atom-space-pen-views")
+import * as spacePenViews from "atom-space-pen-views";
 const $ = spacePenViews.jQuery;
 const TextEditorView = <any>spacePenViews.TextEditorView;
 

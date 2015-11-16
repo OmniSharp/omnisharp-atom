@@ -31,7 +31,7 @@ gulp.task('lint', ['clean'], function() {
 });
 
 gulp.task('typescript', ['lint', 'clean'], function() {
-    var args = ['--declaration', '-p', path.resolve(__dirname.toString())];
+    var args = ['-p', path.resolve(__dirname.toString())];
     var compile = new Promise(function(resolve, reject) {
         var tsc = spawn(path.resolve(__dirname + '/node_modules/.bin/ntsc' + (win32 && '.cmd' || '')), args);
         tsc.stdout.pipe(process.stdout);

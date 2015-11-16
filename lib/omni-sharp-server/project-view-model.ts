@@ -1,8 +1,6 @@
-import {OmniSharp} from "omnisharp-client";
+import {OmniSharp, OmniSharpAtom} from "../omnisharp.d.ts";
 import * as _ from "lodash";
 import {Observable, ReplaySubject} from "@reactivex/rxjs";
-import {basename, dirname, normalize} from "path";
-import {Solution} from "./solution";
 
 const projectFactories: { [key: string]: { new (project: any, solutionPath: string): any; }; } = {
     MsBuildProject: <any>MsBuildProjectViewModel,

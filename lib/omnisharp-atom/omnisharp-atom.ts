@@ -1,8 +1,8 @@
 require("./configure-rx");
 import * as _ from "lodash";
 import {Observable, BehaviorSubject, Subject, AsyncSubject, CompositeDisposable, Disposable} from "@reactivex/rxjs";
-import path = require("path");
-import fs = require("fs");
+import * as path from "path";
+import * as fs from "fs";
 
 // TODO: Remove these at some point to stream line startup.
 import Omni from "../omni-sharp-server/omni";

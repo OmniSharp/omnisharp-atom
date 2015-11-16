@@ -1,10 +1,10 @@
-import {OmniSharp} from "omnisharp-client";
-import * as _ from "lodash";
-import {CompositeDisposable, Subject, Observable, Disposable} from "@reactivex/rxjs";
+import {OmniSharp, OmniSharpAtom} from "../../omnisharp.d.ts";
+import {CompositeDisposable, Disposable} from "../../Disposable";
+import {Observable, Subject} from "@reactivex/rxjs";
 import Omni from "../../omni-sharp-server/omni";
 import {dock} from "../atom/dock";
 import {TestResultsWindow} from "../views/test-results-window";
-import childProcess = require("child_process");
+import * as childProcess from "child_process";
 
 // Using this enum as the Omnisharp one is freaking out.
 enum TestCommandType {
@@ -18,20 +18,17 @@ class RunTests implements OmniSharpAtom.IFeature {
     private window: CompositeDisposable;
     public testResults: OmniSharpAtom.OutputMessage[] = [];
     private lastRun: OmniSharp.Models.GetTestCommandResponse;
+    private results = new Subject< OmniSharpAtom.OutputMessage[]>();
 
     public observe: {
-        updated: Observable<ObjectObserveChange<RunTests>>;
         output: Observable<OmniSharpAtom.OutputMessage[]>;
     };
 
     public activate() {
         this.disposable = new CompositeDisposable();
 
-        const updated = Observable.ofObjectChanges(this);
-
-        const output = Observable.ofArrayChanges(this.testResults).map(x => this.testResults);
+        const output = Observable.from(this.results);
         this.observe = {
-            updated: updated,
             get output() { return output; }
         };
 
@@ -71,12 +68,14 @@ class RunTests implements OmniSharpAtom.IFeature {
 
         const child = childProcess.exec(response.TestCommand, { cwd: response.Directory });
 
-        child.stdout.on("data", (data) => {
+        child.stdout.on("data", (data: any) => {
             this.testResults.push({ message: data, logLevel: "" });
+            this.results.next(this.testResults);
         });
 
-        child.stderr.on("data", (data) => {
+        child.stderr.on("data", (data: any) => {
             this.testResults.push({ message: data, logLevel: "fail" });
+            this.results.next(this.testResults);
         });
 
         dock.selectWindow("test-output");

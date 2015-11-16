@@ -1,7 +1,7 @@
+import {OmniSharpAtom} from "../../omnisharp.d.ts";
 import {CompositeDisposable, Disposable, IDisposable} from "../../Disposable";
 import {each} from "lodash";
 import Omni from "../../omni-sharp-server/omni";
-import * as StatusBarComponent from "../views/status-bar-view";
 import * as React from "react";
 import {dock} from "../atom/dock";
 
@@ -29,7 +29,6 @@ class FeatureEditorButtons implements OmniSharpAtom.IAtomFeature {
     private disposable: CompositeDisposable;
     private statusBar: any;
     private _active = false;
-    private _showInEditor = true;
 
     public activate() {
         this.disposable = new CompositeDisposable();
@@ -73,7 +72,7 @@ class FeatureEditorButtons implements OmniSharpAtom.IAtomFeature {
                 this.disposable.remove(tooltipDisposable);
                 tooltipDisposable.dispose();
             }
-        }
+        };
 
         let tile: any;
         if (atom.config.get("grammar-selector.showOnRightSideOfStatusBar")) {
@@ -113,9 +112,6 @@ class FeatureEditorButtons implements OmniSharpAtom.IAtomFeature {
 
 class FeatureButtons implements OmniSharpAtom.IFeature {
     private disposable: CompositeDisposable;
-    private statusBar: any;
-    private _active = false;
-    private _showInEditor = true;
 
     public activate() {
         this.disposable = new CompositeDisposable();
@@ -127,7 +123,7 @@ class FeatureButtons implements OmniSharpAtom.IFeature {
     }
 
     private _button(button: IButton, index: number) {
-        const {name, config, icon, tooltip} = button;
+        const {config} = button;
 
         let buttonDisposable: IDisposable;
         this.disposable.add(atom.config.observe(config, (value: boolean) => {

@@ -1,11 +1,11 @@
-import {OmniSharp} from "omnisharp-client";
-import SpacePen = require("atom-space-pen-views");
+import {OmniSharp, OmniSharpAtom} from "../../omnisharp.d.ts";
+import * as SpacePen from "atom-space-pen-views";
 import {CompositeDisposable, Disposable, Scheduler, Observable} from "@reactivex/rxjs";
 import * as _ from "lodash";
 import * as React from "react";
 import {ReactClientComponent} from "./react-client-component";
 import {frameworkSelector} from "../atom/framework-selector";
-import $ = require("jquery");
+import * as $ from "jquery";
 
 interface FrameworkSelectorState {
     frameworks?: OmniSharp.Models.DnxFramework[];

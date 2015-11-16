@@ -8,7 +8,7 @@ import {SolutionObserver, SolutionAggregateObserver} from "./composite-solution"
 import {DriverState, findCandidates, Candidate} from "omnisharp-client";
 import {GenericSelectListView} from "../omnisharp-atom/views/generic-list-view";
 
-var openSelectList: GenericSelectListView;
+let openSelectList: GenericSelectListView;
 class SolutionManager {
     /* tslint:disable:variable-name */
     public _unitTestMode_ = false;
@@ -37,6 +37,12 @@ class SolutionManager {
     private _activeSolutions: Solution[] = [];
     public get activeSolutions() {
         return this._activeSolutions;
+    }
+
+    private _activeSolutionsSubject = new Subject<Solution[]>();
+    private _activeSolutionObservable = Observable.from(this._activeSolutionsSubject);
+    public get observeActiveSolutions() {
+        return this._activeSolutionObservable;
     }
 
     // this solution can be used to observe behavior across all solution.
@@ -186,6 +192,7 @@ class SolutionManager {
         cd.add(Disposable.create(() => {
             this._solutionDisposable.remove(cd);
             _.pull(this._activeSolutions, solution);
+            this._activeSolutionsSubject.next(this._activeSolutions.concat());
             this._solutions.delete(candidate);
 
             if (this._temporarySolutions.has(solution)) {
@@ -212,6 +219,7 @@ class SolutionManager {
         }
 
         this._activeSolutions.push(solution);
+        this._activeSolutionsSubject.next(this._activeSolutions.concat());
         if (this._activeSolutions.length === 1)
             this._activeSolution.next(solution);
 
@@ -603,12 +611,12 @@ function addCandidatesInOrder(candidates: { path: string; isProject: boolean; }[
 
         const cds = candidates.slice();
         const candidate = cds.shift();
-        const handleCandidate = (candidate: { path: string; isProject: boolean; }) => {
-            cb(candidate.path, candidate.isProject)
+        const handleCandidate = (candid: { path: string; isProject: boolean; }) => {
+            cb(candid.path, candid.isProject)
                 .do(null, null, () => {
                     if (cds.length) {
-                        candidate = cds.shift();
-                        handleCandidate(candidate);
+                        candid = cds.shift();
+                        handleCandidate(candid);
                     } else {
                         subscriber.next(candidates);
                         subscriber.next();

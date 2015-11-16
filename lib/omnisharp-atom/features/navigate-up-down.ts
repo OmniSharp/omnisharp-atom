@@ -1,5 +1,5 @@
-import {OmniSharp} from "omnisharp-client";
-import {CompositeDisposable} from "@reactivex/rxjs";
+import {OmniSharp, OmniSharpAtom} from "../../omnisharp.d.ts";
+import {CompositeDisposable} from "../../Disposable";
 import Omni from "../../omni-sharp-server/omni";
 
 class Navigate implements OmniSharpAtom.IFeature {

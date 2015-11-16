@@ -1,6 +1,6 @@
+import {OmniSharpAtom} from "../../omnisharp.d.ts";
 import {CompositeDisposable, SingleAssignmentDisposable, Disposable, IDisposable} from "../../Disposable";
 import * as _ from "lodash";
-import Omni from "../../omni-sharp-server/omni";
 import {DockWindow, DockPane, DockButton, IDockWindowProps, DocPaneOptions, DocButtonOptions} from "../views/dock-window";
 import * as React from "react";
 

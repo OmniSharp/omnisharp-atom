@@ -1,8 +1,10 @@
-import * as _ from "lodash";
-import {CompositeDisposable, AsyncSubject, Observable, Scheduler} from "@reactivex/rxjs";
+import {OmniSharpAtom} from "../../omnisharp.d.ts";
+import {CompositeDisposable} from "../../Disposable";
+import {Observable, Scheduler} from "@reactivex/rxjs";
 import Omni from "../../omni-sharp-server/omni";
 import {exists} from "fs";
-const oexists = Observable.fromCallback(exists);
+import {fromCallback} from "../../fromCallback";
+const oexists = fromCallback(exists);
 
 class ReloadWorkspace implements OmniSharpAtom.IFeature {
     private disposable: CompositeDisposable;

@@ -1,20 +1,19 @@
 // Inspiration : https://atom.io/packages/ide-haskell
 // and https://atom.io/packages/ide-flow
 // https://atom.io/packages/atom-typescript
-import {OmniSharp} from "omnisharp-client";
-import {CompositeDisposable, Observable, Disposable} from "@reactivex/rxjs";
+import {OmniSharp, OmniSharpAtom} from "../../omnisharp.d.ts";
+import {CompositeDisposable, Disposable, IDisposable} from "../../Disposable";
+import { Observable, Subscription} from "@reactivex/rxjs";
 import Omni from "../../omni-sharp-server/omni";
-import path = require("path");
-import fs = require("fs");
-import TooltipView = require("../views/tooltip-view");
-import $ = require("jquery");
+import * as TooltipView from "../views/tooltip-view";
+import * as $ from "jquery";
 const escape = require("escape-html");
-import * as _ from "lodash";
 
 class TypeLookup implements OmniSharpAtom.IFeature {
     private disposable: CompositeDisposable;
 
     public activate() {
+        /* tslint:disable:no-string-literal */
         this.disposable = new CompositeDisposable();
         this.disposable.add(Omni.switchActiveEditor((editor, cd) => {
             // subscribe for tooltips
@@ -33,8 +32,9 @@ class TypeLookup implements OmniSharpAtom.IFeature {
             Omni.activeEditor.first().subscribe(editor => {
                 const tooltip = <Tooltip>editor["__omniTooltip"];
                 tooltip.showExpressionTypeOnCommand();
-            })
+            });
         }));
+        /* tslint:enable:no-string-literal */
     }
 
     public dispose() {
@@ -46,12 +46,11 @@ class TypeLookup implements OmniSharpAtom.IFeature {
     public description = "Adds hover tooltips to the editor, also has a keybind";
 }
 
-class Tooltip implements Disposable {
+class Tooltip implements IDisposable {
 
-    private exprTypeTimeout = null;
     private exprTypeTooltip: TooltipView = null;
     private keydown: Observable<KeyboardEvent>;
-    private keydownSubscription: IDisposable;
+    private keydownSubscription: Subscription<any>;
     private rawView: any;
     private disposable: CompositeDisposable;
 
@@ -64,7 +63,7 @@ class Tooltip implements Disposable {
         if (!scroll[0]) return;
 
         // to debounce mousemove event"s firing for some reason on some machines
-        const lastExprTypeBufferPt: any;
+        let lastExprTypeBufferPt: any;
 
         const mousemove = Observable.fromEvent<MouseEvent>(scroll[0], "mousemove");
         const mouseout = Observable.fromEvent<MouseEvent>(scroll[0], "mouseout");
@@ -91,13 +90,13 @@ class Tooltip implements Disposable {
 
         cd.add(mouseout.subscribe((e) => this.hideExpressionType()));
 
-        cd.add(Omni.switchActiveEditor((editor, cd) => {
-            cd.add(Disposable.create(() => this.hideExpressionType()));
+        cd.add(Omni.switchActiveEditor((edt, innerCd) => {
+            innerCd.add(Disposable.create(() => this.hideExpressionType()));
         }));
 
         cd.add(Disposable.create(() => {
             this.hideExpressionType();
-        }))
+        }));
     }
 
     private subcribeKeyDown() {
@@ -108,7 +107,6 @@ class Tooltip implements Disposable {
     public showExpressionTypeOnCommand() {
         if (this.editor.cursors.length < 1) return;
 
-        const buffer = this.editor.getBuffer();
         const bufferPt = this.editor.getCursorBufferPosition();
 
         if (!this.checkPosition(bufferPt)) return;
@@ -149,18 +147,20 @@ class Tooltip implements Disposable {
         this.showToolTip(bufferPt, tooltipRect);
     }
 
-    private checkPosition(bufferPt) {
+    private checkPosition(bufferPt: TextBuffer.Point) {
         const curCharPixelPt = this.rawView.pixelPositionForBufferPosition([bufferPt.row, bufferPt.column]);
         const nextCharPixelPt = this.rawView.pixelPositionForBufferPosition([bufferPt.row, bufferPt.column + 1]);
 
-        if (curCharPixelPt.left >= nextCharPixelPt.left) { return false; }
-        else { return true };
+        if (curCharPixelPt.left >= nextCharPixelPt.left) {
+            return false;
+        } else {
+            return true;
+        }
     }
 
-    private showToolTip(bufferPt, tooltipRect) {
+    private showToolTip(bufferPt: TextBuffer.Point, tooltipRect: any) {
         this.exprTypeTooltip = new TooltipView(tooltipRect);
 
-        const buffer = this.editor.getBuffer();
         // Actually make the program manager query
         Omni.request(solution => solution.typelookup({
             IncludeDocumentation: true,
@@ -170,9 +170,9 @@ class Tooltip implements Disposable {
             if (response.Type === null) {
                 return;
             }
-            const message = `<b>${escape(response.Type) }</b>`;
+            let message = `<b>${escape(response.Type)}</b>`;
             if (response.Documentation) {
-                message = message + `<br/><i>${escape(response.Documentation) }</i>`;
+                message = message + `<br/><i>${escape(response.Documentation)}</i>`;
             }
             // Sorry about this "if". It"s in the code I copied so I guess its there for a reason
             if (this.exprTypeTooltip) {
@@ -192,29 +192,25 @@ class Tooltip implements Disposable {
 
         if (this.keydownSubscription) {
             this.disposable.remove(this.keydownSubscription);
-            this.keydownSubscription.dispose();
+            this.keydownSubscription.unsubscribe();
             this.keydownSubscription = null;
         }
     }
 
     private getFromShadowDom(element: JQuery, selector: string): JQuery {
         const el = element[0];
-        const found = (<any> el).rootElement.querySelectorAll(selector);
+        const found = (<any>el).rootElement.querySelectorAll(selector);
         return $(found[0]);
     }
 
-    private pixelPositionFromMouseEvent(editorView, event: MouseEvent) {
+    private pixelPositionFromMouseEvent(editorView: any, event: MouseEvent) {
         const clientX = event.clientX, clientY = event.clientY;
         const linesClientRect = this.getFromShadowDom(editorView, ".lines")[0].getBoundingClientRect();
-        const top = clientY - linesClientRect.top;
-        const left = clientX - linesClientRect.left;
+        let top = clientY - linesClientRect.top;
+        let left = clientX - linesClientRect.left;
         top += (<any>this.editor).getScrollTop();
         left += (<any>this.editor).getScrollLeft();
         return { top: top, left: left };
-    }
-
-    private screenPositionFromMouseEvent(editorView, event) {
-        return editorView.getModel().screenPositionForPixelPosition(this.pixelPositionFromMouseEvent(editorView, event));
     }
 }
 

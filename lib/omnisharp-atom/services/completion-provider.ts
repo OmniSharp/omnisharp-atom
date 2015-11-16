@@ -1,10 +1,10 @@
-import {OmniSharp} from "omnisharp-client";
+import {OmniSharp, OmniSharpAtom} from "../../omnisharp.d.ts";
 import Omni from "../../omni-sharp-server/omni";
-import OmniSharpAtom = require("../omnisharp-atom");
+import * as OmniSharpAtom from "../omnisharp-atom";
 
 import * as _ from "lodash";
 import {Subject, BehaviorSubject, Observable, CompositeDisposable, Scheduler} from "@reactivex/rxjs";
-import Promise = require("bluebird");
+import * as Promise from "bluebird";
 const filter = require("fuzzaldrin").filter;
 
 interface RequestOptions {

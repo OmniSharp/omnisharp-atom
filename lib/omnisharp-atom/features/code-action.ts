@@ -1,4 +1,4 @@
-import {OmniSharp} from "omnisharp-client";
+import {OmniSharp, OmniSharpAtom} from "../../omnisharp.d.ts";
 import * as _ from "lodash";
 import {CompositeDisposable, IDisposable} from "../../Disposable";
 import {Subject, Observable, Scheduler} from "@reactivex/rxjs";
@@ -26,9 +26,8 @@ class CodeAction implements OmniSharpAtom.IFeature {
                         confirmed: (item) => {
                             if (!editor || editor.isDestroyed()) return;
 
-                            const range = editor.getSelectedBufferRange();
                             this.runCodeActionRequest(editor, request, item.Identifier)
-                                .subscribe((response) => applyAllChanges(response.Changes));
+                                .subscribe((runResponse) => applyAllChanges(runResponse.Changes));
                         }
                     }, editor);
                 });
@@ -39,7 +38,7 @@ class CodeAction implements OmniSharpAtom.IFeature {
             cd.add(Omni.listener.getcodeactions
                 .filter(z => z.request.FileName === editor.getPath())
                 .filter(ctx => ctx.response.CodeActions.length > 0)
-                .subscribe(({response, request}) => {
+                .subscribe(({request}) => {
                     if (marker) {
                         marker.destroy();
                         marker = null;
@@ -54,8 +53,6 @@ class CodeAction implements OmniSharpAtom.IFeature {
             const makeLightbulbRequest = (position: TextBuffer.Point) => {
                 if (subscription) subscription.dispose();
                 if (!editor || editor.isDestroyed()) return;
-
-                const range = editor.getSelectedBufferRange();
 
                 this.getCodeActionsRequest(editor, true)
                     .subscribe(({response}) => {
@@ -89,7 +86,7 @@ class CodeAction implements OmniSharpAtom.IFeature {
                 .subscribe(cursor => update(cursor.newBufferPosition)));
 
             cd.add(editor.onDidStopChanging(_.debounce(() => !onDidStopChanging.isUnsubscribed && onDidStopChanging.next(true), 1000)));
-            cd.add(editor.onDidChangeCursorPosition(_.debounce(e => {
+            cd.add(editor.onDidChangeCursorPosition(_.debounce((e: any) => {
                 const oldPos = e.oldBufferPosition;
                 const newPos = e.newBufferPosition;
 
@@ -102,7 +99,9 @@ class CodeAction implements OmniSharpAtom.IFeature {
                     }
                 }
 
-                !onDidChangeCursorPosition.isUnsubscribed && onDidChangeCursorPosition.next(e);
+                if (!onDidChangeCursorPosition.isUnsubscribed) {
+                    onDidChangeCursorPosition.next(e);
+                }
             }, 1000)));
         }));
     }

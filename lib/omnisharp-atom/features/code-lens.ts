@@ -1,15 +1,15 @@
-import {OmniSharp} from "omnisharp-client";
+import {OmniSharp, OmniSharpAtom} from "../../omnisharp.d.ts";
 import * as _ from "lodash";
-import {CompositeDisposable, Observable, Disposable, Subject, Scheduler} from "@reactivex/rxjs";
+import {CompositeDisposable, Disposable, IDisposable} from "../../Disposable";
+import {Observable, Subject, Scheduler} from "@reactivex/rxjs";
 import Omni from "../../omni-sharp-server/omni";
-import {DriverState} from "omnisharp-client";
 import {read, write} from "fastdom";
 
 interface IDecoration {
-    destroy();
+    destroy(): void;
     getMarker(): Atom.Marker;
-    getProperties(): any
-    setProperties(props: any);
+    getProperties(): any;
+    setProperties(props: any): void;
 }
 
 class CodeLens implements OmniSharpAtom.IFeature {
@@ -65,12 +65,14 @@ class CodeLens implements OmniSharpAtom.IFeature {
             };
 
             cd.add(editor.getBuffer().onDidStopChanging(_.debounce(() => {
-                !subject.isDisposed && subject.next(true);
+                if (!subject.isUnsubscribed) {
+                    subject.next(true);
+                }
                 bindDidChange();
             }, 5000)));
 
-            cd.add(editor.getBuffer().onDidSave(() => !subject.isDisposed && subject.next(true)));
-            cd.add(editor.getBuffer().onDidReload(() => !subject.isDisposed && subject.next(true)));
+            cd.add(editor.getBuffer().onDidSave(() => !subject.isUnsubscribed && subject.next(true)));
+            cd.add(editor.getBuffer().onDidReload(() => !subject.isUnsubscribed && subject.next(true)));
             cd.add(Omni.whenEditorConnected(editor).subscribe(() => subject.next(true)));
 
             cd.add(editor.onDidChangeScrollTop(() => this.updateDecoratorVisiblility(editor)));
@@ -99,8 +101,6 @@ class CodeLens implements OmniSharpAtom.IFeature {
     public updateCodeLens(editor: Atom.TextEditor) {
         if (!this.decorations.has(editor)) this.decorations.set(editor, new Set<Lens>());
         const decorations = this.decorations.get(editor);
-        const lineHeight = editor.getLineHeightInPixels();
-
         const updated = new WeakSet<Lens>();
 
         if (editor.isDestroyed()) {
@@ -116,10 +116,11 @@ class CodeLens implements OmniSharpAtom.IFeature {
                 const marker: Atom.Marker = (<any>editor).markBufferRange(range, { invalidate: "inside" });
 
                 const iteratee = decorations.values();
-                const decoration = iteratee.next();
+                let decoration = iteratee.next();
+                let lens: Lens;
                 while (!decoration.done) {
                     if (decoration.value.isEqual(marker)) {
-                        const lens = decoration.value;
+                        lens = decoration.value;
                         break;
                     }
                     decoration = iteratee.next();
@@ -167,7 +168,6 @@ export class Lens implements IDisposable {
     private _update: Subject<boolean>;
     private _row: number;
     private _decoration: IDecoration;
-    private _resetDisposable: IDisposable;
     private _disposable = new CompositeDisposable();
     private _element: HTMLDivElement;
     private _updateObservable: Observable<number>;
@@ -206,18 +206,21 @@ export class Lens implements IDisposable {
         const isVisible = this._isVisible();
         this._updateDecoration(isVisible);
 
+        let result: Observable<number>;
         if (isVisible) {
-            const result = this._updateObservable.take(1);
+            result = this._updateObservable.take(1);
         } else {
-            const result = Observable.empty<number>();
+            result = Observable.empty<number>();
         }
 
         this._issueUpdate(isVisible);
         return result;
     }
 
-    private _issueUpdate = _.debounce((isVisible) => {
-        !this._update.isDisposed && this._update.next(isVisible);
+    private _issueUpdate = _.debounce((isVisible: boolean) => {
+        if (!this._update.isUnsubscribed) {
+            this._update.next(isVisible);
+        }
     }, 250);
 
     public updateTop(lineHeight: number) {
@@ -232,7 +235,9 @@ export class Lens implements IDisposable {
                 if (x <= 0) {
                     this.dispose();
                 } else {
-                    this._element && (this._element.textContent = x.toString());
+                    if (this._element) {
+                        this._element.textContent = x.toString();
+                    }
                 }
             });
     }

@@ -1,4 +1,4 @@
-import {OmniSharp} from "omnisharp-client";
+import {OmniSharp, OmniSharpAtom} from "../omnisharp.d.ts";
 import * as _ from "lodash";
 import {CompositeDisposable} from "../Disposable";
 import {Observable, Subject} from "@reactivex/rxjs";
@@ -13,6 +13,8 @@ interface SolutionOptions extends OmnisharpClientOptions {
 import {ViewModel} from "./view-model";
 
 export class Solution extends ClientV2 {
+    private static _regex = new RegExp(String.fromCharCode(0xFFFD), "g");
+
     public model: ViewModel;
     public logs: Observable<OmniSharpAtom.OutputMessage>;
     public path: string;
@@ -34,12 +36,12 @@ export class Solution extends ClientV2 {
         this.temporary = options.temporary;
         this.model = new ViewModel(this);
         this.path = options.projectPath;
-        this.index = options["index"];
+        this.index = options.index;
         this.repository = options.repository;
         this.setupRepository();
         this._solutionDisposable.add(this.model);
 
-        this.registerFixup((action: string, request: any, options?: OmniSharp.RequestOptions) => this._fixupRequest(action, request));
+        this.registerFixup((action: string, request: any, opts?: OmniSharp.RequestOptions) => this._fixupRequest(action, request));
     }
 
     public toggle() {
@@ -96,8 +98,7 @@ export class Solution extends ClientV2 {
         return this;
     }
 
-    private static _regex = new RegExp(String.fromCharCode(0xFFFD), "g");
-    private _fixupRequest<TRequest, TResponse>(action: string, request: TRequest) {
+    private _fixupRequest<TRequest extends OmniSharp.Models.Request, TResponse>(action: string, request: TRequest) {
         // Only send changes for requests that really need them.
         if (this._currentEditor && _.isObject(request)) {
             const editor = this._currentEditor;
@@ -126,8 +127,8 @@ export class Solution extends ClientV2 {
             */
         }
 
-        if (request["Buffer"]) {
-            request["Buffer"] = request["Buffer"].replace(Solution._regex, "");
+        if (request.Buffer) {
+            request.Buffer = request.Buffer.replace(Solution._regex, "");
         }
     }
 

@@ -1,3 +1,4 @@
+import {OmniSharpAtom} from "../../omnisharp.d.ts";
 import {CompositeDisposable} from "../../Disposable";
 import {Observable} from "@reactivex/rxjs";
 import * as _ from "lodash";
@@ -34,7 +35,7 @@ class UpdateProject implements OmniSharpAtom.IAtomFeature {
             .filter(z => this._autoAddExternalProjects || this._nagAddExternalProjects)
             .filter(z => !_.startsWith(z.path, z.solutionPath))
             .filter(z => !_.any(this._paths, x => _.startsWith(z.path, x)))
-            .bufferToggle(Omni.listener.model.projectAdded.throttleTime(1000), () => Observable.timer(1000))
+            .buffer(Omni.listener.model.projectAdded.throttleTime(1000).delay(1000))
             .filter(z => z.length > 0)
             .subscribe(project => this.handleProjectAdded(project)));
 
@@ -42,7 +43,7 @@ class UpdateProject implements OmniSharpAtom.IAtomFeature {
             .filter(z => this._autoAddExternalProjects || this._nagAddExternalProjects)
             .filter(z => !_.startsWith(z.path, z.solutionPath))
             .filter(z => _.any(this._paths, x => _.startsWith(z.path, x)))
-            .bufferToggle(Omni.listener.model.projectRemoved.throttleTime(1000), () => Observable.timer(1000))
+            .buffer(Omni.listener.model.projectRemoved.throttleTime(1000).delay(1000))
             .filter(z => z.length > 0)
             .subscribe(project => this.handleProjectRemoved(project)));
 
@@ -81,16 +82,16 @@ class UpdateProject implements OmniSharpAtom.IAtomFeature {
     }
 
     private adjustTreeView(oldPath: string, newPath: string) {
-        const newPaths = this._paths.slice()
+        const newPaths = this._paths.slice();
         newPaths.splice(_.findIndex(this._paths, oldPath), 1, newPath);
         atom.project.setPaths(<any>newPaths);
     }
 
     private getProjectDirectories(projects: ProjectViewModel<any>[]) {
         return Observable.from(_.unique(projects.map(z => z.path)))
-            .mergeMap(project => stat(project).map(stat => ({ stat, project })))
-            .map(({project, stat}) => {
-                if (stat.isDirectory()) {
+            .mergeMap(project => stat(project).map(stats => ({ stats, project })))
+            .map(({project, stats}) => {
+                if (stats.isDirectory()) {
                     return project;
                 } else {
                     return dirname(project);
@@ -134,8 +135,6 @@ class UpdateProject implements OmniSharpAtom.IAtomFeature {
             });
     }
 
-    private _notifications: { [key: string]: Atom.Notification } = {};
-
     private handleProjectRemoved(projects: ProjectViewModel<any>[]) {
         this.getProjectDirectories(projects)
             .subscribe(paths => {
@@ -170,7 +169,7 @@ class UpdateProject implements OmniSharpAtom.IAtomFeature {
             });
     }
 
-    public attach() { }
+    public attach() { /* */ }
 
     public dispose() {
         this.disposable.dispose();

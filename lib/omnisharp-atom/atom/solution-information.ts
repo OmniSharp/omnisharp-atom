@@ -1,18 +1,15 @@
+import {OmniSharpAtom} from "../../omnisharp.d.ts";
 import {CompositeDisposable, Disposable, IDisposable} from "../../Disposable";
 import {Observable} from "@reactivex/rxjs";
-import Omni from "../../omni-sharp-server/omni";
 import * as _ from "lodash";
-import {dock} from "../atom/dock";
 import {SolutionStatusCard, ICardProps} from "../views/solution-status-view";
 import {ViewModel} from "../../omni-sharp-server/view-model";
 import manager from "../../omni-sharp-server/solution-manager";
 import {DriverState} from "omnisharp-client";
 import * as React from "react";
-import * as $ from "jquery";
 
 class SolutionInformation implements OmniSharpAtom.IFeature {
     private disposable: CompositeDisposable;
-    private window: CompositeDisposable;
     public selectedIndex: number = 0;
     private card: SolutionStatusCard<ICardProps>;
     private cardDisposable: IDisposable;
@@ -20,7 +17,7 @@ class SolutionInformation implements OmniSharpAtom.IFeature {
 
     public observe: {
         solutions: Observable<ViewModel[]>;
-    }
+    };
 
     public solutions: ViewModel[] = [];
 
@@ -59,7 +56,7 @@ class SolutionInformation implements OmniSharpAtom.IFeature {
         this.disposable.add(atom.commands.add("atom-workspace", "omnisharp-atom:restart-server", () => {
             const solution = manager.activeSolutions[this.selectedIndex];
             solution.state
-                .filter(z => z == DriverState.Disconnected)
+                .filter(z => z === DriverState.Disconnected)
                 .take(1)
                 .delay(500)
                 .subscribe(() => {
@@ -129,8 +126,6 @@ class SolutionInformation implements OmniSharpAtom.IFeature {
             if (this.cardDisposable) {
                 this.cardDisposable.dispose();
             }
-
-            const notice = <any>React.render(React.DOM.div({}, "Solution not loaded!"), this.container);
 
             disposable.add(Disposable.create(() => {
                 React.unmountComponentAtNode(this.container);

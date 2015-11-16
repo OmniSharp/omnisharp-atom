@@ -1,7 +1,7 @@
+import {OmniSharpAtom} from "../../omnisharp.d.ts";
 import {CompositeDisposable} from "../../Disposable";
 import {Observable} from "@reactivex/rxjs";
 import Omni from "../../omni-sharp-server/omni";
-import * as _ from "lodash";
 import {OmnisharpClientStatus} from "omnisharp-client";
 import {dock} from "../atom/dock";
 import {OutputWindow} from "../views/omni-output-pane-view";
@@ -14,7 +14,7 @@ class ServerInformation implements OmniSharpAtom.IFeature {
         output: Observable<OmniSharpAtom.OutputMessage[]>;
         projects: Observable<OmniSharpAtom.IProjectViewModel[]>;
         model: Observable<ViewModel>;
-    }
+    };
 
     public model: ViewModel;
 

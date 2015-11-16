@@ -1,9 +1,9 @@
-import {OmniSharp} from "omnisharp-client";
+import {OmniSharp, OmniSharpAtom} from "../../omnisharp.d.ts";
 import * as _ from "lodash";
-import path = require("path")
+import * as path from "path";
 import Omni from "../../omni-sharp-server/omni";
 import * as React from "react";
-import $ = require("jquery");
+import * as $ from "jquery";
 import {ReactClientComponent} from "./react-client-component";
 import {codeCheck} from "../features/code-check";
 

@@ -1,6 +1,6 @@
-import {CompositeDisposable} from "@reactivex/rxjs";
+import {OmniSharpAtom} from "../../omnisharp.d.ts";
+import {CompositeDisposable} from "../../Disposable";
 import Omni from "../../omni-sharp-server/omni";
-import path = require("path");
 
 class PackageRestore implements OmniSharpAtom.IFeature {
     private disposable: CompositeDisposable;

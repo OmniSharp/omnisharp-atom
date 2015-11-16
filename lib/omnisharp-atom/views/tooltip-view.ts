@@ -1,4 +1,4 @@
-import spacePen = require("atom-space-pen-views");
+import * as spacePen from "atom-space-pen-views";
 const $ = spacePen.jQuery;
 
 interface Rect {

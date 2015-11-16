@@ -1,8 +1,10 @@
-import path = require("path");
-import fs = require("fs");
+import {OmniSharpAtom} from "../../omnisharp.d.ts";
+import * as path from "path";
+import * as fs from "fs";
 import Omni from "../../omni-sharp-server/omni";
 import * as _ from "lodash";
-import {Observable, Disposable, CompositeDisposable, Subject} from "@reactivex/rxjs";
+import {IDisposable, CompositeDisposable} from "../../Disposable";
+import {Observable, Subject} from "@reactivex/rxjs";
 import {File} from "atom";
 import {ProjectViewModel} from "../../omni-sharp-server/project-view-model";
 import {Solution} from "../../omni-sharp-server/solution";
@@ -10,14 +12,14 @@ import {Solution} from "../../omni-sharp-server/solution";
 function projectLock(solution: Solution, project: ProjectViewModel<any>, filePath: string) {
     const disposable = new CompositeDisposable();
     const subject = new Subject<string>();
-    const file = new File(filePath),
-        onDidChange = file.onDidChange(() => subject.next(filePath)),
+    const file = new File(filePath);
+    let onDidChange = file.onDidChange(() => subject.next(filePath)),
         onWillThrowWatchError = file.onWillThrowWatchError(() => {
             subject.next(filePath);
             disposable.remove(onDidChange);
             onDidChange.dispose();
             _.delay(() => {
-                onDidChange = file.onDidChange(() => subject.next(filePath))
+                onDidChange = file.onDidChange(() => subject.next(filePath));
                 disposable.add(onDidChange);
             }, 5000);
         });
@@ -27,7 +29,7 @@ function projectLock(solution: Solution, project: ProjectViewModel<any>, filePat
     disposable.add(subject);
 
     return {
-        observable: subject.throttleTime(30000).asObservable(),
+        observable: Observable.from(subject.throttleTime(30000)),
         dispose: () => disposable.dispose()
     };
 }
@@ -46,17 +48,17 @@ class FileMonitor implements OmniSharpAtom.IFeature {
                 editor.onDidSave(() => {
                     s.next(false);
                 });
-                return s.asObservable();
+                return Observable.from(s);
             });
 
-        const pauser = Observable.merge(
-                projectJsonEditors.throttleTime(10000),
-                Omni.listener.packageRestoreFinished.debounceTime(1000).map(z => true)
-            ).startWith(true);
+        /*const pauser = Observable.merge(
+            projectJsonEditors.throttleTime(10000),
+            Omni.listener.packageRestoreFinished.debounceTime(1000).map(z => true)
+        ).startWith(true);*/
 
         const changes = Observable.merge(Omni.listener.model.projectAdded, Omni.listener.model.projectChanged)
             .map(project => ({ project, filePath: path.join(project.path, "project.lock.json") }))
-            .filter(({ project, filePath}) => fs.existsSync(filePath))
+            .filter(({ filePath}) => fs.existsSync(filePath))
             .mergeMap(({ project, filePath}) =>
                 Omni.getSolutionForProject(project).map(solution => ({ solution, project, filePath })))
             .filter(x => !!x.solution)
@@ -71,15 +73,15 @@ class FileMonitor implements OmniSharpAtom.IFeature {
                 this.filesMap.set(project, lock);
                 return lock.observable.map(path => ({ solution, filePath }));
             })
-            .share()
-            .pausable(pauser);
+            .share();
+            /*.pausable(pauser);*/
 
         this.disposable.add(changes
-            .buffer(changes.throttleTime(1000), () => Observable.timer(1000))
-            .subscribe(changes => {
-                _.each(_.groupBy(changes, x => x.solution.uniqueId), changes => {
-                    const solution = changes[0].solution;
-                    const paths = _.unique(changes.map(x => x.filePath));
+            .buffer(changes.throttleTime(1000).delay(1000))
+            .subscribe(files => {
+                _.each(_.groupBy(files, x => x.solution.uniqueId), items => {
+                    const solution = items[0].solution;
+                    const paths = _.unique(items.map(x => x.filePath));
                     solution.filesChanged(paths.map(z => ({ FileName: z })));
                 });
             }));
