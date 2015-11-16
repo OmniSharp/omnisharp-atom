@@ -1,18 +1,18 @@
-import {CompositeDisposable} from "rx";
-import Omni = require('../../omni-sharp-server/omni')
-import {applyChanges} from '../services/apply-changes';
+import {CompositeDisposable} from "@reactivex/rxjs";
+import Omni from "../../omni-sharp-server/omni";
+import {applyChanges} from "../services/apply-changes";
 
 class CodeFormat implements OmniSharp.IFeature {
-    private disposable: Rx.CompositeDisposable;
+    private disposable: CompositeDisposable;
 
     public activate() {
         this.disposable = new CompositeDisposable();
-        this.disposable.add(Omni.addTextEditorCommand('omnisharp-atom:code-format',
+        this.disposable.add(Omni.addTextEditorCommand("omnisharp-atom:code-format",
             () => this.format()));
-        this.disposable.add(Omni.addTextEditorCommand('omnisharp-atom:code-format-on-semicolon',
-            (event) => this.formatOnKeystroke(event, ';')));
-        this.disposable.add(Omni.addTextEditorCommand('omnisharp-atom:code-format-on-curly-brace',
-            (event) => this.formatOnKeystroke(event, '}')));
+        this.disposable.add(Omni.addTextEditorCommand("omnisharp-atom:code-format-on-semicolon",
+            (event) => this.formatOnKeystroke(event, ";")));
+        this.disposable.add(Omni.addTextEditorCommand("omnisharp-atom:code-format-on-curly-brace",
+            (event) => this.formatOnKeystroke(event, "}")));
     }
 
     public dispose() {
@@ -20,11 +20,11 @@ class CodeFormat implements OmniSharp.IFeature {
     }
 
     public format() {
-        var editor = atom.workspace.getActiveTextEditor();
+        const editor = atom.workspace.getActiveTextEditor();
         if (editor) {
-            var buffer = editor.getBuffer();
+            const buffer = editor.getBuffer();
             Omni.request(editor, solution => {
-                var request = <OmniSharp.Models.FormatRangeRequest>{
+                const request = <OmniSharp.Models.FormatRangeRequest>{
                     Line: 0,
                     Column: 0,
                     EndLine: buffer.getLineCount() - 1,
@@ -33,23 +33,23 @@ class CodeFormat implements OmniSharp.IFeature {
 
                 return solution
                     .formatRange(request)
-                    .tapOnNext((data) => applyChanges(editor, data));
+                    .do((data) => applyChanges(editor, data));
             });
         }
     }
 
     public formatOnKeystroke(event: Event, char: string): any {
-        var editor = atom.workspace.getActiveTextEditor();
+        const editor = atom.workspace.getActiveTextEditor();
         if (editor) {
             editor.insertText(char);
 
             Omni.request(editor, solution => {
-                var request = <OmniSharp.Models.FormatAfterKeystrokeRequest>{
+                const request = <OmniSharp.Models.FormatAfterKeystrokeRequest>{
                     Character: char
                 };
 
                 return solution.formatAfterKeystroke(request)
-                    .tapOnNext((data) => applyChanges(editor, data));
+                    .do((data) => applyChanges(editor, data));
             });
         }
         event.preventDefault();
@@ -59,7 +59,7 @@ class CodeFormat implements OmniSharp.IFeature {
     }
 
     public required = true;
-    public title = 'Code Format';
-    public description = 'Support for code formatting.';
+    public title = "Code Format";
+    public description = "Support for code formatting.";
 }
-export var codeFormat = new CodeFormat
+export const codeFormat = new CodeFormat

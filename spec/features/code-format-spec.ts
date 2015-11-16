@@ -1,46 +1,46 @@
-import Omni = require('../../lib/omni-sharp-server/omni');
-import {CompositeDisposable} from "rx";
+import Omni from "../../lib/omni-sharp-server/omni";
+import {CompositeDisposable} from "@reactivex/rxjs";
 import {setupFeature, restoreBuffers, openEditor} from "../test-helpers";
 import {codeFormat} from "../../lib/omnisharp-atom/features/code-format";
 
-describe('Code Format', () => {
-    setupFeature(['features/code-format']);
+describe("Code Format", () => {
+    setupFeature(["features/code-format"]);
 
-    it('adds commands', () => {
-        var disposable = new CompositeDisposable();
+    it("adds commands", () => {
+        const disposable = new CompositeDisposable();
 
         runs(() => {
-            var commands: any = atom.commands;
+            const commands: any = atom.commands;
 
-            expect(commands.registeredCommands['omnisharp-atom:code-format']).toBeTruthy();
-            expect(commands.registeredCommands['omnisharp-atom:code-format-on-semicolon']).toBeTruthy();
-            expect(commands.registeredCommands['omnisharp-atom:code-format-on-curly-brace']).toBeTruthy();
+            expect(commands.registeredCommands["omnisharp-atom:code-format"]).toBeTruthy();
+            expect(commands.registeredCommands["omnisharp-atom:code-format-on-semicolon"]).toBeTruthy();
+            expect(commands.registeredCommands["omnisharp-atom:code-format-on-curly-brace"]).toBeTruthy();
 
             disposable.dispose();
         });
     });
 
-    it('formats code', () => {
-        var d = restoreBuffers();
-        var disposable = new CompositeDisposable();
+    it("formats code", () => {
+        const d = restoreBuffers();
+        const disposable = new CompositeDisposable();
         disposable.add(d);
-        var e: Atom.TextEditor;
-        var request: OmniSharp.Models.FormatRangeRequest;
-        var response: OmniSharp.Models.FormatRangeResponse;
+        const e: Atom.TextEditor;
+        const request: OmniSharp.Models.FormatRangeRequest;
+        const response: OmniSharp.Models.FormatRangeResponse;
 
-        var responsePromise = Omni.listener.formatRange
-            .tapOnNext(r => request = r.request)
-            .tapOnNext(r => response = r.response)
+        const responsePromise = Omni.listener.formatRange
+            .do(r => request = r.request)
+            .do(r => response = r.response)
             .take(1)
             .toPromise();
 
-        waitsForPromise(() => atom.workspace.open('simple/code-format/UnformattedClass.cs')
+        waitsForPromise(() => atom.workspace.open("simple/code-format/UnformattedClass.cs")
             .then((editor) => {
                 e = editor;
                 codeFormat.format();
 
-                var observable = Omni.listener.formatRange
-                    .tapOnNext(r =>
+                const observable = Omni.listener.formatRange
+                    .do(r =>
                         request = r.request)
                     .take(1)
                     .delay(400);
@@ -50,12 +50,12 @@ describe('Code Format', () => {
 
         runs(() => {
             expect(e.getPath()).toEqual(request.FileName);
-            var expected = `public class UnformattedClass
+            const expected = `public class UnformattedClass
 {
     public const int TheAnswer = 42;
 }
-`.replace(/\r|\n/g, '');
-            var result = e.getText().replace(/\r|\n/g, '');
+`.replace(/\r|\n/g, "");
+            const result = e.getText().replace(/\r|\n/g, "");
             expect(result).toContain(expected);
             disposable.dispose();
         });

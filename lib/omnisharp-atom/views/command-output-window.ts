@@ -1,7 +1,7 @@
-import {Disposable, Observable} from "rx";
-import _ = require('lodash')
-import Omni = require('../../omni-sharp-server/omni')
-import React = require('react');
+import {Disposable, Observable} from "@reactivex/rxjs";
+import * as _ from "lodash";
+import Omni from "../../omni-sharp-server/omni";
+import * as React from "react";
 import {ReactClientComponent} from "./react-client-component";
 
 interface ICommandOutputWindowState {
@@ -22,7 +22,7 @@ export class CommandOutputWindow extends ReactClientComponent<{ update: Observab
     }
 
     private scrollToBottom() {
-        var item = <any> React.findDOMNode(this).lastElementChild.lastElementChild;
+        const item = <any> React.findDOMNode(this).lastElementChild.lastElementChild;
         if (item) item.scrollIntoViewIfNeeded();
     }
 
@@ -34,11 +34,11 @@ export class CommandOutputWindow extends ReactClientComponent<{ update: Observab
 
     public render() {
         return React.DOM.div({
-            className: 'omni-output-pane-view native-key-bindings ' + (this.props['className'] || ''),
+            className: "omni-output-pane-view native-key-bindings " + (this.props["className"] || ""),
             tabIndex: -1
         },
             React.DOM.div({
-                className: 'messages-container'
+                className: "messages-container"
             }, _.map(this.state.output, (item, index) => this.createItem(item, index))));
     }
 }

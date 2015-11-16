@@ -1,13 +1,23 @@
-import spacePen = require("atom-space-pen-views");
-import _ = require('lodash');
-import {AsyncSubject} from "rx";
+import * as spacePen from "atom-space-pen-views";
+import * as _ from "lodash";
+import {Subject, Observable} from "@reactivex/rxjs";
 
 export class GenericSelectListView extends spacePen.SelectListView {
+    public static content() {
+        return this.div({}, () => {
+            this.p({
+                outlet: "message"
+            }, "");
+
+            (<any>spacePen.SelectListView).content.call(this);
+        });
+    }
+
     private panel: Atom.Panel;
     private previouslyFocusedElement: Node;
     private eventElement: any;
-    private _onClosed = new AsyncSubject<boolean>();
-    public get onClosed() : Rx.Observable<boolean> { return this._onClosed; };
+    private _onClosed = new Subject<boolean>();
+    public get onClosed() : Observable<boolean> { return this._onClosed; };
 
     public message: JQuery;
 
@@ -15,28 +25,18 @@ export class GenericSelectListView extends spacePen.SelectListView {
         super();
     }
 
-    public static content() {
-        return this.div({}, () => {
-            this.p({
-                outlet: 'message'
-            }, '');
-
-            (<any>spacePen.SelectListView).content.call(this);
-        });
-    }
-
-    public keyBindings = null;
+    public keyBindings : any;
 
     public initialize() {
         (<any>spacePen.SelectListView).prototype.initialize.call(this);
-        this.addClass('generic-list');
+        this.addClass("generic-list");
         this.message.text(this.messageText);
 
         return false;
     }
 
     public getFilterKey() {
-        return 'displayName';
+        return "displayName";
     }
 
     public cancelled() {
@@ -70,26 +70,25 @@ export class GenericSelectListView extends spacePen.SelectListView {
         });
 
         // infer the generator somehow? based on the project information?  store in the project system??
-        var commands = _.sortBy(this._items, 'displayName');
+        const commands = _.sortBy(this._items, "displayName");
         this.setItems(commands);
         this.focusFilterEditor();
     }
 
     public hide() {
-        this._onClosed.onNext(true);
-        this._onClosed.onCompleted();
+        this._onClosed.next(true);
+        this._onClosed.complete();
 
-        this.panel && this.panel.hide();
+        this.panel.hide();
         this.panel.destroy();
         this.panel = null;
     }
 
     public viewForItem(item: { displayName: string; name: string; }) {
-        var keyBindings = this.keyBindings;
         return spacePen.$$(function() {
             return this.li({
-                "class": 'event',
-                'data-event-name': item.name
+                "class": "event",
+                "data-event-name": item.name
             }, () => {
                     return this.span(item.displayName, {
                         title: item.name

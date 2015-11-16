@@ -1,5 +1,5 @@
-import SpacePen = require('atom-space-pen-views');
-import $ = require('jquery');
+import SpacePen = require("atom-space-pen-views");
+import $ = require("jquery");
 
 class OmniSelectListView extends SpacePen.SelectListView {
     public panel: Atom.Panel;
@@ -21,13 +21,13 @@ class OmniSelectListView extends SpacePen.SelectListView {
             this.setError(null);
 
             for (let i = 0; i < Math.min(symbols.length, this.maxItems); i++) {
-                var item = symbols[i];
-                var itemView = $(this.viewForItem(item));
-                itemView.data('select-list-item', item)
+                const item = symbols[i];
+                const itemView = $(this.viewForItem(item));
+                itemView.data("select-list-item", item)
                 this.list.append(itemView)
             }
 
-            this.selectItemView(this.list.find('li:first'))
+            this.selectItemView(this.list.find("li:first"))
         } else {
 
         }
@@ -38,7 +38,7 @@ class OmniSelectListView extends SpacePen.SelectListView {
             return;
         }
 
-        var filterQuery = this.getFilterQuery();
+        const filterQuery = this.getFilterQuery();
 
         if (filterQuery.length >= this.getMinQueryLength()) {
             this.onFilter(filterQuery);

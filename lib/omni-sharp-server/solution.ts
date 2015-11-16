@@ -1,5 +1,6 @@
-import _ = require('lodash');
-import {Observable, Subject, CompositeDisposable, Disposable} from 'rx';
+import * as _ from "lodash";
+import {CompositeDisposable} from "../Disposable";
+import {Observable, Subject} from "@reactivex/rxjs";
 import {ClientV2, DriverState, OmnisharpClientOptions} from "omnisharp-client";
 
 interface SolutionOptions extends OmnisharpClientOptions {
@@ -32,7 +33,7 @@ export class Solution extends ClientV2 {
         this.temporary = options.temporary;
         this.model = new ViewModel(this);
         this.path = options.projectPath;
-        this.index = options['index'];
+        this.index = options["index"];
         this.repository = options.repository;
         this.setupRepository();
         this._solutionDisposable.add(this.model);
@@ -42,7 +43,7 @@ export class Solution extends ClientV2 {
 
     public toggle() {
         if (this.currentState === DriverState.Disconnected) {
-            var path = atom && atom.project && atom.project.getPaths()[0];
+            const path = atom && atom.project && atom.project.getPaths()[0];
             this.connect();
         } else {
             this.disconnect();
@@ -56,7 +57,7 @@ export class Solution extends ClientV2 {
 
         this.log("Starting OmniSharp server (pid:" + this.id + ")");
         this.log("OmniSharp Location: " + this.serverPath);
-        this.log("Change the location that OmniSharp is loaded from by setting the OMNISHARP environment variable");
+        this.log("Change the location that OmniSharp is loaded from by setting the OMNISHARP environment constiable");
         this.log("OmniSharp Path: " + this.projectPath);
     }
 
@@ -73,8 +74,8 @@ export class Solution extends ClientV2 {
 
     private configureSolution() {
         this.logs = this.events.map(event => ({
-            message: event.Body && event.Body.Message || event.Event || '',
-            logLevel: event.Body && event.Body.LogLevel || (event.Type === "error" && 'ERROR') || 'INFORMATION'
+            message: event.Body && event.Body.Message || event.Event || "",
+            logLevel: event.Body && event.Body.LogLevel || (event.Type === "error" && "ERROR") || "INFORMATION"
         }));
 
         this._solutionDisposable.add(this.errors.subscribe(exception => {
@@ -82,7 +83,7 @@ export class Solution extends ClientV2 {
         }));
 
         this._solutionDisposable.add(this.responses.subscribe(data => {
-            if (atom.config.get('omnisharp-atom.developerMode')) {
+            if (atom.config.get("omnisharp-atom.developerMode")) {
                 console.log("omni:" + data.command, data.request, data.response);
             }
         }));
@@ -94,20 +95,20 @@ export class Solution extends ClientV2 {
         return this;
     }
 
-    private static _regex = new RegExp(String.fromCharCode(0xFFFD), 'g');
+    private static _regex = new RegExp(String.fromCharCode(0xFFFD), "g");
     private _fixupRequest<TRequest, TResponse>(action: string, request: TRequest) {
         // Only send changes for requests that really need them.
         if (this._currentEditor && _.isObject(request)) {
-            var editor = this._currentEditor;
+            const editor = this._currentEditor;
 
-            var marker = editor.getCursorBufferPosition();
-            _.defaults(request, { Column: marker.column, Line: marker.row, FileName: editor.getURI(), Buffer: editor.getBuffer().getLines().join('\n') });
+            const marker = editor.getCursorBufferPosition();
+            _.defaults(request, { Column: marker.column, Line: marker.row, FileName: editor.getURI(), Buffer: editor.getBuffer().getLines().join("\n") });
             /*
-            TODO: Update once rename/code actions don't apply changes to the workspace
-            var omniChanges: { oldRange: { start: TextBuffer.Point, end: TextBuffer.Point }; newRange: { start: TextBuffer.Point, end: TextBuffer.Point }; oldText: string; newText: string; }[] = (<any>editor).__omniChanges__ || [];
-            var computedChanges: OmniSharp.Models.LinePositionSpanTextChange[];
+            TODO: Update once rename/code actions don"t apply changes to the workspace
+            const omniChanges: { oldRange: { start: TextBuffer.Point, end: TextBuffer.Point }; newRange: { start: TextBuffer.Point, end: TextBuffer.Point }; oldText: string; newText: string; }[] = (<any>editor).__omniChanges__ || [];
+            const computedChanges: OmniSharp.Models.LinePositionSpanTextChange[];
 
-            if (_.any(['goto', 'navigate', 'find', 'package'], x => _.startsWith(action, x))) {
+            if (_.any(["goto", "navigate", "find", "package"], x => _.startsWith(action, x))) {
                 computedChanges = null;
             } else {
                 computedChanges = omniChanges.map(change => <OmniSharp.Models.LinePositionSpanTextChange>{
@@ -124,14 +125,14 @@ export class Solution extends ClientV2 {
             */
         }
 
-        if (request['Buffer']) {
-            request['Buffer'] = request['Buffer'].replace(Solution._regex, '');
+        if (request["Buffer"]) {
+            request["Buffer"] = request["Buffer"].replace(Solution._regex, "");
         }
     }
 
-    public request<TRequest, TResponse>(action: string, request?: TRequest, options?: OmniSharp.RequestOptions): Rx.Observable<TResponse> {
+    public request<TRequest, TResponse>(action: string, request?: TRequest, options?: OmniSharp.RequestOptions): Observable<TResponse> {
         if (this._currentEditor) {
-            var editor = this._currentEditor;
+            const editor = this._currentEditor;
             this._currentEditor = null;
             // TODO: update and add to typings.
             if (editor.isDestroyed()) {
@@ -139,8 +140,8 @@ export class Solution extends ClientV2 {
             }
         }
 
-        var tempR: OmniSharp.Models.Request = request;
-        if (tempR && _.endsWith(tempR.FileName, '.json')) {
+        const tempR: OmniSharp.Models.Request = request;
+        if (tempR && _.endsWith(tempR.FileName, ".json")) {
             tempR.Buffer = null;
             tempR.Changes = null;
         }
@@ -150,22 +151,22 @@ export class Solution extends ClientV2 {
 
     private setupRepository() {
         if (this.repository) {
-            var branchSubject = new Subject<string>();
+            const branchSubject = new Subject<string>();
 
             this._solutionDisposable.add(branchSubject
                 .distinctUntilChanged()
-                .subscribe(() => atom.commands.dispatch(atom.views.getView(atom.workspace), 'omnisharp-atom:restart-server')));
+                .subscribe(() => atom.commands.dispatch(atom.views.getView(atom.workspace), "omnisharp-atom:restart-server")));
             this._solutionDisposable.add(branchSubject);
 
             this._solutionDisposable.add(this.repository.onDidChangeStatuses(() => {
-                branchSubject.onNext(this.repository['branch']);
+                branchSubject.next(this.repository["branch"]);
             }));
         }
     }
 
     public whenConnected() {
         return this.state.startWith(this.currentState)
-            .where(x => x === DriverState.Connected)
+            .filter(x => x === DriverState.Connected)
             .take(1);
     }
 }

@@ -1,8 +1,8 @@
-import {CompositeDisposable} from "rx";
-import Omni = require('../../omni-sharp-server/omni')
+import {CompositeDisposable} from "@reactivex/rxjs";
+import Omni from "../../omni-sharp-server/omni";
 
 class Navigate implements OmniSharp.IFeature {
-    private disposable: Rx.CompositeDisposable;
+    private disposable: CompositeDisposable;
 
     public activate() {
         this.disposable = new CompositeDisposable();
@@ -32,12 +32,12 @@ class Navigate implements OmniSharp.IFeature {
     }
 
     private navigateTo(data: OmniSharp.Models.NavigateResponse) {
-        var editor = atom.workspace.getActiveTextEditor();
+        const editor = atom.workspace.getActiveTextEditor();
         Omni.navigateTo({ FileName: editor.getURI(), Line: data.Line, Column: data.Column });
     }
 
     public required = true;
-    public title = 'Navigate';
-    public description = 'Adds server based navigation support';
+    public title = "Navigate";
+    public description = "Adds server based navigation support";
 }
-export var navigate = new Navigate;
+export const navigate = new Navigate;

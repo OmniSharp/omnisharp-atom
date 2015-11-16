@@ -1,30 +1,32 @@
 import {Solution} from "../../omni-sharp-server/solution";
-import {CompositeDisposable, Disposable, Observable, Subject} from "rx";
-import Omni = require('../../omni-sharp-server/omni');
+import {CompositeDisposable, Disposable} from "../../Disposable";
+import {Observable, Subject} from "@reactivex/rxjs";
+import Omni from "../../omni-sharp-server/omni";
 import {ProjectViewModel} from "../../omni-sharp-server/project-view-model";
 import {any, each, contains, pull} from "lodash";
-import {spawn, ChildProcess} from "child_process";
-import {CommandOutputWindow} from '../views/command-output-window';
+import {spawn} from "child_process";
+import {CommandOutputWindow} from "../views/command-output-window";
 import * as readline from "readline";
 import {dock} from "../atom/dock";
 import {normalize, join, dirname} from "path";
 
-var win32 = process.platform === "win32";
+const win32 = process.platform === "win32";
 
-var daemonFlags = [
-    'Microsoft.AspNet.Hosting', // Old (pre beta 8)
-    'Microsoft.AspNet.Server.Kestrel', // New post beta8
-    'Microsoft.AspNet.Server.WebListener'
+const daemonFlags = [
+    "Microsoft.AspNet.Hosting", // Old (pre beta 8)
+    "Microsoft.AspNet.Server.Kestrel", // New post beta8
+    "Microsoft.AspNet.Server.WebListener"
 ];
+let env: any;
 if (win32) {
-    var env = <typeof process.env>{};
+    env = <typeof process.env>{};
 } else {
-    var env = process.env;
+    env = process.env;
 }
 
 class CommandRunner implements OmniSharp.IFeature {
-    private disposable: Rx.CompositeDisposable;
-    private _projectMap = new WeakMap<ProjectViewModel<any>, Rx.CompositeDisposable>();
+    private disposable: CompositeDisposable;
+    private _projectMap = new WeakMap<ProjectViewModel<any>, CompositeDisposable>();
 
     private _watchProcesses: RunProcess[] = [];
     public get processes() { return this._watchProcesses; }
@@ -38,13 +40,13 @@ class CommandRunner implements OmniSharp.IFeature {
         this.disposable.add(
             Observable.merge(
                 // Get all currently defined projects
-                Omni.solutions.flatMap(z => Observable.from(z.model.projects)),
+                Omni.solutions.mergeMap(z => Observable.from(z.model.projects)),
                 Omni.listener.model.projectAdded
             ).subscribe(project => this.addCommands(project)));
 
         this.disposable.add(Omni.listener.model.projectChanged
             .subscribe(project => {
-                var cd = this._projectMap.get(project);
+                const cd = this._projectMap.get(project);
                 if (cd) {
                     cd.dispose();
                     this._projectMap.delete(project);
@@ -55,7 +57,7 @@ class CommandRunner implements OmniSharp.IFeature {
 
         this.disposable.add(Omni.listener.model.projectRemoved
             .subscribe(project => {
-                var cd = this._projectMap.get(project);
+                const cd = this._projectMap.get(project);
                 if (cd) {
                     cd.dispose();
                     this._projectMap.delete(project);
@@ -63,24 +65,24 @@ class CommandRunner implements OmniSharp.IFeature {
             }));
 
         this.disposable.add(Omni.eachEditor((editor, cd) => {
-            cd.add(editor.onDidSave(() => restart.onNext(editor)));
-            cd.add(editor.getBuffer().onDidReload(() => restart.onNext(editor)));
+            cd.add(editor.onDidSave(() => restart.next(editor)));
+            cd.add(editor.getBuffer().onDidReload(() => restart.next(editor)));
         }));
 
-        var processes = this._processesChanged = new Subject<RunProcess[]>();
+        const processes = this._processesChanged = new Subject<RunProcess[]>();
         this.observe = { processes };
 
         // Auto restart the process if a file changes for a project that applies
-        var restart = new Subject<Atom.TextEditor>();
+        const restart = new Subject<Atom.TextEditor>();
 
         this.disposable.add(restart
-            .where(z => !!this._watchProcesses.length)
-            .flatMap(editor =>
+            .filter(z => !!this._watchProcesses.length)
+            .mergeMap(editor =>
                 Omni.activeModel
                     .concatMap(model => model.getProjectContainingEditor(editor))
                     .take(1)
-                    .where(project => !!project))
-            .throttle(1000)
+                    .filter(project => !!project))
+            .throttleTime(1000)
             .subscribe(project => {
                 each(this._watchProcesses, process => {
                     if (project.solutionPath === process.project.solutionPath)
@@ -92,7 +94,7 @@ class CommandRunner implements OmniSharp.IFeature {
 
     private addCommands(project: ProjectViewModel<any>) {
         if (any(project.commands)) {
-            var cd = new CompositeDisposable();
+            const cd = new CompositeDisposable();
             this._projectMap.set(project, cd);
             this.disposable.add(cd);
 
@@ -105,32 +107,31 @@ class CommandRunner implements OmniSharp.IFeature {
     private addCommand(project: ProjectViewModel<any>, command: string, content: string) {
         //--server Kestrel
         //--server Microsoft.AspNet.Server.WebListener
-        var daemon = any(daemonFlags, cnt => contains(content, cnt));
+        const daemon = any(daemonFlags, cnt => contains(content, cnt));
         if (daemon) {
-            return atom.commands.add('atom-workspace', `omnisharp-dnx:${project.name}-[${command}]-(watch)`, () => this.daemonProcess(project, command));
+            return atom.commands.add("atom-workspace", `omnisharp-dnx:${project.name}-[${command}]-(watch)`, () => this.daemonProcess(project, command));
         } else {
-            return atom.commands.add('atom-workspace', `omnisharp-dnx:${project.name}-[${command}]`, () => this.runProcess(project, command));
+            return atom.commands.add("atom-workspace", `omnisharp-dnx:${project.name}-[${command}]`, () => this.runProcess(project, command));
         }
     }
 
     private daemonProcess(project: ProjectViewModel<any>, command: string) {
-        var process = new RunProcess(project, command, true);
+        const process = new RunProcess(project, command, true);
         this._watchProcesses.push(process);
-        this._processesChanged.onNext(this.processes);
+        this._processesChanged.next(this.processes);
         process.disposable.add(Disposable.create(() => {
             pull(this._watchProcesses, process);
-            this._processesChanged.onNext(this.processes);
+            this._processesChanged.next(this.processes);
         }));
 
-        var objectChanges = Observable.ofObjectChanges(process).where(z => z.name === 'started');
-        process.disposable.add(objectChanges.where(z => z.object.started).delay(1000).subscribe(() => this._processesChanged.onNext(this.processes)));
-        process.disposable.add(objectChanges.where(z => !z.object.started).subscribe(() => this._processesChanged.onNext(this.processes)));
+        process.disposable.add(process.changes.filter(z => z.object.started).delay(1000).subscribe(() => this._processesChanged.next(this.processes)));
+        process.disposable.add(process.changes.filter(z => !z.object.started).subscribe(() => this._processesChanged.next(this.processes)));
 
         process.start();
     }
 
     private runProcess(project: ProjectViewModel<any>, command: string) {
-        var process = new RunProcess(project, command);
+        const process = new RunProcess(project, command);
         process.start();
     }
 
@@ -139,17 +140,18 @@ class CommandRunner implements OmniSharp.IFeature {
     }
 
     public required = true;
-    public title = 'Command Runner';
-    public description = 'Adds command runner to run dnx and other similar commands from within atom.';
+    public title = "Command Runner";
+    public description = "Adds command runner to run dnx and other similar commands from within atom.";
 }
 
 export function getDnxExe(solution: Solution) {
-    return join(solution.model.runtimePath, win32 ? '/bin/dnx.exe' : '/bin/dnx');
+    return join(solution.model.runtimePath, win32 ? "/bin/dnx.exe" : "/bin/dnx");
 }
 
 export class RunProcess {
     public disposable = new CompositeDisposable();
     public update = new Subject<{ message: string }[]>();
+    public changes = new Subject<any>();
     public output: { message: string }[] = [];
     public started = false;
     private id: string;
@@ -157,16 +159,16 @@ export class RunProcess {
 
     constructor(public project: ProjectViewModel<any>, private command: string, private watch: boolean = false) {
         this.id = `${this.project.name}${this.command}`;
-        this.disposable.add(dock.addWindow(this.id, `${this.project.name} ${this.watch ? '--watch' : ''} ${this.command}`, CommandOutputWindow, this, {
+        this.disposable.add(dock.addWindow(this.id, `${this.project.name} ${this.watch ? "--watch" : ""} ${this.command}`, CommandOutputWindow, this, {
             closeable: true,
             priority: 1001
         }, this.disposable));
     }
 
     public start() {
-        var solution = Omni.getSolutionForProject(this.project)
+        const solution = Omni.getSolutionForProject(this.project)
             .map(x => normalize(getDnxExe(x)))
-            .tapOnNext(() => dock.selectWindow(this.id))
+            .do(() => dock.selectWindow(this.id))
             .subscribe((runtime) => this.bootRuntime(runtime));
 
         this.disposable.add(solution);
@@ -177,65 +179,70 @@ export class RunProcess {
     }
 
     private bootRuntime(runtime: string) {
-        var args = [this.command];
+        const args = [this.command];
         // Support old way of doing things (remove at RC?)
-        if (any(['beta3', 'beta4', 'beta5', 'beta6'], x => runtime.indexOf(x) > -1)) {
-            args.unshift('.');
+        if (any(["beta3", "beta4", "beta5", "beta6"], x => runtime.indexOf(x) > -1)) {
+            args.unshift(".");
         }
 
         if (this.watch) {
-            args.unshift('--watch');
+            args.unshift("--watch");
         }
 
-        this.output.push({ message: `Starting ${runtime} ${args.join(' ') }` });
+        this.output.push({ message: `Starting ${runtime} ${args.join(" ")}` });
 
         this.started = true;
+        this.changes.next(this.started);
 
-        var process = this.process = spawn(runtime, args, {
+        const process = this.process = spawn(runtime, args, {
             cwd: dirname(this.project.path),
             env,
-            stdio: 'pipe'
+            stdio: "pipe"
         });
 
-        var out = readline.createInterface({
+        const out = readline.createInterface({
             input: process.stdout,
             output: undefined
         });
 
-        out.on('line', (data) => {
+        out.on("line", (data: any) => {
             this.output.push({ message: data });
-            this.update.onNext(this.output);
+            this.update.next(this.output);
         });
 
-        var error = readline.createInterface({
+        const error = readline.createInterface({
             input: process.stderr,
             output: undefined
         });
 
-        error.on('line', (data) => {
+        error.on("line", (data: any) => {
             this.output.push({ message: data });
-            this.update.onNext(this.output);
+            this.update.next(this.output);
         });
 
-        var disposable = Disposable.create(() => {
+        const disposable = Disposable.create(() => {
             this.started = false;
+            this.changes.next(this.started);
+
             this.process.removeAllListeners();
             this.stop();
             this.disposable.remove(disposable);
         });
         this.disposable.add(disposable);
 
-        var cb = () => {
+        const cb = () => {
             this.started = false;
+            this.changes.next(this.started);
+
             disposable.dispose();
             if (this.watch)
                 this.bootRuntime(runtime);
         };
 
         if (this.watch) {
-            process.on('close', cb);
-            process.on('exit', cb);
-            process.on('disconnect', cb);
+            process.on("close", cb);
+            process.on("exit", cb);
+            process.on("disconnect", cb);
         }
     }
 
@@ -244,4 +251,4 @@ export class RunProcess {
     }
 }
 
-export var commandRunner = new CommandRunner
+export const commandRunner = new CommandRunner

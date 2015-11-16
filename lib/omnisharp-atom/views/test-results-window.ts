@@ -1,7 +1,7 @@
-import {Observable} from "rx";
-import Omni = require('../../omni-sharp-server/omni')
-import React = require('react');
-var Convert = require('ansi-to-html');
+import {Observable} from "@reactivex/rxjs";
+import Omni from "../../omni-sharp-server/omni";
+import * as React from "react";
+const Convert = require("ansi-to-html");
 import * as _ from "lodash";
 import {ReactClientComponent} from "./react-client-component";
 import {runTests} from "../features/run-tests";
@@ -20,7 +20,7 @@ interface TestWindowProps {
 }
 
 export class TestResultsWindow extends ReactClientComponent<TestWindowProps, TestWindowState> {
-    public displayName = 'TestResultsWindow';
+    public displayName = "TestResultsWindow";
 
     private _convert;
 
@@ -34,7 +34,7 @@ export class TestResultsWindow extends ReactClientComponent<TestWindowProps, Tes
         super.componentWillMount();
 
         this.disposable.add(this.props.runTests.observe.output
-            .buffer(this.props.runTests.observe.output.throttle(100), () => Observable.timer(100))
+            .buffer(this.props.runTests.observe.output.throttleTime(100), () => Observable.timer(100))
             .map(arr => arr[0])
             .subscribe(testResults => this.setState({ testResults })));
         _.defer(_.bind(this.scrollToBottom, this));
@@ -56,17 +56,17 @@ export class TestResultsWindow extends ReactClientComponent<TestWindowProps, Tes
     }
 
     private scrollToBottom() {
-        var item = <any> React.findDOMNode(this).lastElementChild.lastElementChild;
+        const item = <any> React.findDOMNode(this).lastElementChild.lastElementChild;
         if (item) item.scrollIntoViewIfNeeded();
     }
 
     public render() {
         return React.DOM.div({
-            className: 'omni-output-pane-view native-key-bindings ' + (this.props['className'] || ''),
+            className: "omni-output-pane-view native-key-bindings " + (this.props["className"] || ""),
             tabIndex: -1
         },
             React.DOM.div({
-                className: 'messages-container'
+                className: "messages-container"
             }, _.map(this.state.testResults, (item, index) => this.createItem(item, index))));
     }
 }

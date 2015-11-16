@@ -1,17 +1,17 @@
-import _ = require('lodash')
-import {CompositeDisposable, Observable} from "rx";
-import RenameView = require('../views/rename-view');
-import Omni = require('../../omni-sharp-server/omni');
-import {applyAllChanges} from '../services/apply-changes';
+import * as _ from "lodash";
+import {CompositeDisposable, Observable} from "@reactivex/rxjs";
+import RenameView = require("../views/rename-view");
+import Omni from "../../omni-sharp-server/omni";
+import {applyAllChanges} from "../services/apply-changes";
 
 class Rename implements OmniSharp.IFeature {
-    private disposable: Rx.CompositeDisposable;
+    private disposable: CompositeDisposable;
     private renameView: RenameView;
 
     public activate() {
         this.disposable = new CompositeDisposable();
         this.renameView = new RenameView();
-        this.disposable.add(Omni.addTextEditorCommand('omnisharp-atom:rename', (e) => {
+        this.disposable.add(Omni.addTextEditorCommand("omnisharp-atom:rename", (e) => {
             e.stopImmediatePropagation();
             e.stopPropagation();
             e.preventDefault();
@@ -28,11 +28,11 @@ class Rename implements OmniSharp.IFeature {
     }
 
     public rename() {
-        var editor = atom.workspace.getActiveTextEditor();
+        const editor = atom.workspace.getActiveTextEditor();
         if (editor) {
-            var wordToRename: string = <any>editor.getWordUnderCursor();
+            const wordToRename: string = <any>editor.getWordUnderCursor();
             // Word under cursor can sometimes return the open bracket if the word is selected.
-            wordToRename = _.trimRight(wordToRename, '(');
+            wordToRename = _.trimRight(wordToRename, "(");
             atom.workspace.addTopPanel({
                 item: this.renameView
             });
@@ -41,7 +41,7 @@ class Rename implements OmniSharp.IFeature {
     }
 
     public required = true;
-    public title = 'Rename';
-    public description = 'Adds command to rename symbols.';
+    public title = "Rename";
+    public description = "Adds command to rename symbols.";
 }
-export var rename = new Rename
+export const rename = new Rename

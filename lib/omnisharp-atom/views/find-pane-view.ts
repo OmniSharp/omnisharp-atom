@@ -1,8 +1,8 @@
-import _ = require('lodash')
-import Omni = require('../../omni-sharp-server/omni')
-import React = require('react');
-import path = require('path');
-import $ = require('jquery');
+import * as _ from "lodash";
+import Omni from "../../omni-sharp-server/omni";
+import * as React from "react";
+import path = require("path");
+import $ = require("jquery");
 import {ReactClientComponent} from "./react-client-component";
 import {findUsages} from "../features/find-usages";
 
@@ -18,7 +18,7 @@ interface FindWindowProps {
 }
 
 export class FindWindow extends ReactClientComponent<FindWindowProps, FindWindowState> {
-    public displayName = 'FindPaneWindow';
+    public displayName = "FindPaneWindow";
 
     private model: typeof findUsages;
 
@@ -32,14 +32,14 @@ export class FindWindow extends ReactClientComponent<FindWindowProps, FindWindow
         super.componentWillMount();
         this.disposable.add(this.model.observe
             .updated
-            .where(z => z.name === "usages")
+            .filter(z => z.name === "usages")
             .subscribe(z => this.setState({
                 usages: this.model.usages
             })));
 
         this.disposable.add(this.model.observe
             .updated
-            .where(z => z.name === "selectedIndex")
+            .filter(z => z.name === "selectedIndex")
             .delay(0)
             .subscribe(z => this.updateStateAndScroll()));
     }
@@ -61,14 +61,14 @@ export class FindWindow extends ReactClientComponent<FindWindowProps, FindWindow
     }
 
     private scrollToItemView() {
-        var self = $(React.findDOMNode(this));
-        var item = self.find(`li.selected`);
+        const self = $(React.findDOMNode(this));
+        const item = self.find(`li.selected`);
         if (!item || !item.position()) return;
 
-        var pane = self;
-        var scrollTop = pane.scrollTop();
-        var desiredTop = item.position().top + scrollTop;
-        var desiredBottom = desiredTop + item.outerHeight();
+        const pane = self;
+        const scrollTop = pane.scrollTop();
+        const desiredTop = item.position().top + scrollTop;
+        const desiredBottom = desiredTop + item.outerHeight();
 
         if (desiredTop < scrollTop)
             pane.scrollTop(desiredTop);
@@ -77,13 +77,13 @@ export class FindWindow extends ReactClientComponent<FindWindowProps, FindWindow
     }
 
     private keydownPane(e: any) {
-        if (e.keyIdentifier == 'Down') {
+        if (e.keyIdentifier == "Down") {
             atom.commands.dispatch(atom.views.getView(atom.workspace), "omnisharp-atom:next-usage");
         }
-        else if (e.keyIdentifier == 'Up') {
+        else if (e.keyIdentifier == "Up") {
             atom.commands.dispatch(atom.views.getView(atom.workspace), "omnisharp-atom:previous-usage");
         }
-        else if (e.keyIdentifier == 'Enter') {
+        else if (e.keyIdentifier == "Enter") {
             atom.commands.dispatch(atom.views.getView(atom.workspace), "omnisharp-atom:go-to-usage");
         }
     }
@@ -95,7 +95,7 @@ export class FindWindow extends ReactClientComponent<FindWindowProps, FindWindow
 
     public render() {
         return React.DOM.div({
-            className: 'error-output-pane ' + (this.props['className'] || ''),
+            className: "error-output-pane " + (this.props["className"] || ""),
             onScroll: (e) => {
                 this.props.setScrollTop((<any>e.currentTarget).scrollTop);
             },
@@ -105,8 +105,8 @@ export class FindWindow extends ReactClientComponent<FindWindowProps, FindWindow
                 style: <any>{ cursor: "pointer" },
             }, _.map(this.state.usages, (usage: OmniSharp.Models.QuickFix, index) =>
                 React.DOM.li({
-                    key: `quick-fix-${usage.FileName}-(${usage.Line}-${usage.Column})-(${usage.EndLine}-${usage.EndColumn})-(${usage.Projects.join('-') })`,
-                    className: 'find-usages' + (index === this.state.selectedIndex ? ' selected' : ''),
+                    key: `quick-fix-${usage.FileName}-(${usage.Line}-${usage.Column})-(${usage.EndLine}-${usage.EndColumn})-(${usage.Projects.join("-") })`,
+                    className: "find-usages" + (index === this.state.selectedIndex ? " selected" : ""),
                     onClick: (e) => this.gotoUsage(usage, index)
                 },
                     React.DOM.pre({

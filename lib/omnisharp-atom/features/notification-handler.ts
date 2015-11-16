@@ -1,11 +1,11 @@
-var _ = require('lodash');
-import Omni = require('../../omni-sharp-server/omni');
-import {CompositeDisposable} from "rx";
-import path = require('path');
-import $ = require('jquery');
+const _ = require("lodash");
+import Omni from "../../omni-sharp-server/omni";
+import {CompositeDisposable} from "@reactivex/rxjs";
+import path = require("path");
+import $ = require("jquery");
 
 class NotificationHandler implements OmniSharp.IFeature {
-    private disposable: Rx.CompositeDisposable;
+    private disposable: CompositeDisposable;
     private packageRestoreNotification: PackageRestoreNotification;
 
     public activate() {
@@ -23,9 +23,9 @@ class NotificationHandler implements OmniSharp.IFeature {
             this.packageRestoreNotification.handleUnresolvedDependencies(e)));
 
         this.disposable.add(Omni.listener.events
-            .where(z => z.Event === "log")
-            .where(z => z.Body.Name === "OmniSharp.Dnx.PackagesRestoreTool")
-            .where(z => z.Body.Message.startsWith('Installing'))
+            .filter(z => z.Event === "log")
+            .filter(z => z.Body.Name === "OmniSharp.Dnx.PackagesRestoreTool")
+            .filter(z => z.Body.Message.startsWith("Installing"))
             .subscribe(e => this.packageRestoreNotification.handleEvents(e)));
     }
 
@@ -34,8 +34,8 @@ class NotificationHandler implements OmniSharp.IFeature {
     }
 
     public required = true;
-    public title = 'Package Restore Notifications';
-    public description = 'Adds support to show package restore progress, when the server initiates a restore operation.';
+    public title = "Package Restore Notifications";
+    public description = "Adds support to show package restore progress, when the server initiates a restore operation.";
 }
 
 class PackageRestoreNotification {
@@ -55,19 +55,19 @@ class PackageRestoreNotification {
         // Count how many of these we get so we know when to dismiss the notification
         this.packageRestoreStarted++;
         if (this.notification.isDismissed()) {
-            this.notification.show('Package restore started', "Starting..");
+            this.notification.show("Package restore started", "Starting..");
         }
     }
 
     public handleUnresolvedDependencies = (event: OmniSharp.Models.UnresolvedDependenciesMessage) => {
         // Sometimes UnresolvedDependencies event is sent before PackageRestoreStarted
         if (this.notification.isDismissed()) {
-            this.notification.show('Package restore started', "Starting..");
+            this.notification.show("Package restore started", "Starting..");
         }
 
-        var projectName = this.findProjectNameFromFileName(event.FileName);
+        const projectName = this.findProjectNameFromFileName(event.FileName);
         // Client gets more than one of each UnresolvedDependencies events for each project
-        // Don't show multiple instances of a project in the notification
+        // Don"t show multiple instances of a project in the notification
         if (!_.any(this.knownProjects, (knownProject) => { return knownProject == projectName })) {
             this.knownProjects.push(projectName);
             this.notification.addDetail(`Unresolved dependencies for ${projectName}:`, true);
@@ -83,7 +83,7 @@ class PackageRestoreNotification {
         // Count how many of these we get so we know when to dismiss the notification
         this.packageRestoreFinished++;
         if (this.packageRestoreStarted === this.packageRestoreFinished) {
-            this.notification.setSuccessfulAndDismiss('Package restore finished.');
+            this.notification.setSuccessfulAndDismiss("Package restore finished.");
             this.packageRestoreStarted = 0;
             this.packageRestoreFinished = 0;
             this.knownProjects = [];
@@ -95,14 +95,14 @@ class PackageRestoreNotification {
     }
 
     private findProjectNameFromFileName(fileName: string): string {
-        var split = fileName.split(path.sep);
-        var projectName = split[split.length - 2];
+        const split = fileName.split(path.sep);
+        const projectName = split[split.length - 2];
         return projectName;
     }
 
     private setPackageInstalled(message: string) {
-        var match = message.match(/Installing ([a-zA-Z.]*) ([\D?\d?.?-?]*)/);
-        var detailLines = this.notification.getDetailElement().children('.line');
+        const match = message.match(/Installing ([a-zA-Z.]*) ([\D?\d?.?-?]*)/);
+        const detailLines = this.notification.getDetailElement().children(".line");
         if (!match || match.length < 3) return;
         _.forEach(detailLines, line => {
             if (line.textContent.startsWith(` - ${match[1]} `)) {
@@ -122,9 +122,9 @@ class OmniNotification {
     private isBeingDismissed: boolean;
 
     public addDetail(detail: string, newline?: boolean) {
-        var details = this.getDetailElement();
+        const details = this.getDetailElement();
         if (!detail) return;
-        if (newline) details.append('<br />')
+        if (newline) details.append("<br />")
         details.append(`<div class="line">${detail}</div>`);
     }
 
@@ -140,11 +140,11 @@ class OmniNotification {
     public setSuccessfulAndDismiss(message: string) {
         if (this.isBeingDismissed) return;
         this.addDetail(message, true);
-        var domNotification = $(atom.views.getView(this.atomNotification));
-        domNotification.removeClass('info');
-        domNotification.removeClass('icon-info');
-        domNotification.addClass('success');
-        domNotification.addClass('icon-check');
+        const domNotification = $(atom.views.getView(this.atomNotification));
+        domNotification.removeClass("info");
+        domNotification.removeClass("icon-info");
+        domNotification.addClass("success");
+        domNotification.addClass("icon-check");
         this.isBeingDismissed = true;
         setTimeout(() => { this.dismiss(); }, 2000);
     }
@@ -158,15 +158,15 @@ class OmniNotification {
     }
 
     public getDetailElement(): JQuery {
-        return this.getFromDom($(atom.views.getView(this.atomNotification)), '.content .detail .detail-content');
+        return this.getFromDom($(atom.views.getView(this.atomNotification)), ".content .detail .detail-content");
     }
 
     private getFromDom(element: JQuery, selector: string): JQuery {
-        var el = element[0];
+        const el = element[0];
         if (!el) return;
-        var found = (<any> el).querySelectorAll(selector);
+        const found = (<any> el).querySelectorAll(selector);
         return $(found[0]);
     }
 }
 
-export var notificationHandler = new NotificationHandler
+export const notificationHandler = new NotificationHandler

@@ -1,19 +1,19 @@
 import * as _ from "lodash";
-import {Observable} from "rx";
-import Omni = require('../../omni-sharp-server/omni');
+import {Observable} from "@reactivex/rxjs";
+import Omni from "../../omni-sharp-server/omni";
 import Manager from "../../omni-sharp-server/solution-manager";
 import {ajax} from "jquery";
-var filter = require('fuzzaldrin').filter;
+const filter = require("fuzzaldrin").filter;
 
-var frameworkCache = new Map<string, { [key: string]: string }>();
+const frameworkCache = new Map<string, { [key: string]: string }>();
 
 function fetchFrameworkFromGithub(framework: string) {
     if (frameworkCache.has(framework)) {
-        return Observable.just<{ [key: string]: string }>(frameworkCache.get(framework));
+        return Observable.of<{ [key: string]: string }>(frameworkCache.get(framework));
     }
 
     // Get the file from github
-    var result = ajax(`https://raw.githubusercontent.com/OmniSharp/omnisharp-nuget/resources/frameworks/${framework.toLowerCase() }.json`).then(res => JSON.parse(res));
+    const result = ajax(`https://raw.githubusercontent.com/OmniSharp/omnisharp-nuget/resources/frameworks/${framework.toLowerCase() }.json`).then(res => JSON.parse(res));
 
     return Observable.fromPromise<{ [key: string]: string }>(result);
 }
@@ -31,12 +31,12 @@ interface IAutocompleteProviderOptions {
 interface IAutocompleteProvider {
     fileMatchs: string[];
     pathMatch: (path: string) => boolean;
-    getSuggestions: (options: IAutocompleteProviderOptions) => Rx.IPromise<any[]>;
+    getSuggestions: (options: IAutocompleteProviderOptions) => Promise<any[]>;
     dispose(): void;
 }
 
 function makeSuggestion(item: string, replacementPrefix: string) {
-    var type = 'package';
+    const type = "package";
 
     return {
         _search: item,
@@ -45,12 +45,12 @@ function makeSuggestion(item: string, replacementPrefix: string) {
         type: type,
         displayText: item,
         replacementPrefix,
-        className: 'autocomplete-project-json',
+        className: "autocomplete-project-json",
     }
 }
 
 function makeSuggestion2(item: string, replacementPrefix: string) {
-    var type = 'version';
+    const type = "version";
 
     return {
         _search: item,
@@ -59,46 +59,46 @@ function makeSuggestion2(item: string, replacementPrefix: string) {
         type: type,
         displayText: item,
         replacementPrefix,
-        className: 'autocomplete-project-json',
+        className: "autocomplete-project-json",
     }
 }
 
-var nameRegex = /\/((?:dnx|net)[0-9]{2,3})\/frameworkAssemblies$/;
-var versionRegex = /\/((?:dnx|net)[0-9]{2,3})\/frameworkAssemblies\/([a-zA-Z0-9\._]*?)(?:\/version)?$/;
+const nameRegex = /\/((?:dnx|net)[0-9]{2,3})\/frameworkAssemblies$/;
+const versionRegex = /\/((?:dnx|net)[0-9]{2,3})\/frameworkAssemblies\/([a-zA-Z0-9\._]*?)(?:\/version)?$/;
 
-var nugetName: IAutocompleteProvider = {
+const nugetName: IAutocompleteProvider = {
     getSuggestions(options: IAutocompleteProviderOptions) {
-        var framework = options.path.match(nameRegex)[1];
+        const framework = options.path.match(nameRegex)[1];
 
         return fetchFrameworkFromGithub(framework)
             .map(_.keys)
             .map(z => z.map(x => makeSuggestion(x, options.replacementPrefix)))
-            .map(s => filter(s, options.prefix, { key: '_search' }))
+            .map(s => filter(s, options.prefix, { key: "_search" }))
             .toPromise();
     },
-    fileMatchs: ['project.json'],
+    fileMatchs: ["project.json"],
     pathMatch(path) {
         return path && !!path.match(nameRegex);
     },
     dispose() { }
 }
 
-var nugetVersion: IAutocompleteProvider = {
+const nugetVersion: IAutocompleteProvider = {
     getSuggestions(options: IAutocompleteProviderOptions) {
-        var match = options.path.match(versionRegex);
-        var framework = match[1];
-        var name = match[2];
+        const match = options.path.match(versionRegex);
+        const framework = match[1];
+        const name = match[2];
 
         return fetchFrameworkFromGithub(framework)
             .map(x => [makeSuggestion(x[name], options.replacementPrefix)])
             .toPromise();
     },
-    fileMatchs: ['project.json'],
+    fileMatchs: ["project.json"],
     pathMatch(path) {
         return path && !!path.match(versionRegex);
     },
     dispose() { }
 }
 
-var providers = [nugetName, nugetVersion];
+const providers = [nugetName, nugetVersion];
 export = providers;

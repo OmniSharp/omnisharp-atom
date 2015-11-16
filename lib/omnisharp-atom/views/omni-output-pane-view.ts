@@ -1,10 +1,10 @@
-import {Disposable} from "rx";
-var Convert = require('ansi-to-html');
-import _ = require('lodash')
-import Omni = require('../../omni-sharp-server/omni')
-import React = require('react');
+import {Disposable} from "@reactivex/rxjs";
+const Convert = require("ansi-to-html");
+import * as _ from "lodash";
+import Omni from "../../omni-sharp-server/omni";
+import * as React from "react";
 import {ReactClientComponent} from "./react-client-component";
-import {server} from '../atom/server-information';
+import {server} from "../atom/server-information";
 
 interface IOutputWindowState {
     output: OmniSharp.OutputMessage[];
@@ -30,7 +30,7 @@ export class OutputWindow<T> extends ReactClientComponent<T, IOutputWindowState>
     }
 
     private scrollToBottom() {
-        var item = <any> React.findDOMNode(this).lastElementChild.lastElementChild;
+        const item = <any> React.findDOMNode(this).lastElementChild.lastElementChild;
         if (item) item.scrollIntoViewIfNeeded();
     }
 
@@ -44,11 +44,11 @@ export class OutputWindow<T> extends ReactClientComponent<T, IOutputWindowState>
 
     public render() {
         return React.DOM.div({
-            className: 'omni-output-pane-view native-key-bindings ' + (this.props['className'] || ''),
+            className: "omni-output-pane-view native-key-bindings " + (this.props["className"] || ""),
             tabIndex: -1
         },
             React.DOM.div({
-                className: 'messages-container'
+                className: "messages-container"
             }, _.map(this.state.output, (item, index) => this.createItem(item, index))));
     }
 }

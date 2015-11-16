@@ -1,4 +1,4 @@
-import SpacePen = require('atom-space-pen-views');
+import SpacePen = require("atom-space-pen-views");
 
 export interface SelectListViewOptions<T> {
     items: T[];
@@ -6,7 +6,7 @@ export interface SelectListViewOptions<T> {
 }
 
 export default function <T>(options: SelectListViewOptions<T>, editor: Atom.TextEditor): CodeActionsView<T> {
-    var codeActionView = (<any>editor).codeActionView;
+    const codeActionView = (<any>editor).codeActionView;
     if (!codeActionView) {
         (<any>editor).codeActionView = codeActionView = new CodeActionsView<T>(options, editor);
     }
@@ -30,8 +30,8 @@ class CodeActionsView<T> extends SpacePen.SelectListView {
         super();
         this._editorElement = atom.views.getView(editor);
         this._vimMode = atom.packages.isPackageActive("vim-mode");
-        this.$.addClass('code-actions-overlay');
-        (<any>this).filterEditorView.model.placeholderText = 'Filter list';
+        this.$.addClass("code-actions-overlay");
+        (<any>this).filterEditorView.model.placeholderText = "Filter list";
     }
 
     get $(): JQuery {
@@ -90,14 +90,14 @@ class CodeActionsView<T> extends SpacePen.SelectListView {
         }
     }
 
-    public getFilterKey() { return 'Name'; }
+    public getFilterKey() { return "Name"; }
 
     public viewForItem(item) {
 
         return SpacePen.$$(function() {
             return this.li({
-                "class": 'event',
-                'data-event-name': item.Name
+                "class": "event",
+                "data-event-name": item.Name
             }, () => {
                 return this.span(item.Name, {
                     title: item.Name

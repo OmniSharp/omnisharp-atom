@@ -1,5 +1,5 @@
-import spacePen = require('atom-space-pen-views');
-var $ = spacePen.jQuery;
+import spacePen = require("atom-space-pen-views");
+const $ = spacePen.jQuery;
 
 interface Rect {
     left: number;
@@ -19,29 +19,29 @@ class TooltipView extends spacePen.View {
     private inner: JQuery;
 
     static content() {
-        return this.div({ class: 'atom-typescript-tooltip tooltip' }, () => {
-            this.div({ class: 'tooltip-inner', outlet: 'inner' })
+        return this.div({ class: "atom-typescript-tooltip tooltip" }, () => {
+            this.div({ class: "tooltip-inner", outlet: "inner" })
         });
     }
 
     updateText(text: string) {
         this.inner.html(text);
-        this.inner.css({'white-space' : 'pre', 'text-align' : 'left'});
+        this.inner.css({"white-space" : "pre", "text-align" : "left"});
         this.updatePosition();
         (<any>this).fadeTo(300, 1);
     }
 
     updatePosition() {
-        var offset = 10;
-        var left = this.rect.right;
-        var top = this.rect.bottom;
-        var right = undefined;
+        const offset = 10;
+        const left = this.rect.right;
+        const top = this.rect.bottom;
+        const right = undefined;
 
         // X axis adjust
         if (left + this[0].offsetWidth >= $(document.body).width())
             left = $(document.body).width() - this[0].offsetWidth - offset;
         if (left < 0) {
-            this.css({ 'white-space': 'pre-wrap' })
+            this.css({ "white-space": "pre-wrap" })
             left = offset
             right = offset
         }

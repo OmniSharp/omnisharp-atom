@@ -1,5 +1,5 @@
-import {CompositeDisposable} from "rx";
-import React = require('react');
+import {CompositeDisposable} from "@reactivex/rxjs";
+import * as React from "react";
 
 export class ReactClientComponent<P, S> extends React.Component<P, S> {
     protected disposable = new CompositeDisposable();

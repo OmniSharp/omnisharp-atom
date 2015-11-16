@@ -1,11 +1,11 @@
-import Omni = require('../../omni-sharp-server/omni')
-var Range = require('atom').Range;
-import _ = require('lodash');
-import {Observable, CompositeDisposable, Subject} from "rx";
+import Omni from "../../omni-sharp-server/omni";
+const Range = require("atom").Range;
+import * as _ from "lodash";
+import {Observable, CompositeDisposable, Subject} from "@reactivex/rxjs";
 import {codeCheck} from "../features/code-check";
 
 interface LinterError {
-    type: string; // 'error' | 'warning'
+    type: string; // "error" | "warning"
     text?: string;
     html?: string;
     filePath?: string;
@@ -14,7 +14,7 @@ interface LinterError {
 }
 
 function getWordAt(str: string, pos: number) {
-    var wordLocation = {
+    const wordLocation = {
         start: pos,
         end: pos
     }
@@ -27,8 +27,8 @@ function getWordAt(str: string, pos: number) {
         ++pos;
     }
 
-    var left = str.slice(0, pos + 1).search(/\W(?!.*\W)/);
-    var right = str.slice(pos).search(/(\W|$)/);
+    const left = str.slice(0, pos + 1).search(/\W(?!.*\W)/);
+    const right = str.slice(pos).search(/(\W|$)/);
 
     wordLocation.start = left + 1;
     wordLocation.end = wordLocation.start + right;
@@ -37,11 +37,11 @@ function getWordAt(str: string, pos: number) {
 }
 
 function mapValues(editor: Atom.TextEditor, error: OmniSharp.Models.DiagnosticLocation): LinterError {
-    var line = error.Line;
-    var column = error.Column;
-    var text = editor.lineTextForBufferRow(line);
-    var wordLocation = getWordAt(text, column);
-    var level = error.LogLevel.toLowerCase();
+    const line = error.Line;
+    const column = error.Column;
+    const text = editor.lineTextForBufferRow(line);
+    const wordLocation = getWordAt(text, column);
+    const level = error.LogLevel.toLowerCase();
 
     return {
         type: level,
@@ -54,37 +54,37 @@ function mapValues(editor: Atom.TextEditor, error: OmniSharp.Models.DiagnosticLo
 }
 
 function showLinter() {
-    _.each(document.querySelectorAll('linter-bottom-tab'), (element: HTMLElement) => element.style.display = '');
-    _.each(document.querySelectorAll('linter-bottom-status'), (element: HTMLElement) => element.style.display = '');
-    var panel = <HTMLElement>document.querySelector('linter-panel');
+    _.each(document.querySelectorAll("linter-bottom-tab"), (element: HTMLElement) => element.style.display = "");
+    _.each(document.querySelectorAll("linter-bottom-status"), (element: HTMLElement) => element.style.display = "");
+    const panel = <HTMLElement>document.querySelector("linter-panel");
     if (panel)
-        panel.style.display = '';
+        panel.style.display = "";
 }
 
 function hideLinter() {
-    _.each(document.querySelectorAll('linter-bottom-tab'), (element: HTMLElement) => element.style.display = 'none');
-    _.each(document.querySelectorAll('linter-bottom-status'), (element: HTMLElement) => element.style.display = 'none');
-    var panel = <HTMLElement>document.querySelector('linter-panel');
+    _.each(document.querySelectorAll("linter-bottom-tab"), (element: HTMLElement) => element.style.display = "none");
+    _.each(document.querySelectorAll("linter-bottom-status"), (element: HTMLElement) => element.style.display = "none");
+    const panel = <HTMLElement>document.querySelector("linter-panel");
     if (panel)
-        panel.style.display = 'none';
+        panel.style.display = "none";
 }
 
 export function init() {
-    var disposable = new CompositeDisposable();
-    var cd: CompositeDisposable;
-    disposable.add(atom.config.observe('omnisharp-atom.hideLinterInterface', hidden => {
+    const disposable = new CompositeDisposable();
+    const cd: CompositeDisposable;
+    disposable.add(atom.config.observe("omnisharp-atom.hideLinterInterface", hidden => {
         if (hidden) {
             cd = new CompositeDisposable();
             disposable.add(cd);
 
             // show linter buttons
             cd.add(Omni.activeEditor
-                .where(z => !z)
+                .filter(z => !z)
                 .subscribe(showLinter));
 
             // hide linter buttons
             cd.add(Omni.activeEditor
-                .where(z => !!z)
+                .filter(z => !!z)
                 .subscribe(hideLinter));
         } else {
             if (cd) {
@@ -98,35 +98,35 @@ export function init() {
     return disposable;
 }
 
-export var provider = [
+export const provider = [
     {
         get grammarScopes() { return Omni.grammars.map((x: any) => x.scopeName) },
-        scope: 'file',
+        scope: "file",
         lintOnFly: true,
         lint: (editor: Atom.TextEditor) => {
             if (!Omni.isValidGrammar(editor.getGrammar())) return Promise.resolve([]);
 
             codeCheck.doCodeCheck(editor);
-            var path = editor.getPath();
+            const path = editor.getPath();
             return Omni.diagnostics
                 .take(1)
-                .flatMap(x => x)
-                .where(z =>z.FileName === path)
-                .where(z => z.LogLevel !== "Hidden")
+                .mergeMap(x => x)
+                .filter(z =>z.FileName === path)
+                .filter(z => z.LogLevel !== "Hidden")
                 .map(error => mapValues(editor, error))
                 .toArray()
                 .toPromise();
         }
     }, {
         get grammarScopes() { return Omni.grammars.map((x: any) => x.scopeName) },
-        scope: 'project',
+        scope: "project",
         lintOnFly: false,
         lint: (editor: Atom.TextEditor) => {
             if (!Omni.isValidGrammar(editor.getGrammar())) return Promise.resolve([]);
 
             return Omni.activeModel
-                .flatMap(x => Observable.from(x.diagnostics))
-                .where(z => z.LogLevel != "Hidden")
+                .mergeMap(x => Observable.from(x.diagnostics))
+                .filter(z => z.LogLevel != "Hidden")
                 .map(error => mapValues(editor, error))
                 .toArray()
                 .toPromise();

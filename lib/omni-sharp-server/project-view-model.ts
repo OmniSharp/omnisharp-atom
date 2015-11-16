@@ -1,22 +1,22 @@
 import * as _ from "lodash";
-import {Observable, ReplaySubject} from "rx";
+import {Observable, ReplaySubject} from "@reactivex/rxjs";
 import {basename, dirname, normalize} from "path";
 import {Solution} from "./solution";
 
-const projectFactories: { [key: string]: { new (project: any, solutionPath: string); }; } = {
+const projectFactories: { [key: string]: { new (project: any, solutionPath: string): any; }; } = {
     MsBuildProject: <any>MsBuildProjectViewModel,
     DnxProject: <any>DnxProjectViewModel
 };
 
 const supportedProjectTypes = _.keys(projectFactories);
 export function projectViewModelFactory(omnisharpProject: OmniSharp.Models.ProjectInformationResponse, solutionPath: string) {
-    var projectTypes = _.filter(supportedProjectTypes, type => _.has(omnisharpProject, type));
-    var missing = _.difference(_.keys(omnisharpProject), supportedProjectTypes);
+    const projectTypes = _.filter(supportedProjectTypes, type => _.has(omnisharpProject, type));
+    const missing = _.difference(_.keys(omnisharpProject), supportedProjectTypes);
     if (missing.length) {
         console.log(`Missing factory for project type ${missing}`);
     }
 
-    var results: ProjectViewModel<any>[] = []
+    const results: ProjectViewModel<any>[] = []
     _.each(projectTypes, projectType => {
         if (projectType && projectFactories[projectType]) {
             results.push(new projectFactories[projectType](omnisharpProject[projectType], solutionPath));
@@ -41,9 +41,9 @@ const workspaceFactories: { [key: string]: (workspace: any, solutionPath: string
 
 const supportedWorkspaceTypes = _.keys(projectFactories);
 export function workspaceViewModelFactory(omnisharpWorkspace: OmniSharp.Models.WorkspaceInformationResponse, solutionPath: string) {
-    var projects = [];
+    const projects: any[] = [];
     _.forIn(omnisharpWorkspace, (item, key) => {
-        var factory = workspaceFactories[key];
+        const factory = workspaceFactories[key];
         if (factory) {
             projects.push(...factory(item, solutionPath));
         }
@@ -57,7 +57,7 @@ export abstract class ProjectViewModel<T> implements OmniSharp.IProjectViewModel
         this.solutionPath = solutionPath;
         this.init(project);
         this.observe = { activeFramework: this._subjectActiveFramework };
-        this._subjectActiveFramework.onNext(this._frameworks[0]);
+        this._subjectActiveFramework.next(this._frameworks[0]);
     }
 
     private _name: string;
@@ -98,13 +98,13 @@ export abstract class ProjectViewModel<T> implements OmniSharp.IProjectViewModel
      }
     public set activeFramework(value) {
         this._activeFramework = value;
-        !this._subjectActiveFramework.isDisposed && this._subjectActiveFramework.onNext(this._activeFramework);
+        !this._subjectActiveFramework.isUnsubscribed && this._subjectActiveFramework.next(this._activeFramework);
     }
 
-    private _frameworks: OmniSharp.Models.DnxFramework[] = [{ FriendlyName: 'All', Name: 'all', ShortName: 'all' }];
+    private _frameworks: OmniSharp.Models.DnxFramework[] = [{ FriendlyName: "All", Name: "all", ShortName: "all" }];
     public get frameworks() { return this._frameworks; }
     public set frameworks(value) {
-        this._frameworks = [{ FriendlyName: 'All', Name: 'all', ShortName: 'all' }].concat(value);
+        this._frameworks = [{ FriendlyName: "All", Name: "all", ShortName: "all" }].concat(value);
         if (!this.activeFramework) {
             this.activeFramework = this._frameworks[0];
         }
@@ -122,7 +122,8 @@ export abstract class ProjectViewModel<T> implements OmniSharp.IProjectViewModel
         activeFramework: Observable<OmniSharp.Models.DnxFramework>;
     };
 
-    public abstract init(value: T);
+    public abstract init(value: T): void;
+
     public update(other: ProjectViewModel<T>) {
         this.name = other.name;
         this.path = other.path;
@@ -135,12 +136,12 @@ export abstract class ProjectViewModel<T> implements OmniSharp.IProjectViewModel
     }
 
     public toJSON() {
-        var {name, path, solutionPath, sourceFiles, frameworks, configurations, commands} = this;
+        const {name, path, solutionPath, sourceFiles, frameworks, configurations, commands} = this;
         return { name, path, solutionPath, sourceFiles, frameworks, configurations, commands };
     }
 
     public dispose() {
-        this._subjectActiveFramework.dispose();
+        this._subjectActiveFramework.unsubscribe();
     }
 }
 
@@ -152,7 +153,7 @@ class ProxyProjectViewModel extends ProjectViewModel<ProjectViewModel<any>> {
 
 class MsBuildProjectViewModel extends ProjectViewModel<OmniSharp.Models.MSBuildProject> {
     public init(project: OmniSharp.Models.MSBuildProject) {
-        var frameworks = [{
+        const frameworks = [{
             FriendlyName: project.TargetFramework,
             Name: project.TargetFramework,
             ShortName: project.TargetFramework
@@ -178,7 +179,7 @@ class DnxProjectViewModel extends ProjectViewModel<OmniSharp.Models.DnxProject> 
 
 class ScriptCsProjectViewModel extends ProjectViewModel<OmniSharp.ScriptCs.ScriptCsContext> {
     public init(project: OmniSharp.ScriptCs.ScriptCsContext) {
-        this.name = 'ScriptCs';
+        this.name = "ScriptCs";
         this.path = project.Path;
         this.sourceFiles = project.CsxFiles;
     }

@@ -1,11 +1,9 @@
-import _ = require('lodash');
-import {Observable} from 'rx';
 import {ObservationClientV2, AggregateClientV2} from "omnisharp-client";
 import {Solution} from "./solution";
-import {ViewModel} from './view-model';
+import {ViewModel} from "./view-model";
 
 export class SolutionObserver extends ObservationClientV2<Solution> {
-    model: typeof ViewModel.prototype.observe;
+    public model: typeof ViewModel.prototype.observe;
 
     constructor(solutions: Solution[] = []) {
         super(solutions);

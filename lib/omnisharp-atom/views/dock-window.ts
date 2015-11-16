@@ -1,8 +1,9 @@
-//var Convert = require('ansi-to-html')
-import _ = require('lodash')
-import {Observable, SingleAssignmentDisposable, Disposable, CompositeDisposable, Subject} from "rx";
-import Omni = require('../../omni-sharp-server/omni');
-import React = require('react');
+//const Convert = require("ansi-to-html")
+import * as _ from "lodash";
+import {SingleAssignmentDisposable, Disposable, CompositeDisposable, IDisposable} from "../../Disposable";
+import {Observable, Subject} from "@reactivex/rxjs";
+import Omni from "../../omni-sharp-server/omni";
+import * as React from "react";
 import {ReactClientComponent} from "./react-client-component";
 import {findUsages} from "../features/find-usages";
 
@@ -41,7 +42,7 @@ export interface DockPane<P, S> {
     props: P;
     view: typeof React.Component;
     options: DocPaneOptions;
-    disposable: Rx.IDisposable;
+    disposable: IDisposable;
 }
 
 
@@ -54,7 +55,7 @@ export interface DockButton {
     title: string;
     view: React.HTMLElement;
     options: DocButtonOptions;
-    disposable: Rx.IDisposable;
+    disposable: IDisposable;
 }
 
 export interface DisposableDockPane<P, S> {
@@ -63,7 +64,7 @@ export interface DisposableDockPane<P, S> {
     props: P;
     view: typeof React.Component;
     options: DocPaneOptions;
-    disposable: Rx.Disposable;
+    disposable: IDisposable;
 }
 
 class DockWindows<T extends IDockWindowButtonsProps> extends ReactClientComponent<T, IDockWindowButtonsState> {
@@ -75,11 +76,11 @@ class DockWindows<T extends IDockWindowButtonsProps> extends ReactClientComponen
 
     private panelButton({id, title, options, disposable}: DisposableDockPane<any, any>) {
 
-        var children = [React.DOM.span({ className: 'text' }, title)];
+        const children = [React.DOM.span({ className: "text" }, title)];
         if (options.closeable) {
             children.push(React.DOM.span({
-                className: 'fa fa-times-circle close-pane',
-                key: 'close',
+                className: "fa fa-times-circle close-pane",
+                key: "close",
                 onClick: (e) => {
                     e.stopPropagation();
                     e.preventDefault();
@@ -89,7 +90,7 @@ class DockWindows<T extends IDockWindowButtonsProps> extends ReactClientComponen
         }
 
         return React.DOM.button({
-            className: `btn btn-default btn-fix ${this.props.selected === id ? 'selected' : ''} ${options.closeable ? 'closeable' : ''}`,
+            className: `btn btn-default btn-fix ${this.props.selected === id ? "selected" : ""} ${options.closeable ? "closeable" : ""}`,
             key: id,
             onClick: (e) => {
                 e.stopPropagation();
@@ -105,7 +106,7 @@ class DockWindows<T extends IDockWindowButtonsProps> extends ReactClientComponen
     }
 
     private getPanelButtons() {
-        return _.map(this.props.panes, (e) => this.panelButton(e));
+        return _.map(this.props.panes, (e) => this.panelButton(<any>e));
     }
 
     private getButtons() {
@@ -115,8 +116,8 @@ class DockWindows<T extends IDockWindowButtonsProps> extends ReactClientComponen
     public render() {
         return React.DOM.div({
             className: "panel-heading clearfix"
-        }, React.DOM.div({ className: 'btn-toolbar pull-left' },
-            React.DOM.div({ className: 'btn-group btn-toggle' },
+        }, React.DOM.div({ className: "btn-toolbar pull-left" },
+            React.DOM.div({ className: "btn-group btn-toggle" },
                 this.getPanelButtons())
             ),
             React.DOM.div({className:"btn-well pull-right btn-group"},
@@ -134,11 +135,11 @@ export class DockWindow<T extends IDockWindowProps> extends ReactClientComponent
     private height = 0;
     private tempHeight = 0;
 
-    private _convert;
+    private _convert: any;
 
     constructor(props?: T, context?: any) {
         super(props, context);
-        this.state = { selected: 'output', fontSize: atom.config.get<number>('editor.fontSize') };
+        this.state = { selected: "output", fontSize: atom.config.get<number>("editor.fontSize") };
     }
 
     public componentWillMount() {
@@ -148,10 +149,10 @@ export class DockWindow<T extends IDockWindowProps> extends ReactClientComponent
     public componentDidMount() {
         super.componentDidMount();
 
-        var node = React.findDOMNode(this);
+        const node = React.findDOMNode(this);
         this.height = node.clientHeight;
 
-        atom.config.observe('editor.fontSize', (size: number) => {
+        atom.config.observe("editor.fontSize", (size: number) => {
             this.setState({ fontSize: size });
         });
     }
@@ -163,7 +164,7 @@ export class DockWindow<T extends IDockWindowProps> extends ReactClientComponent
     private updateAtom(cb: () => void) {
         if (this.props.panel.visible !== this.visible) {
             if (this.visible) {
-                var node = React.findDOMNode(this);
+                const node = React.findDOMNode(this);
                 this.props.panel.show();
                 this.height = node.clientHeight;
             } else {
@@ -215,7 +216,7 @@ export class DockWindow<T extends IDockWindowProps> extends ReactClientComponent
         if (this.state.selected) {
             return `omnisharp-atom-output ${key}-output selected`;
         }
-        return '';
+        return "";
     }
 
     public selectWindow(selected: string) {
@@ -226,19 +227,19 @@ export class DockWindow<T extends IDockWindowProps> extends ReactClientComponent
 
         // Focus the panel!
         this.updateState(() => {
-            var panel: any = React.findDOMNode(this).querySelector('.omnisharp-atom-output.selected');
+            const panel: any = React.findDOMNode(this).querySelector(".omnisharp-atom-output.selected");
             if (panel) panel.focus();
         });
     }
 
     private getWindows() {
-        var window = _.find(this.props.panes, { id: this.state.selected });
+        const window = _.find(this.props.panes, { id: this.state.selected });
         if (!this.state.selected || !window)
             return React.DOM.span({});
 
         if (window) {
-            var props = _.clone(window.props);
-            props.className = (this.isSelected((window.id)) + ' ' + (props.className || ''))
+            const props = _.clone(window.props);
+            props.className = (this.isSelected((window.id)) + " " + (props.className || ""))
             props.key = window.id;
             return React.createElement(window.view, props);
         }
@@ -248,16 +249,16 @@ export class DockWindow<T extends IDockWindowProps> extends ReactClientComponent
         if (!this.visible) {
             return React.DOM.span({
                 style: <any>{
-                    display: 'none'
+                    display: "none"
                 }
             });
         }
 
-        var fontSize = this.state.fontSize - 1;
+        let fontSize = this.state.fontSize - 1;
         if (fontSize <= 0)
             fontSize = 1;
 
-        var insetProps = <any> {
+        const insetProps = <any> {
             className: "inset-panel font-size-" + fontSize
         };
 
@@ -267,7 +268,7 @@ export class DockWindow<T extends IDockWindowProps> extends ReactClientComponent
 
         return React.DOM.div(insetProps,
             React.createElement(Resizer, {
-                className: 'omnisharp-atom-output-resizer',
+                className: "omnisharp-atom-output-resizer",
                 update: ({top}: { left: number, top: number }) => {
                     console.log(top);
                     this.tempHeight = -(top);
@@ -285,17 +286,17 @@ export class DockWindow<T extends IDockWindowProps> extends ReactClientComponent
 }
 
 function makeRxReactEventHandler<T>() {
-    var subject = new Subject<T>();
+    const subject = new Subject<T>();
 
     return {
-        handler: <(value: T) => void> subject.onNext.bind(subject),
-        observable: subject.asObservable()
+        handler: <(value: T) => void> subject.next.bind(subject),
+        observable: <Observable<T>>subject
     }
 }
 
 interface IResizeProps {
-    update(location: { left: number; top: number });
-    done();
+    update(location: { left: number; top: number }): void;
+    done(): void;
     className: string;
 }
 
@@ -304,12 +305,12 @@ export class Resizer<T extends IResizeProps> extends React.Component<T, {}> {
     private disposable = new CompositeDisposable();
 
     public componentDidMount() {
-        var node = React.findDOMNode(this);
-        var mousemove = Observable.fromEvent<MouseEvent>(document.body, 'mousemove').share();
-        var mouseup = Observable.fromEvent<MouseEvent>(document.body, 'mouseup').share();
-        var mousedown = this._mousedown.observable;
+        const node = React.findDOMNode(this);
+        const mousemove = Observable.fromEvent<MouseEvent>(document.body, "mousemove").share();
+        const mouseup = Observable.fromEvent<MouseEvent>(document.body, "mouseup").share();
+        const mousedown = this._mousedown.observable;
 
-        var mousedrag = mousedown.selectMany((md) => {
+        const mousedrag = mousedown.mergeMap((md) => {
             const startX = md.clientX + window.scrollX,
                 startY = md.clientY + window.scrollY,
                 startLeft = parseInt((<any>md.target).style.left, 10) || 0,
@@ -325,12 +326,12 @@ export class Resizer<T extends IResizeProps> extends React.Component<T, {}> {
             }).takeUntil(mouseup);
         });
 
-        mousedown.flatMapLatest(x => mousemove.skipUntil(mouseup)).subscribe(() => this.props.done())
+        mousedown.switchMap(x => mousemove.skipUntil(mouseup)).subscribe(() => this.props.done())
         this.disposable.add(mousedrag.subscribe(this.props.update));
     }
 
     public componentWillUnmount() {
-        var node = React.findDOMNode(this);
+        const node = React.findDOMNode(this);
         this.disposable.dispose();
     }
 

@@ -1,10 +1,10 @@
-import {CompositeDisposable, Disposable} from "rx";
-import Omni = require('../../omni-sharp-server/omni')
+import {CompositeDisposable, Disposable} from "../../Disposable";
+import Omni from "../../omni-sharp-server/omni";
 import {StatusBarElement} from "../views/status-bar-view";
-import React = require('react');
+import * as React from "react";
 
 class StatusBar implements OmniSharp.IAtomFeature {
-    private disposable: Rx.CompositeDisposable;
+    private disposable: CompositeDisposable;
     private view: StatusBarElement;
     private tile: any;
     private statusBar: any;
@@ -15,7 +15,7 @@ class StatusBar implements OmniSharp.IAtomFeature {
         this.disposable.add(Disposable.create(() => this._active = false));
     }
 
-    public setup(statusBar) {
+    public setup(statusBar: any) {
         this.statusBar = statusBar;
 
         if (this._active) {
@@ -30,7 +30,7 @@ class StatusBar implements OmniSharp.IAtomFeature {
 
     private _attach() {
         this.view = new StatusBarElement();
-        var tile = this.statusBar.addLeftTile({
+        const tile = this.statusBar.addLeftTile({
             item: this.view,
             priority: -10000
         });
@@ -46,8 +46,8 @@ class StatusBar implements OmniSharp.IAtomFeature {
     }
 
     public required = true;
-    public title = 'Status Bar';
-    public description = 'Adds the OmniSharp status icon to the status bar.';
+    public title = "Status Bar";
+    public description = "Adds the OmniSharp status icon to the status bar.";
 }
 
-export var statusBar = new StatusBar;
+export const statusBar = new StatusBar;

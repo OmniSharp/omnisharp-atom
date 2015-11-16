@@ -1,9 +1,10 @@
-import {Observable, CompositeDisposable} from "rx";
-import Omni = require("../../omni-sharp-server/omni");
-import * as _ from 'lodash';
+import {CompositeDisposable} from "../../Disposable";
+import {Observable} from "@reactivex/rxjs";
+import Omni from "../../omni-sharp-server/omni";
+import * as _ from "lodash";
 import {OmnisharpClientStatus} from "omnisharp-client";
 import {dock} from "../atom/dock";
-import {OutputWindow} from '../views/omni-output-pane-view';
+import {OutputWindow} from "../views/omni-output-pane-view";
 import {ViewModel} from "../../omni-sharp-server/view-model";
 
 class ServerInformation implements OmniSharp.IFeature {
@@ -13,7 +14,6 @@ class ServerInformation implements OmniSharp.IFeature {
         output: Observable<OmniSharp.OutputMessage[]>;
         projects: Observable<OmniSharp.IProjectViewModel[]>;
         model: Observable<ViewModel>;
-        updates: Observable<Rx.ObjectObserveChange<ServerInformation>>;
     }
 
     public model: ViewModel;
@@ -21,20 +21,20 @@ class ServerInformation implements OmniSharp.IFeature {
     public activate() {
         this.disposable = new CompositeDisposable();
 
-        var status = this.setupStatus();
-        var output = this.setupOutput();
-        var projects = this.setupProjects();
+        const status = this.setupStatus();
+        const output = this.setupOutput();
+        const projects = this.setupProjects();
 
         this.disposable.add(Omni.activeModel.subscribe(z => this.model = z));
-        this.observe = { status, output, projects, model: Omni.activeModel, updates: Observable.ofObjectChanges(this) };
+        this.observe = { status, output, projects, model: Omni.activeModel };
 
-        this.disposable.add(dock.addWindow('output', 'Omnisharp output', OutputWindow, {}));
+        this.disposable.add(dock.addWindow("output", "Omnisharp output", OutputWindow, {}));
     }
 
     private setupStatus() {
         // Stream the status from the active model
         return Omni.activeModel
-            .flatMapLatest(model => model.observe.status)
+            .switchMap(model => model.observe.status)
             .share();
     }
 
@@ -42,7 +42,7 @@ class ServerInformation implements OmniSharp.IFeature {
         // As the active model changes (when we go from an editor for ClientA to an editor for ClientB)
         // We want to make sure that the output field is
         return Omni.activeModel
-            .flatMapLatest(z => z.observe.output)
+            .switchMap(z => z.observe.output)
         // This starts us off with the current models output
             .merge(Omni.activeModel.map(z => z.output))
             .startWith([])
@@ -51,7 +51,7 @@ class ServerInformation implements OmniSharp.IFeature {
 
     private setupProjects() {
         return Omni.activeModel
-            .flatMapLatest(model => model.observe.projects)
+            .switchMap(model => model.observe.projects)
         // This starts us off with the current projects output
             .merge(Omni.activeModel.map(z => z.projects))
             .share();
@@ -62,8 +62,8 @@ class ServerInformation implements OmniSharp.IFeature {
     }
 
     public required = true;
-    public title = 'Server Information';
-    public description = 'Monitors server output and status.';
+    public title = "Server Information";
+    public description = "Monitors server output and status.";
 }
 
-export var server = new ServerInformation;
+export const server = new ServerInformation;

@@ -1,4 +1,3 @@
-/// <reference path="../typingsTemp/atom/atom.d.ts" />
 declare module OmniSharp {
     interface IFeature {
         activate(): void;
@@ -29,10 +28,12 @@ declare module OmniSharp {
         logLevel?: string;
     }
 
+    interface Observable<T> {}
+
     interface ExtendApi extends OmniSharp.Api.V2 {
-        request<TRequest, TResponse>(path: string, request: TRequest): Rx.Observable<TResponse>;
+        request<TRequest, TResponse>(path: string, request: TRequest): Observable<TResponse>;
         path: string;
-        whenConnected(): Rx.Observable<any>;
+        whenConnected(): Observable<any>;
     }
 
     interface IProjectViewModel {
