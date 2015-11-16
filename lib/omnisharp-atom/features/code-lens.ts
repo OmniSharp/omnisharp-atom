@@ -1,3 +1,4 @@
+import {OmniSharp} from "omnisharp-client";
 import * as _ from "lodash";
 import {CompositeDisposable, Observable, Disposable, Subject, Scheduler} from "@reactivex/rxjs";
 import Omni from "../../omni-sharp-server/omni";
@@ -11,7 +12,7 @@ interface IDecoration {
     setProperties(props: any);
 }
 
-class CodeLens implements OmniSharp.IFeature {
+class CodeLens implements OmniSharpAtom.IFeature {
     private disposable: CompositeDisposable;
     private decorations = new WeakMap<Atom.TextEditor, Set<Lens>>();
 

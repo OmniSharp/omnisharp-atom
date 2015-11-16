@@ -32,7 +32,7 @@ function projectLock(solution: Solution, project: ProjectViewModel<any>, filePat
     };
 }
 
-class FileMonitor implements OmniSharp.IFeature {
+class FileMonitor implements OmniSharpAtom.IFeature {
     private disposable: CompositeDisposable;
     private filesMap = new WeakMap<ProjectViewModel<any>, IDisposable>();
 

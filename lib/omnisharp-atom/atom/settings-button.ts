@@ -4,7 +4,7 @@ import * as StatusBarComponent from "../views/status-bar-view";
 import * as React from "react";
 import {dock} from "../atom/dock";
 
-class SettingsButton implements OmniSharp.IFeature {
+class SettingsButton implements OmniSharpAtom.IFeature {
     private disposable: CompositeDisposable;
     private _active = false;
 

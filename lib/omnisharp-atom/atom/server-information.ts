@@ -7,12 +7,12 @@ import {dock} from "../atom/dock";
 import {OutputWindow} from "../views/omni-output-pane-view";
 import {ViewModel} from "../../omni-sharp-server/view-model";
 
-class ServerInformation implements OmniSharp.IFeature {
+class ServerInformation implements OmniSharpAtom.IFeature {
     private disposable: CompositeDisposable;
     public observe: {
         status: Observable<OmnisharpClientStatus>;
-        output: Observable<OmniSharp.OutputMessage[]>;
-        projects: Observable<OmniSharp.IProjectViewModel[]>;
+        output: Observable<OmniSharpAtom.OutputMessage[]>;
+        projects: Observable<OmniSharpAtom.IProjectViewModel[]>;
         model: Observable<ViewModel>;
     }
 

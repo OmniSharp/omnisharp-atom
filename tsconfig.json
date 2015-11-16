@@ -34,6 +34,7 @@
     "./lib/**/*.ts",
     "!./lib/**/*.d.ts",
     "./tsd.d.ts",
+    "./lib/omnisharpatom.d.ts",
     "./lib/typings.d.ts"
   ],
   "files": [

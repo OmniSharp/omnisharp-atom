@@ -1,3 +1,4 @@
+import {OmniSharp} from "omnisharp-client";
 import * as _ from "lodash";
 import Omni from "../../omni-sharp-server/omni";
 import * as React from "react";

@@ -1,10 +1,11 @@
+import {OmniSharp} from "omnisharp-client";
 import {CompositeDisposable, Disposable} from "../../Disposable";
 import {ProjectViewModel} from "../../omni-sharp-server/project-view-model";
 import Omni from "../../omni-sharp-server/omni";
 import {FrameworkSelectorComponent} from "../views/framework-selector-view";
 import * as React from "react";
 
-class FrameworkSelector implements OmniSharp.IAtomFeature {
+class FrameworkSelector implements OmniSharpAtom.IAtomFeature {
     private disposable: CompositeDisposable;
     private view: HTMLSpanElement;
     private tile: any;

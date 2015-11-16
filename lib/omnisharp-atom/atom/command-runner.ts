@@ -1,3 +1,4 @@
+import {OmniSharp} from "omnisharp-client";
 import {Solution} from "../../omni-sharp-server/solution";
 import {CompositeDisposable, Disposable} from "../../Disposable";
 import {Observable, Subject} from "@reactivex/rxjs";
@@ -24,7 +25,7 @@ if (win32) {
     env = process.env;
 }
 
-class CommandRunner implements OmniSharp.IFeature {
+class CommandRunner implements OmniSharpAtom.IFeature {
     private disposable: CompositeDisposable;
     private _projectMap = new WeakMap<ProjectViewModel<any>, CompositeDisposable>();
 

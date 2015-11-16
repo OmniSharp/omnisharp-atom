@@ -10,7 +10,7 @@ import {DriverState} from "omnisharp-client";
 import * as React from "react";
 import * as $ from "jquery";
 
-class SolutionInformation implements OmniSharp.IFeature {
+class SolutionInformation implements OmniSharpAtom.IFeature {
     private disposable: CompositeDisposable;
     private window: CompositeDisposable;
     public selectedIndex: number = 0;

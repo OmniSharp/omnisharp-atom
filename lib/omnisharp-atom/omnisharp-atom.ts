@@ -92,7 +92,7 @@ class OmniSharpAtom {
                     const feature = loadFeature(z.file);
 
                     const features: { key: string, activate: () => () => void }[] = [];
-                    _.each(feature, (value: OmniSharp.IFeature, key: string) => {
+                    _.each(feature, (value: OmniSharpAtom.IFeature, key: string) => {
                         if (!_.isFunction(value)) {
                             if (!value.required) {
                                 this.config[key] = {
@@ -145,7 +145,7 @@ class OmniSharpAtom {
             .do(x => x());
     }
 
-    public activateFeature(whiteListUndefined, key: string, value: OmniSharp.IFeature) {
+    public activateFeature(whiteListUndefined, key: string, value: OmniSharpAtom.IFeature) {
         const result: () => void = null;
         const firstRun = true;
 

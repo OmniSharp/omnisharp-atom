@@ -1,3 +1,4 @@
+import {OmniSharp} from "omnisharp-client";
 import * as _ from "lodash";
 import {CompositeDisposable, Observable, ReplaySubject, Subject, Disposable} from "@reactivex/rxjs";
 import Omni from "../../omni-sharp-server/omni";
@@ -7,7 +8,7 @@ import {CodeCheckOutputWindow, ICodeCheckOutputWindowProps} from "../views/codec
 import {DriverState} from "omnisharp-client";
 import {reloadWorkspace} from "./reload-workspace";
 
-class CodeCheck implements OmniSharp.IFeature {
+class CodeCheck implements OmniSharpAtom.IFeature {
     private disposable: CompositeDisposable;
 
     public displayDiagnostics: OmniSharp.Models.DiagnosticLocation[] = [];

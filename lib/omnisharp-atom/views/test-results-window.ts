@@ -12,7 +12,7 @@ import {runTests} from "../features/run-tests";
 // ctrl-r, ctrl-l run last
 
 interface TestWindowState {
-    testResults: OmniSharp.OutputMessage[];
+    testResults: OmniSharpAtom.OutputMessage[];
 }
 
 interface TestWindowProps {
@@ -48,7 +48,7 @@ export class TestResultsWindow extends ReactClientComponent<TestWindowProps, Tes
         super.componentWillUnmount();
     }
 
-    private createItem(item: OmniSharp.OutputMessage, index: number) {
+    private createItem(item: OmniSharpAtom.OutputMessage, index: number) {
         return React.DOM.pre({
             key: `output-${index}`,
             className: item.logLevel

@@ -58,7 +58,7 @@ module Yeoman {
     }
 }
 
-class GeneratorAspnet implements OmniSharp.IFeature {
+class GeneratorAspnet implements OmniSharpAtom.IFeature {
     private disposable: CompositeDisposable;
     private generator: {
         run(generator: string, path?: string, options?: any): Promise<any>; start(prefix: string, path?: string, options?: any): Promise<any>;

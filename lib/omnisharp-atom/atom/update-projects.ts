@@ -8,7 +8,7 @@ import {fromNodeCallback} from "../../fromCallback";
 const stat = fromNodeCallback(fs.stat);
 import {dirname} from "path";
 
-class UpdateProject implements OmniSharp.IAtomFeature {
+class UpdateProject implements OmniSharpAtom.IAtomFeature {
     private disposable: CompositeDisposable;
     private _paths: string[];
 

@@ -1,3 +1,4 @@
+import {OmniSharp} from "omnisharp-client";
 import {read, write} from "fastdom";
 import * as _ from "lodash";
 

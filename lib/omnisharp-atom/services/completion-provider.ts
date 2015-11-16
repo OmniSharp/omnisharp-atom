@@ -1,3 +1,4 @@
+import {OmniSharp} from "omnisharp-client";
 import Omni from "../../omni-sharp-server/omni";
 import OmniSharpAtom = require("../omnisharp-atom");
 

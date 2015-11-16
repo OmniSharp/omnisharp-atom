@@ -1,4 +1,5 @@
 import * as _ from "lodash";
+import {OmniSharp} from "omnisharp-client";
 import {Solution} from "./solution";
 import {DriverState, OmnisharpClientStatus} from "omnisharp-client";
 import {IDisposable, CompositeDisposable, Disposable} from "../Disposable";
@@ -28,7 +29,7 @@ export class ViewModel implements VMViewState, IDisposable {
 
     public get index() { return this._solution.index; }
     public get path() { return this._solution.path; }
-    public output: OmniSharp.OutputMessage[] = [];
+    public output: OmniSharpAtom.OutputMessage[] = [];
     public diagnostics: OmniSharp.Models.DiagnosticLocation[] = [];
     public get state() { return this._solution.currentState };
     public packageSources: string[] = [];
@@ -42,7 +43,7 @@ export class ViewModel implements VMViewState, IDisposable {
 
     public observe: {
         codecheck: Observable<OmniSharp.Models.DiagnosticLocation[]>;
-        output: Observable<OmniSharp.OutputMessage[]>;
+        output: Observable<OmniSharpAtom.OutputMessage[]>;
         status: Observable<OmnisharpClientStatus>;
         state: Observable<ViewModel>;
         projectAdded: Observable<ProjectViewModel<any>>;

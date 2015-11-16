@@ -1,3 +1,4 @@
+import {OmniSharp} from "omnisharp-client";
 import SpacePen = require("atom-space-pen-views");
 import {CompositeDisposable, Disposable, Scheduler, Observable} from "@reactivex/rxjs";
 import * as _ from "lodash";

@@ -4,7 +4,7 @@ import RenameView = require("../views/rename-view");
 import Omni from "../../omni-sharp-server/omni";
 import {applyAllChanges} from "../services/apply-changes";
 
-class Rename implements OmniSharp.IFeature {
+class Rename implements OmniSharpAtom.IFeature {
     private disposable: CompositeDisposable;
     private renameView: RenameView;
 

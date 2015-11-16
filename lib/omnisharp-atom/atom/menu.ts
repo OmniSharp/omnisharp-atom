@@ -3,7 +3,7 @@ import {Observable} from "@reactivex/rxjs";
 import Omni from "../../omni-sharp-server/omni";
 import {readFileSync} from "fs";
 
-class Menu implements OmniSharp.IFeature {
+class Menu implements OmniSharpAtom.IFeature {
     private disposable: CompositeDisposable;
     private _json: string;
 

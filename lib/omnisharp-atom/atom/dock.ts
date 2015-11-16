@@ -4,7 +4,7 @@ import Omni from "../../omni-sharp-server/omni";
 import {DockWindow, DockPane, DockButton, IDockWindowProps, DocPaneOptions, DocButtonOptions} from "../views/dock-window";
 import * as React from "react";
 
-class Dock implements OmniSharp.IAtomFeature {
+class Dock implements OmniSharpAtom.IAtomFeature {
     private disposable: CompositeDisposable;
     private view: Element;
     private dock: DockWindow<IDockWindowProps>;

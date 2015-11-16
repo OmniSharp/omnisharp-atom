@@ -1,3 +1,4 @@
+import {OmniSharp} from "omnisharp-client";
 const Range = require("atom").Range;
 import {Observable} from "@reactivex/rxjs";
 

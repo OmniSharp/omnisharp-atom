@@ -1,3 +1,4 @@
+import {OmniSharp} from "omnisharp-client";
 import * as _ from "lodash";
 import {CompositeDisposable} from "../Disposable";
 import {Observable, Subject} from "@reactivex/rxjs";
@@ -13,7 +14,7 @@ import {ViewModel} from "./view-model";
 
 export class Solution extends ClientV2 {
     public model: ViewModel;
-    public logs: Observable<OmniSharp.OutputMessage>;
+    public logs: Observable<OmniSharpAtom.OutputMessage>;
     public path: string;
     public index: number;
     public temporary: boolean = false;

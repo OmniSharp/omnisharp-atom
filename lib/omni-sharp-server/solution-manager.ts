@@ -5,10 +5,10 @@ import {Observable, BehaviorSubject, Scheduler, Subject, Subscriber} from "@reac
 import {Solution} from "./solution";
 import {AtomProjectTracker} from "./atom-projects";
 import {SolutionObserver, SolutionAggregateObserver} from "./composite-solution";
-import {DriverState, findCandidates} from "omnisharp-client";
+import {DriverState, findCandidates, Candidate} from "omnisharp-client";
 import {GenericSelectListView} from "../omnisharp-atom/views/generic-list-view";
 
-let openSelectList: GenericSelectListView;
+var openSelectList: GenericSelectListView;
 class SolutionManager {
     /* tslint:disable:variable-name */
     public _unitTestMode_ = false;
@@ -131,7 +131,7 @@ class SolutionManager {
         this._disposable.add(this._atomProjects.added
             .filter(project => !this._solutionProjects.has(project))
             .map(project => {
-                return this._candidateFinder(project, console)
+                return this._candidateFinder(project)
                     .mergeMap(candidates => addCandidatesInOrder(candidates, (candidate, isProject) => this._addSolution(candidate, isProject, { project })));
             })
             .subscribe(candidateObservable => {
@@ -489,60 +489,62 @@ class SolutionManager {
                 }));
         };
 
-        this._candidateFinder(directory, console)
+        this._candidateFinder(directory)
             .subscribe(cb);
 
         return subject;
     }
 
-    private _candidateFinder(directory: string, console: any) {
+    private _candidateFinder(directory: string) {
         return findCandidates.withCandidates(directory, console, {
             solutionIndependentSourceFilesToSearch: this.__specialCaseExtensions.map(z => "*" + z)
-        })
-            .mergeMap(candidates => {
-                const slns = _.filter(candidates, x => _.endsWith(x.path, ".sln"));
-                if (slns.length > 1) {
-                    const items = _.difference(candidates, slns);
-                    const asyncResult = new Subject<typeof candidates>();
-                    asyncResult.next(items);
+        }).mergeMap(candidates => this.__candidateFinder(candidates));
+    }
 
-                    // handle multiple solutions.
-                    const listView = new GenericSelectListView("",
-                        slns.map(x => ({ displayName: x.path, name: x.path })),
-                        (result: any) => {
-                            items.unshift(result);
-                            _.each(candidates, x => this._candidateFinderCache.add(x.path));
+//  private __candidateFinder(candidates: Candidate[]): Promise<Candidate[]> {
+    private __candidateFinder(candidates: Candidate[]): Promise<Candidate[]> {
+        const slns = _.filter(candidates, x => _.endsWith(x.path, ".sln"));
+        return new Promise(resolve => {
+            if (slns.length > 1) {
+                const items = _.difference(candidates, slns);
 
-                            asyncResult.complete();
-                        },
-                        () => {
-                            asyncResult.complete();
-                        }
-                    );
+                // handle multiple solutions.
+                const listView = new GenericSelectListView("",
+                    slns.map(x => ({ displayName: x.path, name: x.path })),
+                    (result: any) => {
+                        items.unshift(result);
+                        _.each(candidates, x => this._candidateFinderCache.add(x.path));
 
-                    listView.message.text("Please select a solution to load.");
-
-                    // Show the view
-                    if (openSelectList) {
-                        openSelectList.onClosed.subscribe(() => {
-                            if (!_.any(slns, x => this._candidateFinderCache.has(x.path))) {
-                                _.defer(() => listView.toggle());
-                            } else {
-                                asyncResult.complete();
-                            }
-                        });
-                    } else {
-                        _.defer(() => listView.toggle());
+                        openSelectList = null;
+                        resolve(items);
+                    },
+                    () => {
+                        openSelectList = null;
+                        resolve([]);
                     }
+                );
 
-                    asyncResult.do(null, null, () => openSelectList = null);
-                    openSelectList = listView;
+                listView.message.text("Please select a solution to load.");
 
-                    return asyncResult;
+                // Show the view
+                if (openSelectList) {
+                    openSelectList.onClosed.subscribe(() => {
+                        if (!_.any(slns, x => this._candidateFinderCache.has(x.path))) {
+                            _.defer(() => listView.toggle());
+                        } else {
+                            openSelectList = null;
+                            resolve([]);
+                        }
+                    });
                 } else {
-                    return Observable.of(candidates);
+                    _.defer(() => listView.toggle());
                 }
-            });
+
+                openSelectList = listView;
+            } else {
+                resolve(candidates);
+            }
+        });
     }
 
     private _setupDisposableForTemporarySolution(solution: Solution, editor: Atom.TextEditor) {

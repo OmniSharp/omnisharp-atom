@@ -1,6 +1,7 @@
 // Inspiration : https://atom.io/packages/ide-haskell
 // and https://atom.io/packages/ide-flow
 // https://atom.io/packages/atom-typescript
+import {OmniSharp} from "omnisharp-client";
 import {CompositeDisposable, Observable, Disposable} from "@reactivex/rxjs";
 import Omni from "../../omni-sharp-server/omni";
 import path = require("path");
@@ -10,7 +11,7 @@ import $ = require("jquery");
 const escape = require("escape-html");
 import * as _ from "lodash";
 
-class TypeLookup implements OmniSharp.IFeature {
+class TypeLookup implements OmniSharpAtom.IFeature {
     private disposable: CompositeDisposable;
 
     public activate() {

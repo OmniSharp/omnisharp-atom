@@ -1,3 +1,4 @@
+import {OmniSharp} from "omnisharp-client";
 import Omni from "../../omni-sharp-server/omni";
 const Range = require("atom").Range;
 import * as _ from "lodash";

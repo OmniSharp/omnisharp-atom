@@ -1,3 +1,4 @@
+import {OmniSharp} from "omnisharp-client";
 import {CompositeDisposable, Observable, Disposable, Subject} from "@reactivex/rxjs";
 import Omni from "../../omni-sharp-server/omni";
 import * as _ from "lodash";
@@ -10,7 +11,7 @@ interface IDecoration {
     setProperties(props: any);
 }
 
-class SignatureHelp implements OmniSharp.IFeature {
+class SignatureHelp implements OmniSharpAtom.IFeature {
     private disposable: CompositeDisposable;
     private _bubble: SignatureBubble;
 

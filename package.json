@@ -77,7 +77,7 @@
     "jquery": "^2.1.1",
     "lodash": "^3.10.1",
     "merge-stream": "^1.0.0",
-    "ntypescript": "^1.201510130006.1",
+    "ntypescript": "1.201511160604.1",
     "omnisharp-client": "^3.1.0",
     "react": "^0.14.0",
     "rimraf": "^2.4.3",

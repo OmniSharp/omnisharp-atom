@@ -1,3 +1,4 @@
+import {OmniSharp} from "omnisharp-client";
 import * as _ from "lodash";
 import {Observable, ReplaySubject} from "@reactivex/rxjs";
 import {basename, dirname, normalize} from "path";
@@ -52,7 +53,7 @@ export function workspaceViewModelFactory(omnisharpWorkspace: OmniSharp.Models.W
     return projects;
 }
 
-export abstract class ProjectViewModel<T> implements OmniSharp.IProjectViewModel {
+export abstract class ProjectViewModel<T> implements OmniSharpAtom.IProjectViewModel {
     constructor(project: T, solutionPath: string) {
         this.solutionPath = solutionPath;
         this.init(project);

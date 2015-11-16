@@ -1,9 +1,10 @@
+import {OmniSharp} from "omnisharp-client";
 import {CompositeDisposable, Observable, Subject, Disposable} from "@reactivex/rxjs";
 import Omni from "../../omni-sharp-server/omni";
 import {dock} from "../atom/dock";
 import {FindWindow} from "../views/find-pane-view";
 
-class FindUsages implements OmniSharp.IFeature {
+class FindUsages implements OmniSharpAtom.IFeature {
     private disposable: CompositeDisposable;
     private window: CompositeDisposable;
     public selectedIndex: number = 0;

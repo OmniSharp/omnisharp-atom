@@ -1,3 +1,4 @@
+import {OmniSharp} from "omnisharp-client";
 import * as _ from "lodash";
 import {CompositeDisposable, Subject, Observable, Disposable} from "@reactivex/rxjs";
 import Omni from "../../omni-sharp-server/omni";
@@ -12,15 +13,15 @@ enum TestCommandType {
     Single = 2
 }
 
-class RunTests implements OmniSharp.IFeature {
+class RunTests implements OmniSharpAtom.IFeature {
     private disposable: CompositeDisposable;
     private window: CompositeDisposable;
-    public testResults: OmniSharp.OutputMessage[] = [];
+    public testResults: OmniSharpAtom.OutputMessage[] = [];
     private lastRun: OmniSharp.Models.GetTestCommandResponse;
 
     public observe: {
         updated: Observable<ObjectObserveChange<RunTests>>;
-        output: Observable<OmniSharp.OutputMessage[]>;
+        output: Observable<OmniSharpAtom.OutputMessage[]>;
     };
 
     public activate() {

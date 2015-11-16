@@ -1,3 +1,4 @@
+import {OmniSharp} from "omnisharp-client";
 import * as _ from "lodash";
 import {CompositeDisposable, IDisposable} from "../../Disposable";
 import {Subject, Observable, Scheduler} from "@reactivex/rxjs";
@@ -6,7 +7,7 @@ import * as SpacePen from "atom-space-pen-views";
 import {applyAllChanges} from "../services/apply-changes";
 import codeActionsView from "../views/code-actions-view";
 
-class CodeAction implements OmniSharp.IFeature {
+class CodeAction implements OmniSharpAtom.IFeature {
     private disposable: CompositeDisposable;
 
     private view: SpacePen.SelectListView;

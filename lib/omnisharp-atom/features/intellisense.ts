@@ -3,7 +3,7 @@ import {defer, delay} from "lodash";
 import Omni from "../../omni-sharp-server/omni";
 import {CompletionProvider} from "../services/completion-provider";
 
-class Intellisense implements OmniSharp.IFeature {
+class Intellisense implements OmniSharpAtom.IFeature {
     private disposable: CompositeDisposable;
 
     public activate() {

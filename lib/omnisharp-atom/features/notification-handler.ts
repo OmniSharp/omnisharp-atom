@@ -1,10 +1,11 @@
-const _ = require("lodash");
+import * as _ from "lodash";
+import {OmniSharp} from "omnisharp-client";
 import Omni from "../../omni-sharp-server/omni";
-import {CompositeDisposable} from "@reactivex/rxjs";
-import path = require("path");
-import $ = require("jquery");
+import {CompositeDisposable} from "../../Disposable";
+import * as path from "path";
+import * as $ from "jquery";
 
-class NotificationHandler implements OmniSharp.IFeature {
+class NotificationHandler implements OmniSharpAtom.IFeature {
     private disposable: CompositeDisposable;
     private packageRestoreNotification: PackageRestoreNotification;
 
@@ -15,7 +16,7 @@ class NotificationHandler implements OmniSharp.IFeature {
 
         this.disposable.add(Omni.listener.packageRestoreStarted.subscribe(e =>
             this.packageRestoreNotification.handlePackageRestoreStarted(e)));
-            
+
         this.disposable.add(Omni.listener.packageRestoreFinished.subscribe(e =>
             this.packageRestoreNotification.handlePackageRestoreFinished(e)));
 

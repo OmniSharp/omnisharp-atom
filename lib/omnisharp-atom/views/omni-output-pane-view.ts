@@ -7,7 +7,7 @@ import {ReactClientComponent} from "./react-client-component";
 import {server} from "../atom/server-information";
 
 interface IOutputWindowState {
-    output: OmniSharp.OutputMessage[];
+    output: OmniSharpAtom.OutputMessage[];
 }
 
 export class OutputWindow<T> extends ReactClientComponent<T, IOutputWindowState>  {
@@ -34,7 +34,7 @@ export class OutputWindow<T> extends ReactClientComponent<T, IOutputWindowState>
         if (item) item.scrollIntoViewIfNeeded();
     }
 
-    private createItem(item: OmniSharp.OutputMessage, index: number) {
+    private createItem(item: OmniSharpAtom.OutputMessage, index: number) {
         return React.DOM.pre({
             key: `output-${index}`,
             className: item.logLevel,

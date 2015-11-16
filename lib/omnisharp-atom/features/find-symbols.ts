@@ -2,7 +2,7 @@ import {CompositeDisposable} from "@reactivex/rxjs";
 import Omni from "../../omni-sharp-server/omni";
 import FindSymbolsView = require("../views/find-symbols-view");
 
-class FindSymbols implements OmniSharp.IFeature {
+class FindSymbols implements OmniSharpAtom.IFeature {
     private disposable: CompositeDisposable;
     private view: FindSymbolsView;
     private editor: Atom.TextEditor;

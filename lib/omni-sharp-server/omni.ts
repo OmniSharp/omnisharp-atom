@@ -1,3 +1,4 @@
+import {OmniSharp} from "omnisharp-client";
 import {CompositeDisposable, Disposable, IDisposable} from "../Disposable";
 import {Observable, ReplaySubject, Subject, BehaviorSubject, Scheduler} from "@reactivex/rxjs";
 import manager from "./solution-manager";
@@ -280,9 +281,9 @@ class Omni implements IDisposable {
      * The callback will then issue the request
      * NOTE: This API only exposes the operation Api and doesn"t expose the event api, as we are requesting something to happen
      */
-    public request<T>(editor: Atom.TextEditor, callback: (solution: OmniSharp.ExtendApi) => Observable<T>): Observable<T>;
-    public request<T>(callback: (solution: OmniSharp.ExtendApi) => Observable<T>): Observable<T>;
-    public request<T>(editor: Atom.TextEditor | ((solution: OmniSharp.ExtendApi) => Observable<T>), callback?: (solution: OmniSharp.ExtendApi) => Observable<T>): Observable<T> {
+    public request<T>(editor: Atom.TextEditor, callback: (solution: OmniSharpAtom.ExtendApi) => Observable<T>): Observable<T>;
+    public request<T>(callback: (solution: OmniSharpAtom.ExtendApi) => Observable<T>): Observable<T>;
+    public request<T>(editor: Atom.TextEditor | ((solution: OmniSharpAtom.ExtendApi) => Observable<T>), callback?: (solution: OmniSharpAtom.ExtendApi) => Observable<T>) {
         if (_.isFunction(editor)) {
             callback = <any>editor;
             editor = null;

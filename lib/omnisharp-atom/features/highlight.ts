@@ -1,3 +1,4 @@
+import {OmniSharp} from "omnisharp-client";
 import Omni from "../../omni-sharp-server/omni";
 import {DriverState} from "omnisharp-client";
 import OmniSharpAtom = require("../omnisharp-atom");
@@ -8,7 +9,7 @@ const Range: typeof TextBuffer.Range = <any>require("atom").Range;
 
 const DEBOUNCE_TIME = 240/*240*/;
 
-class Highlight implements OmniSharp.IFeature {
+class Highlight implements OmniSharpAtom.IFeature {
     private disposable: CompositeDisposable;
     private editors: Array<Atom.TextEditor>;
 

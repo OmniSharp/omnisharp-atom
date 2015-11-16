@@ -25,7 +25,7 @@ const buttons = [
         tooltip: "Enable / Disable Code Lens"
     }];
 
-class FeatureEditorButtons implements OmniSharp.IAtomFeature {
+class FeatureEditorButtons implements OmniSharpAtom.IAtomFeature {
     private disposable: CompositeDisposable;
     private statusBar: any;
     private _active = false;
@@ -111,7 +111,7 @@ class FeatureEditorButtons implements OmniSharp.IAtomFeature {
     public default = true;
 }
 
-class FeatureButtons implements OmniSharp.IFeature {
+class FeatureButtons implements OmniSharpAtom.IFeature {
     private disposable: CompositeDisposable;
     private statusBar: any;
     private _active = false;

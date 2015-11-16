@@ -2,7 +2,7 @@ import {CompositeDisposable} from "@reactivex/rxjs";
 import Omni from "../../omni-sharp-server/omni";
 import path = require("path");
 
-class PackageRestore implements OmniSharp.IFeature {
+class PackageRestore implements OmniSharpAtom.IFeature {
     private disposable: CompositeDisposable;
 
     public activate() {

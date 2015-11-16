@@ -1,3 +1,4 @@
+import {OmniSharp} from "omnisharp-client";
 import * as _ from "lodash";
 import {CompositeDisposable, Observable} from "@reactivex/rxjs";
 import Omni from "../../omni-sharp-server/omni";
@@ -5,7 +6,7 @@ import $ = require("jquery");
 const Range: typeof TextBuffer.Range = require("atom").Range;
 const identifierRegex = /^identifier|identifier$|\.identifier\./;
 
-class GoToDefinition implements OmniSharp.IFeature {
+class GoToDefinition implements OmniSharpAtom.IFeature {
     private disposable: CompositeDisposable;
     private exprTypeTimeout = null;
     private marker = null;

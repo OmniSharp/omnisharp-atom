@@ -4,7 +4,7 @@ import Omni from "../../omni-sharp-server/omni";
 import {exists} from "fs";
 const oexists = Observable.fromCallback(exists);
 
-class ReloadWorkspace implements OmniSharp.IFeature {
+class ReloadWorkspace implements OmniSharpAtom.IFeature {
     private disposable: CompositeDisposable;
 
     public activate() {
