@@ -1,7 +1,6 @@
 {
   "compilerOptions": {
     "target": "es6",
-    "module": "es6",
     "moduleResolution": "node",
     "declaration": false,
     "noImplicitAny": true,
@@ -31,13 +30,15 @@
   "filesGlob": [
     "./lib/**/*.ts",
     "!./lib/**/*.d.ts",
+    "./spec/**/*.ts",
+    "!./spec/**/*.d.ts",
     "./tsd.d.ts",
     "./lib/omnisharp.d.ts",
     "./lib/typings.d.ts"
   ],
   "files": [
-    "./tsd.d.ts",
-    "./lib/typings.d.ts",
+    "./lib/Disposable.ts",
+    "./lib/fromCallback.ts",
     "./lib/omni-sharp-server/atom-projects.ts",
     "./lib/omni-sharp-server/composite-solution.ts",
     "./lib/omni-sharp-server/omni.ts",
@@ -100,7 +101,35 @@
     "./lib/omnisharp-atom/views/solution-status-view.ts",
     "./lib/omnisharp-atom/views/status-bar-view.ts",
     "./lib/omnisharp-atom/views/test-results-window.ts",
-    "./lib/omnisharp-atom/views/tooltip-view.ts"
+    "./lib/omnisharp-atom/views/tooltip-view.ts",
+    "./spec/atom/dock-spec.ts",
+    "./spec/atom/framework-selector-spec.ts",
+    "./spec/atom/solution-information-spec.ts",
+    "./spec/atom/status-bar-spec.ts",
+    "./spec/atom/update-project-spec.ts",
+    "./spec/client-manager-spec.ts",
+    "./spec/features/code-format-spec.ts",
+    "./spec/features/code-lens-spec.ts",
+    "./spec/features/command-runner-spec.ts",
+    "./spec/features/find-symbols-spec.ts",
+    "./spec/features/find-usages-spec.ts",
+    "./spec/features/go-to-definition-spec.ts",
+    "./spec/features/highlight-spec.ts",
+    "./spec/features/intellisense-spec.ts",
+    "./spec/features/log-spec.ts",
+    "./spec/features/lookup-spec.ts",
+    "./spec/features/navigate-up-down-spec.ts",
+    "./spec/features/package-restore-spec.ts",
+    "./spec/features/project-lock-spec.ts",
+    "./spec/features/rename-spec.ts",
+    "./spec/features/run-tests-spec.ts",
+    "./spec/features/server-information-spec.ts",
+    "./spec/features/signature-help-spec.ts",
+    "./spec/omnisharp-atom-spec.ts",
+    "./spec/test-helpers.ts",
+    "./tsd.d.ts",
+    "./lib/omnisharp.d.ts",
+    "./lib/typings.d.ts"
   ],
   "exclude": []
 }

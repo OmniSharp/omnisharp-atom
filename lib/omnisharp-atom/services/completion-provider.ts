@@ -1,9 +1,7 @@
-import {OmniSharp, OmniSharpAtom} from "../../omnisharp.d.ts";
+import {OmniSharp} from "../../omnisharp.d.ts";
 import Omni from "../../omni-sharp-server/omni";
-import * as OmniSharpAtom from "../omnisharp-atom";
-
 import * as _ from "lodash";
-import {Subject, BehaviorSubject, Observable, CompositeDisposable, Scheduler} from "@reactivex/rxjs";
+import {CompositeDisposable} from "../../Disposable";
 import * as Promise from "bluebird";
 const filter = require("fuzzaldrin").filter;
 
@@ -85,9 +83,9 @@ let setupSubscriptions = () => {
 }
 
 function makeSuggestion(item: OmniSharp.Models.AutoCompleteResponse) {
-    const description, leftLabel, iconHTML, type;
+    let description: any, leftLabel: any, iconHTML: any, type: any;
 
-    if (_useLeftLabelColumnForSuggestions == true) {
+    if (_useLeftLabelColumnForSuggestions === true) {
         description = item.RequiredNamespaceImport;
         leftLabel = item.ReturnType;
     } else {
@@ -95,7 +93,7 @@ function makeSuggestion(item: OmniSharp.Models.AutoCompleteResponse) {
         leftLabel = "";
     }
 
-    if (_useIcons == true) {
+    if (_useIcons === true) {
         iconHTML = renderIcon(item);
         type = item.Kind;
     } else {
@@ -122,7 +120,7 @@ function renderReturnType(returnType: string) {
     return `Returns: ${returnType}`;
 }
 
-function renderIcon(item) {
+function renderIcon(item: any) {
     // todo: move additional styling to css
     return `<img height="16px" width="16px" src="atom://omnisharp-atom/styles/icons/autocomplete_${item.Kind.toLowerCase()}@3x.png" /> `;
 }
@@ -150,7 +148,7 @@ function getSuggestions(options: RequestOptions): Promise<Suggestion[]> {
         return;
     }
 
-    const search = options.prefix;
+    let search = options.prefix;
     if (search === ".")
         search = "";
 

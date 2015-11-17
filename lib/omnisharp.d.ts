@@ -2,9 +2,8 @@ import {Observable} from "@reactivex/rxjs";
 import {OmniSharp} from "omnisharp-client";
 export {OmniSharp} from "omnisharp-client";
 
-
 export module OmniSharpAtom {
-    interface IFeature {
+    export interface IFeature {
         activate(): void;
         dispose(): void;
         required: boolean;
@@ -13,29 +12,29 @@ export module OmniSharpAtom {
         default?: boolean;
     }
 
-    interface IAtomFeature extends IFeature {
+    export interface IAtomFeature extends IFeature {
         attach(): void;
     }
 
-    interface ICompletionResult {
+    export interface ICompletionResult {
         word: string;
         prefix: string;
         renderLabelAsHtml: boolean;
         label: string;
     }
 
-    interface OutputMessage {
+    export interface OutputMessage {
         message: string;
         logLevel?: string;
     }
 
-    interface ExtendApi extends OmniSharp.Api.V2 {
+    export interface ExtendApi extends OmniSharp.Api.V2 {
         request<TRequest, TResponse>(path: string, request: TRequest): Observable<TResponse>;
         path: string;
         whenConnected(): Observable<any>;
     }
 
-    interface IProjectViewModel {
+    export interface IProjectViewModel {
         name: string;
         path: string;
         activeFramework: OmniSharp.Models.DnxFramework;
