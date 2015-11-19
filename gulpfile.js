@@ -8,15 +8,14 @@ var path = require('path');
 var _ = require('lodash');
 var win32 = process.platform === "win32";
 var spawn = require('child_process').spawn;
-var tslint = require('gulp-tslint');
 var babel = require("gulp-babel");
+var tslint = require("gulp-tslint");
 var gulpPath = path.join(__dirname, 'node_modules/.bin/gulp' + (win32 && '.cmd' || ''));
-var Promise = require('bluebird');
 var ts = require('ntypescript');
 
 var metadata = {
     lib: ['lib/**/*.ts', '!lib/**/*.d.ts'],
-    spec: ['spec/**/*.ts'],
+    spec: ['spec/**/*.ts', '!spec/**/*.d.ts'],
 };
 
 // Simply take TS code and strip anything not javascript
@@ -45,7 +44,7 @@ function tsTranspiler(source, dest) {
         .pipe(tslint())
         .pipe(tsTranspile())
         .pipe(babel())
-        .pipe(tslint.report('prose'));
+        //.pipe(tslint.report('prose'));
         .pipe(gulp.dest(dest));
 }
 

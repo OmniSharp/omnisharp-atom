@@ -75,6 +75,7 @@ export class ViewModel implements VMViewState, Rx.IDisposable {
         var _projectRemovedStream = this._projectRemovedStream.share();
         var _projectChangedStream = this._projectChangedStream.share();
         var projects = Observable.merge(_projectAddedStream, _projectRemovedStream, _projectChangedStream)
+            .startsWith(<any>[])
             .debounce(200)
             .map(z => this.projects)
             .share();
