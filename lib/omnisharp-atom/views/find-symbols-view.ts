@@ -1,5 +1,5 @@
-import OmniSelectListView = require('../services/omni-select-list-view');
-import Omni = require('../../omni-sharp-server/omni');
+import OmniSelectListView = require("../services/omni-select-list-view");
+import Omni = require("../../omni-sharp-server/omni");
 
 class FindSymbolsView extends OmniSelectListView {
 
@@ -10,14 +10,14 @@ class FindSymbolsView extends OmniSelectListView {
     }
 
     public viewForItem(item) {
-        return '<li>' +
-            '<span>' +
-            '<img style="margin-right: 0.75em;" height="16px" width="16px" src="atom://omnisharp-atom/styles/icons/autocomplete_' + item.Kind.toLowerCase() + '@3x.png" />' +
-            '<span>' + item.Text + '</span>' +
-            '</span>' +
-            '<br/>' +
-            '<span class="filename">' + atom.project.relativizePath(item.FileName)[1] + ':' + item.Line + '</span>' +
-            '</li>';
+        return "<li>" +
+            "<span>" +
+            "<img style="margin-right: 0.75em;" height="16px" width="16px" src="atom://omnisharp-atom/styles/icons/autocomplete_" + item.Kind.toLowerCase() + "@3x.png" />" +
+            "<span>" + item.Text + "</span>" +
+            "</span>" +
+            "<br/>" +
+            "<span class="filename">" + atom.project.relativizePath(item.FileName)[1] + ":" + item.Line + "</span>" +
+            "</li>";
     }
 
     public getFilterKey() {

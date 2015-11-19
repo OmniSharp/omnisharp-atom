@@ -1,15 +1,15 @@
 import {CompositeDisposable} from "rx";
-import Omni = require('../../omni-sharp-server/omni')
-import FindSymbolsView = require('../views/find-symbols-view');
+import Omni = require("../../omni-sharp-server/omni")
+import FindSymbolsView = require("../views/find-symbols-view");
 
-class FindSymbols implements OmniSharp.IFeature {
+class FindSymbols implements IFeature {
     private disposable: Rx.CompositeDisposable;
     private view: FindSymbolsView;
     private editor: Atom.TextEditor;
 
     public activate() {
         this.disposable = new CompositeDisposable();
-        this.disposable.add(atom.commands.add("atom-workspace", 'omnisharp-atom:find-symbols', () => {
+        this.disposable.add(atom.commands.add("atom-workspace", "omnisharp-atom:find-symbols", () => {
             this.view = new FindSymbolsView();
         }));
 
@@ -23,8 +23,8 @@ class FindSymbols implements OmniSharp.IFeature {
     }
 
     public required = true;
-    public title = 'Find Symbols';
-    public description = 'Adds commands to find symbols through the UI.';
+    public title = "Find Symbols";
+    public description = "Adds commands to find symbols through the UI.";
 }
 
-export var findSymbols = new FindSymbols;
+export const findSymbols = new FindSymbols;

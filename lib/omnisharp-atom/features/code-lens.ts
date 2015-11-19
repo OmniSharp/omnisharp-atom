@@ -1,6 +1,6 @@
-import _ = require('lodash');
+import * as _ from "lodash";
 import {CompositeDisposable, Observable, Disposable, Subject, Scheduler} from "rx";
-import Omni = require('../../omni-sharp-server/omni');
+import Omni = require("../../omni-sharp-server/omni");
 import {DriverState} from "omnisharp-client";
 import {read, write} from "fastdom";
 
@@ -11,7 +11,7 @@ interface IDecoration {
     setProperties(props: any);
 }
 
-class CodeLens implements OmniSharp.IFeature {
+class CodeLens implements IFeature {
     private disposable: Rx.CompositeDisposable;
     private decorations = new WeakMap<Atom.TextEditor, Set<Lens>>();
 
@@ -20,7 +20,7 @@ class CodeLens implements OmniSharp.IFeature {
 
         this.disposable.add(Omni.eachEditor((editor, cd) => {
             cd.add(Disposable.create(() => {
-                var markers = this.decorations.get(editor);
+                const markers = this.decorations.get(editor);
 
                 if (markers) {
                     markers.forEach(marker => marker.dispose());
@@ -29,9 +29,9 @@ class CodeLens implements OmniSharp.IFeature {
                 this.decorations.delete(editor);
             }));
 
-            cd.add(atom.config.observe('editor.fontSize', (size: number) => {
-                var decorations = this.decorations.get(editor);
-                var lineHeight = editor.getLineHeightInPixels();
+            cd.add(atom.config.observe("editor.fontSize", (size: number) => {
+                const decorations = this.decorations.get(editor);
+                const lineHeight = editor.getLineHeightInPixels();
                 if (decorations && lineHeight) {
                     decorations.forEach(decoration => decoration.updateTop(lineHeight));
                 }
@@ -39,10 +39,10 @@ class CodeLens implements OmniSharp.IFeature {
         }));
 
         this.disposable.add(Omni.switchActiveEditor((editor, cd) => {
-            var items = this.decorations.get(editor);
+            const items = this.decorations.get(editor);
             if (!items) this.decorations.set(editor, new Set<Lens>());
 
-            var subject = new Subject<boolean>();
+            const subject = new Subject<boolean>();
 
             cd.add(subject
                 .where(x => !!x && !editor.isDestroyed())
@@ -52,8 +52,8 @@ class CodeLens implements OmniSharp.IFeature {
                 .subscribe()
             );
 
-            var bindDidChange = function() {
-                var didChange = editor.getBuffer().onDidChange(() => {
+            const bindDidChange = function() {
+                const didChange = editor.getBuffer().onDidChange(() => {
                     didChange.dispose();
                     cd.remove(didChange);
 
@@ -87,7 +87,7 @@ class CodeLens implements OmniSharp.IFeature {
 
     public updateDecoratorVisiblility(editor: Atom.TextEditor) {
         if (!this.decorations.has(editor)) this.decorations.set(editor, new Set<Lens>());
-        var decorations = this.decorations.get(editor);
+        const decorations = this.decorations.get(editor);
         decorations.forEach(decoration => decoration.updateVisible());
     }
 
@@ -97,10 +97,10 @@ class CodeLens implements OmniSharp.IFeature {
 
     public updateCodeLens(editor: Atom.TextEditor) {
         if (!this.decorations.has(editor)) this.decorations.set(editor, new Set<Lens>());
-        var decorations = this.decorations.get(editor);
-        var lineHeight = editor.getLineHeightInPixels();
+        const decorations = this.decorations.get(editor);
+        const lineHeight = editor.getLineHeightInPixels();
 
-        var updated = new WeakSet<Lens>();
+        const updated = new WeakSet<Lens>();
 
         if (editor.isDestroyed()) {
             return Observable.empty<number>();
@@ -111,14 +111,14 @@ class CodeLens implements OmniSharp.IFeature {
             .where(fileMembers => !!fileMembers)
             .flatMap(fileMembers => Observable.from(fileMembers))
             .concatMap(fileMember => {
-                var range: TextBuffer.Range = <any>editor.getBuffer().rangeForRow(fileMember.Line, false);
-                var marker: Atom.Marker = (<any>editor).markBufferRange(range, { invalidate: 'inside' });
+                const range: TextBuffer.Range = <any>editor.getBuffer().rangeForRow(fileMember.Line, false);
+                const marker: Atom.Marker = (<any>editor).markBufferRange(range, { invalidate: "inside" });
 
-                var iteratee = decorations.values();
-                var decoration = iteratee.next();
+                const iteratee = decorations.values();
+                const decoration = iteratee.next();
                 while (!decoration.done) {
                     if (decoration.value.isEqual(marker)) {
-                        var lens = decoration.value;
+                        const lens = decoration.value;
                         break;
                     }
                     decoration = iteratee.next();
@@ -148,14 +148,14 @@ class CodeLens implements OmniSharp.IFeature {
     }
 
     public required = false;
-    public title = 'Code Lens';
-    public description = 'Adds support for displaying references in the editor.';
+    public title = "Code Lens";
+    public description = "Adds support for displaying references in the editor.";
 }
 
 function isLineVisible(editor: Atom.TextEditor, line: number) {
-    var element: any = atom.views.getView(editor);
-    var top = element.getFirstVisibleScreenRow();
-    var bottom = element.getLastVisibleScreenRow();
+    const element: any = atom.views.getView(editor);
+    const top = element.getFirstVisibleScreenRow();
+    const bottom = element.getLastVisibleScreenRow();
 
     if (line <= top || line >= bottom)
         return false;
@@ -202,13 +202,13 @@ export class Lens implements Rx.IDisposable {
     }
 
     public updateVisible() {
-        var isVisible = this._isVisible();
+        const isVisible = this._isVisible();
         this._updateDecoration(isVisible);
 
         if (isVisible) {
-            var result = this._updateObservable.take(1);
+            const result = this._updateObservable.take(1);
         } else {
-            var result = Observable.empty<number>();
+            const result = Observable.empty<number>();
         }
 
         this._issueUpdate(isVisible);
@@ -246,36 +246,36 @@ export class Lens implements Rx.IDisposable {
 
     private _updateDecoration(isVisible: boolean) {
         if (this._decoration && this._element) {
-            var element = this._element;
+            const element = this._element;
             if (isVisible) {
-                read(() => element.style.display === 'none' && write(() => element.style.display = ''));
+                read(() => element.style.display === "none" && write(() => element.style.display = ""));
             } else {
-                read(() => element.style.display !== 'none' && write(() => element.style.display = 'none'));
+                read(() => element.style.display !== "none" && write(() => element.style.display = "none"));
             }
         }
     }
 
     private _decorate(count: number) {
-        var lineHeight = this._editor.getLineHeightInPixels();
+        const lineHeight = this._editor.getLineHeightInPixels();
 
-        var element = this._element = document.createElement('div');
-        element.style.position = 'relative';
+        const element = this._element = document.createElement("div");
+        element.style.position = "relative";
         element.style.top = `-${lineHeight}px`;
-        element.style.left = '16px';
-        element.classList.add('highlight-info', 'badge', 'badge-small');
+        element.style.left = "16px";
+        element.classList.add("highlight-info", "badge", "badge-small");
         element.textContent = count.toString();
         element.onclick = () => Omni.request(this._editor, s => s.findusages({ FileName: this._path, Column: this._member.Column + 1, Line: this._member.Line, Buffer: null, Changes: null }));
 
-        this._decoration = <any>this._editor.decorateMarker(this._marker, { type: "overlay", class: `codelens`, item: this._element, position: 'head' });
+        this._decoration = <any>this._editor.decorateMarker(this._marker, { type: "overlay", class: `codelens`, item: this._element, position: "head" });
         this._disposable.add(Disposable.create(() => {
             this._element.remove();
             this._decoration.destroy();
             this._element = null;
         }));
 
-        var isVisible = isLineVisible(this._editor, this._row);
+        const isVisible = isLineVisible(this._editor, this._row);
         if (!isVisible) {
-            element.style.display = 'none';
+            element.style.display = "none";
         }
 
         return this._decoration;
@@ -284,4 +284,4 @@ export class Lens implements Rx.IDisposable {
     public dispose() { return this._disposable.dispose(); }
 }
 
-export var codeLens = new CodeLens();
+export const codeLens = new CodeLens();

@@ -1,19 +1,19 @@
-import Omni = require('../../lib/omni-sharp-server/omni');
+import Omni = require("../../lib/omni-sharp-server/omni");
 import {Observable, CompositeDisposable} from "rx";
 import {setupFeature, restoreBuffers, openEditor} from "../test-helpers";
 
-describe('Intellisense', () => {
-    setupFeature(['features/intellisense']);
+describe("Intellisense", () => {
+    setupFeature(["features/intellisense"]);
 
-    it('adds commands', () => {
-        var disposable = new CompositeDisposable();
+    it("adds commands", () => {
+        const disposable = new CompositeDisposable();
 
         runs(() => {
-            var commands: any = atom.commands;
+            const commands: any = atom.commands;
 
-            expect(commands.registeredCommands['omnisharp-atom:intellisense-dot']).toBeTruthy();
-            expect(commands.registeredCommands['omnisharp-atom:intellisense-space']).toBeTruthy();
-            expect(commands.registeredCommands['omnisharp-atom:intellisense-semicolon']).toBeTruthy();
+            expect(commands.registeredCommands["omnisharp-atom:intellisense-dot"]).toBeTruthy();
+            expect(commands.registeredCommands["omnisharp-atom:intellisense-space"]).toBeTruthy();
+            expect(commands.registeredCommands["omnisharp-atom:intellisense-semicolon"]).toBeTruthy();
             disposable.dispose();
         });
     });

@@ -668,7 +668,7 @@ declare module TextBuffer {
         getTailPosition() : Point;
     
         /**
-         * Sets the tail position of the marker. If the marker doesn't have a
+         * Sets the tail position of the marker. If the marker doesn"t have a
          * tail, it will after calling this method.
          * @param position? - A {Point} or point-compatible {Array}. The position will be clipped before it is assigned.
          * @param properties? - {Object} properties to associate with the marker. 
@@ -680,7 +680,7 @@ declare module TextBuffer {
         getEndPosition() : Point;
     
         /**
-         * Removes the marker's tail. After calling the marker's head position
+         * Removes the marker"s tail. After calling the marker"s head position
          * will be reported as its current tail position until the tail is planted
          * again.
          * @param properties? - {Object} properties to associate with the marker. 
@@ -688,9 +688,9 @@ declare module TextBuffer {
         clearTail(properties? : any) : void;
     
         /**
-         * Plants the marker's tail at the current head position. After calling
-         * the marker's tail position will be its head position at the time of the
-         * call, regardless of where the marker's head is moved.
+         * Plants the marker"s tail at the current head position. After calling
+         * the marker"s tail position will be its head position at the time of the
+         * call, regardless of where the marker"s head is moved.
          * @param properties? - {Object} properties to associate with the marker. 
          */
         plantTail(properties? : Object) : any;
@@ -722,7 +722,7 @@ declare module TextBuffer {
         getProperties() : Object;
     
         /**
-         * Merges an {Object} containing new properties into the marker's
+         * Merges an {Object} containing new properties into the marker"s
          * existing properties.
          * @param properties? - {Object} 
          */
@@ -735,7 +735,7 @@ declare module TextBuffer {
         copy(options? : Marker) : Marker;
     
         /**
-         * Destroys the marker, causing it to emit the 'destroyed' event. Once
+         * Destroys the marker, causing it to emit the "destroyed" event. Once
          * destroyed, a marker cannot be restored by undo/redo operations. 
          */
         destroy() : void;
@@ -1095,7 +1095,7 @@ declare module TextBuffer {
     class Point {
         /**
          * Convert any point-compatible object to a {Point}.
-         * @param object? - This can be an object that's already a {Point}, in which case it's simply returned, or an array containing two {Number}s representing the row and column.
+         * @param object? - This can be an object that"s already a {Point}, in which case it"s simply returned, or an array containing two {Number}s representing the row and column.
          * @param copy? - An optional boolean indicating whether to force the copying of objects that are already points.
          * Returns: A {Point} based on the given object.
          */
@@ -1153,7 +1153,7 @@ declare module TextBuffer {
         /**
          * Build and return a new point by adding the rows and columns of
          * the given point.
-         * @param other? - A {Point} whose row and column will be added to this point's row and column to build the returned point.
+         * @param other? - A {Point} whose row and column will be added to this point"s row and column to build the returned point.
          * Returns a {Point}.
          */
         translate(other? : Point) : Point;
@@ -1223,7 +1223,7 @@ declare module TextBuffer {
     class Range {
         /**
          * Convert any range-compatible object to a {Range}.
-         * @param object? - This can be an object that's already a {Range}, in which case it's simply returned, or an array containing two {Point}s or point-compatible arrays.
+         * @param object? - This can be an object that"s already a {Range}, in which case it"s simply returned, or an array containing two {Point}s or point-compatible arrays.
          * @param copy? - An optional boolean indicating whether to force the copying of objects that are already ranges.˚
          * Returns: A {Range} based on the given object.
          */
@@ -1297,7 +1297,7 @@ declare module TextBuffer {
         union(otherRange? : Atom.Range) : any;
     
         /**
-         * Build and return a new range by translating this range's start and
+         * Build and return a new range by translating this range"s start and
          * end points by the given delta(s).
          * @param startDelta? - A {Point} by which to translate the start of this range.
          * @param endDelta? - A {Point} to by which to translate the end of this range. If omitted, the `startDelta` will be used instead.
@@ -1306,7 +1306,7 @@ declare module TextBuffer {
         translate(startDelta? : Point, endDelta? : Point) : Range;
     
         /**
-         * Build and return a new range by traversing this range's start and
+         * Build and return a new range by traversing this range"s start and
          * end points by the given delta.
          * 
          * See {Point::traverse} for details of how traversal differs from translation.
@@ -1528,7 +1528,7 @@ declare module TextBuffer {
          * Invoke the given callback synchronously _before_ the content of the
          * buffer changes.
          * 
-         * Because observers are invoked synchronously, it's important not to perform
+         * Because observers are invoked synchronously, it"s important not to perform
          * any expensive operations via this method.
          * @param callback - {Function} to be called when the buffer changes.
          */
@@ -1538,7 +1538,7 @@ declare module TextBuffer {
          * Invoke the given callback synchronously when the content of the
          * buffer changes.
          * 
-         * Because observers are invoked synchronously, it's important not to perform
+         * Because observers are invoked synchronously, it"s important not to perform
          * any expensive operations via this method. Consider {::onDidStopChanging} to
          * delay expensive operations until after changes stop occurring.
          * @param callback - {Function} to be called when the buffer changes.
@@ -1556,7 +1556,7 @@ declare module TextBuffer {
          * additional change.
          * 
          * This method can be used to perform potentially expensive operations that
-         * don't need to be performed synchronously. If you need to run your callback
+         * don"t need to be performed synchronously. If you need to run your callback
          * synchronously, use {::onDidChange} instead.
          * @param callback - {Function} to be called when the buffer stops changing.
          */
@@ -1685,14 +1685,14 @@ declare module TextBuffer {
         getPath() : string;
     
         /**
-         * Set the path for the buffer's associated file.
+         * Set the path for the buffer"s associated file.
          * @param filePath? - A {String} representing the new file path 
          */
         setPath(filePath? : string) : string;
     
         /**
          * Sets the character set encoding for this buffer.
-         * @param encoding? - The {String} encoding to use (default: 'utf8'). 
+         * @param encoding? - The {String} encoding to use (default: "utf8"). 
          */
         setEncoding(encoding? : string) : string;
     
@@ -1716,7 +1716,7 @@ declare module TextBuffer {
         /**
          * Get the basename of the associated file.
          * 
-         * The basename is the name portion of the file's path, without the containing
+         * The basename is the name portion of the file"s path, without the containing
          * directories.
          * This field or method was marked private by atomdoc. Use with caution.
          */
@@ -1775,13 +1775,13 @@ declare module TextBuffer {
         isRowBlank(row? : number) : boolean;
     
         /**
-         * Given a row, find the first preceding row that's not blank.
+         * Given a row, find the first preceding row that"s not blank.
          * @param startRow? - A {Number} identifying the row to start checking at.
          */
         previousNonBlankRow(startRow? : number) : number;
     
         /**
-         * Given a row, find the next row that's not blank.
+         * Given a row, find the next row that"s not blank.
          * @param startRow? - A {Number} identifying the row to start checking at.
          */
         nextNonBlankRow(startRow? : number) : number;
@@ -1853,7 +1853,7 @@ declare module TextBuffer {
         /**
          * Create a marker with the given range. This marker will maintain
          * its logical location as the buffer is changed, so if you mark a particular
-         * word, the marker will remain over that word even if the word's location in
+         * word, the marker will remain over that word even if the word"s location in
          * the buffer changes.
          * @param range? - A {Range} or range-compatible {Array}
          * @param properties? - A hash of key-value pairs to associate with the marker. There are also reserved property names that have marker-specific meaning.
@@ -1912,9 +1912,9 @@ declare module TextBuffer {
          * 
          * Any group of operations that are logically grouped from the perspective of
          * undoing and redoing should be performed in a transaction. If you want to
-         * abort the transaction, call {::abortTransaction} to terminate the function's
+         * abort the transaction, call {::abortTransaction} to terminate the function"s
          * execution and revert any changes performed up to the abortion.
-         * @param groupingInterval? - The {Number} of milliseconds for which this transaction should be considered 'open for grouping' after it begins. If a transaction with a positive `groupingInterval` is committed while the previous transaction is still open for grouping, the two transactions are merged with respect to undo and redo.
+         * @param groupingInterval? - The {Number} of milliseconds for which this transaction should be considered "open for grouping" after it begins. If a transaction with a positive `groupingInterval` is committed while the previous transaction is still open for grouping, the two transactions are merged with respect to undo and redo.
          * @param fn? - A {Function} to call inside the transaction. 
          */
         transact(groupingInterval? : number, fn? : Function) : any;
@@ -1959,10 +1959,10 @@ declare module TextBuffer {
          * Scan regular expression matches in the entire buffer, calling the
          * given iterator function on each match.
          * 
-         * If you're programmatically modifying the results, you may want to try
+         * If you"re programmatically modifying the results, you may want to try
          * {::backwardsScan} to avoid tripping over your own changes.
          * @param regex? - A {RegExp} to search for.
-         * @param iterator? - A {Function} that's called on each match with an {Object} containing the following keys:
+         * @param iterator? - A {Function} that"s called on each match with an {Object} containing the following keys:
          */
         scan(regex? : RegExp, iterator? : Function) : any;
     
@@ -1970,7 +1970,7 @@ declare module TextBuffer {
          * Scan regular expression matches in the entire buffer in reverse
          * order, calling the given iterator function on each match.
          * @param regex? - A {RegExp} to search for.
-         * @param iterator? - A {Function} that's called on each match with an {Object} containing the following keys:
+         * @param iterator? - A {Function} that"s called on each match with an {Object} containing the following keys:
          */
         backwardsScan(regex? : RegExp, iterator? : Function) : any;
     
@@ -1979,7 +1979,7 @@ declare module TextBuffer {
          * iterator function on each match.
          * @param regex? - A {RegExp} to search for.
          * @param range? - A {Range} in which to search.
-         * @param iterator? - A {Function} that's called on each match with an {Object} containing the following keys:
+         * @param iterator? - A {Function} that"s called on each match with an {Object} containing the following keys:
          */
         scanInRange(regex? : RegExp, range? : Atom.Range, iterator? : Function, reverse? : any) : Atom.Range;
     
@@ -1988,7 +1988,7 @@ declare module TextBuffer {
          * calling the given iterator function on each match.
          * @param regex? - A {RegExp} to search for.
          * @param range? - A {Range} in which to search.
-         * @param iterator? - A {Function} that's called on each match with an {Object} containing the following keys:
+         * @param iterator? - A {Function} that"s called on each match with an {Object} containing the following keys:
          */
         backwardsScanInRange(regex? : RegExp, range? : Atom.Range, iterator? : Function) : Atom.Range;
     
@@ -2087,9 +2087,9 @@ declare module TextBuffer {
         saveAs(filePath? : string, options? : any) : void;
     
         /**
-         * Reload the buffer's contents from disk.
+         * Reload the buffer"s contents from disk.
          * 
-         * Sets the buffer's content to the cached disk contents 
+         * Sets the buffer"s content to the cached disk contents 
          */
         reload(clearHistory? : History) : void;
     

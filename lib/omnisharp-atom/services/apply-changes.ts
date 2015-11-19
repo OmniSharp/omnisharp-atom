@@ -1,4 +1,4 @@
-var Range = require('atom').Range;
+const Range = require("atom").Range;
 import {Observable} from "rx";
 
 
@@ -6,11 +6,11 @@ export function applyChanges(editor: Atom.TextEditor, response: { Changes: OmniS
 export function applyChanges(editor: Atom.TextEditor, response: { Buffer: string });
 export function applyChanges(editor: Atom.TextEditor, response: any) {
     if (response.Changes) {
-        var buffer = editor.getBuffer();
-        var checkpoint = buffer.createCheckpoint();
+        const buffer = editor.getBuffer();
+        const checkpoint = buffer.createCheckpoint();
 
         response.Changes.forEach((change) => {
-            var range = new Range([change.StartLine, change.StartColumn], [change.EndLine, change.EndColumn]);
+            const range = new Range([change.StartLine, change.StartColumn], [change.EndLine, change.EndColumn]);
             buffer.setTextInRange(range, change.NewText);
         });
 
@@ -24,16 +24,16 @@ export function applyChanges(editor: Atom.TextEditor, response: any) {
 //     they will actually try to close
 //     with changes still.
 function resetPreviewTab() {
-    var pane: HTMLElement = <any>atom.views.getView(atom.workspace.getActivePane());
+    const pane: HTMLElement = <any>atom.views.getView(atom.workspace.getActivePane());
     if (pane) {
-    var title = pane.querySelector('.title.temp');
+    const title = pane.querySelector(".title.temp");
     if (title) {
-        title.classList.remove('temp');
+        title.classList.remove("temp");
     }
 
-    var tab = pane.querySelector('.preview-tab.active');
+    const tab = pane.querySelector(".preview-tab.active");
     if (tab) {
-        tab.classList.remove('preview-tab');
+        tab.classList.remove("preview-tab");
         (<any>tab).isPreviewTab = false;
     }
     }

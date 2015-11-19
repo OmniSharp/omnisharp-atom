@@ -1,10 +1,10 @@
-import Omni = require('../../omni-sharp-server/omni')
-import OmniSharpAtom = require('../omnisharp-atom');
+import Omni = require("../../omni-sharp-server/omni")
+import OmniSharpAtom = require("../omnisharp-atom");
 
-import _ = require('lodash')
-import {Subject, BehaviorSubject, Observable, CompositeDisposable, Scheduler} from 'rx';
-import Promise = require('bluebird');
-var filter = require('fuzzaldrin').filter;
+import * as _ from "lodash";
+import {Subject, BehaviorSubject, Observable, CompositeDisposable, Scheduler} from "rx";
+import * as Promise from "bluebird";
+const filter = require("fuzzaldrin").filter;
 
 interface RequestOptions {
     editor: Atom.TextEditor;
@@ -35,14 +35,14 @@ function calcuateMovement(previous: RequestOptions, current: RequestOptions) {
     if (!current) return { reset: true, current: current, previous: null };
     // If the row changes we moved lines, we should refetch the completions
     // (Is it possible it will be the same set?)
-    var row = Math.abs(current.bufferPosition.row - previous.bufferPosition.row) > 0;
+    const row = Math.abs(current.bufferPosition.row - previous.bufferPosition.row) > 0;
     // If the column jumped, lets get them again to be safe.
-    var column = Math.abs(current.bufferPosition.column - previous.bufferPosition.column) > 3;
+    const column = Math.abs(current.bufferPosition.column - previous.bufferPosition.column) > 3;
     return { reset: row || column || false, previous: previous, current: current };
 }
 
-var autoCompleteOptions = <OmniSharp.Models.AutoCompleteRequest>{
-    WordToComplete: '',
+const autoCompleteOptions = <OmniSharp.Models.AutoCompleteRequest>{
+    WordToComplete: "",
     WantDocumentationForEveryCompletionResult: false,
     WantKind: true,
     WantSnippet: true,
@@ -61,7 +61,7 @@ let results: Rx.Promise<any>;
 let setupSubscriptions = () => {
     if (_initialized) return;
 
-    var disposable = _disposable = new CompositeDisposable();
+    const disposable = _disposable = new CompositeDisposable();
 
     // Clear when auto-complete is opening.
     // TODO: Update atom typings
@@ -72,11 +72,11 @@ let setupSubscriptions = () => {
     }));
 
     // TODO: Dispose of these when not needed
-    disposable.add(atom.config.observe('omnisharp-atom.useIcons', (value) => {
+    disposable.add(atom.config.observe("omnisharp-atom.useIcons", (value) => {
         _useIcons = value;
     }));
 
-    disposable.add(atom.config.observe('omnisharp-atom.useLeftLabelColumnForSuggestions', (value) => {
+    disposable.add(atom.config.observe("omnisharp-atom.useLeftLabelColumnForSuggestions", (value) => {
         _useLeftLabelColumnForSuggestions = value;
     }));
 
@@ -84,14 +84,14 @@ let setupSubscriptions = () => {
 }
 
 function makeSuggestion(item: OmniSharp.Models.AutoCompleteResponse) {
-    var description, leftLabel, iconHTML, type;
+    const description, leftLabel, iconHTML, type;
 
     if (_useLeftLabelColumnForSuggestions == true) {
         description = item.RequiredNamespaceImport;
         leftLabel = item.ReturnType;
     } else {
         description = renderReturnType(item.ReturnType);
-        leftLabel = '';
+        leftLabel = "";
     }
 
     if (_useIcons == true) {
@@ -108,7 +108,7 @@ function makeSuggestion(item: OmniSharp.Models.AutoCompleteResponse) {
         type: type,
         iconHTML: iconHTML,
         displayText: item.DisplayText,
-        className: 'autocomplete-omnisharp-atom',
+        className: "autocomplete-omnisharp-atom",
         description: description,
         leftLabel: leftLabel,
     }
@@ -123,7 +123,7 @@ function renderReturnType(returnType: string) {
 
 function renderIcon(item) {
     // todo: move additional styling to css
-    return '<img height="16px" width="16px" src="atom://omnisharp-atom/styles/icons/autocomplete_' + item.Kind.toLowerCase() + '@3x.png" /> '
+    return "<img height="16px" width="16px" src="atom://omnisharp-atom/styles/icons/autocomplete_" + item.Kind.toLowerCase() + "@3x.png" /> "
 }
 
 function getSuggestions(options: RequestOptions): Rx.IPromise<Suggestion[]> {
@@ -139,25 +139,25 @@ function getSuggestions(options: RequestOptions): Rx.IPromise<Suggestion[]> {
 
     previous = options;
 
-    var buffer = options.editor.getBuffer();
-    var end = options.bufferPosition.column;
+    const buffer = options.editor.getBuffer();
+    const end = options.bufferPosition.column;
 
-    var data = buffer.getLines()[options.bufferPosition.row].substring(0, end + 1);
-    var lastCharacterTyped = data[end - 1];
+    const data = buffer.getLines()[options.bufferPosition.row].substring(0, end + 1);
+    const lastCharacterTyped = data[end - 1];
 
     if (!/[A-Z_0-9.]+/i.test(lastCharacterTyped)) {
         return;
     }
 
-    var search = options.prefix;
+    const search = options.prefix;
     if (search === ".")
         search = "";
 
     if (!results) results = Omni.request(solution => solution.autocomplete(_.clone(autoCompleteOptions))).toPromise();
 
-    var p = results;
+    const p = results;
     if (search)
-        p = p.then(s => filter(s, search, { key: 'CompletionText' }));
+        p = p.then(s => filter(s, search, { key: "CompletionText" }));
 
     return p.then(response => response.map(s => makeSuggestion(s)));
 }
@@ -174,9 +174,9 @@ function dispose() {
     _initialized = false;
 }
 
-export var CompletionProvider = {
-    get selector() { return Omni.grammars.map((x: any) => `.${x.scopeName}`).join(', ') },
-    get disableForSelector() { return Omni.grammars.map((x: any) => `.${x.scopeName} .comment`).join(', ') },
+export const CompletionProvider = {
+    get selector() { return Omni.grammars.map((x: any) => `.${x.scopeName}`).join(", ") },
+    get disableForSelector() { return Omni.grammars.map((x: any) => `.${x.scopeName} .comment`).join(", ") },
     inclusionPriority: 1,
     suggestionPriority: 10,
     excludeLowerPriority: true,

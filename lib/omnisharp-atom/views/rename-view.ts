@@ -1,8 +1,8 @@
-import spacePenViews = require('atom-space-pen-views')
-var $ = spacePenViews.jQuery;
-var TextEditorView = <any>spacePenViews.TextEditorView;
+import * as spacePenViews from "atom-space-pen-views";
+const $ = spacePenViews.jQuery;
+const TextEditorView = <any>spacePenViews.TextEditorView;
 
-import Omni = require('../../omni-sharp-server/omni')
+import Omni = require("../../omni-sharp-server/omni")
 
 class RenameView extends spacePenViews.View {
     private wordToRename = null;
@@ -10,13 +10,13 @@ class RenameView extends spacePenViews.View {
 
     public static content() {
         return this.div({
-            "class": 'rename overlay from-top'
+            "class": "rename overlay from-top"
         }, () => {
             this.p({
-                outlet: 'message',
-                "class": 'icon icon-diff-renamed'
-            }, 'Rename to:');
-            return this.subview('miniEditor',
+                outlet: "message",
+                "class": "icon icon-diff-renamed"
+            }, "Rename to:");
+            return this.subview("miniEditor",
                 new spacePenViews.TextEditorView({
                     mini: true
                 }));
@@ -24,8 +24,8 @@ class RenameView extends spacePenViews.View {
     }
 
     public initialize() {
-        atom.commands.add(this[0], 'core:confirm', () => this.rename());
-        atom.commands.add(this[0], 'core:cancel', () => this.destroy());
+        atom.commands.add(this[0], "core:confirm", () => this.rename());
+        atom.commands.add(this[0], "core:cancel", () => this.destroy());
     }
 
     public configure(wordToRename) {
@@ -42,7 +42,7 @@ class RenameView extends spacePenViews.View {
     }
 
     public destroy() {
-        this.miniEditor.setText('');
+        this.miniEditor.setText("");
         return this.detach();
     }
 }

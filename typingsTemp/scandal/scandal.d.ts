@@ -394,10 +394,10 @@ declare module Scandal {
 
 }
 declare module "scandal" {
-    var main: any;
-    var replace: any;
+    const main: any;
+    const replace: any;
     class PathSearcher extends Scandal.PathSearcher {}
     class PathScanner extends Scandal.PathScanner {}
-    var PathReplacer: any;
+    const PathReplacer: any;
     export = Serializable.Serializable;
 }

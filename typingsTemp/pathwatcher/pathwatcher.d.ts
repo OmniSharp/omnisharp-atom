@@ -43,8 +43,8 @@ declare module Pathwatcher {
         create(mode? : any) : Q.Promise<any>;
     
         /**
-         * Invoke the given callback when the directory's contents change.
-         * @param callback - {Function} to be called when the directory's contents change.
+         * Invoke the given callback when the directory"s contents change.
+         * @param callback - {Function} to be called when the directory"s contents change.
          */
         onDidChange(callback : Function /* needs to be defined */) : EventKit.Disposable;
     
@@ -75,7 +75,7 @@ declare module Pathwatcher {
     
         /**
          * Return a {Boolean}, true if this {Directory} is the root directory
-         * of the filesystem, or false if it isn't. 
+         * of the filesystem, or false if it isn"t. 
          */
         isRoot() : boolean;
     
@@ -116,14 +116,14 @@ declare module Pathwatcher {
         getParent() : Directory;
     
         /**
-         * Traverse within this Directory to a child File. This method doesn't
+         * Traverse within this Directory to a child File. This method doesn"t
          * actually check to see if the File exists, it just creates the File object.
          */
         getFile(filename? : string) : File;
     
         /**
          * Traverse within this a Directory to a child Directory. This method
-         * doesn't actually check to see if the Directory exists, it just creates the
+         * doesn"t actually check to see if the Directory exists, it just creates the
          * Directory object.
          */
         getSubdirectory(dirname? : string) : Directory;
@@ -210,14 +210,14 @@ declare module Pathwatcher {
         create() : Q.Promise<any>;
     
         /**
-         * Invoke the given callback when the file's contents change.
-         * @param callback - {Function} to be called when the file's contents change.
+         * Invoke the given callback when the file"s contents change.
+         * @param callback - {Function} to be called when the file"s contents change.
          */
         onDidChange(callback : Function /* needs to be defined */) : EventKit.Disposable;
     
         /**
-         * Invoke the given callback when the file's path changes.
-         * @param callback - {Function} to be called when the file's path changes.
+         * Invoke the given callback when the file"s path changes.
+         * @param callback - {Function} to be called when the file"s path changes.
          */
         onDidRename(callback : Function /* needs to be defined */) : EventKit.Disposable;
     
@@ -278,8 +278,8 @@ declare module Pathwatcher {
         setDigest(contents? : any) : void;
     
         /**
-         * Sets the file's character set encoding name.
-         * @param encoding? - The {String} encoding to use (default: 'utf8') 
+         * Sets the file"s character set encoding name.
+         * @param encoding? - The {String} encoding to use (default: "utf8") 
          */
         setEncoding(encoding? : string) : string;
     
@@ -347,7 +347,7 @@ declare module Pathwatcher {
         /**
          * Writes the text to specified path.
          * 
-         * Privilege escalation would be asked when current user doesn't have
+         * Privilege escalation would be asked when current user doesn"t have
          * permission to the path. 
          * This field or method was marked private by atomdoc. Use with caution.
          */

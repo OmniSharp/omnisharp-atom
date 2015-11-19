@@ -1,17 +1,17 @@
 import {Observable, CompositeDisposable} from "rx";
 import Omni = require("../../omni-sharp-server/omni");
-import * as _ from 'lodash';
+import * as _ from "lodash";
 import {OmnisharpClientStatus} from "omnisharp-client";
 import {dock} from "../atom/dock";
-import {OutputWindow} from '../views/omni-output-pane-view';
+import {OutputWindow} from "../views/omni-output-pane-view";
 import {ViewModel} from "../../omni-sharp-server/view-model";
 
-class ServerInformation implements OmniSharp.IFeature {
+class ServerInformation implements IFeature {
     private disposable: CompositeDisposable;
     public observe: {
         status: Observable<OmnisharpClientStatus>;
-        output: Observable<OmniSharp.OutputMessage[]>;
-        projects: Observable<OmniSharp.IProjectViewModel[]>;
+        output: Observable<OutputMessage[]>;
+        projects: Observable<IProjectViewModel[]>;
         model: Observable<ViewModel>;
         updates: Observable<Rx.ObjectObserveChange<ServerInformation>>;
     }
@@ -21,14 +21,14 @@ class ServerInformation implements OmniSharp.IFeature {
     public activate() {
         this.disposable = new CompositeDisposable();
 
-        var status = this.setupStatus();
-        var output = this.setupOutput();
-        var projects = this.setupProjects();
+        const status = this.setupStatus();
+        const output = this.setupOutput();
+        const projects = this.setupProjects();
 
         this.disposable.add(Omni.activeModel.subscribe(z => this.model = z));
         this.observe = { status, output, projects, model: Omni.activeModel, updates: Observable.ofObjectChanges(this) };
 
-        this.disposable.add(dock.addWindow('output', 'Omnisharp output', OutputWindow, {}));
+        this.disposable.add(dock.addWindow("output", "Omnisharp output", OutputWindow, {}));
     }
 
     private setupStatus() {
@@ -62,8 +62,8 @@ class ServerInformation implements OmniSharp.IFeature {
     }
 
     public required = true;
-    public title = 'Server Information';
-    public description = 'Monitors server output and status.';
+    public title = "Server Information";
+    public description = "Monitors server output and status.";
 }
 
-export var server = new ServerInformation;
+export const server = new ServerInformation;

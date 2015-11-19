@@ -1,8 +1,8 @@
 import {CompositeDisposable} from "rx";
-import Omni = require('../../omni-sharp-server/omni');
-import path = require('path');
+import Omni = require("../../omni-sharp-server/omni");
+import * as path from "path";
 
-class PackageRestore implements OmniSharp.IFeature {
+class PackageRestore implements IFeature {
     private disposable: Rx.CompositeDisposable;
 
     public activate() {
@@ -19,8 +19,8 @@ class PackageRestore implements OmniSharp.IFeature {
     }
 
     public required = true;
-    public title = 'Package Restore';
-    public description = 'Initializes a package restore, when an project.json file is saved.';
+    public title = "Package Restore";
+    public description = "Initializes a package restore, when an project.json file is saved.";
 }
 
-export var packageRestore = new PackageRestore;
+export const packageRestore = new PackageRestore;

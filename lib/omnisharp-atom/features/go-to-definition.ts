@@ -1,11 +1,11 @@
-import _ = require('lodash');
+import * as _ from "lodash";
 import {CompositeDisposable, Observable} from "rx";
-import Omni = require('../../omni-sharp-server/omni');
-import $ = require('jquery');
-var Range: typeof TextBuffer.Range = require('atom').Range;
-var identifierRegex = /^identifier|identifier$|\.identifier\./;
+import Omni = require("../../omni-sharp-server/omni");
+import * as $ from "jquery";
+const Range: typeof TextBuffer.Range = require("atom").Range;
+const identifierRegex = /^identifier|identifier$|\.identifier\./;
 
-class GoToDefinition implements OmniSharp.IFeature {
+class GoToDefinition implements IFeature {
     private disposable: Rx.CompositeDisposable;
     private exprTypeTimeout = null;
     private marker = null;
@@ -15,37 +15,37 @@ class GoToDefinition implements OmniSharp.IFeature {
     public activate() {
         this.disposable = new CompositeDisposable();
         this.disposable.add(Omni.switchActiveEditor((editor, cd) => {
-            var view = $(atom.views.getView(editor));
-            var scroll = this.getFromShadowDom(view, '.scroll-view');
+            const view = $(atom.views.getView(editor));
+            const scroll = this.getFromShadowDom(view, ".scroll-view");
             if (!scroll[0]) {
                 return;
             }
 
-            var click = Observable.fromEvent<MouseEvent>(scroll[0], 'click');
+            const click = Observable.fromEvent<MouseEvent>(scroll[0], "click");
 
-            var mousemove = Observable.fromEvent<MouseEvent>(scroll[0], 'mousemove');
+            const mousemove = Observable.fromEvent<MouseEvent>(scroll[0], "mousemove");
 
-            var keyup = Observable.merge(
-                Observable.fromEvent<any>(view[0], 'focus'),
-                Observable.fromEvent<any>(view[0], 'blur'),
-                Observable.fromEventPattern(x => { (<any>atom.getCurrentWindow()).on('focus', x) }, x => { (<any>atom.getCurrentWindow()).removeListener('focus', x) }),
-                Observable.fromEventPattern(x => { (<any>atom.getCurrentWindow()).on('blur', x) }, x => { (<any>atom.getCurrentWindow()).removeListener('blur', x) }),
-                Observable.fromEvent<KeyboardEvent>(view[0], 'keyup')
+            const keyup = Observable.merge(
+                Observable.fromEvent<any>(view[0], "focus"),
+                Observable.fromEvent<any>(view[0], "blur"),
+                Observable.fromEventPattern(x => { (<any>atom.getCurrentWindow()).on("focus", x) }, x => { (<any>atom.getCurrentWindow()).removeListener("focus", x) }),
+                Observable.fromEventPattern(x => { (<any>atom.getCurrentWindow()).on("blur", x) }, x => { (<any>atom.getCurrentWindow()).removeListener("blur", x) }),
+                Observable.fromEvent<KeyboardEvent>(view[0], "keyup")
                     .where(x => x.which === 17 || x.which === 224 || x.which === 93 || x.which === 91)
             )
                 .throttle(100);
 
-            var keydown = Observable.fromEvent<KeyboardEvent>(view[0], 'keydown')
+            const keydown = Observable.fromEvent<KeyboardEvent>(view[0], "keydown")
                 .where(z => !z.repeat)
                 .where(e => e.ctrlKey || e.metaKey)
                 .throttle(100);
 
-            var specialKeyDown = keydown
+            const specialKeyDown = keydown
                 .flatMapLatest(x => mousemove
                     .takeUntil(keyup)
                     .map(event => {
-                        var pixelPt = this.pixelPositionFromMouseEvent(editor, view, event);
-                        var screenPt = editor.screenPositionForPixelPosition(pixelPt);
+                        const pixelPt = this.pixelPositionFromMouseEvent(editor, view, event);
+                        const screenPt = editor.screenPositionForPixelPosition(pixelPt);
                         return editor.bufferPositionForScreenPosition(screenPt);
                     })
                     .startWith(editor.getCursorBufferPosition())
@@ -55,15 +55,15 @@ class GoToDefinition implements OmniSharp.IFeature {
 
             editor.onDidDestroy(() => cd.dispose());
 
-            var eventDisposable: Rx.Disposable;
-            cd.add(atom.config.observe('omnisharp-atom.enhancedHighlighting', (enabled: boolean) => {
+            const eventDisposable: Rx.Disposable;
+            cd.add(atom.config.observe("omnisharp-atom.enhancedHighlighting", (enabled: boolean) => {
                 this.enhancedHighlighting = enabled;
                 if (eventDisposable) {
                     eventDisposable.dispose();
                     cd.remove(eventDisposable);
                 }
 
-                var observable = specialKeyDown;
+                const observable = specialKeyDown;
                 if (!enabled) {
                     observable = observable.debounce(200);
                 }
@@ -89,7 +89,7 @@ class GoToDefinition implements OmniSharp.IFeature {
 
         this.disposable.add(atom.emitter.on("symbols-view:go-to-declaration", () => this.goToDefinition()));
         this.disposable.add(Omni.addTextEditorCommand("omnisharp-atom:go-to-definition", () => this.goToDefinition()));
-        this.disposable.add(atom.config.observe('omnisharp-atom.wantMetadata', enabled => {
+        this.disposable.add(atom.config.observe("omnisharp-atom.wantMetadata", enabled => {
             this.wantMetadata = enabled;
         }));
     }
@@ -99,9 +99,9 @@ class GoToDefinition implements OmniSharp.IFeature {
     }
 
     public goToDefinition() {
-        var editor = atom.workspace.getActiveTextEditor();
+        const editor = atom.workspace.getActiveTextEditor();
         if (editor) {
-            var word = <any>editor.getWordUnderCursor();
+            const word = <any>editor.getWordUnderCursor();
             Omni.request(editor, solution => solution.gotodefinition({
                 WantMetadata: this.wantMetadata
             }))
@@ -109,14 +109,14 @@ class GoToDefinition implements OmniSharp.IFeature {
                     if (data.FileName != null) {
                         Omni.navigateTo(data);
                     } else if (data.MetadataSource) {
-                        var {AssemblyName, TypeName} = data.MetadataSource;
+                        const {AssemblyName, TypeName} = data.MetadataSource;
                         atom.workspace.open(`omnisharp://metadata/${AssemblyName}/${TypeName}`, <any>{
                             initialLine: data.Line,
                             initialColumn: data.Column,
                             searchAllPanes: true
                         });
                     } else {
-                        atom.notifications.addWarning("Can't navigate to '" + word + "'");
+                        atom.notifications.addWarning("Can"t navigate to "" + word + """);
                     }
                 });
         }
@@ -130,10 +130,10 @@ class GoToDefinition implements OmniSharp.IFeature {
     }
 
     private getWordRange(editor: Atom.TextEditor, bufferPt: TextBuffer.Point): TextBuffer.Range {
-        var buffer = editor.getBuffer();
-        var startColumn = bufferPt.column;
-        var endColumn = bufferPt.column;
-        var line = buffer.getLines()[bufferPt.row];
+        const buffer = editor.getBuffer();
+        const startColumn = bufferPt.column;
+        const endColumn = bufferPt.column;
+        const line = buffer.getLines()[bufferPt.row];
 
         if (!/[A-Z_0-9]/i.test(line[bufferPt.column])) {
             if (this.marker) this.removeMarker();
@@ -155,14 +155,14 @@ class GoToDefinition implements OmniSharp.IFeature {
             this.marker.bufferMarker.range.compare(wordRange) === 0)
             return;
 
-        var addMark = () => {
+        const addMark = () => {
             this.removeMarker();
             this.marker = editor.markBufferRange(wordRange);
-            var decoration = editor.decorateMarker(this.marker, { type: 'highlight', class: 'gotodefinition-underline' });
+            const decoration = editor.decorateMarker(this.marker, { type: "highlight", class: "gotodefinition-underline" });
         };
 
         if (this.enhancedHighlighting) {
-            var scopes: string[] = (<any>editor.scopeDescriptorForBufferPosition(bufferPt)).scopes;
+            const scopes: string[] = (<any>editor.scopeDescriptorForBufferPosition(bufferPt)).scopes;
             if (identifierRegex.test(_.last(scopes))) {
                 addMark();
             }
@@ -171,24 +171,24 @@ class GoToDefinition implements OmniSharp.IFeature {
             Omni.request(editor, solution => solution.gotodefinition({
                 Line: bufferPt.row,
                 Column: bufferPt.column
-            })).where(data => !!data.FileName || !!data['MetadataSource'])
+            })).where(data => !!data.FileName || !!data["MetadataSource"])
                 .subscribe(data => addMark());
         }
     }
 
     private pixelPositionFromMouseEvent(editor: Atom.TextEditor, editorView, event: MouseEvent) {
-        var clientX = event.clientX, clientY = event.clientY;
-        var linesClientRect = this.getFromShadowDom(editorView, '.lines')[0].getBoundingClientRect();
-        var top = clientY - linesClientRect.top;
-        var left = clientX - linesClientRect.left;
+        const clientX = event.clientX, clientY = event.clientY;
+        const linesClientRect = this.getFromShadowDom(editorView, ".lines")[0].getBoundingClientRect();
+        const top = clientY - linesClientRect.top;
+        const left = clientX - linesClientRect.left;
         top += (<any>editor).getScrollTop();
         left += (<any>editor).getScrollLeft();
         return { top: top, left: left };
     }
 
     private getFromShadowDom(element: JQuery, selector: string): JQuery {
-        var el = element[0];
-        var found = (<any>el).rootElement.querySelectorAll(selector);
+        const el = element[0];
+        const found = (<any>el).rootElement.querySelectorAll(selector);
         return $(found[0]);
     }
 
@@ -200,8 +200,8 @@ class GoToDefinition implements OmniSharp.IFeature {
     }
 
     public required = true;
-    public title = 'Go To Definition';
-    public description = 'Adds support to goto definition, as well as display metadata returned by a goto definition metadata response';
+    public title = "Go To Definition";
+    public description = "Adds support to goto definition, as well as display metadata returned by a goto definition metadata response";
 }
 
-export var goToDefintion = new GoToDefinition;
+export const goToDefintion = new GoToDefinition;

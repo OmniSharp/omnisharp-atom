@@ -1,17 +1,17 @@
-import Omni = require('../../lib/omni-sharp-server/omni');
+import Omni = require("../../lib/omni-sharp-server/omni");
 import {Observable, CompositeDisposable} from "rx";
 import {setupFeature, restoreBuffers, openEditor} from "../test-helpers";
 
-describe('Go To Definition', () => {
-    setupFeature(['features/go-to-definition']);
+describe("Go To Definition", () => {
+    setupFeature(["features/go-to-definition"]);
 
-    it('adds commands', () => {
-        var disposable = new CompositeDisposable();
+    it("adds commands", () => {
+        const disposable = new CompositeDisposable();
 
         runs(() => {
-            var commands: any = atom.commands;
+            const commands: any = atom.commands;
 
-            expect(commands.registeredCommands['omnisharp-atom:go-to-definition']).toBeTruthy();
+            expect(commands.registeredCommands["omnisharp-atom:go-to-definition"]).toBeTruthy();
             disposable.dispose();
         });
     });

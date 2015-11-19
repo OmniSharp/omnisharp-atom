@@ -21,7 +21,7 @@ declare module Atom {
         /**
          * Load or create the Atom environment in the given mode.
          * This field or method was marked private by atomdoc. Use with caution.
-         * @param mode? - A {String} mode that is either 'editor' or 'spec' depending on the kind of environment you want to build.
+         * @param mode? - A {String} mode that is either "editor" or "spec" depending on the kind of environment you want to build.
          */
         static loadOrCreate(mode? : string) : Atom;
     
@@ -41,7 +41,7 @@ declare module Atom {
         static getStateKey(paths? : string, mode? : any) : any;
     
         /**
-         * Get the directory path to Atom's configuration area.
+         * Get the directory path to Atom"s configuration area.
          * This field or method was marked private by atomdoc. Use with caution.
          */
         static getConfigDirPath() : string;
@@ -210,7 +210,7 @@ declare module Atom {
         isReleasedVersion() : number;
     
         /**
-         * Get the directory path to Atom's configuration area.
+         * Get the directory path to Atom"s configuration area.
          * This field or method was marked private by atomdoc. Use with caution.
          */
         getConfigDirPath() : string;
@@ -221,7 +221,7 @@ declare module Atom {
          * This time include things like loading and activating packages, creating
          * DOM elements for the editor, and reading the config.
          * Returns the {Number} of milliseconds taken to load the window or null
-         * if the window hasn't finished loading yet.
+         * if the window hasn"t finished loading yet.
          */
         getWindowLoadTime() : number;
     
@@ -450,7 +450,7 @@ declare module Atom {
         watchThemes() : any;
     
         /**
-         * Notify the browser project of the window's current project path 
+         * Notify the browser project of the window"s current project path 
          * This field or method was marked private by atomdoc. Use with caution.
          */
         watchProjectPath() : string;
@@ -588,7 +588,7 @@ declare module Atom {
         /**
          * Flattens the given menu and submenu items into an single Array.
          * 
-         * menu - A complete menu configuration object for atom-shell's menu API.
+         * menu - A complete menu configuration object for atom-shell"s menu API.
          * This field or method was marked private by atomdoc. Use with caution.
          * Returns an Array of native menu items.
          */
@@ -638,12 +638,12 @@ declare module Atom {
         /**
          * Combines a menu template with the appropriate keystroke.
          * 
-         * template - An Object conforming to atom-shell's menu api but lacking
+         * template - An Object conforming to atom-shell"s menu api but lacking
          *            accelerator and click properties.
          * keystrokesByCommand - An Object where the keys are commands and the values
          *                       are Arrays containing the keystroke.
          * This field or method was marked private by atomdoc. Use with caution.
-         * Returns a complete menu configuration object for atom-shell's menu API.
+         * Returns a complete menu configuration object for atom-shell"s menu API.
          */
         translateTemplate(template? : MenuItem[], keystrokesByCommand? : string) : any;
     
@@ -660,7 +660,7 @@ declare module Atom {
     }
 
     /**
-     * The application's singleton class.
+     * The application"s singleton class.
      */
     export class AtomApplication {
         /**
@@ -753,7 +753,7 @@ declare module Atom {
         /**
          * Executes the given command.
          * 
-         * If it isn't handled globally, delegate to the currently focused window.
+         * If it isn"t handled globally, delegate to the currently focused window.
          * 
          * command - The string representing the command.
          * args - The optional arguments to pass along. 
@@ -770,7 +770,7 @@ declare module Atom {
         sendCommandToWindow(command? : string, atomWindow? : AtomWindow, args? : any) : string;
     
         /**
-         * Translates the command into OS X action and sends it to application's first
+         * Translates the command into OS X action and sends it to application"s first
          * responder. 
          * This field or method was marked private by atomdoc. Use with caution.
          */
@@ -809,8 +809,8 @@ declare module Atom {
          *   :pathToOpen - The file path to open
          *   :pidToKillWhenClosed - The integer of the pid to kill
          *   :newWindow - Boolean of whether this should be opened in a new window.
-         *   :devMode - Boolean to control the opened window's dev mode.
-         *   :safeMode - Boolean to control the opened window's safe mode.
+         *   :devMode - Boolean to control the opened window"s dev mode.
+         *   :safeMode - Boolean to control the opened window"s safe mode.
          *   :profileStartup - Boolean to control creating a profile of the startup time.
          *   :window - {AtomWindow} to open file paths in. 
          */
@@ -823,8 +823,8 @@ declare module Atom {
          *   :pathsToOpen - The array of file paths to open
          *   :pidToKillWhenClosed - The integer of the pid to kill
          *   :newWindow - Boolean of whether this should be opened in a new window.
-         *   :devMode - Boolean to control the opened window's dev mode.
-         *   :safeMode - Boolean to control the opened window's safe mode.
+         *   :devMode - Boolean to control the opened window"s dev mode.
+         *   :safeMode - Boolean to control the opened window"s safe mode.
          *   :windowDimensions - Object with height and width keys.
          *   :window - {AtomWindow} to open file paths in. 
          */
@@ -863,12 +863,12 @@ declare module Atom {
          * 
          * The host of the URL being opened is assumed to be the package name
          * responsible for opening the URL.  A new window will be created with
-         * that package's `urlMain` as the bootstrap script.
+         * that package"s `urlMain` as the bootstrap script.
          * 
          * options -
          *   :urlToOpen - The atom:// url to open.
-         *   :devMode - Boolean to control the opened window's dev mode.
-         *   :safeMode - Boolean to control the opened window's safe mode. 
+         *   :devMode - Boolean to control the opened window"s dev mode.
+         *   :safeMode - Boolean to control the opened window"s safe mode. 
          * This field or method was marked private by atomdoc. Use with caution.
          */
         openUrl({ urlToOpen, devMode, safeMode } : { urlToOpen? : string; devMode? : boolean; safeMode? : boolean }) : string;
@@ -881,7 +881,7 @@ declare module Atom {
          *                   completion.
          *   :resourcePath - The path to include specs from.
          *   :specPath - The directory to load specs from.
-         *   :safeMode - A Boolean that, if true, won't run specs from ~/.atom/packages
+         *   :safeMode - A Boolean that, if true, won"t run specs from ~/.atom/packages
          *               and ~/.atom/dev/packages, defaults to false. 
          * This field or method was marked private by atomdoc. Use with caution.
          */
@@ -895,11 +895,11 @@ declare module Atom {
         /**
          * Opens a native dialog to prompt the user for a path.
          * 
-         * Once paths are selected, they're opened in a new or existing {AtomWindow}s.
+         * Once paths are selected, they"re opened in a new or existing {AtomWindow}s.
          * 
          * options -
-         *   :type - A String which specifies the type of the dialog, could be 'file',
-         *           'folder' or 'all'. The 'all' is only available on OS X.
+         *   :type - A String which specifies the type of the dialog, could be "file",
+         *           "folder" or "all". The "all" is only available on OS X.
          *   :devMode - A Boolean which controls whether any newly opened windows
          *              should be in dev mode or not.
          *   :safeMode - A Boolean which controls whether any newly opened windows
@@ -917,7 +917,7 @@ declare module Atom {
     }
 
     /**
-     * Handles requests with 'atom' protocol.
+     * Handles requests with "atom" protocol.
      */
     export class AtomProtocolHandler {
         /**
@@ -926,7 +926,7 @@ declare module Atom {
         constructor(resourcePath? : string, safeMode? : boolean);
     
         /**
-         * Creates the 'atom' custom protocol handler. 
+         * Creates the "atom" custom protocol handler. 
          * This field or method was marked private by atomdoc. Use with caution.
          */
         registerAtomProtocol() : any;
@@ -1230,7 +1230,7 @@ declare module Atom {
         constructor(template? : MenuItem[], atomWindow? : AtomWindow);
     
         /**
-         * It's necessary to build the event handlers in this process, otherwise
+         * It"s necessary to build the event handlers in this process, otherwise
          * closures are dragged across processes and failed to be garbage collected
          * appropriately. 
          * This field or method was marked private by atomdoc. Use with caution.
@@ -1254,7 +1254,7 @@ declare module Atom {
 
     /**
      * A wrapper which provides standard error/output line buffering for
-     * Node's ChildProcess.
+     * Node"s ChildProcess.
      */
     export class BufferedProcess {
         /**
@@ -1379,12 +1379,12 @@ declare module Atom {
 
     /**
      * A simple color class returned from {Config::get} when the value
-     * at the key path is of type 'color'. 
+     * at the key path is of type "color". 
      */
     export class Color {
         /**
          * Parse a {String} or {Object} into a {Color}.
-         * @param value? - A {String} such as `'white'`, `#ff00ff`, or `'rgba(255, 15, 60, .75)'` or an {Object} with `red`, `green`, `blue`, and `alpha` properties.
+         * @param value? - A {String} such as `"white"`, `#ff00ff`, or `"rgba(255, 15, 60, .75)"` or an {Object} with `red`, `green`, `blue`, and `alpha` properties.
          * Returns a {Color} or `null` if it cannot be parsed.
          */
         static parse(value? : string) : Color;
@@ -1572,7 +1572,7 @@ declare module Atom {
     }
 
     /**
-     * Used to access all of Atom's configuration details.
+     * Used to access all of Atom"s configuration details.
      */
     export class Config {
         /**
@@ -1628,7 +1628,7 @@ declare module Atom {
     }
 
     /**
-     * Provides a registry for commands that you'd like to appear in the
+     * Provides a registry for commands that you"d like to appear in the
      * context menu.
      */
     export class ContextMenuManager {
@@ -1699,7 +1699,7 @@ declare module Atom {
         onDidDestroy(callback : () => void) : EventKit.Disposable;
     
         /**
-         * Calls your `callback` when the cursor's visibility has changed
+         * Calls your `callback` when the cursor"s visibility has changed
          * @param callback - {Function}
          */
         onDidChangeVisibility(callback : (event: { oldBufferPosition: TextBuffer.Point; oldScreenPosition: TextBuffer.Point; newBufferPosition: TextBuffer.Point; newScreenPosition: TextBuffer.Point; textChanged: boolean; cursor: Cursor; }) => any) : EventKit.Disposable;
@@ -1727,7 +1727,7 @@ declare module Atom {
         getScreenColumn() : number;
     
         /**
-         * Retrieves the cursor's current buffer row. 
+         * Retrieves the cursor"s current buffer row. 
          */
         getBufferRow() : number;
     
@@ -1762,7 +1762,7 @@ declare module Atom {
         getIndentLevel() : any;
     
         /**
-         * Retrieves the scope descriptor for the cursor's current position.
+         * Retrieves the scope descriptor for the cursor"s current position.
          */
         getScopeDescriptor() : ScopeDescriptor;
     
@@ -1939,7 +1939,7 @@ declare module Atom {
         updateVisibility() : void;
     
         /**
-         * Compare this cursor's buffer position to another cursor's buffer position.
+         * Compare this cursor"s buffer position to another cursor"s buffer position.
          * 
          * See {Point::compare} for more details.
          * @param otherCursor? - {Cursor} to compare against 
@@ -2023,7 +2023,7 @@ declare module Atom {
     
         /**
          * Sets the decorationItem on the decorationNode.
-         * If `decorationItem` is undefined, the decorationNode's child item will be cleared. 
+         * If `decorationItem` is undefined, the decorationNode"s child item will be cleared. 
          * This field or method was marked private by atomdoc. Use with caution.
          */
         setDecorationItem(newItem? : any, decorationHeight? : number, decorationId? : any, decorationNode? : TextBuffer.Node) : void;
@@ -2097,7 +2097,7 @@ declare module Atom {
          * 
          * Results are streamed back to the caller by invoking methods on the specified `options`,
          * such as `didMatch` and `didError`.
-         * @param directories? - {Array} of {Directory} objects to search, all of which have been accepted by this searcher's `canSearchDirectory()` predicate.
+         * @param directories? - {Array} of {Directory} objects to search, all of which have been accepted by this searcher"s `canSearchDirectory()` predicate.
          * @param regex? - {RegExp} to search with.
          * @param options? - {Object} with the following properties: Each item in the array is a file/directory pattern, e.g., `src` to search in the "src" directory or `*.js` to search all JavaScript files. In practice, this often comes from the comma-delimited list of patterns in the bottom text input of the ProjectFindView dialog.
          * Returns a *thenable* `DirectorySearch` that includes a `cancel()` method. If `cancel()` is
@@ -2690,7 +2690,7 @@ declare module Atom {
         bufferPositionForScreenPosition(screenPosition? : TextBuffer.Point | { row: number; column: number } | [number, number], options? : any) : TextBuffer.Point;
     
         /**
-         * Retrieves the grammar's token scopeDescriptor for a buffer position.
+         * Retrieves the grammar"s token scopeDescriptor for a buffer position.
          * 
          * bufferPosition - A {Point} in the {TextBuffer}
          * This field or method was marked private by atomdoc. Use with caution.
@@ -2703,7 +2703,7 @@ declare module Atom {
         bufferRangeForScopeAtPosition(selector? : string, position? : TextBuffer.Point | { row: number; column: number } | [number, number]) : TextBuffer.Range;
     
         /**
-         * Retrieves the grammar's token for a buffer position.
+         * Retrieves the grammar"s token for a buffer position.
          * 
          * bufferPosition - A {Point} in the {TextBuffer}.
          * This field or method was marked private by atomdoc. Use with caution.
@@ -2733,8 +2733,8 @@ declare module Atom {
         /**
          * Given a position, this clips it to a real position.
          * 
-         * For example, if `position`'s row exceeds the row count of the buffer,
-         * or if its column goes beyond a line's length, this "sanitizes" the value
+         * For example, if `position`"s row exceeds the row count of the buffer,
+         * or if its column goes beyond a line"s length, this "sanitizes" the value
          * to a real position.
          * 
          * position - The {Point} to clip
@@ -2742,7 +2742,7 @@ declare module Atom {
          *           wrapBeyondNewlines: if `true`, continues wrapping past newlines
          *           wrapAtSoftNewlines: if `true`, continues wrapping past soft newlines
          *           skipSoftWrapIndentation: if `true`, skips soft wrap indentation without wrapping to the previous line
-         *           screenLine: if `true`, indicates that you're using a line number, not a row number
+         *           screenLine: if `true`, indicates that you"re using a line number, not a row number
          * This field or method was marked private by atomdoc. Use with caution.
          */
         clipScreenPosition(screenPosition? : TextBuffer.Point | { row: number; column: number } | [number, number], options? : any) : TextBuffer.Point;
@@ -2882,7 +2882,7 @@ declare module Atom {
          * Find all markers satisfying a set of parameters.
          * 
          * params - An {Object} containing parameters that all returned markers must
-         *   satisfy. Unreserved keys will be compared against the markers' custom
+         *   satisfy. Unreserved keys will be compared against the markers" custom
          *   properties. There are also the following reserved keys with special
          *   meaning for the query:
          *   :startBufferRow - A {Number}. Only returns markers starting at this row in
@@ -3175,14 +3175,14 @@ declare module Atom {
         destroy() : void;
     
         /**
-         * Invoke the given callback when this GitRepository's destroy() method
+         * Invoke the given callback when this GitRepository"s destroy() method
          * is invoked.
          * @param callback - {Function}
          */
         onDidDestroy(callback : Function /* needs to be defined */) : EventKit.Disposable;
     
         /**
-         * Invoke the given callback when a specific file's status has
+         * Invoke the given callback when a specific file"s status has
          * changed. When a file is updated, reloaded, etc, and the status changes, this
          * will be fired.
          * @param callback - {Function}
@@ -3190,7 +3190,7 @@ declare module Atom {
         onDidChangeStatus(callback : Function /* needs to be defined */) : EventKit.Disposable;
     
         /**
-         * Invoke the given callback when a multiple files' statuses have
+         * Invoke the given callback when a multiple files" statuses have
          * changed. For example, on window focus, the status of all the paths in the
          * repo is checked. If any of them have changed, this will be fired. Call
          * {::getPathStatus(path)} to get the status for your path of choice.
@@ -3212,7 +3212,7 @@ declare module Atom {
         isProjectAtRoot() : boolean;
     
         /**
-         * Makes a path relative to the repository's working directory. 
+         * Makes a path relative to the repository"s working directory. 
          */
         relativize(path? : string) : any;
     
@@ -3238,7 +3238,7 @@ declare module Atom {
         getAheadBehindCount(reference? : string, path? : string) : number;
     
         /**
-         * Get the cached ahead/behind commit counts for the current branch's
+         * Get the cached ahead/behind commit counts for the current branch"s
          * upstream branch.
          * @param path? - An optional {String} path in the repository to get this information for, only needed if the repository has submodules.
          */
@@ -3274,7 +3274,7 @@ declare module Atom {
         isPathIgnored(path? : string) : string;
     
         /**
-         * Get the status of a directory in the repository's working directory.
+         * Get the status of a directory in the repository"s working directory.
          * Returns a {Number} representing the status. This value can be passed to
          * {::isStatusModified} or {::isStatusNew} to get more information.
          */
@@ -3335,15 +3335,15 @@ declare module Atom {
          *   git checkout HEAD -- <path>
          * ```
          * @param path? - The {String} path to checkout.
-         * Returns a {Boolean} that's true if the method was successful.
+         * Returns a {Boolean} that"s true if the method was successful.
          */
         checkoutHead(path? : string) : boolean;
     
         /**
          * Checks out a branch in your repository.
          * @param reference? - The {String} reference to checkout.
-         * @param create? - A {Boolean} value which, if true creates the new reference if it doesn't exist.
-         * Returns a Boolean that's true if the method was successful.
+         * @param create? - A {Boolean} value which, if true creates the new reference if it doesn"t exist.
+         * Returns a Boolean that"s true if the method was successful.
          */
         checkoutReference(reference? : string, create? : boolean) : any;
     
@@ -3587,7 +3587,7 @@ declare module Atom {
         destroy() : void;
     
         /**
-         * Calls your `callback` when the gutter's visibility changes.
+         * Calls your `callback` when the gutter"s visibility changes.
          * @param callback - {Function}
          */
         onDidChangeVisible(callback : Function /* needs to be defined */) : EventKit.Disposable;
@@ -3616,7 +3616,7 @@ declare module Atom {
         /**
          * Add a decoration that tracks a {Marker}. When the marker moves,
          * is invalidated, or is destroyed, the decoration will be updated to reflect
-         * the marker's state.
+         * the marker"s state.
          * @param marker? - A {Marker} you want this decoration to follow.
          */
         decorateMarker(marker? : Marker, options? : any) : Marker;
@@ -3750,7 +3750,7 @@ declare module Atom {
         /**
          * Wraps the lines between two rows in comments.
          * 
-         * If the language doesn't have comment, nothing happens.
+         * If the language doesn"t have comment, nothing happens.
          * 
          * startRow - The row {Number} to start at
          * endRow - The row {Number} to end at 
@@ -3817,7 +3817,7 @@ declare module Atom {
         isLineCommentedAtBufferRow(bufferRow? : number) : number;
     
         /**
-         * Find a row range for a 'paragraph' around specified bufferRow. A paragraph
+         * Find a row range for a "paragraph" around specified bufferRow. A paragraph
          * is a block of text bounded by and empty line or a block of text that is not
          * the same type (comments next to source code). 
          * This field or method was marked private by atomdoc. Use with caution.
@@ -4443,7 +4443,7 @@ declare module Atom {
         constructor({ bufferMarker, displayBuffer } : { bufferMarker? : Marker; displayBuffer? : DisplayBuffer });
     
         /**
-         * Destroys the marker, causing it to emit the 'destroyed' event. Once
+         * Destroys the marker, causing it to emit the "destroyed" event. Once
          * destroyed, a marker cannot be restored by undo/redo operations. 
          */
         destroy() : void;
@@ -4454,10 +4454,10 @@ declare module Atom {
          * 
          * {Selection} markers (markers with a custom property `type: "selection"`)
          * should be copied with a different `type` value, for example with
-         * `marker.copy({type: null})`. Otherwise, the new marker's selection will
-         * be merged with this marker's selection, and a `null` value will be
+         * `marker.copy({type: null})`. Otherwise, the new marker"s selection will
+         * be merged with this marker"s selection, and a `null` value will be
          * returned.
-         * @param properties? - {Object} properties to associate with the new marker. The new marker's properties are computed by extending this marker's properties with `properties`.
+         * @param properties? - {Object} properties to associate with the new marker. The new marker"s properties are computed by extending this marker"s properties with `properties`.
          */
         copy(properties? : Marker) : Marker;
     
@@ -4490,7 +4490,7 @@ declare module Atom {
         getProperties() : Object;
     
         /**
-         * Merges an {Object} containing new properties into the marker's
+         * Merges an {Object} containing new properties into the marker"s
          * existing properties.
          * @param properties? - {Object} 
          */
@@ -4534,71 +4534,71 @@ declare module Atom {
         setScreenRange(screenRange? : Range, options? : any) : Range;
     
         /**
-         * Retrieves the buffer position of the marker's start. This will always be
+         * Retrieves the buffer position of the marker"s start. This will always be
          * less than or equal to the result of {Marker::getEndBufferPosition}.
          */
         getStartBufferPosition() : TextBuffer.Point;
     
         /**
-         * Retrieves the screen position of the marker's start. This will always be
+         * Retrieves the screen position of the marker"s start. This will always be
          * less than or equal to the result of {Marker::getEndScreenPosition}.
          */
         getStartScreenPosition() : TextBuffer.Point;
     
         /**
-         * Retrieves the buffer position of the marker's end. This will always be
+         * Retrieves the buffer position of the marker"s end. This will always be
          * greater than or equal to the result of {Marker::getStartBufferPosition}.
          */
         getEndBufferPosition() : TextBuffer.Point;
     
         /**
-         * Retrieves the screen position of the marker's end. This will always be
+         * Retrieves the screen position of the marker"s end. This will always be
          * greater than or equal to the result of {Marker::getStartScreenPosition}.
          */
         getEndScreenPosition() : TextBuffer.Point;
     
         /**
-         * Retrieves the buffer position of the marker's head.
+         * Retrieves the buffer position of the marker"s head.
          */
         getHeadBufferPosition() : TextBuffer.Point;
     
         /**
-         * Sets the buffer position of the marker's head.
+         * Sets the buffer position of the marker"s head.
          * @param bufferPosition? - The new {Point} to use
          * @param properties? - {Object} properties to associate with the marker. 
          */
         setHeadBufferPosition(bufferPosition? : TextBuffer.Point | { row: number; column: number } | [number, number], properties? : any) : TextBuffer.Point;
     
         /**
-         * Retrieves the screen position of the marker's head.
+         * Retrieves the screen position of the marker"s head.
          */
         getHeadScreenPosition() : TextBuffer.Point;
     
         /**
-         * Sets the screen position of the marker's head.
+         * Sets the screen position of the marker"s head.
          * @param screenPosition? - The new {Point} to use
          * @param properties? - {Object} properties to associate with the marker. 
          */
         setHeadScreenPosition(screenPosition? : TextBuffer.Point | { row: number; column: number } | [number, number], properties? : any) : TextBuffer.Point;
     
         /**
-         * Retrieves the buffer position of the marker's tail.
+         * Retrieves the buffer position of the marker"s tail.
          */
         getTailBufferPosition() : TextBuffer.Point;
     
         /**
-         * Sets the buffer position of the marker's tail.
+         * Sets the buffer position of the marker"s tail.
          * @param bufferPosition? - The new {Point} to use
          */
         setTailBufferPosition(bufferPosition? : TextBuffer.Point | { row: number; column: number } | [number, number]) : TextBuffer.Point;
     
         /**
-         * Retrieves the screen position of the marker's tail.
+         * Retrieves the screen position of the marker"s tail.
          */
         getTailScreenPosition() : TextBuffer.Point;
     
         /**
-         * Sets the screen position of the marker's tail.
+         * Sets the screen position of the marker"s tail.
          * @param screenPosition? - The new {Point} to use
          */
         setTailScreenPosition(screenPosition? : TextBuffer.Point | { row: number; column: number } | [number, number], options? : any) : TextBuffer.Point;
@@ -4606,14 +4606,14 @@ declare module Atom {
         hasTail() : boolean;
     
         /**
-         * Plants the marker's tail at the current head position. After calling
-         * the marker's tail position will be its head position at the time of the
-         * call, regardless of where the marker's head is moved.
+         * Plants the marker"s tail at the current head position. After calling
+         * the marker"s tail position will be its head position at the time of the
+         * call, regardless of where the marker"s head is moved.
          */
         plantTail() : any;
     
         /**
-         * Removes the marker's tail. After calling the marker's head position
+         * Removes the marker"s tail. After calling the marker"s head position
          * will be reported as its current tail position until the tail is planted
          * again.
          * @param properties? - {Object} properties to associate with the marker. 
@@ -4639,7 +4639,7 @@ declare module Atom {
     }
 
     /**
-     * Provides a registry for menu items that you'd like to appear in the
+     * Provides a registry for menu items that you"d like to appear in the
      * application menu.
      */
     export class MenuManager {
@@ -5062,7 +5062,7 @@ declare module Atom {
         /**
          * Get packages for a certain package type
          * This field or method was marked private by atomdoc. Use with caution.
-         * @param types? - an {Array} of {String}s like ['atom', 'textmate']. 
+         * @param types? - an {Array} of {String}s like ["atom", "textmate"]. 
          */
         getLoadedPackagesForTypes(types? : any[]) : any;
     
@@ -5204,7 +5204,7 @@ declare module Atom {
     }
 
     /**
-     * Loads and activates a package's main module and resources such as
+     * Loads and activates a package"s main module and resources such as
      * stylesheets, keymaps, grammar, editor properties, and menus. 
      */
     export class Package {
@@ -5516,7 +5516,7 @@ declare module Atom {
          * Get an array of all the native modules that this package depends on.
          * 
          * First try to get this information from
-         * @metadata._atomModuleCache.extensions. If @metadata._atomModuleCache doesn't
+         * @metadata._atomModuleCache.extensions. If @metadata._atomModuleCache doesn"t
          * exist, recurse through all dependencies. 
          * This field or method was marked private by atomdoc. Use with caution.
          */
@@ -5531,7 +5531,7 @@ declare module Atom {
         isCompatible() : boolean;
     
         /**
-         * Rebuild native modules in this package's dependencies for the
+         * Rebuild native modules in this package"s dependencies for the
          * current version of Atom.
          * Returns a {Promise} that resolves with an object containing `code`,
          * `stdout`, and `stderr` properties based on the results of running
@@ -6053,7 +6053,7 @@ declare module Atom {
         /**
          * Invoke the given callback when the pane resizes
          * 
-         * The callback will be invoked when pane's flexScale property changes.
+         * The callback will be invoked when pane"s flexScale property changes.
          * Use {::getFlexScale} to get the current value.
          * @param callback - {Function} to be called when the pane is resized
          */
@@ -6242,7 +6242,7 @@ declare module Atom {
     
         /**
          * Make the given item *active*, causing it to be displayed by
-         * the pane's view. 
+         * the pane"s view. 
          */
         activateItem(item? : any) : void;
     
@@ -6255,7 +6255,7 @@ declare module Atom {
     
         /**
          * Add the given items to the pane.
-         * @param items? - An {Array} of items to add. Items can be views or models with associated views. Any objects that are already present in the pane's current items will not be added again.
+         * @param items? - An {Array} of items to add. Items can be views or models with associated views. Any objects that are already present in the pane"s current items will not be added again.
          * @param index? - {Number} index at which to add the items. If omitted, the item is #   added after the current active item.
          */
         addItems(items? : any, index? : number) : void;
@@ -6594,7 +6594,7 @@ declare module Atom {
     }
 
     /**
-     * Represents a project that's opened in Atom.
+     * Represents a project that"s opened in Atom.
      */
     export class Project extends Model {
         /**
@@ -6641,7 +6641,7 @@ declare module Atom {
         onDidAddBuffer(callback : Function /* needs to be defined */) : EventKit.Disposable;
     
         /**
-         * Get an {Array} of {GitRepository}s associated with the project's
+         * Get an {Array} of {GitRepository}s associated with the project"s
          * directories.
          * 
          * This method will be removed in 2.0 because it does synchronous I/O.
@@ -6662,25 +6662,25 @@ declare module Atom {
         repositoryForDirectory(directory? : Pathwatcher.Directory) : Pathwatcher.Directory;
     
         /**
-         * Get an {Array} of {String}s containing the paths of the project's
+         * Get an {Array} of {String}s containing the paths of the project"s
          * directories. 
          */
         getPaths() : string[];
     
         /**
-         * Set the paths of the project's directories.
+         * Set the paths of the project"s directories.
          * @param projectPaths? - {Array} of {String} paths. 
          */
         setPaths(projectPaths? : string) : string;
     
         /**
-         * Add a path to the project's list of root paths
+         * Add a path to the project"s list of root paths
          * @param projectPath? - {String} The path to the directory to add. 
          */
         addPath(projectPath? : string, options? : any) : string;
     
         /**
-         * remove a path from the project's list of root paths.
+         * remove a path from the project"s list of root paths.
          * @param projectPath? - {String} The path to remove. 
          */
         removePath(projectPath? : string) : string;
@@ -6709,12 +6709,12 @@ declare module Atom {
     
         /**
          * Determines whether the given path (real or symbolic) is inside the
-         * project's directory.
+         * project"s directory.
          * 
          * This method does not actually check if the path exists, it just checks their
          * locations relative to each other.
          * @param pathToCheck? - {String} path
-         * Returns whether the path is inside the project's root directory.
+         * Returns whether the path is inside the project"s root directory.
          */
         contains(pathToCheck? : string) : any;
     
@@ -7353,7 +7353,7 @@ declare module Atom {
         /**
          * If the selection is empty, removes all text from the cursor to the
          * end of the line. If the cursor is already at the end of the line, it
-         * removes the following newline. If the selection isn't empty, only deletes
+         * removes the following newline. If the selection isn"t empty, only deletes
          * the contents of the selection. 
          */
         deleteToEndOfLine() : number;
@@ -7408,7 +7408,7 @@ declare module Atom {
         autoIndentSelectedRows() : number[];
     
         /**
-         * Wraps the selected lines in comments if they aren't currently part
+         * Wraps the selected lines in comments if they aren"t currently part
          * of a comment.
          * 
          * Removes the comment if they are currently wrapped in a comment. 
@@ -7435,7 +7435,7 @@ declare module Atom {
         /**
          * Copies the current selection to the clipboard.
          * @param maintainClipboard? - {Boolean} if `true`, a specific metadata property is created to store each content copied to the clipboard. The clipboard `text` still contains the concatenation of the clipboard with the current selection. (default: false)
-         * @param fullLine? - {Boolean} if `true`, the copied text will always be pasted at the beginning of the line containing the cursor, regardless of the cursor's horizontal position. (default: false) 
+         * @param fullLine? - {Boolean} if `true`, the copied text will always be pasted at the beginning of the line containing the cursor, regardless of the cursor"s horizontal position. (default: false) 
          */
         copy(maintainClipboard? : boolean, fullLine? : boolean) : Selection;
     
@@ -7485,7 +7485,7 @@ declare module Atom {
         merge(otherSelection? : Selection, options? : Object) : any;
     
         /**
-         * Compare this selection's buffer range to another selection's buffer
+         * Compare this selection"s buffer range to another selection"s buffer
          * range.
          * 
          * See {Range::compare} for more details.
@@ -7525,9 +7525,9 @@ declare module Atom {
         modifySelection(fn? : any) : Selection;
     
         /**
-         * Sets the marker's tail to the same position as the marker's head.
+         * Sets the marker"s tail to the same position as the marker"s head.
          * 
-         * This only works if there isn't already a tail position.
+         * This only works if there isn"t already a tail position.
          * This field or method was marked private by atomdoc. Use with caution.
          * Returns a {Point} representing the new tail position.
          */
@@ -7575,7 +7575,7 @@ declare module Atom {
     /**
      * A singleton instance of this class available via `atom.styles`,
      * which you can use to globally query and observe the set of active style
-     * sheets. The `StyleManager` doesn't add any style elements to the DOM on its
+     * sheets. The `StyleManager` doesn"t add any style elements to the DOM on its
      * own, but is instead subscribed to by individual `<atom-styles>` elements,
      * which clone and attach style elements in different contexts. 
      */
@@ -8135,7 +8135,7 @@ declare module Atom {
     
         /**
          * Measure explicitly-styled height and width and relay them to the model. If
-         * these values aren't explicitly styled, we assume the editor is unconstrained
+         * these values aren"t explicitly styled, we assume the editor is unconstrained
          * and use the scrollHeight / scrollWidth as its height and width in
          * calculations. 
          * This field or method was marked private by atomdoc. Use with caution.
@@ -9055,7 +9055,7 @@ declare module Atom {
     /**
      * This class represents all essential editing state for a single
      * {TextBuffer}, including cursor and selection positions, folds, and soft wraps.
-     * If you're manipulating the state of an editor, use this class. If you're
+     * If you"re manipulating the state of an editor, use this class. If you"re
      * interested in the visual appearance of editors, use {TextEditorElement}
      * instead.
      */
@@ -9176,13 +9176,13 @@ declare module Atom {
         destroyed() : void;
     
         /**
-         * Calls your `callback` when the buffer's title has changed.
+         * Calls your `callback` when the buffer"s title has changed.
          * @param callback - {Function}
          */
         onDidChangeTitle(callback : (title: string) => void) : EventKit.Disposable;
     
         /**
-         * Calls your `callback` when the buffer's path, and therefore title, has changed.
+         * Calls your `callback` when the buffer"s path, and therefore title, has changed.
          * @param callback - {Function}
          */
         onDidChangePath(callback : (path: string) => void) : EventKit.Disposable;
@@ -9191,7 +9191,7 @@ declare module Atom {
          * Invoke the given callback synchronously when the content of the
          * buffer changes.
          * 
-         * Because observers are invoked synchronously, it's important not to perform
+         * Because observers are invoked synchronously, it"s important not to perform
          * any expensive operations via this method. Consider {::onDidStopChanging} to
          * delay expensive operations until after changes stop occurring.
          * @param callback - {Function}
@@ -9199,7 +9199,7 @@ declare module Atom {
         onDidChange(callback : (item: any) => void) : EventKit.Disposable;
     
         /**
-         * Invoke `callback` when the buffer's contents change. It is
+         * Invoke `callback` when the buffer"s contents change. It is
          * emit asynchronously 300ms after the last buffer change. This is a good place
          * to handle changes to the buffer without compromising typing performance.
          * @param callback - {Function}
@@ -9214,7 +9214,7 @@ declare module Atom {
         onDidChangeCursorPosition(callback : (event: { oldBufferPosition: TextBuffer.Point; oldScreenPosition: TextBuffer.Point; newBufferPosition: TextBuffer.Point; newScreenPosition: TextBuffer.Point; textChanged: boolean; cursor: Cursor; }) => any) : EventKit.Disposable;
     
         /**
-         * Calls your `callback` when a selection's screen range changes.
+         * Calls your `callback` when a selection"s screen range changes.
          * @param callback - {Function}
          */
         onDidChangeSelectionRange(callback : (event: { oldBufferRange: TextBuffer.Point; oldScreenRange: TextBuffer.Point; newBufferRange: TextBuffer.Point; newScreenRange: TextBuffer.Point; selection: Selection; }) => any) : EventKit.Disposable;
@@ -9226,7 +9226,7 @@ declare module Atom {
         onDidChangeSoftWrapped(callback : Function) : EventKit.Disposable;
     
         /**
-         * Calls your `callback` when the buffer's encoding has changed.
+         * Calls your `callback` when the buffer"s encoding has changed.
          * @param callback - {Function}
          */
         onDidChangeEncoding(callback : (encoding: string) => void) : EventKit.Disposable;
@@ -9253,7 +9253,7 @@ declare module Atom {
         onDidChangeModified(callback : Function /* needs to be defined */) : EventKit.Disposable;
     
         /**
-         * Calls your `callback` when the buffer's underlying file changes on
+         * Calls your `callback` when the buffer"s underlying file changes on
          * disk at a moment when the result of {::isModified} is true.
          * @param callback - {Function}
          */
@@ -9383,7 +9383,7 @@ declare module Atom {
         getBuffer() : TextBuffer.TextBuffer;
     
         /**
-         * Retrieves the current buffer's URI. 
+         * Retrieves the current buffer"s URI. 
          * This field or method was marked private by atomdoc. Use with caution.
          */
         getURI() : string;
@@ -9464,20 +9464,20 @@ declare module Atom {
         getEditorWidthInChars() : number;
     
         /**
-         * Get the editor's title for display in other parts of the
+         * Get the editor"s title for display in other parts of the
          * UI such as the tabs.
          * 
-         * If the editor's buffer is saved, its title is the file name. If it is
+         * If the editor"s buffer is saved, its title is the file name. If it is
          * unsaved, its title is "untitled".
          * Returns a {String}.
          */
         getTitle() : string;
     
         /**
-         * Get the editor's long title for display in other parts of the UI
+         * Get the editor"s long title for display in other parts of the UI
          * such as the window title.
          * 
-         * If the editor's buffer is saved, its long title is formatted as
+         * If the editor"s buffer is saved, its long title is formatted as
          * "<filename> - <directory>". If it is unsaved, its title is "untitled"
          * Returns a {String}.
          */
@@ -9488,9 +9488,9 @@ declare module Atom {
         getEncoding() : string;
     
         /**
-         * Set the character set encoding to use in this editor's text
+         * Set the character set encoding to use in this editor"s text
          * buffer.
-         * @param encoding? - The {String} character set encoding name such as 'utf8' 
+         * @param encoding? - The {String} character set encoding name such as "utf8" 
          */
         setEncoding(encoding? : string) : string;
     
@@ -9505,14 +9505,14 @@ declare module Atom {
         copyPathToClipboard() : Clipboard;
     
         /**
-         * Saves the editor's text buffer.
+         * Saves the editor"s text buffer.
          * 
          * See {TextBuffer::save} for more details. 
          */
         save() : void;
     
         /**
-         * Saves the editor's text buffer as the given path.
+         * Saves the editor"s text buffer as the given path.
          * 
          * See {TextBuffer::saveAs} for more details.
          * @param filePath? - A {String} path. 
@@ -9699,7 +9699,7 @@ declare module Atom {
         moveLineDown() : void;
     
         /**
-         * Duplicate the most recent cursor's current line. 
+         * Duplicate the most recent cursor"s current line. 
          * This field or method was marked private by atomdoc. Use with caution.
          */
         duplicateLines() : string[];
@@ -9746,7 +9746,7 @@ declare module Atom {
         /**
          * Toggle line comments for rows intersecting selections.
          * 
-         * If the current grammar doesn't support comments, does nothing. 
+         * If the current grammar doesn"t support comments, does nothing. 
          */
         toggleLineCommentsInSelection() : Selection;
     
@@ -9848,9 +9848,9 @@ declare module Atom {
          * 
          * Any group of operations that are logically grouped from the perspective of
          * undoing and redoing should be performed in a transaction. If you want to
-         * abort the transaction, call {::abortTransaction} to terminate the function's
+         * abort the transaction, call {::abortTransaction} to terminate the function"s
          * execution and revert any changes performed up to the abortion.
-         * @param groupingInterval? - The {Number} of milliseconds for which this transaction should be considered 'groupable' after it begins. If a transaction with a positive `groupingInterval` is committed while the previous transaction is still 'groupable', the two transactions are merged with respect to undo and redo.
+         * @param groupingInterval? - The {Number} of milliseconds for which this transaction should be considered "groupable" after it begins. If a transaction with a positive `groupingInterval` is committed while the previous transaction is still "groupable", the two transactions are merged with respect to undo and redo.
          * @param fn? - A {Function} to call inside the transaction. 
          */
         transact(groupingInterval? : number, fn? : Function) : any;
@@ -9969,7 +9969,7 @@ declare module Atom {
         /**
          * Adds a decoration that tracks a {Marker}. When the marker moves,
          * is invalidated, or is destroyed, the decoration will be updated to reflect
-         * the marker's state.
+         * the marker"s state.
          * 
          * The following are the supported decorations types:
          * 
@@ -9993,7 +9993,7 @@ declare module Atom {
          *     decorations are created by calling {Gutter::decorateMarker} on the
          *     desired `Gutter` instance.
          * @param marker? - A {Marker} you want this decoration to follow.
-         * @param decorationParams? - An {Object} representing the decoration e.g. `{type: 'line-number', class: 'linter-error'}`
+         * @param decorationParams? - An {Object} representing the decoration e.g. `{type: "line-number", class: "linter-error"}`
          */
         decorateMarker(marker? : Marker, decorationParams? : Object) : Marker;
     
@@ -10006,31 +10006,31 @@ declare module Atom {
     
         /**
          * Get all decorations.
-         * @param propertyFilter? - An {Object} containing key value pairs that the returned decorations' properties must match.
+         * @param propertyFilter? - An {Object} containing key value pairs that the returned decorations" properties must match.
          */
         getDecorations(propertyFilter? : Object) : Decoration[];
     
         /**
-         * Get all decorations of type 'line'.
-         * @param propertyFilter? - An {Object} containing key value pairs that the returned decorations' properties must match.
+         * Get all decorations of type "line".
+         * @param propertyFilter? - An {Object} containing key value pairs that the returned decorations" properties must match.
          */
         getLineDecorations(propertyFilter? : Object) : Decoration[];
     
         /**
-         * Get all decorations of type 'line-number'.
-         * @param propertyFilter? - An {Object} containing key value pairs that the returned decorations' properties must match.
+         * Get all decorations of type "line-number".
+         * @param propertyFilter? - An {Object} containing key value pairs that the returned decorations" properties must match.
          */
         getLineNumberDecorations(propertyFilter? : Object) : Decoration[];
     
         /**
-         * Get all decorations of type 'highlight'.
-         * @param propertyFilter? - An {Object} containing key value pairs that the returned decorations' properties must match.
+         * Get all decorations of type "highlight".
+         * @param propertyFilter? - An {Object} containing key value pairs that the returned decorations" properties must match.
          */
         getHighlightDecorations(propertyFilter? : Object) : Decoration[];
     
         /**
-         * Get all decorations of type 'overlay'.
-         * @param propertyFilter? - An {Object} containing key value pairs that the returned decorations' properties must match.
+         * Get all decorations of type "overlay".
+         * @param propertyFilter? - An {Object} containing key value pairs that the returned decorations" properties must match.
          */
         getOverlayDecorations(propertyFilter? : Object) : Decoration[];
     
@@ -10048,7 +10048,7 @@ declare module Atom {
          * Create a marker with the given range in buffer coordinates. This
          * marker will maintain its logical location as the buffer is changed, so if
          * you mark a particular word, the marker will remain over that word even if
-         * the word's location in the buffer changes.
+         * the word"s location in the buffer changes.
          */
         markBufferRange(args? : any) : Marker;
     
@@ -10056,7 +10056,7 @@ declare module Atom {
          * Create a marker with the given range in screen coordinates. This
          * marker will maintain its logical location as the buffer is changed, so if
          * you mark a particular word, the marker will remain over that word even if
-         * the word's location in the buffer changes.
+         * the word"s location in the buffer changes.
          */
         markScreenRange(args? : any) : Marker;
     
@@ -10100,7 +10100,7 @@ declare module Atom {
         getMarkers() : Marker[];
     
         /**
-         * Get the number of markers in this editor's buffer.
+         * Get the number of markers in this editor"s buffer.
          */
         getMarkerCount() : number;
     
@@ -10417,7 +10417,7 @@ declare module Atom {
     
         /**
          * Move the cursor of each selection one character upward while
-         * preserving the selection's tail position.
+         * preserving the selection"s tail position.
          * 
          * This method may merge selections that end up intesecting. 
          * @param rowCount? - {Number} number of rows to select (default: 1)
@@ -10426,7 +10426,7 @@ declare module Atom {
     
         /**
          * Move the cursor of each selection one character downward while
-         * preserving the selection's tail position.
+         * preserving the selection"s tail position.
          * 
          * This method may merge selections that end up intesecting. 
          * @param rowCount? - {Number} number of rows to select (default: 1)
@@ -10435,7 +10435,7 @@ declare module Atom {
     
         /**
          * Move the cursor of each selection one character leftward while
-         * preserving the selection's tail position.
+         * preserving the selection"s tail position.
          * 
          * This method may merge selections that end up intesecting. 
          * @param columnCount? - {Number} number of columns to select (default: 1)
@@ -10444,7 +10444,7 @@ declare module Atom {
     
         /**
          * Move the cursor of each selection one character rightward while
-         * preserving the selection's tail position.
+         * preserving the selection"s tail position.
          * 
          * This method may merge selections that end up intesecting. 
          * @param columnCount? - {Number} number of columns to select (default: 1)
@@ -10476,7 +10476,7 @@ declare module Atom {
     
         /**
          * Move the cursor of each selection to the beginning of its line
-         * while preserving the selection's tail position.
+         * while preserving the selection"s tail position.
          * 
          * This method may merge selections that end up intesecting. 
          */
@@ -10484,7 +10484,7 @@ declare module Atom {
     
         /**
          * Move the cursor of each selection to the first non-whitespace
-         * character of its line while preserving the selection's tail position. If the
+         * character of its line while preserving the selection"s tail position. If the
          * cursor is already on the first character of the line, move it to the
          * beginning of the line.
          * 
@@ -10494,7 +10494,7 @@ declare module Atom {
     
         /**
          * Move the cursor of each selection to the end of its line while
-         * preserving the selection's tail position.
+         * preserving the selection"s tail position.
          * 
          * This method may merge selections that end up intersecting. 
          */
@@ -10504,7 +10504,7 @@ declare module Atom {
          * Expand selections to the beginning of their containing word.
          * 
          * Operates on all selections. Moves the cursor to the beginning of the
-         * containing word while preserving the selection's tail position. 
+         * containing word while preserving the selection"s tail position. 
          */
         selectToBeginningOfWord() : any;
     
@@ -10512,13 +10512,13 @@ declare module Atom {
          * Expand selections to the end of their containing word.
          * 
          * Operates on all selections. Moves the cursor to the end of the containing
-         * word while preserving the selection's tail position. 
+         * word while preserving the selection"s tail position. 
          */
         selectToEndOfWord() : any;
     
         /**
          * For each selection, move its cursor to the preceding subword
-         * boundary while maintaining the selection's tail position.
+         * boundary while maintaining the selection"s tail position.
          * 
          * This method may merge selections that end up intersecting. 
          */
@@ -10526,7 +10526,7 @@ declare module Atom {
     
         /**
          * For each selection, move its cursor to the next subword boundary
-         * while maintaining the selection's tail position.
+         * while maintaining the selection"s tail position.
          * 
          * This method may merge selections that end up intersecting. 
          */
@@ -10546,7 +10546,7 @@ declare module Atom {
     
         /**
          * For each selection, move its cursor to the preceding word boundary
-         * while maintaining the selection's tail position.
+         * while maintaining the selection"s tail position.
          * 
          * This method may merge selections that end up intersecting. 
          */
@@ -10554,7 +10554,7 @@ declare module Atom {
     
         /**
          * For each selection, move its cursor to the next word boundary while
-         * maintaining the selection's tail position.
+         * maintaining the selection"s tail position.
          * 
          * This method may merge selections that end up intersecting. 
          */
@@ -10564,7 +10564,7 @@ declare module Atom {
          * Expand selections to the beginning of the next word.
          * 
          * Operates on all selections. Moves the cursor to the beginning of the next
-         * word while preserving the selection's tail position. 
+         * word while preserving the selection"s tail position. 
          */
         selectToBeginningOfNextWord() : any;
     
@@ -10572,7 +10572,7 @@ declare module Atom {
          * Expand selections to the beginning of the next paragraph.
          * 
          * Operates on all selections. Moves the cursor to the beginning of the next
-         * paragraph while preserving the selection's tail position. 
+         * paragraph while preserving the selection"s tail position. 
          */
         selectToBeginningOfNextParagraph() : any;
     
@@ -10580,7 +10580,7 @@ declare module Atom {
          * Expand selections to the beginning of the next paragraph.
          * 
          * Operates on all selections. Moves the cursor to the beginning of the next
-         * paragraph while preserving the selection's tail position. 
+         * paragraph while preserving the selection"s tail position. 
          */
         selectToBeginningOfPreviousParagraph() : any;
     
@@ -10619,7 +10619,7 @@ declare module Atom {
          * 
          * Operates on all selections. If the selection is empty, adds an empty
          * selection to the next following non-empty line as close to the current
-         * selection's column as possible. If the selection is non-empty, adds a
+         * selection"s column as possible. If the selection is non-empty, adds a
          * selection to the next line that is long enough for a non-empty selection
          * starting at the same column as the current selection to be added to it. 
          * This field or method was marked private by atomdoc. Use with caution.
@@ -10632,7 +10632,7 @@ declare module Atom {
          * 
          * Operates on all selections. If the selection is empty, adds an empty
          * selection to the next preceding non-empty line as close to the current
-         * selection's column as possible. If the selection is non-empty, adds a
+         * selection"s column as possible. If the selection is non-empty, adds a
          * selection to the next line that is long enough for a non-empty selection
          * starting at the same column as the current selection to be added to it. 
          * This field or method was marked private by atomdoc. Use with caution.
@@ -10729,10 +10729,10 @@ declare module Atom {
          * 
          * `::scan` functions as the replace method as well via the `replace`
          * 
-         * If you're programmatically modifying the results, you may want to try
+         * If you"re programmatically modifying the results, you may want to try
          * {::backwardsScanInBufferRange} to avoid tripping over your own changes.
          * @param regex? - A {RegExp} to search for.
-         * @param iterator? - A {Function} that's called on each match
+         * @param iterator? - A {Function} that"s called on each match
          */
         scan(regex? : RegExp, iterator? : Function) : any;
     
@@ -10741,7 +10741,7 @@ declare module Atom {
          * iterator function on each match.
          * @param regex? - A {RegExp} to search for.
          * @param range? - A {Range} in which to search.
-         * @param iterator? - A {Function} that's called on each match with an {Object} containing the following keys:
+         * @param iterator? - A {Function} that"s called on each match with an {Object} containing the following keys:
          */
         scanInBufferRange(regex? : RegExp, range? : Range, iterator? : Function) : Range;
     
@@ -10750,7 +10750,7 @@ declare module Atom {
          * calling the given iterator function on each match.
          * @param regex? - A {RegExp} to search for.
          * @param range? - A {Range} in which to search.
-         * @param iterator? - A {Function} that's called on each match with an {Object} containing the following keys:
+         * @param iterator? - A {Function} that"s called on each match with an {Object} containing the following keys:
          */
         backwardsScanInBufferRange(regex? : RegExp, range? : Range, iterator? : Function) : Range;
     
@@ -10863,7 +10863,7 @@ declare module Atom {
         indentLevelForLine(line? : number) : number;
     
         /**
-         * Indent rows intersecting selections based on the grammar's suggested
+         * Indent rows intersecting selections based on the grammar"s suggested
          * indent level. 
          */
         autoIndentSelectedRows() : number[];
@@ -10920,7 +10920,7 @@ declare module Atom {
          * 
          * For example, if you wanted to find the string surrounding the cursor, you
          * could call `editor.bufferRangeForScopeAtCursor(".string.quoted")`.
-         * @param scopeSelector? - {String} selector. e.g. `'.source.ruby'`
+         * @param scopeSelector? - {String} selector. e.g. `".source.ruby"`
          */
         bufferRangeForScopeAtCursor(scopeSelector? : string) : Cursor;
     
@@ -10982,7 +10982,7 @@ declare module Atom {
         cutToEndOfBufferLine() : number;
     
         /**
-         * Fold the most recent cursor's row based on its indentation level.
+         * Fold the most recent cursor"s row based on its indentation level.
          * 
          * The fold will extend from the nearest preceding line with a lower
          * indentation level up to the nearest following row with a lower indentation
@@ -10991,7 +10991,7 @@ declare module Atom {
         foldCurrentRow() : number;
     
         /**
-         * Unfold the most recent cursor's row by one level. 
+         * Unfold the most recent cursor"s row by one level. 
          */
         unfoldCurrentRow() : number;
     
@@ -11048,13 +11048,13 @@ declare module Atom {
         isFoldableAtScreenRow(screenRow? : number) : number;
     
         /**
-         * Fold the given buffer row if it isn't currently folded, and unfold
+         * Fold the given buffer row if it isn"t currently folded, and unfold
          * it otherwise. 
          */
         toggleFoldAtBufferRow(bufferRow? : number) : number;
     
         /**
-         * Determine whether the most recently added cursor's row is folded.
+         * Determine whether the most recently added cursor"s row is folded.
          */
         isFoldedAtCursorRow() : number;
     
@@ -11118,7 +11118,7 @@ declare module Atom {
         addGutter(options? : any) : Gutter;
     
         /**
-         * Get this editor's gutters.
+         * Get this editor"s gutters.
          */
         getGutters() : Gutter[];
     
@@ -12284,14 +12284,14 @@ declare module Atom {
         copy() : TokenizedLine;
     
         /**
-         * This clips a given screen column to a valid column that's within the line
+         * This clips a given screen column to a valid column that"s within the line
          * and not in the middle of any atomic tokens.
          * 
          * column - A {Number} representing the column to clip
          * options - A hash with the key clip. Valid values for this key:
-         *           'closest' (default): clip to the closest edge of an atomic token.
-         *           'forward': clip to the forward edge.
-         *           'backward': clip to the backward edge.
+         *           "closest" (default): clip to the closest edge of an atomic token.
+         *           "forward": clip to the forward edge.
+         *           "backward": clip to the backward edge.
          * This field or method was marked private by atomdoc. Use with caution.
          */
         clipScreenColumn(column? : number, options? : any) : number;
@@ -12448,7 +12448,7 @@ declare module Atom {
     
         /**
          * Add a provider that will be used to construct views in the
-         * workspace's view layer based on model objects in its model layer.
+         * workspace"s view layer based on model objects in its model layer.
          * @param modelConstructor? - Constructor {Function} for your model.
          * @param createView? - Factory {Function} that is passed an instance of your model and must return a subclass of `HTMLElement` or `undefined`.
          */
@@ -12457,9 +12457,9 @@ declare module Atom {
         /**
          * Get the view associated with an object in the workspace.
          * 
-         * If you're just *using* the workspace, you shouldn't need to access the view
+         * If you"re just *using* the workspace, you shouldn"t need to access the view
          * layer, but view layer access may be necessary if you want to perform DOM
-         * manipulation that isn't supported via the model API.
+         * manipulation that isn"t supported via the model API.
          * 
          * ## View Resolution Algorithm
          * 
@@ -12727,14 +12727,14 @@ declare module Atom {
         subscribeToActiveItem() : any;
     
         /**
-         * Updates the application's title and proxy icon based on whichever file is
+         * Updates the application"s title and proxy icon based on whichever file is
          * open. 
          * This field or method was marked private by atomdoc. Use with caution.
          */
         updateWindowTitle() : void;
     
         /**
-         * On OS X, fades the application window's proxy icon when the current file
+         * On OS X, fades the application window"s proxy icon when the current file
          * has been modified. 
          * This field or method was marked private by atomdoc. Use with caution.
          */
@@ -12853,7 +12853,7 @@ declare module Atom {
         open(uri? : string, options? : Q.Promise<TextEditor>) : Q.Promise<TextEditor>;
     
         /**
-         * Open Atom's license in the active pane. 
+         * Open Atom"s license in the active pane. 
          * This field or method was marked private by atomdoc. Use with caution.
          */
         openLicense() : void;
@@ -12874,7 +12874,7 @@ declare module Atom {
         openURIInPane(uri? : any, pane? : Pane, options? : any) : Pane;
     
         /**
-         * Asynchronously reopens the last-closed item's URI if it hasn't already been
+         * Asynchronously reopens the last-closed item"s URI if it hasn"t already been
          * reopened.
          * Returns a promise that is resolved when the item is opened
          */
@@ -12900,7 +12900,7 @@ declare module Atom {
         getPaneItems() : any[];
     
         /**
-         * Get the active {Pane}'s active item.
+         * Get the active {Pane}"s active item.
          * Returns an pane item {Object}.
          */
         getActivePaneItem() : Object;
@@ -12929,7 +12929,7 @@ declare module Atom {
         /**
          * Save the active pane item.
          * 
-         * If the active pane item currently has a URI according to the item's
+         * If the active pane item currently has a URI according to the item"s
          * `.getURI` method, calls `.save` on the item. Otherwise
          * {::saveActivePaneItemAs} # will be called instead. This method does nothing
          * if the active item does not implement a `.save` method. 
@@ -13015,7 +13015,7 @@ declare module Atom {
         decreaseFontSize() : void;
     
         /**
-         * Restore to the window's original editor font size. 
+         * Restore to the window"s original editor font size. 
          * This field or method was marked private by atomdoc. Use with caution.
          */
         resetFontSize() : void;
@@ -13026,13 +13026,13 @@ declare module Atom {
         subscribeToFontSize() : any;
     
         /**
-         * Removes the item's uri from the list of potential items to reopen. 
+         * Removes the item"s uri from the list of potential items to reopen. 
          * This field or method was marked private by atomdoc. Use with caution.
          */
         itemOpened(item? : any) : any;
     
         /**
-         * Adds the destroyed item's uri to the list of items to reopen. 
+         * Adds the destroyed item"s uri to the list of items to reopen. 
          * This field or method was marked private by atomdoc. Use with caution.
          */
         didDestroyPaneItem({ item } : { item? : any }) : any;
@@ -13219,18 +13219,18 @@ declare module "atom" {
     class ViewRegistry extends Atom.ViewRegistry {}
     class WindowEventHandler extends Atom.WindowEventHandler {}
     class Workspace extends Atom.Workspace {}
-    var Point : typeof TextBuffer.Point;
-    var File : typeof Pathwatcher.File;
-    var Directory : typeof Pathwatcher.Directory;
-    var Emitter : typeof EventKit.Emitter;
-    var Disposable : typeof EventKit.Disposable;
-    var CompositeDisposable : typeof EventKit.CompositeDisposable;
+    const Point : typeof TextBuffer.Point;
+    const File : typeof Pathwatcher.File;
+    const Directory : typeof Pathwatcher.Directory;
+    const Emitter : typeof EventKit.Emitter;
+    const Disposable : typeof EventKit.Disposable;
+    const CompositeDisposable : typeof EventKit.CompositeDisposable;
 }
 
 //${content}
 declare module "fs-plus" {
-    import fs = require("fs");
+    import * as fs from "fs";
     export = fs;
 }
 
-declare var atom: Atom.Atom;
+declare const atom: Atom.Atom;

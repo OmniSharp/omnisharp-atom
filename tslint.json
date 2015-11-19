@@ -16,7 +16,7 @@
     "member-ordering": [true, "static-before-instance"],
     "no-arg": false,
     "no-bitwise": true,
-    "no-console": [true, "debug", "info", "time", "timeEnd", "trace"],
+    "no-console": [true, "debug", "time", "timeEnd", "trace"],
     "no-construct": true,
     "no-constructor-vars": false,
     "no-debugger": true,
@@ -34,7 +34,7 @@
     "no-unused-variable": true,
     "no-unreachable": true,
     "no-use-before-declare": true,
-    "no-var-keyword": true,
+    "no-const-keyword": true,
     "object-literal-sort-keys": false,
     "one-line": [true,
       "check-open-brace",
@@ -42,7 +42,7 @@
       "check-else",
       "check-whitespace"
     ],
-    "quotemark": [true, "single"],
+    "quotemark": [true, "double"],
     "radix": true,
     "semicolon": true,
     "triple-equals": [true, "allow-null-check"],
@@ -50,6 +50,6 @@
     "typedef-whitespace": [true],
     "use-strict": [false],
     "variable-name": [true, "allow-leading-underscore", "allow-trailing-underscore"],
-    "whitespace": [true, "check-branch", "check-decl", "check-operator", "check-module", "check-separator", "check-type"]
+    "whitespace": [false, "check-branch", "check-decl", "check-operator", "check-module", "check-separator", "check-type"]
   }
 }

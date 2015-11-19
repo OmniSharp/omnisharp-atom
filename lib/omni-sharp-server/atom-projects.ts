@@ -1,7 +1,6 @@
 import {CompositeDisposable, Subject} from "rx";
 import {difference} from "lodash";
 
-
 export class AtomProjectTracker implements Rx.IDisposable {
     private _disposable = new CompositeDisposable();
     private _projectPaths: string[] = [];
@@ -15,12 +14,12 @@ export class AtomProjectTracker implements Rx.IDisposable {
     public activate() {
         // monitor atom project paths
         this.updatePaths(atom.project.getPaths());
-        this._disposable.add(atom.project.onDidChangePaths((paths) => this.updatePaths(paths)));
+        this._disposable.add(atom.project.onDidChangePaths((paths: string[]) => this.updatePaths(paths)));
     }
 
     private updatePaths(paths: string[]) {
-        var addedPaths = difference(paths, this._projectPaths);
-        var removedPaths = difference(this._projectPaths, paths);
+        const addedPaths = difference(paths, this._projectPaths);
+        const removedPaths = difference(this._projectPaths, paths);
 
         for (let project of addedPaths) this._addedSubject.onNext(project);
         for (let project of removedPaths) this._removedSubject.onNext(project);

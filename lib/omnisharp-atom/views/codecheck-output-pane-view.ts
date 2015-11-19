@@ -1,8 +1,8 @@
-import _ = require('lodash')
-import path = require('path')
-import Omni = require('../../omni-sharp-server/omni')
-import React = require('react');
-import $ = require('jquery');
+import * as _ from "lodash";
+import * as path from "path";
+import Omni = require("../../omni-sharp-server/omni")
+import * as React from "react";
+import * as $ from "jquery";
 import {ReactClientComponent} from "./react-client-component";
 import {codeCheck} from "../features/code-check";
 
@@ -18,7 +18,7 @@ export interface ICodeCheckOutputWindowProps {
 }
 
 export class CodeCheckOutputWindow<T extends ICodeCheckOutputWindowProps> extends ReactClientComponent<T, ICodeCheckOutputWindowState> {
-    public displayName = 'FindPaneWindow';
+    public displayName = "FindPaneWindow";
     private model: typeof codeCheck;
 
     constructor(props?: T, context?: any) {
@@ -59,13 +59,13 @@ export class CodeCheckOutputWindow<T extends ICodeCheckOutputWindowProps> extend
     }
 
     private keydownPane(e: any) {
-        if (e.keyIdentifier == 'Down') {
+        if (e.keyIdentifier == "Down") {
             atom.commands.dispatch(atom.views.getView(atom.workspace), "omnisharp-atom:next-diagnostic");
         }
-        else if (e.keyIdentifier == 'Up') {
+        else if (e.keyIdentifier == "Up") {
             atom.commands.dispatch(atom.views.getView(atom.workspace), "omnisharp-atom:previous-diagnostic");
         }
-        else if (e.keyIdentifier == 'Enter') {
+        else if (e.keyIdentifier == "Enter") {
             atom.commands.dispatch(atom.views.getView(atom.workspace), "omnisharp-atom:go-to-diagnostic");
         }
     }
@@ -75,14 +75,14 @@ export class CodeCheckOutputWindow<T extends ICodeCheckOutputWindowProps> extend
     }
 
     private scrollToItemView() {
-        var self = $(React.findDOMNode(this));
-        var item = self.find(`li.selected`);
+        const self = $(React.findDOMNode(this));
+        const item = self.find(`li.selected`);
         if (!item || !item.position()) return;
 
-        var pane = self;
-        var scrollTop = pane.scrollTop();
-        var desiredTop = item.position().top + scrollTop;
-        var desiredBottom = desiredTop + item.outerHeight();
+        const pane = self;
+        const scrollTop = pane.scrollTop();
+        const desiredTop = item.position().top + scrollTop;
+        const desiredBottom = desiredTop + item.outerHeight();
 
         if (desiredTop < scrollTop)
             pane.scrollTop(desiredTop);
@@ -92,7 +92,7 @@ export class CodeCheckOutputWindow<T extends ICodeCheckOutputWindowProps> extend
 
     public render() {
         return React.DOM.div({
-            className: 'codecheck-output-pane ' + (this.props['className'] || ''),
+            className: "codecheck-output-pane " + (this.props["className"] || ""),
             onScroll: (e) => {
                 this.props.setScrollTop((<any>e.currentTarget).scrollTop);
             },
@@ -102,12 +102,12 @@ export class CodeCheckOutputWindow<T extends ICodeCheckOutputWindowProps> extend
                 style: <any>{ cursor: "pointer" },
             }, _.map(this.state.diagnostics, (error, index) =>
                 React.DOM.li({
-                    key: `code-check-${error.LogLevel}-${error.FileName}-(${error.Line}-${error.Column})-(${error.EndLine}-${error.EndColumn})-(${error.Projects.join('-')})`,
-                    className: `codecheck ${error.LogLevel}` + (index === this.state.selectedIndex ? ' selected' : ''),
+                    key: `code-check-${error.LogLevel}-${error.FileName}-(${error.Line}-${error.Column})-(${error.EndLine}-${error.EndColumn})-(${error.Projects.join("-")})`,
+                    className: `codecheck ${error.LogLevel}` + (index === this.state.selectedIndex ? " selected" : ""),
                     onClick: (e) => this.goToLine(error, index)
                 },
                     React.DOM.span({
-                        className: error.LogLevel === 'Error' ? 'fa fa-times-circle' : 'fa fa-exclamation-triangle'
+                        className: error.LogLevel === "Error" ? "fa fa-times-circle" : "fa fa-exclamation-triangle"
                     }),
                     React.DOM.pre({
                         className: "text-highlight"

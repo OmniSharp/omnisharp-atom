@@ -1,5 +1,5 @@
 import {CompositeDisposable, Observable, Disposable, Subject} from "rx";
-import Omni = require('../../omni-sharp-server/omni');
+import Omni = require("../../omni-sharp-server/omni");
 import * as _ from "lodash";
 import {SignatureView} from "../views/signature-help-view";
 
@@ -10,24 +10,24 @@ interface IDecoration {
     setProperties(props: any);
 }
 
-class SignatureHelp implements OmniSharp.IFeature {
+class SignatureHelp implements IFeature {
     private disposable: Rx.CompositeDisposable;
     private _bubble: SignatureBubble;
 
     public activate() {
         this.disposable = new CompositeDisposable();
-        var issueRequest = new Subject<TextBuffer.Point>();
-        var delayIssueRequest = new Subject<any>();
+        const issueRequest = new Subject<TextBuffer.Point>();
+        const delayIssueRequest = new Subject<any>();
 
         this.disposable.add(delayIssueRequest
             .debounce(1000)
             .subscribe(() => {
-                var editor = atom.workspace.getActiveTextEditor();
-                var position = editor.getCursorBufferPosition();
+                const editor = atom.workspace.getActiveTextEditor();
+                const position = editor.getCursorBufferPosition();
                 issueRequest.onNext(position);
             }));
 
-        this.disposable.add(Omni.addTextEditorCommand('omnisharp-atom:signature-help',
+        this.disposable.add(Omni.addTextEditorCommand("omnisharp-atom:signature-help",
             (e) => delayIssueRequest.onNext(null)));
 
         this.disposable.add(atom.commands.onWillDispatch(function(event: Event) {
@@ -36,7 +36,7 @@ class SignatureHelp implements OmniSharp.IFeature {
             }
         }));
 
-        var shouldContinue = Observable.zip(
+        const shouldContinue = Observable.zip(
             Omni.listener.signatureHelp,
             Omni.listener.signatureHelp.skip(1).startWith(null),
             (current, previous) => {
@@ -71,12 +71,12 @@ class SignatureHelp implements OmniSharp.IFeature {
                         .flatMap(response => {
                             if (response && response.Signatures && response.Signatures.length > 0) {
                                 if (!this._bubble) {
-                                    var disposable = editor.onDidChangeCursorPosition(event => {
+                                    const disposable = editor.onDidChangeCursorPosition(event => {
                                         issueRequest.onNext(event.newBufferPosition);
                                     });
                                     cd.add(disposable);
 
-                                    var disposer = Disposable.create(() => {
+                                    const disposer = Disposable.create(() => {
                                         if (this._bubble) {
                                             this._bubble.dispose();
                                             this._bubble = null;
@@ -106,10 +106,10 @@ class SignatureHelp implements OmniSharp.IFeature {
 
     public required = false;
     public default = false;
-    public title = 'Signature Help';
-    public description = 'Adds signature help to method calls.';
+    public title = "Signature Help";
+    public description = "Adds signature help to method calls.";
 }
-export var signatureHelp = new SignatureHelp;
+export const signatureHelp = new SignatureHelp;
 
 class SignatureBubble implements Rx.IDisposable {
     private _decoration: IDecoration;
@@ -124,35 +124,35 @@ class SignatureBubble implements Rx.IDisposable {
     constructor(private _editor: Atom.TextEditor, disposer: Rx.IDisposable) {
         this._disposable.add(disposer);
 
-        var editorView: HTMLElement = <any>atom.views.getView(_editor);
-        editorView.classList.add('signature-help-active');
+        const editorView: HTMLElement = <any>atom.views.getView(_editor);
+        editorView.classList.add("signature-help-active");
 
         this._disposable.add(Disposable.create(() => {
-            editorView.classList.remove('signature-help-active');
+            editorView.classList.remove("signature-help-active");
         }))
 
         this._disposable.add(
-            atom.commands.add('atom-text-editor:not(.autocomplete-active).signature-help-active',
-                'core:move-up', (event) => {
+            atom.commands.add("atom-text-editor:not(.autocomplete-active).signature-help-active",
+                "core:move-up", (event) => {
                     this._element.moveIndex(-1);
                     event.stopImmediatePropagation();
                 }));
 
         this._disposable.add(
-            atom.commands.add('atom-text-editor:not(.autocomplete-active).signature-help-active',
-                'core:move-down', (event) => {
+            atom.commands.add("atom-text-editor:not(.autocomplete-active).signature-help-active",
+                "core:move-down", (event) => {
                     this._element.moveIndex(1);
                     event.stopImmediatePropagation();
                 }));
 
         this._disposable.add(
-            atom.commands.add('atom-text-editor:not(.autocomplete-active).signature-help-active',
-                'core:cancel', (event) => {
+            atom.commands.add("atom-text-editor:not(.autocomplete-active).signature-help-active",
+                "core:cancel", (event) => {
                     this.dispose();
                     event.stopImmediatePropagation();
                 }));
 
-        this._disposable.add(atom.config.observe('editor.fontSize', (size: number) => {
+        this._disposable.add(atom.config.observe("editor.fontSize", (size: number) => {
             _.defer(() => {
                 this._lineHeight = _editor.getLineHeightInPixels();
                 if (this._element)
@@ -163,9 +163,9 @@ class SignatureBubble implements Rx.IDisposable {
 
     public update(position: TextBuffer.Point, member: OmniSharp.Models.SignatureHelp) {
         this._position = position;
-        var range = [[position.row, position.column], [position.row, position.column]];
+        const range = [[position.row, position.column], [position.row, position.column]];
         if (!this._marker) {
-            this._marker = (<any>this._editor).markBufferRange(range/*, { invalidate: 'inside' }*/);
+            this._marker = (<any>this._editor).markBufferRange(range/*, { invalidate: "inside" }*/);
             this._disposable.add(Disposable.create(() => {
                 this._marker.destroy();
             }));
@@ -176,7 +176,7 @@ class SignatureBubble implements Rx.IDisposable {
         if (!this._element || !this._decoration) {
             this._element = new SignatureView();
             this._element.setLineHeight(this._lineHeight);
-            this._decoration = <any>this._editor.decorateMarker(this._marker, { type: "overlay", class: `signature-help`, item: this._element, position: 'head' });
+            this._decoration = <any>this._editor.decorateMarker(this._marker, { type: "overlay", class: `signature-help`, item: this._element, position: "head" });
         }
 
         if (!this._member) {

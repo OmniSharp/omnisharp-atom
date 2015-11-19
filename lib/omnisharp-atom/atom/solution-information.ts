@@ -1,15 +1,15 @@
 import {Observable, CompositeDisposable, Disposable} from "rx";
 import Omni = require("../../omni-sharp-server/omni");
-import * as _ from 'lodash';
+import * as _ from "lodash";
 import {dock} from "../atom/dock";
-import {SolutionStatusCard, ICardProps} from '../views/solution-status-view';
+import {SolutionStatusCard, ICardProps} from "../views/solution-status-view";
 import {ViewModel} from "../../omni-sharp-server/view-model";
 import manager from "../../omni-sharp-server/solution-manager";
 import {DriverState} from "omnisharp-client";
-import React = require('react');
-import $ = require('jquery');
+import * as React from "react";
+import * as $ from "jquery";
 
-class SolutionInformation implements OmniSharp.IFeature {
+class SolutionInformation implements IFeature {
     private disposable: CompositeDisposable;
     private window: CompositeDisposable;
     public selectedIndex: number = 0;
@@ -27,16 +27,16 @@ class SolutionInformation implements OmniSharp.IFeature {
     public activate() {
         this.disposable = new CompositeDisposable();
 
-        var solutions = this.setupSolutions();
+        const solutions = this.setupSolutions();
         this.observe = { solutions, updates: Observable.ofObjectChanges(this) };
 
         this.disposable.add(manager.activeSolution.subscribe(model => this.selectedIndex = _.findIndex(manager.activeSolutions, { index: model.index })));
 
-        this.disposable.add(atom.commands.add("atom-workspace", 'omnisharp-atom:next-solution-status', () => {
+        this.disposable.add(atom.commands.add("atom-workspace", "omnisharp-atom:next-solution-status", () => {
             this.updateSelectedItem(this.selectedIndex + 1);
         }));
 
-        this.disposable.add(atom.commands.add("atom-workspace", 'omnisharp-atom:solution-status', () => {
+        this.disposable.add(atom.commands.add("atom-workspace", "omnisharp-atom:solution-status", () => {
             if (this.cardDisposable) {
                 this.cardDisposable.dispose();
             } else {
@@ -44,20 +44,20 @@ class SolutionInformation implements OmniSharp.IFeature {
             }
         }));
 
-        this.disposable.add(atom.commands.add("atom-workspace", 'omnisharp-atom:previous-solution-status', () => {
+        this.disposable.add(atom.commands.add("atom-workspace", "omnisharp-atom:previous-solution-status", () => {
             this.updateSelectedItem(this.selectedIndex - 1);
         }));
 
-        this.disposable.add(atom.commands.add("atom-workspace", 'omnisharp-atom:stop-server', () => {
+        this.disposable.add(atom.commands.add("atom-workspace", "omnisharp-atom:stop-server", () => {
             manager.activeSolutions[this.selectedIndex].dispose();
         }));
 
-        this.disposable.add(atom.commands.add("atom-workspace", 'omnisharp-atom:start-server', () => {
+        this.disposable.add(atom.commands.add("atom-workspace", "omnisharp-atom:start-server", () => {
             manager.activeSolutions[this.selectedIndex].connect();
         }));
 
-        this.disposable.add(atom.commands.add("atom-workspace", 'omnisharp-atom:restart-server', () => {
-            var solution = manager.activeSolutions[this.selectedIndex];
+        this.disposable.add(atom.commands.add("atom-workspace", "omnisharp-atom:restart-server", () => {
+            const solution = manager.activeSolutions[this.selectedIndex];
             solution.state
                 .where(z => z == DriverState.Disconnected)
                 .take(1)
@@ -86,7 +86,7 @@ class SolutionInformation implements OmniSharp.IFeature {
     }
 
     private setupSolutions() {
-        var solutions = Observable.ofArrayChanges(manager.activeSolutions)
+        const solutions = Observable.ofArrayChanges(manager.activeSolutions)
             .map(() => manager.activeSolutions)
             .startWith(manager.activeSolutions)
             .map(x=> x.map(z => z.model))
@@ -100,24 +100,24 @@ class SolutionInformation implements OmniSharp.IFeature {
     }
 
     private createSolutionCard() {
-        var disposable = new CompositeDisposable();
+        const disposable = new CompositeDisposable();
         this.disposable.add(disposable);
-        var workspace = <any>atom.views.getView(atom.workspace);
+        const workspace = <any>atom.views.getView(atom.workspace);
         if (!this.container) {
-            var container = this.container = document.createElement("div");
+            const container = this.container = document.createElement("div");
             workspace.appendChild(container);
         }
 
         if (this.solutions.length) {
-            var element: SolutionStatusCard<ICardProps> = <any>React.render(React.createElement(SolutionStatusCard, {
+            const element: SolutionStatusCard<ICardProps> = <any>React.render(React.createElement(SolutionStatusCard, {
                 model: this.solutions[this.selectedIndex],
                 count: this.solutions.length,
-                attachTo: '.projects-icon'
+                attachTo: ".projects-icon"
             }), this.container);
 
             this.card = element;
 
-            disposable.add(atom.commands.add("atom-workspace", 'core:cancel', () => {
+            disposable.add(atom.commands.add("atom-workspace", "core:cancel", () => {
                 disposable.dispose();
                 this.disposable.remove(disposable);
             }));
@@ -132,7 +132,7 @@ class SolutionInformation implements OmniSharp.IFeature {
                 this.cardDisposable.dispose();
             }
 
-            var notice = <any>React.render(React.DOM.div({}, "Solution not loaded!"), this.container);
+            const notice = <any>React.render(React.DOM.div({}, "Solution not loaded!"), this.container);
 
             disposable.add(Disposable.create(() => {
                 React.unmountComponentAtNode(this.container);
@@ -150,8 +150,8 @@ class SolutionInformation implements OmniSharp.IFeature {
     }
 
     public required = true;
-    public title = 'Solution Information';
-    public description = 'Monitors each running solution and offers the ability to start/restart/stop a solution.';
+    public title = "Solution Information";
+    public description = "Monitors each running solution and offers the ability to start/restart/stop a solution.";
 }
 
-export var solutionInformation = new SolutionInformation;
+export const solutionInformation = new SolutionInformation;

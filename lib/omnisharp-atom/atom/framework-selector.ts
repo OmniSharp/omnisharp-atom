@@ -1,10 +1,10 @@
 import {CompositeDisposable, Observable, Disposable} from "rx";
 import {ProjectViewModel} from "../../omni-sharp-server/project-view-model";
-import Omni = require('../../omni-sharp-server/omni')
-import {FrameworkSelectorComponent} from '../views/framework-selector-view';
-import React = require('react');
+import Omni = require("../../omni-sharp-server/omni")
+import {FrameworkSelectorComponent} from "../views/framework-selector-view";
+import * as React from "react";
 
-class FrameworkSelector implements OmniSharp.IAtomFeature {
+class FrameworkSelector implements IAtomFeature {
     private disposable: Rx.CompositeDisposable;
     private view: HTMLSpanElement;
     private tile: any;
@@ -32,23 +32,23 @@ class FrameworkSelector implements OmniSharp.IAtomFeature {
 
     private _attach() {
         this.view = document.createElement("span");
-        this.view.classList.add('inline-block');
-        this.view.classList.add('framework-selector');
-        this.view.style.display = 'none';
+        this.view.classList.add("inline-block");
+        this.view.classList.add("framework-selector");
+        this.view.style.display = "none";
         
-        if (atom.config.get('grammar-selector.showOnRightSideOfStatusBar')) {
-            var tile = this.statusBar.addRightTile({
+        if (atom.config.get("grammar-selector.showOnRightSideOfStatusBar")) {
+            const tile = this.statusBar.addRightTile({
                 item: this.view,
                 priority: 9
             });
         } else {
-            var tile = this.statusBar.addLeftTile({
+            const tile = this.statusBar.addLeftTile({
                 item: this.view,
                 priority: 11
             });
         }
 
-        this._component = <any>React.render(React.createElement(FrameworkSelectorComponent, { alignLeft: !atom.config.get('grammar-selector.showOnRightSideOfStatusBar') }), this.view);
+        this._component = <any>React.render(React.createElement(FrameworkSelectorComponent, { alignLeft: !atom.config.get("grammar-selector.showOnRightSideOfStatusBar") }), this.view);
 
         this.disposable.add(Disposable.create(() => {
             React.unmountComponentAtNode(this.view);
@@ -58,26 +58,26 @@ class FrameworkSelector implements OmniSharp.IAtomFeature {
 
         this.disposable.add(Omni.activeEditor
             .where(z => !z)
-            .subscribe(() => this.view.style.display = 'none'));
+            .subscribe(() => this.view.style.display = "none"));
 
         this.disposable.add(Omni.activeProject
             .where(z => z.frameworks.length === 1)
-            .subscribe(() => this.view.style.display = 'none'));
+            .subscribe(() => this.view.style.display = "none"));
 
         this.disposable.add(Omni.activeProject
             .subscribe(project => {
-                this.view.style.display = '';
+                this.view.style.display = "";
 
-                var {frameworks, activeFramework} = project;
+                const {frameworks, activeFramework} = project;
                 this.project = project;
                 this._component.setState({ frameworks: frameworks, activeFramework });
             }));
 
         this.disposable.add(Omni.activeFramework
             .subscribe(ctx => {
-                this.view.style.display = '';
+                this.view.style.display = "";
 
-                var {project, framework} = ctx;
+                const {project, framework} = ctx;
                 this.project = project;
                 this._component.setState({ frameworks: project.frameworks, activeFramework: framework });
             }));
@@ -95,8 +95,8 @@ class FrameworkSelector implements OmniSharp.IAtomFeature {
     }
 
     public required = true;
-    public title = 'Framework Selector';
-    public description = 'Lets you select the framework you\'re currently targeting.';
+    public title = "Framework Selector";
+    public description = "Lets you select the framework you\"re currently targeting.";
 }
 
-export var frameworkSelector = new FrameworkSelector;
+export const frameworkSelector = new FrameworkSelector;

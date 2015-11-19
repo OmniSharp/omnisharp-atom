@@ -10,13 +10,13 @@ const projectFactories: { [key: string]: { new (project: any, solutionPath: stri
 
 const supportedProjectTypes = _.keys(projectFactories);
 export function projectViewModelFactory(omnisharpProject: OmniSharp.Models.ProjectInformationResponse, solutionPath: string) {
-    var projectTypes = _.filter(supportedProjectTypes, type => _.has(omnisharpProject, type));
-    var missing = _.difference(_.keys(omnisharpProject), supportedProjectTypes);
+    const projectTypes = _.filter(supportedProjectTypes, type => _.has(omnisharpProject, type));
+    const missing = _.difference(_.keys(omnisharpProject), supportedProjectTypes);
     if (missing.length) {
         console.log(`Missing factory for project type ${missing}`);
     }
 
-    var results: ProjectViewModel<any>[] = []
+    const results: ProjectViewModel<any>[] = []
     _.each(projectTypes, projectType => {
         if (projectType && projectFactories[projectType]) {
             results.push(new projectFactories[projectType](omnisharpProject[projectType], solutionPath));
@@ -41,9 +41,9 @@ const workspaceFactories: { [key: string]: (workspace: any, solutionPath: string
 
 const supportedWorkspaceTypes = _.keys(projectFactories);
 export function workspaceViewModelFactory(omnisharpWorkspace: OmniSharp.Models.WorkspaceInformationResponse, solutionPath: string) {
-    var projects = [];
+    const projects = [];
     _.forIn(omnisharpWorkspace, (item, key) => {
-        var factory = workspaceFactories[key];
+        const factory = workspaceFactories[key];
         if (factory) {
             projects.push(...factory(item, solutionPath));
         }
@@ -52,7 +52,7 @@ export function workspaceViewModelFactory(omnisharpWorkspace: OmniSharp.Models.W
     return projects;
 }
 
-export abstract class ProjectViewModel<T> implements OmniSharp.IProjectViewModel {
+export abstract class ProjectViewModel<T> implements IProjectViewModel {
     constructor(project: T, solutionPath: string) {
         this.solutionPath = solutionPath;
         this.init(project);
@@ -101,10 +101,10 @@ export abstract class ProjectViewModel<T> implements OmniSharp.IProjectViewModel
         !this._subjectActiveFramework.isDisposed && this._subjectActiveFramework.onNext(this._activeFramework);
     }
 
-    private _frameworks: OmniSharp.Models.DnxFramework[] = [{ FriendlyName: 'All', Name: 'all', ShortName: 'all' }];
+    private _frameworks: OmniSharp.Models.DnxFramework[] = [{ FriendlyName: "All", Name: "all", ShortName: "all" }];
     public get frameworks() { return this._frameworks; }
     public set frameworks(value) {
-        this._frameworks = [{ FriendlyName: 'All', Name: 'all', ShortName: 'all' }].concat(value);
+        this._frameworks = [{ FriendlyName: "All", Name: "all", ShortName: "all" }].concat(value);
         if (!this.activeFramework) {
             this.activeFramework = this._frameworks[0];
         }
@@ -135,7 +135,7 @@ export abstract class ProjectViewModel<T> implements OmniSharp.IProjectViewModel
     }
 
     public toJSON() {
-        var {name, path, solutionPath, sourceFiles, frameworks, configurations, commands} = this;
+        const {name, path, solutionPath, sourceFiles, frameworks, configurations, commands} = this;
         return { name, path, solutionPath, sourceFiles, frameworks, configurations, commands };
     }
 
@@ -152,7 +152,7 @@ class ProxyProjectViewModel extends ProjectViewModel<ProjectViewModel<any>> {
 
 class MsBuildProjectViewModel extends ProjectViewModel<OmniSharp.Models.MSBuildProject> {
     public init(project: OmniSharp.Models.MSBuildProject) {
-        var frameworks = [{
+        const frameworks = [{
             FriendlyName: project.TargetFramework,
             Name: project.TargetFramework,
             ShortName: project.TargetFramework
@@ -178,7 +178,7 @@ class DnxProjectViewModel extends ProjectViewModel<OmniSharp.Models.DnxProject> 
 
 class ScriptCsProjectViewModel extends ProjectViewModel<OmniSharp.ScriptCs.ScriptCsContext> {
     public init(project: OmniSharp.ScriptCs.ScriptCsContext) {
-        this.name = 'ScriptCs';
+        this.name = "ScriptCs";
         this.path = project.Path;
         this.sourceFiles = project.CsxFiles;
     }

@@ -1,8 +1,8 @@
 import {CompositeDisposable, Disposable} from "rx";
-import {each} from 'lodash';
-import Omni = require('../../omni-sharp-server/omni')
-import StatusBarComponent = require('../views/status-bar-view');
-import React = require('react');
+import {each} from "lodash";
+import Omni = require("../../omni-sharp-server/omni")
+import StatusBarComponent = require("../views/status-bar-view");
+import * as React from "react";
 import {dock} from "../atom/dock";
 
 interface IButton {
@@ -14,18 +14,18 @@ interface IButton {
 
 const buttons = [
     {
-        name: 'enhanced-highlighting',
-        config: 'omnisharp-atom.enhancedHighlighting',
-        icon: 'icon-pencil',
-        tooltip: 'Enable / Disable Enhanced Highlighting'
+        name: "enhanced-highlighting",
+        config: "omnisharp-atom.enhancedHighlighting",
+        icon: "icon-pencil",
+        tooltip: "Enable / Disable Enhanced Highlighting"
     }, {
-        name: 'code-lens',
-        config: 'omnisharp-atom.codeLens',
-        icon: 'icon-telescope',
-        tooltip: 'Enable / Disable Code Lens'
+        name: "code-lens",
+        config: "omnisharp-atom.codeLens",
+        icon: "icon-telescope",
+        tooltip: "Enable / Disable Code Lens"
     }];
 
-class FeatureEditorButtons implements OmniSharp.IAtomFeature {
+class FeatureEditorButtons implements IAtomFeature {
     private disposable: Rx.CompositeDisposable;
     private statusBar: any;
     private _active = false;
@@ -57,13 +57,13 @@ class FeatureEditorButtons implements OmniSharp.IAtomFeature {
     }
 
     private _button(button: IButton, index: number) {
-        var {name, config, icon, tooltip} = button;
-        var view = document.createElement("span");
-        view.classList.add('inline-block', `${name}-button`, icon);
-        view.style.display = 'none';
+        const {name, config, icon, tooltip} = button;
+        const view = document.createElement("span");
+        view.classList.add("inline-block", `${name}-button`, icon);
+        view.style.display = "none";
         view.onclick = () => atom.config.set(config, !atom.config.get(config));
 
-        var tooltipDisposable: Rx.IDisposable;
+        const tooltipDisposable: Rx.IDisposable;
         view.onmouseenter = () => {
             tooltipDisposable = atom.tooltips.add(view, { title: tooltip });
             this.disposable.add(tooltipDisposable);
@@ -75,13 +75,13 @@ class FeatureEditorButtons implements OmniSharp.IAtomFeature {
             }
         }
 
-        if (atom.config.get('grammar-selector.showOnRightSideOfStatusBar')) {
-            var tile = this.statusBar.addRightTile({
+        if (atom.config.get("grammar-selector.showOnRightSideOfStatusBar")) {
+            const tile = this.statusBar.addRightTile({
                 item: view,
                 priority: 9 - index - 1
             });
         } else {
-            var tile = this.statusBar.addLeftTile({
+            const tile = this.statusBar.addLeftTile({
                 item: view,
                 priority: 11 + index + 1
             });
@@ -89,9 +89,9 @@ class FeatureEditorButtons implements OmniSharp.IAtomFeature {
 
         this.disposable.add(atom.config.observe(config, (value: boolean) => {
             if (value) {
-                view.classList.add('text-success');
+                view.classList.add("text-success");
             } else {
-                view.classList.remove('text-success');
+                view.classList.remove("text-success");
             }
         }));
 
@@ -101,7 +101,7 @@ class FeatureEditorButtons implements OmniSharp.IAtomFeature {
         }));
 
         this.disposable.add(Omni.activeEditor
-            .subscribe((editor) => editor ? (view.style.display = '') : (view.style.display = 'none')));
+            .subscribe((editor) => editor ? (view.style.display = "") : (view.style.display = "none")));
     }
 
     public required = false;
@@ -110,7 +110,7 @@ class FeatureEditorButtons implements OmniSharp.IAtomFeature {
     public default = true;
 }
 
-class FeatureButtons implements OmniSharp.IFeature {
+class FeatureButtons implements IFeature {
     private disposable: Rx.CompositeDisposable;
     private statusBar: any;
     private _active = false;
@@ -126,9 +126,9 @@ class FeatureButtons implements OmniSharp.IFeature {
     }
 
     private _button(button: IButton, index: number) {
-        var {name, config, icon, tooltip} = button;
+        const {name, config, icon, tooltip} = button;
 
-        var buttonDisposable: Rx.IDisposable;
+        const buttonDisposable: Rx.IDisposable;
         this.disposable.add(atom.config.observe(config, (value: boolean) => {
             if (buttonDisposable) {
                 this.disposable.remove(buttonDisposable);
@@ -145,12 +145,12 @@ class FeatureButtons implements OmniSharp.IFeature {
     }
 
     private _makeButton(button: IButton, index: number, enabled: boolean) {
-        var {name, config, icon, tooltip} = button;
+        const {name, config, icon, tooltip} = button;
 
-        var tooltipDisposable: Rx.IDisposable;
-        var reactButton = React.DOM.a({
+        const tooltipDisposable: Rx.IDisposable;
+        const reactButton = React.DOM.a({
             id: `${icon}-name`,
-            className: `btn ${icon} ${enabled ? 'btn-success' : ''}`,
+            className: `btn ${icon} ${enabled ? "btn-success" : ""}`,
             onClick: () => atom.config.set(config, !atom.config.get(config)),
             onMouseEnter: (e) => {
                 tooltipDisposable = atom.tooltips.add(<any>e.currentTarget, { title: tooltip });
@@ -164,7 +164,7 @@ class FeatureButtons implements OmniSharp.IFeature {
             }
         });
 
-        var buttonDisposable = dock.addButton(
+        const buttonDisposable = dock.addButton(
             `${name}-button`,
             tooltip,
             reactButton,
@@ -180,5 +180,5 @@ class FeatureButtons implements OmniSharp.IFeature {
     public default = true;
 }
 
-export var featureButtons = new FeatureButtons();
-export var featureEditorButtons = new FeatureEditorButtons();
+export const featureButtons = new FeatureButtons();
+export const featureEditorButtons = new FeatureEditorButtons();

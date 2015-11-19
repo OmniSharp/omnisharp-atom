@@ -1,12 +1,12 @@
-import _ = require('lodash')
+import * as _ from "lodash";
 import {basename} from "path";
-import Omni = require('../../omni-sharp-server/omni')
-import React = require('react');
+import Omni = require("../../omni-sharp-server/omni")
+import * as React from "react";
 import {ReactClientComponent} from "./react-client-component";
 import {solutionInformation} from "../atom/solution-information";
 import {ViewModel} from "../../omni-sharp-server/view-model";
 import {DriverState} from "omnisharp-client";
-import $ = require('jquery');
+import * as $ from "jquery";
 import {Observable} from "rx";
 
 interface ICardState {
@@ -27,12 +27,12 @@ interface ISolutionStatusWindowProps {
 }
 
 function truncateStringReverse(str: string, maxLength: number = 55) {
-    var reversedString = _.toArray(str).reverse().join('');
-    return _.toArray(_.trunc(reversedString, maxLength)).reverse().join('');
+    const reversedString = _.toArray(str).reverse().join("");
+    return _.toArray(_.trunc(reversedString, maxLength)).reverse().join("");
 }
 
 export class SolutionStatusCard<T extends ICardProps> extends ReactClientComponent<T, ICardState> {
-    public displayName = 'Card';
+    public displayName = "Card";
     private updatesDisposable: Rx.Disposable;
 
     constructor(props?: T, context?: any) {
@@ -73,11 +73,11 @@ export class SolutionStatusCard<T extends ICardProps> extends ReactClientCompone
     }
 
     private verifyPosition() {
-        var node = React.findDOMNode(this);
-        var offset = $(document.querySelectorAll(this.props.attachTo)).offset();
+        const node = React.findDOMNode(this);
+        const offset = $(document.querySelectorAll(this.props.attachTo)).offset();
         if (offset) {
             $(node).css({
-                position: 'fixed',
+                position: "fixed",
                 top: offset.top - node.clientHeight,
                 left: offset.left
             });
@@ -85,39 +85,39 @@ export class SolutionStatusCard<T extends ICardProps> extends ReactClientCompone
     }
 
     private getButtons() {
-        var buttons = [];
+        const buttons = [];
 
         if (this.state.model.isReady) {
             buttons.push(React.DOM.button({
-                type: 'button',
-                className: 'btn btn-xs btn-error',
-                onClick: () => atom.commands.dispatch(atom.views.getView(atom.workspace), 'omnisharp-atom:stop-server')
-            }, React.DOM.span({ className: 'fa fa-stop' }), 'Stop'));
+                type: "button",
+                className: "btn btn-xs btn-error",
+                onClick: () => atom.commands.dispatch(atom.views.getView(atom.workspace), "omnisharp-atom:stop-server")
+            }, React.DOM.span({ className: "fa fa-stop" }), "Stop"));
         } else if (this.state.model.isOff) {
             buttons.push(React.DOM.button({
-                type: 'button',
-                className: 'btn btn-xs btn-success',
-                onClick: () => atom.commands.dispatch(atom.views.getView(atom.workspace), 'omnisharp-atom:start-server')
-            }, React.DOM.span({ className: 'fa fa-play' }), 'Start'));
+                type: "button",
+                className: "btn btn-xs btn-success",
+                onClick: () => atom.commands.dispatch(atom.views.getView(atom.workspace), "omnisharp-atom:start-server")
+            }, React.DOM.span({ className: "fa fa-play" }), "Start"));
         }
 
         if (this.state.model.isOn) {
             buttons.push(React.DOM.button({
-                type: 'button',
-                className: 'btn btn-xs btn-info',
-                onClick: () => atom.commands.dispatch(atom.views.getView(atom.workspace), 'omnisharp-atom:restart-server')
-            }, React.DOM.span({ className: 'fa fa-refresh' }), 'Restart'));
+                type: "button",
+                className: "btn btn-xs btn-info",
+                onClick: () => atom.commands.dispatch(atom.views.getView(atom.workspace), "omnisharp-atom:restart-server")
+            }, React.DOM.span({ className: "fa fa-refresh" }), "Restart"));
         }
 
         return buttons;
     }
 
     private getProjects() {
-        var projects = [];
+        const projects = [];
         return this.state.model.projects.map(
             project => {
-                var path = truncateStringReverse(project.path.replace(this.state.model.path, ''), 24);
-                return React.DOM.div({ className: 'project name', title: `${path} [${project.frameworks.filter(z => z.Name !== 'all').map(x => x.FriendlyName) }]` }, project.name);
+                const path = truncateStringReverse(project.path.replace(this.state.model.path, ""), 24);
+                return React.DOM.div({ className: "project name", title: `${path} [${project.frameworks.filter(z => z.Name !== "all").map(x => x.FriendlyName) }]` }, project.name);
             });
     }
 
@@ -134,16 +134,16 @@ export class SolutionStatusCard<T extends ICardProps> extends ReactClientCompone
 
     public render() {
         if (!this.state.model) {
-            return React.DOM.div({ className: 'omnisharp-card' });
+            return React.DOM.div({ className: "omnisharp-card" });
         }
-        var path = truncateStringReverse(this.state.model.path);
+        const path = truncateStringReverse(this.state.model.path);
 
-        var stats = [
+        const stats = [
             React.DOM.div({
-                className: 'meta-controls'
+                className: "meta-controls"
             },
                 React.DOM.div({
-                    className: 'btn-group'
+                    className: "btn-group"
                 },
                     this.getButtons())
                 )
@@ -153,59 +153,59 @@ export class SolutionStatusCard<T extends ICardProps> extends ReactClientCompone
             className: "pull-left stats-item " + (DriverState[this.state.model.state].toLowerCase())
         },
             React.DOM.span({
-                className: ''
+                className: ""
             }, React.DOM.span({
-                className: 'icon icon-zap'
+                className: "icon icon-zap"
             }), this.getStatusText())));
 
         if (this.state.model.runtime) {
             stats.unshift(React.DOM.span({
                 className: "pull-right stats-item"
             }, React.DOM.span({
-                className: 'icon icon-versions'
+                className: "icon icon-versions"
             }),
                 React.DOM.span({
-                    className: ''
+                    className: ""
                 }, this.state.model.runtime)));
         }
 
         if (this.state.model.projects.length) {
-            var projects = React.DOM.div({ className: 'meta meta-projects' },
-                React.DOM.div({ className: 'header' }, 'Projects'),
+            const projects = React.DOM.div({ className: "meta meta-projects" },
+                React.DOM.div({ className: "header" }, "Projects"),
                 this.getProjects());
         }
 
-        var children = [
+        const children = [
             React.DOM.div({
-                className: 'body'
+                className: "body"
             },
                 React.DOM.h4({
-                    className: 'name'
+                    className: "name"
                 },
                     React.DOM.span({
                     }, `${basename(this.state.model.path) } (${this.state.model.index})`)),
                 React.DOM.span({
-                    className: 'description'
+                    className: "description"
                 }, path), ...stats),
-            projects || ''
+            projects || ""
         ];
 
         if (this.state.count > 1) {
             children.unshift(
-                React.DOM.div({ className: 'selector btn-group btn-group-xs' },
+                React.DOM.div({ className: "selector btn-group btn-group-xs" },
                     React.DOM.span({
                         className: "btn btn-xs icon icon-triangle-left",
-                        onClick: (e) => atom.commands.dispatch(atom.views.getView(atom.workspace), 'omnisharp-atom:previous-solution-status')
+                        onClick: (e) => atom.commands.dispatch(atom.views.getView(atom.workspace), "omnisharp-atom:previous-solution-status")
                     }),
                     React.DOM.span({
                         className: "btn btn-xs icon icon-triangle-right",
-                        onClick: (e) => atom.commands.dispatch(atom.views.getView(atom.workspace), 'omnisharp-atom:next-solution-status')
+                        onClick: (e) => atom.commands.dispatch(atom.views.getView(atom.workspace), "omnisharp-atom:next-solution-status")
                     }))
                 );
         }
 
         return React.DOM.div({
-            className: 'omnisharp-card'
+            className: "omnisharp-card"
         }, ...children);
     }
 }

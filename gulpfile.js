@@ -44,7 +44,7 @@ function tsTranspiler(source, dest) {
         .pipe(tslint())
         .pipe(tsTranspile())
         .pipe(babel())
-        //.pipe(tslint.report('prose'));
+        .pipe(tslint.report('prose'));
         .pipe(gulp.dest(dest));
 }
 

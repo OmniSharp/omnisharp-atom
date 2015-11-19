@@ -1,16 +1,16 @@
-import Omni = require('../lib/omni-sharp-server/omni');
-import SolutionManager from '../lib/omni-sharp-server/solution-manager';
+import Omni = require("../lib/omni-sharp-server/omni");
+import SolutionManager from "../lib/omni-sharp-server/solution-manager";
 import {DriverState} from "omnisharp-client";
 import {Observable} from "rx";
 import {setupFeature} from "./test-helpers";
 
-describe('OmniSharp Atom', () => {
+describe("OmniSharp Atom", () => {
     setupFeature([]);
 
-    describe('when the package is activated', () => {
-        it('connect', () => {
+    describe("when the package is activated", () => {
+        it("connect", () => {
             waitsForPromise(() =>
-                Observable.fromPromise(atom.workspace.open('simple/code-lens/CodeLens.cs'))
+                Observable.fromPromise(atom.workspace.open("simple/code-lens/CodeLens.cs"))
                     .flatMap(editor =>
                         SolutionManager.getSolutionForEditor(editor))
                     .flatMap(x =>
@@ -25,12 +25,12 @@ describe('OmniSharp Atom', () => {
             });
         });
 
-        it('connect-simple2', () => {
+        it("connect-simple2", () => {
             waitsForPromise(() =>
                 Observable.fromPromise(
                     Promise.all([
-                        atom.workspace.open('simple/code-lens/CodeLens.cs'),
-                        atom.workspace.open('simple2/project.json')
+                        atom.workspace.open("simple/code-lens/CodeLens.cs"),
+                        atom.workspace.open("simple2/project.json")
                     ])
                     )
                     .flatMap(x => Observable.from(x))

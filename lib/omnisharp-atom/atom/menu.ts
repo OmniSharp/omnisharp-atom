@@ -1,19 +1,19 @@
 import {CompositeDisposable, Observable} from "rx";
-import Omni = require('../../omni-sharp-server/omni')
+import Omni = require("../../omni-sharp-server/omni")
 import {readFileSync} from "fs";
 
-class Menu implements OmniSharp.IFeature {
+class Menu implements IFeature {
     private disposable: Rx.CompositeDisposable;
     private _json: string;
 
     public activate() {
         this.disposable = new CompositeDisposable();
         if (!this._json) {
-            var menuJsonFile = Omni.packageDir + "/omnisharp-atom/menus/omnisharp-menu.json";
-            this._json = JSON.parse(readFileSync(menuJsonFile, 'utf8')).menu;
+            const menuJsonFile = Omni.packageDir + "/omnisharp-atom/menus/omnisharp-menu.json";
+            this._json = JSON.parse(readFileSync(menuJsonFile, "utf8")).menu;
         }
 
-        var cd = new CompositeDisposable();
+        const cd = new CompositeDisposable();
 
         this.disposable.add(Omni.switchActiveSolution((solution, cd) => {
             if (solution) {
@@ -32,4 +32,4 @@ class Menu implements OmniSharp.IFeature {
     public default = true;
 }
 
-export var topMenu = new Menu();
+export const topMenu = new Menu();

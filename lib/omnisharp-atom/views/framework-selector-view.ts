@@ -1,10 +1,10 @@
-import SpacePen = require('atom-space-pen-views');
+import * as SpacePen from "atom-space-pen-views";
 import {CompositeDisposable, Disposable, Scheduler, Observable} from "rx";
-import _ = require('lodash');
-import React = require('react');
+import * as _ from "lodash";
+import * as React from "react";
 import {ReactClientComponent} from "./react-client-component";
 import {frameworkSelector} from "../atom/framework-selector";
-import $ = require('jquery');
+import * as $ from "jquery";
 
 interface FrameworkSelectorState {
     frameworks?: OmniSharp.Models.DnxFramework[];
@@ -28,10 +28,10 @@ export class FrameworkSelectorComponent extends ReactClientComponent<{ alignLeft
 
     public render() {
         return React.DOM.a({
-            href: '#',
+            href: "#",
             onClick: (e) => {
-                var view = new FrameworkSelectorSelectListView(atom.workspace.getActiveTextEditor(), {
-                    attachTo: '.framework-selector',
+                const view = new FrameworkSelectorSelectListView(atom.workspace.getActiveTextEditor(), {
+                    attachTo: ".framework-selector",
                     alignLeft: this.props.alignLeft,
                     items: this.state.frameworks,
                     save: (framework: OmniSharp.Models.DnxFramework) => {
@@ -52,8 +52,8 @@ class FrameworkSelectorSelectListView extends SpacePen.SelectListView {
 
     constructor(public editor: Atom.TextEditor, private options: { alignLeft: boolean; attachTo: string; items: OmniSharp.Models.DnxFramework[]; save(item: any): void }) {
         super();
-        this.$.addClass('code-actions-overlay');
-        (<any>this).filterEditorView.model.placeholderText = 'Filter list';
+        this.$.addClass("code-actions-overlay");
+        (<any>this).filterEditorView.model.placeholderText = "Filter list";
     }
 
     get $(): JQuery {
@@ -74,21 +74,21 @@ class FrameworkSelectorSelectListView extends SpacePen.SelectListView {
     show() {
         this.storeFocusedElement();
         setTimeout(() => this.focusFilterEditor(), 100);
-        var width = 180;
-        var node = this[0];
-        var attachTo = $(document.querySelectorAll(this.options.attachTo));
-        var offset = attachTo.offset();
+        const width = 180;
+        const node = this[0];
+        const attachTo = $(document.querySelectorAll(this.options.attachTo));
+        const offset = attachTo.offset();
         if (offset) {
             if (this.options.alignLeft) {
                 $(node).css({
-                    position: 'fixed',
+                    position: "fixed",
                     top: offset.top - node.clientHeight - 18,
                     left: offset.left,
                     width: width
                 });
             } else {
                 $(node).css({
-                    position: 'fixed',
+                    position: "fixed",
                     top: offset.top - node.clientHeight - 18,
                     left: offset.left - width + attachTo[0].clientWidth,
                     width: width
@@ -106,7 +106,7 @@ class FrameworkSelectorSelectListView extends SpacePen.SelectListView {
         this.hide();
     }
 
-    public getFilterKey() { return 'Name'; }
+    public getFilterKey() { return "Name"; }
 
     public viewForItem(item) {
         if (!item) {
@@ -114,8 +114,8 @@ class FrameworkSelectorSelectListView extends SpacePen.SelectListView {
         }
         return SpacePen.$$(function() {
             return this.li({
-                "class": 'event',
-                'data-event-name': item.Name
+                "class": "event",
+                "data-event-name": item.Name
             }, () => {
                 return this.span(item.FriendlyName, {
                     title: item.FriendlyName

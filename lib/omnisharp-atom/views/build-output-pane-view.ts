@@ -1,12 +1,12 @@
-var Convert = require('ansi-to-html')
-import _ = require('lodash')
-import Omni = require('../../omni-sharp-server/omni');
-import React = require('react');
+const Convert = require("ansi-to-html")
+import * as _ from "lodash";
+import Omni = require("../../omni-sharp-server/omni");
+import * as React from "react";
 import {ReactClientComponent} from "./react-client-component";
-import {server} from '../atom/server-information';
+import {server} from "../atom/server-information";
 
 interface IBuildOutputWindowState {
-    output: OmniSharp.OutputMessage[];
+    output: OutputMessage[];
 }
 
 export class BuildOutputWindow<T> extends ReactClientComponent<T, IBuildOutputWindowState> {
@@ -28,11 +28,11 @@ export class BuildOutputWindow<T> extends ReactClientComponent<T, IBuildOutputWi
     }
 
     private scrollToBottom() {
-        var item = <any> React.findDOMNode(this).lastElementChild.lastElementChild;
+        const item = <any> React.findDOMNode(this).lastElementChild.lastElementChild;
         if (item) item.scrollIntoViewIfNeeded();
     }
 
-    private createItem(item: OmniSharp.OutputMessage) {
+    private createItem(item: OutputMessage) {
         return React.DOM.pre({
             className: item.logLevel,
         }, this._convert.toHtml(item.message).trim());
@@ -40,11 +40,11 @@ export class BuildOutputWindow<T> extends ReactClientComponent<T, IBuildOutputWi
 
     public render() {
         return React.DOM.div({
-            className: 'build-output-pane-view native-key-bindings ' + (this.props['className'] || ''),
+            className: "build-output-pane-view native-key-bindings " + (this.props["className"] || ""),
             tabIndex: -1
         },
             React.DOM.div({
-                className: 'messages-container'
+                className: "messages-container"
             }, _.map(this.state.output, item => this.createItem(item))));
     }
 }

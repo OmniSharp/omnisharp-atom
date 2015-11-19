@@ -96,7 +96,7 @@ declare module AtomKeymap {
     export class KeymapManager {
         /**
          * Create a keydown DOM event for testing purposes.
-         * @param key? - The key or keyIdentifier of the event. For example, `'a'`, `'1'`, `'escape'`, `'backspace'`, etc.
+         * @param key? - The key or keyIdentifier of the event. For example, `"a"`, `"1"`, `"escape"`, `"backspace"`, etc.
          * @param options? - An {Object} containing any of the following:
          */
         static buildKeydownEvent(key? : any, options? : Object) : any;
@@ -216,14 +216,14 @@ declare module AtomKeymap {
          * Cause the keymap to reload the key bindings file at the given path
          * whenever it changes.
          * 
-         * This method doesn't perform the initial load of the key bindings file. If
-         * that's what you're looking for, call {::loadKeymap} with `watch: true`.
+         * This method doesn"t perform the initial load of the key bindings file. If
+         * that"s what you"re looking for, call {::loadKeymap} with `watch: true`.
          */
         watchKeymap(filePath? : string) : any;
     
         /**
          * Called by the path watcher callback to reload a file at the given path. If
-         * we can't read the file cleanly, we don't proceed with the reload. 
+         * we can"t read the file cleanly, we don"t proceed with the reload. 
          * This field or method was marked private by atomdoc. Use with caution.
          */
         reloadKeymap(filePath? : string) : void;
@@ -235,7 +235,7 @@ declare module AtomKeymap {
     
         /**
          * Determine if the given path should be loaded on this platform. If the
-         * filename has the pattern '<platform>.cson' or 'foo.<platform>.cson' and
+         * filename has the pattern "<platform>.cson" or "foo.<platform>.cson" and
          * 
          * <platform> does not match the current platform, returns false. Otherwise
          * returns true. 
@@ -247,29 +247,29 @@ declare module AtomKeymap {
          * Dispatch a custom event associated with the matching key binding for
          * the given `KeyboardEvent` if one can be found.
          * 
-         * If a matching binding is found on the event's target or one of its
+         * If a matching binding is found on the event"s target or one of its
          * ancestors, `.preventDefault()` is called on the keyboard event and the
-         * binding's command is emitted as a custom event on the matching element.
+         * binding"s command is emitted as a custom event on the matching element.
          * 
-         * If the matching binding's command is 'native!', the method will terminate
+         * If the matching binding"s command is "native!", the method will terminate
          * without calling `.preventDefault()` on the keyboard event, allowing the
          * browser to handle it as normal.
          * 
-         * If the matching binding's command is 'unset!', the search will continue from
-         * the current element's parent.
+         * If the matching binding"s command is "unset!", the search will continue from
+         * the current element"s parent.
          * 
-         * If the matching binding's command is 'abort!', the search will terminate
+         * If the matching binding"s command is "abort!", the search will terminate
          * without dispatching a command event.
          * 
-         * If the event's target is `document.body`, it will be treated as if its
+         * If the event"s target is `document.body`, it will be treated as if its
          * target is `.defaultTarget` if that property is assigned on the keymap.
-         * @param event? - A `KeyboardEvent` of type 'keydown' 
+         * @param event? - A `KeyboardEvent` of type "keydown" 
          */
         handleKeyboardEvent(event? : any) : void;
     
         /**
          * Translate a keydown event to a keystroke string.
-         * @param event? - A `KeyboardEvent` of type 'keydown'
+         * @param event? - A `KeyboardEvent` of type "keydown"
          * Returns a {String} describing the keystroke.
          */
         keystrokeForKeyboardEvent(event? : any) : string;
@@ -312,7 +312,7 @@ declare module AtomKeymap {
     
         /**
          * Find the matching bindings among the given candidates for the given target,
-         * ordered by specificity. Does not traverse up the target's ancestors. This is
+         * ordered by specificity. Does not traverse up the target"s ancestors. This is
          * used by {::handleKeyboardEvent} to find a matching binding when there are no
          * partially-matching bindings. 
          * This field or method was marked private by atomdoc. Use with caution.
@@ -346,7 +346,7 @@ declare module AtomKeymap {
     
         /**
          * After we match a binding, we call this method to dispatch a custom event
-         * based on the binding's command. 
+         * based on the binding"s command. 
          * This field or method was marked private by atomdoc. Use with caution.
          */
         dispatchCommandEvent(command? : string, target? : any, keyboardEvent? : any) : CommandEvent;

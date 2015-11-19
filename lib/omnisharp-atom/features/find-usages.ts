@@ -1,9 +1,9 @@
 import {CompositeDisposable, Observable, Subject, Disposable} from "rx";
-import Omni = require('../../omni-sharp-server/omni');
+import Omni = require("../../omni-sharp-server/omni");
 import {dock} from "../atom/dock";
 import {FindWindow} from "../views/find-pane-view";
 
-class FindUsages implements OmniSharp.IFeature {
+class FindUsages implements IFeature {
     private disposable: Rx.CompositeDisposable;
     private window: Rx.CompositeDisposable;
     public selectedIndex: number = 0;
@@ -20,7 +20,7 @@ class FindUsages implements OmniSharp.IFeature {
     public activate() {
         this.disposable = new CompositeDisposable();
 
-        var observable = Observable.merge(
+        const observable = Observable.merge(
             // Listen to find usages
             Omni.listener.findusages,
             // We also want find implementations, where we found more than one
@@ -31,7 +31,7 @@ class FindUsages implements OmniSharp.IFeature {
             .map(z => <OmniSharp.Models.DiagnosticLocation[]>z.response.QuickFixes || [])
             .share();
 
-        var updated = Observable.ofObjectChanges(this);
+        const updated = Observable.ofObjectChanges(this);
 
         this.observe = {
             find: observable,
@@ -50,26 +50,26 @@ class FindUsages implements OmniSharp.IFeature {
             Omni.request(solution => solution.findimplementations({}));
         }));
 
-        this.disposable.add(atom.commands.add("atom-workspace", 'omnisharp-atom:next-usage', () => {
+        this.disposable.add(atom.commands.add("atom-workspace", "omnisharp-atom:next-usage", () => {
             this.updateSelectedItem(this.selectedIndex + 1);
         }));
 
-        this.disposable.add(atom.commands.add("atom-workspace", 'omnisharp-atom:go-to-usage', () => {
+        this.disposable.add(atom.commands.add("atom-workspace", "omnisharp-atom:go-to-usage", () => {
             if (this.usages[this.selectedIndex])
                 Omni.navigateTo(this.usages[this.selectedIndex]);
         }));
 
-        this.disposable.add(atom.commands.add("atom-workspace", 'omnisharp-atom:previous-usage', () => {
+        this.disposable.add(atom.commands.add("atom-workspace", "omnisharp-atom:previous-usage", () => {
             this.updateSelectedItem(this.selectedIndex - 1);
         }));
 
-        this.disposable.add(atom.commands.add("atom-workspace", 'omnisharp-atom:go-to-next-usage', () => {
+        this.disposable.add(atom.commands.add("atom-workspace", "omnisharp-atom:go-to-next-usage", () => {
             this.updateSelectedItem(this.selectedIndex + 1);
             if (this.usages[this.selectedIndex])
                 Omni.navigateTo(this.usages[this.selectedIndex]);
         }));
 
-        this.disposable.add(atom.commands.add("atom-workspace", 'omnisharp-atom:go-to-previous-usage', () => {
+        this.disposable.add(atom.commands.add("atom-workspace", "omnisharp-atom:go-to-previous-usage", () => {
             this.updateSelectedItem(this.selectedIndex - 1);
             if (this.usages[this.selectedIndex])
                 Omni.navigateTo(this.usages[this.selectedIndex]);
@@ -110,7 +110,7 @@ class FindUsages implements OmniSharp.IFeature {
     private ensureWindowIsCreated() {
         if (!this.window) {
             this.window = new CompositeDisposable();
-            var windowDisposable = dock.addWindow('find', 'Find', FindWindow, {
+            const windowDisposable = dock.addWindow("find", "Find", FindWindow, {
                 scrollTop: () => this.scrollTop,
                 setScrollTop: (scrollTop) => this.scrollTop = scrollTop,
                 findUsages: this
@@ -136,7 +136,7 @@ class FindUsages implements OmniSharp.IFeature {
     }
 
     public required = true;
-    public title = 'Find Usages / Go To Implementations';
-    public description = 'Adds support to find usages, and go to implementations';
+    public title = "Find Usages / Go To Implementations";
+    public description = "Adds support to find usages, and go to implementations";
 }
-export var findUsages = new FindUsages;
+export const findUsages = new FindUsages;

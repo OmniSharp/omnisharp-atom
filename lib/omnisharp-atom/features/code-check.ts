@@ -1,13 +1,13 @@
-import _ = require('lodash');
+import * as _ from "lodash";
 import {CompositeDisposable, Observable, ReplaySubject, Subject, Disposable} from "rx";
-import Omni = require('../../omni-sharp-server/omni');
-var currentlyEnabled = false;
+import Omni = require("../../omni-sharp-server/omni");
+const currentlyEnabled = false;
 import {dock} from "../atom/dock";
-import {CodeCheckOutputWindow, ICodeCheckOutputWindowProps} from '../views/codecheck-output-pane-view';
+import {CodeCheckOutputWindow, ICodeCheckOutputWindowProps} from "../views/codecheck-output-pane-view";
 import {DriverState} from "omnisharp-client";
 import {reloadWorkspace} from "./reload-workspace";
 
-class CodeCheck implements OmniSharp.IFeature {
+class CodeCheck implements IFeature {
     private disposable: Rx.CompositeDisposable;
 
     public displayDiagnostics: OmniSharp.Models.DiagnosticLocation[] = [];
@@ -22,33 +22,33 @@ class CodeCheck implements OmniSharp.IFeature {
         this._fullCodeCheck = new Subject<any>();
         this.disposable.add(this._fullCodeCheck);
 
-        this.disposable.add(atom.commands.add("atom-workspace", 'omnisharp-atom:next-diagnostic', () => {
+        this.disposable.add(atom.commands.add("atom-workspace", "omnisharp-atom:next-diagnostic", () => {
             this.updateSelectedItem(this.selectedIndex + 1);
         }));
 
-        this.disposable.add(atom.commands.add("atom-workspace", 'omnisharp-atom:go-to-diagnostic', () => {
+        this.disposable.add(atom.commands.add("atom-workspace", "omnisharp-atom:go-to-diagnostic", () => {
             if (this.displayDiagnostics[this.selectedIndex])
                 Omni.navigateTo(this.displayDiagnostics[this.selectedIndex]);
         }));
 
-        this.disposable.add(atom.commands.add("atom-workspace", 'omnisharp-atom:previous-diagnostic', () => {
+        this.disposable.add(atom.commands.add("atom-workspace", "omnisharp-atom:previous-diagnostic", () => {
             this.updateSelectedItem(this.selectedIndex - 1);
         }));
 
-        this.disposable.add(atom.commands.add("atom-workspace", 'omnisharp-atom:go-to-next-diagnostic', () => {
+        this.disposable.add(atom.commands.add("atom-workspace", "omnisharp-atom:go-to-next-diagnostic", () => {
             this.updateSelectedItem(this.selectedIndex + 1);
             Omni.navigateTo(this.displayDiagnostics[this.selectedIndex]);
         }));
 
-        this.disposable.add(atom.commands.add("atom-workspace", 'omnisharp-atom:go-to-previous-diagnostic', () => {
+        this.disposable.add(atom.commands.add("atom-workspace", "omnisharp-atom:go-to-previous-diagnostic", () => {
             this.updateSelectedItem(this.selectedIndex - 1);
             Omni.navigateTo(this.displayDiagnostics[this.selectedIndex]);
         }));
 
         this.disposable.add(Omni.eachEditor((editor, cd) => {
-            var subject = new Subject<any>();
+            const subject = new Subject<any>();
 
-            var o = subject
+            const o = subject
                 .debounce(500)
                 .where(() => !editor.isDestroyed())
                 .flatMap(() => this._doCodeCheck(editor))
@@ -56,7 +56,7 @@ class CodeCheck implements OmniSharp.IFeature {
                 .share();
 
             this._editorSubjects.set(editor, () => {
-                var result = o.take(1);
+                const result = o.take(1);
                 subject.onNext(null);
                 return result;
             });
@@ -84,13 +84,13 @@ class CodeCheck implements OmniSharp.IFeature {
             this.selectedIndex = 0;
         }));
 
-        this.disposable.add(dock.addWindow('errors', 'Errors & Warnings', CodeCheckOutputWindow, {
+        this.disposable.add(dock.addWindow("errors", "Errors & Warnings", CodeCheckOutputWindow, {
             scrollTop: () => this.scrollTop,
             setScrollTop: (scrollTop) => this.scrollTop = scrollTop,
             codeCheck: this
         }));
 
-        var started = 0, finished = 0;
+        const started = 0, finished = 0;
         this.disposable.add(Observable.combineLatest(
             Omni.listener.packageRestoreStarted.map(x => started++),
             Omni.listener.packageRestoreFinished.map(x => finished++),
@@ -104,7 +104,7 @@ class CodeCheck implements OmniSharp.IFeature {
             }));
 
         this.disposable.add(Omni.listener.packageRestoreFinished.debounce(3000).subscribe(() => this.doFullCodeCheck()));
-        this.disposable.add(atom.commands.add('atom-workspace', 'omnisharp-atom:code-check', () => this.doFullCodeCheck()));
+        this.disposable.add(atom.commands.add("atom-workspace", "omnisharp-atom:code-check", () => this.doFullCodeCheck()));
 
         this.disposable.add(this._fullCodeCheck
             .concatMap(() => reloadWorkspace.reloadWorkspace()
@@ -153,8 +153,8 @@ class CodeCheck implements OmniSharp.IFeature {
     }
 
     public required = true;
-    public title = 'Diagnostics';
-    public description = 'Support for diagnostic errors.';
+    public title = "Diagnostics";
+    public description = "Support for diagnostic errors.";
 }
 
-export var codeCheck = new CodeCheck;
+export const codeCheck = new CodeCheck;

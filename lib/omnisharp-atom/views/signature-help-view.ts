@@ -8,8 +8,8 @@ function _d(cb: (value: Function) => Function) {
     }
 }
 
-var parseString = (function() {
-    var parser = new DOMParser();
+const parseString = (function() {
+    const parser = new DOMParser();
 
     return function(xml: string) {
         return parser.parseFromString(xml, "text/xml");
@@ -35,26 +35,26 @@ export class SignatureView extends HTMLDivElement { /* implements WebComponent *
         this._lastIndex = -1;
         this._editorLineHeight = 0;
 
-        this._inner = document.createElement('div');
-        this._label = document.createElement('span');
-        this._documentation = document.createElement('div');
-        this._parameterDocumentation = document.createElement('div');
-        this._parameterDocumentation.style.marginLeft = '2.4em';
-        this._arrows = document.createElement('span');
-        this._parameters = document.createElement('span');
-        this._count = document.createElement('span');
+        this._inner = document.createElement("div");
+        this._label = document.createElement("span");
+        this._documentation = document.createElement("div");
+        this._parameterDocumentation = document.createElement("div");
+        this._parameterDocumentation.style.marginLeft = "2.4em";
+        this._arrows = document.createElement("span");
+        this._parameters = document.createElement("span");
+        this._count = document.createElement("span");
         this._parametersList = [];
 
-        this.classList.add('tooltip');
-        this._inner.classList.add('tooltip-inner');
+        this.classList.add("tooltip");
+        this._inner.classList.add("tooltip-inner");
 
         this._setupArrows();
 
-        var open = document.createElement('span');
-        open.innerText = '(';
+        const open = document.createElement("span");
+        open.innerText = "(";
 
-        var close = document.createElement('span');
-        close.innerText = ')';
+        const close = document.createElement("span");
+        close.innerText = ")";
 
         this.appendChild(this._inner);
         this._inner.appendChild(this._documentation);
@@ -66,11 +66,11 @@ export class SignatureView extends HTMLDivElement { /* implements WebComponent *
         this._inner.appendChild(this._parameters);
         this._inner.appendChild(close);
 
-        var open = document.createElement('span');
-        open.innerText = ' [';
+        const open = document.createElement("span");
+        open.innerText = " [";
 
-        var close = document.createElement('span');
-        close.innerText = ']';
+        const close = document.createElement("span");
+        close.innerText = "]";
 
         this._inner.appendChild(open);
         this._inner.appendChild(this._count);
@@ -96,14 +96,14 @@ export class SignatureView extends HTMLDivElement { /* implements WebComponent *
     }
 
     private _setupArrows() {
-        var up = document.createElement('a');
-        up.classList.add('icon-arrow-up');
-        up.href = '#';
+        const up = document.createElement("a");
+        up.classList.add("icon-arrow-up");
+        up.href = "#";
         up.onclick = () => this.moveIndex(-1);
 
-        var down = document.createElement('a');
-        down.classList.add('icon-arrow-down');
-        down.href = '#';
+        const down = document.createElement("a");
+        down.classList.add("icon-arrow-down");
+        down.href = "#";
         down.onclick = () => this.moveIndex(1);
 
         this._arrows.appendChild(up);
@@ -129,9 +129,9 @@ export class SignatureView extends HTMLDivElement { /* implements WebComponent *
             }
         }
 
-        var signature = member.Signatures[this._selectedIndex];
+        const signature = member.Signatures[this._selectedIndex];
         if (signature.Documentation)
-            var docs = parseString(signature.Documentation);
+            const docs = parseString(signature.Documentation);
 
         if (this._lastIndex !== this._selectedIndex) {
             this._lastIndex = this._selectedIndex;
@@ -141,41 +141,41 @@ export class SignatureView extends HTMLDivElement { /* implements WebComponent *
                 this._documentation.innerText = signature.Documentation;
 
                 if (docs && signature.Documentation) {
-                    var s: NodeListOf<HTMLElement> = <any>docs.getElementsByTagName('summary');
+                    const s: NodeListOf<HTMLElement> = <any>docs.getElementsByTagName("summary");
                     if (s.length) {
-                        var summary = _.trim((s[0]).innerHTML);
+                        const summary = _.trim((s[0]).innerHTML);
                         this._documentation.innerText = summary;
                     } else {
-                        this._documentation.innerText = '';
-                        this._documentation.style.display = 'none';
+                        this._documentation.innerText = "";
+                        this._documentation.style.display = "none";
                     }
 
-                    this._documentation.style.display = '';
+                    this._documentation.style.display = "";
                 } else {
-                    this._documentation.innerText = '';
-                    this._documentation.style.display = 'none';
+                    this._documentation.innerText = "";
+                    this._documentation.style.display = "none";
                 }
 
                 if (member.Signatures.length > 1) {
-                    this._arrows.style.display = '';
+                    this._arrows.style.display = "";
                 } else {
-                    this._arrows.style.display = 'none';
+                    this._arrows.style.display = "none";
                 }
             });
 
             this._parametersList = [];
 
             write(() => {
-                var parameters = signature.Parameters;
-                var parametersElement = document.createElement('span');
+                const parameters = signature.Parameters;
+                const parametersElement = document.createElement("span");
                 _.each(parameters, (parameter, i) => {
-                    var view: SignatureParameterView = <any>new exports.SignatureParameterView();
+                    const view: SignatureParameterView = <any>new exports.SignatureParameterView();
                     view.setMember(parameter);
                     view.setCurrent(i === member.ActiveParameter);
 
                     if (i > 0) {
-                        var comma = document.createElement('span');
-                        comma.innerText = ', ';
+                        const comma = document.createElement("span");
+                        comma.innerText = ", ";
                         parametersElement.appendChild(comma);
                     }
 
@@ -183,7 +183,7 @@ export class SignatureView extends HTMLDivElement { /* implements WebComponent *
                     this._parametersList.push(view);
                 });
 
-                var currentElement = this._parameters;
+                const currentElement = this._parameters;
                 this._inner.insertBefore(parametersElement, currentElement);
                 this._inner.removeChild(currentElement);
 
@@ -196,25 +196,25 @@ export class SignatureView extends HTMLDivElement { /* implements WebComponent *
             });
         }
 
-        var currentParameter = signature.Parameters[member.ActiveParameter];
+        const currentParameter = signature.Parameters[member.ActiveParameter];
         read(() => {
             if (signature.Documentation) {
-                var paramDocs = parseString(currentParameter.Documentation);
+                const paramDocs = parseString(currentParameter.Documentation);
 
                 if (paramDocs) {
-                    var s: NodeListOf<HTMLElement> = <any>paramDocs.getElementsByTagName('summary');
+                    const s: NodeListOf<HTMLElement> = <any>paramDocs.getElementsByTagName("summary");
                     if (s.length) {
-                        var summaryElement = s[0];
+                        const summaryElement = s[0];
                         if (summaryElement)
-                            var summary = _.trim(summaryElement.innerHTML);
+                            const summary = _.trim(summaryElement.innerHTML);
                     }
                 }
             }
 
             if (docs && !summary) {
-                var s: NodeListOf<HTMLElement> = <any>docs.getElementsByTagName('param');
+                const s: NodeListOf<HTMLElement> = <any>docs.getElementsByTagName("param");
                 if (s.length) {
-                    var param = <HTMLElement>_.find(s, x => x.attributes['name'] && x.attributes['name'].value === currentParameter.Name);
+                    const param = <HTMLElement>_.find(s, x => x.attributes["name"] && x.attributes["name"].value === currentParameter.Name);
                     if (param) {
                         summary = _.trim(param.innerHTML);
                     }
@@ -225,7 +225,7 @@ export class SignatureView extends HTMLDivElement { /* implements WebComponent *
                 if (summary) {
                     this._parameterDocumentation.innerText = summary;
                 } else {
-                    this._parameterDocumentation.innerText = '';
+                    this._parameterDocumentation.innerText = "";
                 }
             }
         });
@@ -239,14 +239,14 @@ export class SignatureView extends HTMLDivElement { /* implements WebComponent *
     }
 }
 
-(<any>exports).SignatureView = (<any>document).registerElement('omnisharp-signature-help', { prototype: SignatureView.prototype });
+(<any>exports).SignatureView = (<any>document).registerElement("omnisharp-signature-help", { prototype: SignatureView.prototype });
 
 export class SignatureParameterView extends HTMLSpanElement { /* implements WebComponent */
     private _member: OmniSharp.Models.SignatureHelpParameter;
     private _label: HTMLSpanElement;
 
     public createdCallback() {
-        this._label = document.createElement('span');
+        this._label = document.createElement("span");
         this.appendChild(this._label);
     }
 
@@ -257,13 +257,13 @@ export class SignatureParameterView extends HTMLSpanElement { /* implements WebC
 
     public setCurrent(current: boolean) {
         read(() => {
-            if (!current && this.style.fontWeight === 'bold') {
-                write(() => this.style.fontWeight = '');
-            } else if (current && this.style.fontWeight !== 'bold') {
-                write(() => this.style.fontWeight = 'bold');
+            if (!current && this.style.fontWeight === "bold") {
+                write(() => this.style.fontWeight = "");
+            } else if (current && this.style.fontWeight !== "bold") {
+                write(() => this.style.fontWeight = "bold");
             }
         });
     }
 }
 
-(<any>exports).SignatureParameterView = (<any>document).registerElement('omnisharp-signature-parameter', { prototype: SignatureParameterView.prototype });
+(<any>exports).SignatureParameterView = (<any>document).registerElement("omnisharp-signature-parameter", { prototype: SignatureParameterView.prototype });

@@ -1,9 +1,9 @@
-import _ = require('lodash');
+import * as _ from "lodash";
 import {CompositeDisposable, Subject, Observable, Disposable} from "rx";
-import Omni = require('../../omni-sharp-server/omni')
+import Omni = require("../../omni-sharp-server/omni")
 import {dock} from "../atom/dock";
 import {TestResultsWindow} from "../views/test-results-window";
-import childProcess = require('child_process');
+import * as childProcess from "child_process";
 
 // Using this enum as the Omnisharp one is freaking out.
 enum TestCommandType {
@@ -12,23 +12,23 @@ enum TestCommandType {
     Single = 2
 }
 
-class RunTests implements OmniSharp.IFeature {
+class RunTests implements IFeature {
     private disposable: Rx.CompositeDisposable;
     private window: Rx.CompositeDisposable;
-    public testResults: OmniSharp.OutputMessage[] = [];
+    public testResults: OutputMessage[] = [];
     private lastRun: OmniSharp.Models.GetTestCommandResponse;
 
     public observe: {
         updated: Observable<Rx.ObjectObserveChange<RunTests>>;
-        output: Observable<OmniSharp.OutputMessage[]>;
+        output: Observable<OutputMessage[]>;
     };
 
     public activate() {
         this.disposable = new CompositeDisposable();
 
-        var updated = Observable.ofObjectChanges(this);
+        const updated = Observable.ofObjectChanges(this);
 
-        var output = Observable.ofArrayChanges(this.testResults).map(x => this.testResults);
+        const output = Observable.ofArrayChanges(this.testResults).map(x => this.testResults);
         this.observe = {
             updated: updated,
             get output() { return output; }
@@ -39,19 +39,19 @@ class RunTests implements OmniSharp.IFeature {
             this.executeTests(data.response);
         }));
 
-        this.disposable.add(Omni.addTextEditorCommand('omnisharp-atom:run-all-tests', () => {
+        this.disposable.add(Omni.addTextEditorCommand("omnisharp-atom:run-all-tests", () => {
             this.makeRequest(TestCommandType.All);
         }));
 
-        this.disposable.add(Omni.addTextEditorCommand('omnisharp-atom:run-fixture-tests', () => {
+        this.disposable.add(Omni.addTextEditorCommand("omnisharp-atom:run-fixture-tests", () => {
             this.makeRequest(TestCommandType.Fixture);
         }));
 
-        this.disposable.add(Omni.addTextEditorCommand('omnisharp-atom:run-single-test', () => {
+        this.disposable.add(Omni.addTextEditorCommand("omnisharp-atom:run-single-test", () => {
             this.makeRequest(TestCommandType.Single);
         }));
 
-        this.disposable.add(Omni.addTextEditorCommand('omnisharp-atom:run-last-test', () => {
+        this.disposable.add(Omni.addTextEditorCommand("omnisharp-atom:run-last-test", () => {
             this.executeTests(this.lastRun);
         }));
     }
@@ -68,24 +68,24 @@ class RunTests implements OmniSharp.IFeature {
         this.testResults.length = 0;
         this.lastRun = response;
 
-        var child = childProcess.exec(response.TestCommand, { cwd: response.Directory });
+        const child = childProcess.exec(response.TestCommand, { cwd: response.Directory });
 
-        child.stdout.on('data', (data) => {
-            this.testResults.push({ message: data, logLevel: '' });
+        child.stdout.on("data", (data) => {
+            this.testResults.push({ message: data, logLevel: "" });
         });
 
-        child.stderr.on('data', (data) => {
-            this.testResults.push({ message: data, logLevel: 'fail' });
+        child.stderr.on("data", (data) => {
+            this.testResults.push({ message: data, logLevel: "fail" });
         });
 
-        dock.selectWindow('test-output');
+        dock.selectWindow("test-output");
     }
 
     private ensureWindowIsCreated() {
         if (!this.window) {
             this.window = new CompositeDisposable();
 
-            var windowDisposable = dock.addWindow('test-output', 'Test output', TestResultsWindow, {
+            const windowDisposable = dock.addWindow("test-output", "Test output", TestResultsWindow, {
                 runTests: this
             }, {
                     priority: 2000,
@@ -101,8 +101,8 @@ class RunTests implements OmniSharp.IFeature {
     }
 
     public required = true;
-    public title = 'Test Runner';
-    public description = 'Adds support for running tests within atom.';
+    public title = "Test Runner";
+    public description = "Adds support for running tests within atom.";
 }
 
-export var runTests = new RunTests;
+export const runTests = new RunTests;

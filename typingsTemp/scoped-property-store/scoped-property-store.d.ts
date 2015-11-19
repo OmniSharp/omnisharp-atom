@@ -71,7 +71,7 @@ declare module ScopedPropertyStore {
         /**
          * Add scoped properties to be queried with {::get}
          * @param source? - A string describing these properties to allow them to be removed later.
-         * @param propertiesBySelector? - An {Object} containing CSS-selectors mapping to {Objects} containing properties. For example: `{'.foo .bar': {x: 1, y: 2}`
+         * @param propertiesBySelector? - An {Object} containing CSS-selectors mapping to {Objects} containing properties. For example: `{".foo .bar": {x: 1, y: 2}`
          */
         addProperties(source? : any, propertiesBySelector? : Selector, options? : any) : void;
     
