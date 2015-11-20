@@ -1,5 +1,6 @@
 import {join} from "path";
 import {readFileSync} from "fs";
+import {CompositeDisposable} from "rx";
 
 module.exports = function(
     {testPaths, buildAtomEnvironment, buildDefaultApplicationDelegate}: {
@@ -31,7 +32,9 @@ module.exports = function(
         enablePersistence: false
     });
 
-    (<any>window).atom = atom;
+    (document as any).atom = atom;
+    (window as any).atom = atom;
+    (global as any).atom = atom;
 
     //const atomDiv = document.createElement("div");
     //atomDiv.style.display = "none";
@@ -49,15 +52,30 @@ module.exports = function(
     const mocha = new mochaCtor({
         ui: "bdd",
         reporter: "html",
+        grep: "format",
         timeout: 30000
     });
 
+    let cd: CompositeDisposable;
+
+    /* tslint:disable:variable-name */
+    const {SolutionManager} = require("../lib/omni-sharp-server/solution-manager");
+    /* tslint:enable:variable-name */
+
     (<any>mocha).suite.beforeEach(() => {
+        cd = new CompositeDisposable();
+
+        cd.add(SolutionManager.solutionObserver.errors.subscribe((error: any) => console.error(JSON.stringify(error))));
+        cd.add(SolutionManager.solutionObserver.events.subscribe((event: any) => console.info(`server event: ${JSON.stringify(event)}`)));
+        cd.add(SolutionManager.solutionObserver.requests.subscribe((r: any) => console.info(`request: ${JSON.stringify(r)}`)));
+        cd.add(SolutionManager.solutionObserver.responses.subscribe((r: any) => console.info(`response: ${JSON.stringify(r)}`)));
+
         process.chdir(fixtures[0]);
         atom.project.setPaths(<any>fixtures);
     });
 
     (<any>mocha).suite.afterEach(() => {
+        cd.dispose();
         atom.packages.deactivatePackages();
     });
 

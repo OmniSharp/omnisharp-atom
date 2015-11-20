@@ -5,7 +5,7 @@ import {ReactClientComponent} from "./react-client-component";
 import {solutionInformation} from "../atom/solution-information";
 import {ViewModel} from "../../omni-sharp-server/view-model";
 import {DriverState} from "omnisharp-client";
-import * as $ from "jquery";
+const $ : JQueryStatic = require("jquery");
 
 interface ICardState {
     model: ViewModel;

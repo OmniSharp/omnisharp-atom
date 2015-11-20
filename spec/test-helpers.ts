@@ -4,11 +4,6 @@ import {Observable} from "rx";
 import {CompositeDisposable, Disposable} from "rx";
 import {DriverState} from "omnisharp-client";
 
-SolutionManager.solutionObserver.errors.subscribe(error => console.error(JSON.stringify(error)));
-SolutionManager.solutionObserver.events.subscribe(event => console.info(`server event: ${JSON.stringify(event) }`));
-SolutionManager.solutionObserver.requests.subscribe(r => console.info(`request: ${JSON.stringify(r) }`));
-SolutionManager.solutionObserver.responses.subscribe(r => console.info(`response: ${JSON.stringify(r) }`));
-
 export function setupFeature(features: string[], unitTestMode = true) {
     let cd: CompositeDisposable;
     beforeEach(function(done) {

@@ -5,7 +5,7 @@ import {OmniSharp} from "../../omnisharp";
 import {CompositeDisposable, Observable, Disposable} from "rx";
 import {Omni} from "../../omni-sharp-server/omni";
 import {TooltipView} from "../views/tooltip-view";
-import * as $ from "jquery";
+const $ : JQueryStatic = require("jquery");
 const escape = require("escape-html");
 
 class TypeLookup implements IFeature {

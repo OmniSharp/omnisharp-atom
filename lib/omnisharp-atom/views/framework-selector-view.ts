@@ -3,7 +3,7 @@ import * as SpacePen from "atom-space-pen-views";
 import * as React from "react";
 import {ReactClientComponent} from "./react-client-component";
 import {frameworkSelector} from "../atom/framework-selector";
-import * as $ from "jquery";
+const $ : JQueryStatic = require("jquery");
 
 interface FrameworkSelectorState {
     frameworks?: OmniSharp.Models.DnxFramework[];

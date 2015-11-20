@@ -22,7 +22,7 @@ describe("Code Lens", () => {
                 const lenses = map.get(editor);
 
                 expect(lenses.size).to.be.eql(15);
-            }, null, done);
+            }, done, done);
     });
 
     it("should handle editor switching", (done) => {
@@ -34,6 +34,6 @@ describe("Code Lens", () => {
             .flatMap((ctx) => Omni.listener.currentfilemembersasflat.debounce(1000).take(1).map(() => ctx))
             .subscribe(({editor}) => {
                 expect(editor.getDecorations().length).to.be.greaterThan(9);
-            }, null, done);
+            }, done, done);
     });
 });

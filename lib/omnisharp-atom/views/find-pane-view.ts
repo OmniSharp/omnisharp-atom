@@ -4,7 +4,7 @@ const _ : _.LoDashStatic = require("lodash");
 import {Omni} from "../../omni-sharp-server/omni";
 import * as React from "react";
 import * as path from "path";
-import * as $ from "jquery";
+const $ : JQueryStatic = require("jquery");
 import {ReactClientComponent} from "./react-client-component";
 import {findUsages} from "../features/find-usages";
 

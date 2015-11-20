@@ -506,7 +506,7 @@ class SolutionInstanceManager {
                     const listView = new GenericSelectListView("",
                         slns.map(x => ({ displayName: x.path, name: x.path })),
                         (result: any) => {
-                            items.unshift(result);
+                            items.unshift(_.find(slns, z => z.path === result));
                             _.each(candidates, x => this._candidateFinderCache.add(x.path));
 
                             asyncResult.onCompleted();

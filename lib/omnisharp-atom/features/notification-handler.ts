@@ -3,7 +3,7 @@ const _ : _.LoDashStatic = require("lodash");
 import {Omni} from "../../omni-sharp-server/omni";
 import {CompositeDisposable} from "rx";
 import * as path from "path";
-import * as $ from "jquery";
+const $ : JQueryStatic = require("jquery");
 
 class NotificationHandler implements IFeature {
     private disposable: Rx.CompositeDisposable;

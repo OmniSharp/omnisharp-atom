@@ -1,6 +1,5 @@
 /// <reference path="../tsd.d.ts" />
 import {expect} from "chai";
-import {OmniSharp} from "../../lib/omnisharp.ts";
 import {Omni} from "../../lib/omni-sharp-server/omni";
 import {CompositeDisposable} from "rx";
 import {setupFeature, restoreBuffers} from "../test-helpers";
@@ -26,37 +25,48 @@ describe("Code Format", () => {
         const disposable = new CompositeDisposable();
         disposable.add(d);
         disposable.add({ dispose: done });
-        let e: Atom.TextEditor;
-        let request: OmniSharp.Models.FormatRangeRequest;
-        let response: OmniSharp.Models.FormatRangeResponse;
 
-        Omni.listener.formatRange
-            .do(r => request = r.request)
-            .do(r => response = r.response)
-            .take(1)
-            .toPromise();
-
+        let tries = 5;
         atom.workspace.open("simple/code-format/UnformattedClass.cs")
             .then((editor) => {
-                e = editor;
-                codeFormat.format();
-
-                return Omni.listener.formatRange
-                    .do(r => request = r.request)
-                    .take(1)
-                    .delay(400)
-                    .toPromise();
-            })
-            .then(() => {
-                expect(e.getPath()).to.be.eql(request.FileName);
-                const expected = `public class UnformattedClass
-{
-    public const int TheAnswer = 42;
-}
-`.replace(/\r|\n/g, "");
-                const result = e.getText().replace(/\r|\n/g, "");
-                expect(result).to.contain(expected);
-                disposable.dispose();
+                execute(editor);
             });
+
+
+        function execute(editor: Atom.TextEditor) {
+
+            var sub = Omni.listener.formatRange
+                .take(1)
+                .subscribe(({request}) => {
+
+                    expect(editor.getPath()).to.be.eql(request.FileName);
+                    const expected = `public class UnformattedClass{    public const int TheAnswer = 42;}`;
+                    const result = editor.getText().replace(/\r|\n/g, "");
+                    try {
+                        expect(result).to.contain(expected);
+                        tries = 0;
+                    } catch (e) {
+                        if (tries > 0) {
+                            execute(editor);
+                        } else {
+                            tries = -1;
+                            throw e;
+                        }
+                    } finally {
+                        if (tries === -1) {
+                            disposable.dispose();
+                            done(1);
+                        }
+                        if (tries === 0) {
+                            disposable.dispose();
+                            done();
+                        }
+                        tries--;
+                    }
+                });
+            codeFormat.format();
+
+            return sub;
+        }
     });
 });
