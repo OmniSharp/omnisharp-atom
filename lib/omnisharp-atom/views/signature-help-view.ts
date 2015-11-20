@@ -1,7 +1,7 @@
 /* tslint:disable:no-string-literal */
 import {OmniSharp} from "../../omnisharp";
 import {read, write} from "fastdom";
-import * as _ from "lodash";
+const _ : _.LoDashStatic = require("lodash");
 
 const parseString = (function() {
     const parser = new DOMParser();

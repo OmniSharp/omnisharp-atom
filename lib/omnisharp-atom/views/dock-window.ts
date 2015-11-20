@@ -1,5 +1,5 @@
 //const Convert = require("ansi-to-html")
-import * as _ from "lodash";
+const _ : _.LoDashStatic = require("lodash");
 import {Observable,   CompositeDisposable, Subject} from "rx";
 import * as React from "react";
 import {ReactClientComponent} from "./react-client-component";

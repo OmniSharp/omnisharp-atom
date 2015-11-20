@@ -1,7 +1,7 @@
 import * as path from "path";
 import * as fs from "fs";
 import {Omni} from "../../omni-sharp-server/omni";
-import * as _ from "lodash";
+const _ : _.LoDashStatic = require("lodash");
 import {Observable, CompositeDisposable, Subject} from "rx";
 import {File} from "atom";
 import {ProjectViewModel} from "../../omni-sharp-server/project-view-model";
@@ -24,7 +24,6 @@ function projectLock(solution: Solution, project: ProjectViewModel<any>, filePat
 
     disposable.add(onDidChange);
     disposable.add(onWillThrowWatchError);
-    disposable.add(subject);
 
     return {
         observable: subject.throttle(30000).asObservable(),

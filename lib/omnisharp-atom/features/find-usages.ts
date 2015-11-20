@@ -15,7 +15,6 @@ class FindUsages implements IFeature {
         find: Observable<OmniSharp.Models.DiagnosticLocation[]>;
         open: Observable<boolean>;
         reset: Observable<boolean>;
-        updated: Observable<Rx.ObjectObserveChange<FindUsages>>;
     };
 
     public activate() {
@@ -32,15 +31,12 @@ class FindUsages implements IFeature {
             .map(z => <OmniSharp.Models.DiagnosticLocation[]>z.response.QuickFixes || [])
             .share();
 
-        const updated = Observable.ofObjectChanges(this);
-
         this.observe = {
             find: observable,
             // NOTE: We cannot do the same for find implementations because find implementation
             //      just goes to the item if only one comes back.
             open: Omni.listener.requests.where(z => !z.silent && z.command === "findusages").map(() => true),
             reset: Omni.listener.requests.where(z => !z.silent && (z.command === "findimplementations" || z.command === "findusages")).map(() => true),
-            updated: updated,
         };
 
         this.disposable.add(Omni.addTextEditorCommand("omnisharp-atom:find-usages", () => {

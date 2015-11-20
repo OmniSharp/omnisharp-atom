@@ -1,5 +1,5 @@
 import {Observable, CompositeDisposable, Disposable} from "rx";
-import * as _ from "lodash";
+const _ : _.LoDashStatic = require("lodash");
 import {SolutionStatusCard, ICardProps} from "../views/solution-status-view";
 import {ViewModel} from "../../omni-sharp-server/view-model";
 import {SolutionManager} from "../../omni-sharp-server/solution-manager";
@@ -15,7 +15,6 @@ class SolutionInformation implements IFeature {
 
     public observe: {
         solutions: Observable<ViewModel[]>;
-        updates: Observable<Rx.ObjectObserveChange<SolutionInformation>>;
     };
 
     public solutions: ViewModel[] = [];
@@ -24,7 +23,7 @@ class SolutionInformation implements IFeature {
         this.disposable = new CompositeDisposable();
 
         const solutions = this.setupSolutions();
-        this.observe = { solutions, updates: Observable.ofObjectChanges(this) };
+        this.observe = { solutions };
 
         this.disposable.add(SolutionManager.activeSolution.subscribe(model => this.selectedIndex = _.findIndex(SolutionManager.activeSolutions, { index: model.index })));
 
@@ -82,17 +81,12 @@ class SolutionInformation implements IFeature {
     }
 
     private setupSolutions() {
-        const solutions = Observable.ofArrayChanges(SolutionManager.activeSolutions)
-            .map(() => SolutionManager.activeSolutions)
-            .startWith(SolutionManager.activeSolutions)
-            .map(x=> x.map(z => z.model))
-            .share();
-
-        this.disposable.add(solutions.subscribe(o => {
+        var vms = SolutionManager.observeActiveSolutions.map(x => x.map(z => z.model));
+        this.disposable.add(vms.subscribe(o => {
             this.solutions = o;
             this.updateSelectedItem(this.selectedIndex);
         }));
-        return solutions;
+        return vms;
     }
 
     private createSolutionCard() {

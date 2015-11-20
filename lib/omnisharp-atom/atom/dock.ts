@@ -1,5 +1,5 @@
 import {CompositeDisposable, SingleAssignmentDisposable, Disposable} from "rx";
-import * as _ from "lodash";
+const _ : _.LoDashStatic = require("lodash");
 import {DockWindow, DockPane, DockButton, IDockWindowProps, DocPaneOptions, DocButtonOptions} from "../views/dock-window";
 import * as React from "react";
 

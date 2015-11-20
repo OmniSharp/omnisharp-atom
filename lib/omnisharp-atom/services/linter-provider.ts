@@ -3,7 +3,7 @@ import {Omni} from "../../omni-sharp-server/omni";
 /* tslint:disable:variable-name */
 const Range = require("atom").Range;
 /* tslint:enable:variable-name */
-import * as _ from "lodash";
+const _ : _.LoDashStatic = require("lodash");
 import {Observable, CompositeDisposable} from "rx";
 import {codeCheck} from "../features/code-check";
 

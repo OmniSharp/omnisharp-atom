@@ -1,5 +1,5 @@
 import {OmniSharp} from "../../omnisharp";
-import * as _ from "lodash";
+const _ : _.LoDashStatic = require("lodash");
 import {CompositeDisposable, Observable} from "rx";
 import {Omni} from "../../omni-sharp-server/omni";
 import * as $ from "jquery";

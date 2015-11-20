@@ -4,7 +4,7 @@ const Convert = require("ansi-to-html");
 /* tslint:enable:variable-name */
 import {Observable} from "rx";
 import * as React from "react";
-import * as _ from "lodash";
+const _ : _.LoDashStatic = require("lodash");
 import {ReactClientComponent} from "./react-client-component";
 import {runTests} from "../features/run-tests";
 

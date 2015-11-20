@@ -1,4 +1,4 @@
-import * as _ from "lodash";
+const _ : _.LoDashStatic = require("lodash");
 import {basename} from "path";
 import * as React from "react";
 import {ReactClientComponent} from "./react-client-component";

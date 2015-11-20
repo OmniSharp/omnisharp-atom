@@ -1,4 +1,4 @@
-import * as _ from "lodash";
+const _ : _.LoDashStatic = require("lodash");
 import {OmniSharp} from "../omnisharp";
 import {Observable, Subject, CompositeDisposable} from "rx";
 import {ClientV2, DriverState, OmnisharpClientOptions} from "omnisharp-client";
@@ -157,7 +157,6 @@ export class Solution extends ClientV2 {
             this._solutionDisposable.add(branchSubject
                 .distinctUntilChanged()
                 .subscribe(() => atom.commands.dispatch(atom.views.getView(atom.workspace), "omnisharp-atom:restart-server")));
-            this._solutionDisposable.add(branchSubject);
 
             this._solutionDisposable.add(this.repository.onDidChangeStatuses(() => {
                 branchSubject.onNext((<any>this.repository).branch);

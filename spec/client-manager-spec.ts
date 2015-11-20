@@ -18,7 +18,7 @@ describe("OmniSharp Atom", () => {
     it("shows a list of solutions when it detects many sln files", function(done) {
         atom.workspace.open("two-solution/class.cs")
             .then(editor => SolutionManager.getSolutionForEditor(editor).toPromise())
-            .then(done);
+            .then(() => done());
 
         function checkPanel() {
             const panels = atom.workspace.getModalPanels();

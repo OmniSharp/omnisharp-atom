@@ -9,8 +9,7 @@
     "removeComments": true,
     "noLib": false,
     "preserveConstEnums": true,
-    "experimentalDecorators": true,
-    "experimentalAsyncFunctions": true
+    "experimentalDecorators": true
   },
   "compileOnSave": true,
   "formatCodeOptions": {

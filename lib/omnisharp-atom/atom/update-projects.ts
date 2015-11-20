@@ -1,5 +1,5 @@
 import {CompositeDisposable, Observable} from "rx";
-import * as _ from "lodash";
+const _ : _.LoDashStatic = require("lodash");
 import {Omni} from "../../omni-sharp-server/omni";
 import {ProjectViewModel} from "../../omni-sharp-server/project-view-model";
 import * as fs from "fs";

@@ -1,7 +1,7 @@
 import {OmniSharp} from "../../omnisharp";
 import {CompositeDisposable, Observable, Disposable, Subject} from "rx";
 import {Omni} from "../../omni-sharp-server/omni";
-import * as _ from "lodash";
+const _ : _.LoDashStatic = require("lodash");
 import {SignatureView} from "../views/signature-help-view";
 
 interface IDecoration {

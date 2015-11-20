@@ -1,4 +1,4 @@
-import * as _ from "lodash";
+const _ : _.LoDashStatic = require("lodash");
 import {OmniSharp} from "../omnisharp";
 import {Solution} from "./solution";
 import {DriverState, OmnisharpClientStatus} from "omnisharp-client";

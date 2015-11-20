@@ -22,7 +22,7 @@ export function setupFeature(features: string[], unitTestMode = true) {
         atom.packages.activatePackage("language-csharp")
             .then(() => atom.packages.activatePackage("omnisharp-atom"))
             .then((pack: Atom.Package) => pack.mainModule._activated.toPromise())
-            .then(done);
+            .then(() => done());
     });
 
     afterEach(() => {

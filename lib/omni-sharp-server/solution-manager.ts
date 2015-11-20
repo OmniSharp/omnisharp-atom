@@ -1,4 +1,4 @@
-import * as _ from "lodash";
+const _ : _.LoDashStatic = require("lodash");
 import * as path from "path";
 import {Observable, AsyncSubject, RefCountDisposable, Disposable, CompositeDisposable, BehaviorSubject, Scheduler, Subject} from "rx";
 import {Solution} from "./solution";
@@ -32,6 +32,10 @@ class SolutionInstanceManager {
     // These extensions only support server per folder, unlike normal cs files.
     private _specialCaseExtensions = [".csx", /*".cake"*/];
     public get __specialCaseExtensions() { return this._specialCaseExtensions; }
+
+    private _subjectActiveSolutions = new Subject<Solution[]>();
+    private _observeActiveSolutions = this._subjectActiveSolutions.shareReplay(1);
+    public get observeActiveSolutions() { return this._observeActiveSolutions; }
 
     private _activeSolutions: Solution[] = [];
     public get activeSolutions() {
@@ -177,6 +181,7 @@ class SolutionInstanceManager {
         cd.add(Disposable.create(() => {
             this._solutionDisposable.remove(cd);
             _.pull(this._activeSolutions, solution);
+            this._subjectActiveSolutions.onNext(this._activeSolutions.slice());
             this._solutions.delete(candidate);
 
             if (this._temporarySolutions.has(solution)) {
@@ -203,6 +208,7 @@ class SolutionInstanceManager {
         }
 
         this._activeSolutions.push(solution);
+        this._subjectActiveSolutions.onNext(this._activeSolutions.slice());
         if (this._activeSolutions.length === 1)
             this._activeSolution.onNext(solution);
 
@@ -565,7 +571,7 @@ class SolutionInstanceManager {
         // Look for the closest match first.
         mappedLocations.reverse();
 
-        const intersect: string = (<any>_<string[]>(mappedLocations)).intersection(validSolutionPaths).first();
+        const intersect: string = _.intersection(mappedLocations, validSolutionPaths)[0];
         if (intersect) {
             return intersect;
         }

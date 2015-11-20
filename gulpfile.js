@@ -28,8 +28,9 @@ function tsTranspile() {
         }
 
         var res = ts.transpile(file.contents.toString(), {
-            module: ts.ModuleKind.CommonJS
-        });
+            module: ts.ModuleKind.ES6,
+            target: ts.ScriptTarget.ES6
+        }, file.path);
 
         file.contents = new Buffer(res);
         file.path = gutil.replaceExtension(file.path, '.js');

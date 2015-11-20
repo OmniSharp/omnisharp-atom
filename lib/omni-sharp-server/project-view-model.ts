@@ -1,5 +1,5 @@
 import {OmniSharp, IProjectViewModel} from "../omnisharp";
-import * as _ from "lodash";
+const _ : _.LoDashStatic = require("lodash");
 import {Observable, ReplaySubject} from "rx";
 
 const projectFactories: { [key: string]: { new (project: any, solutionPath: string): any; }; } = {

@@ -1,6 +1,6 @@
 /* tslint:disable:no-string-literal */
 import {CompositeDisposable, Observable} from "rx";
-import * as _ from "lodash";
+const _ : _.LoDashStatic = require("lodash");
 import {Omni} from "../../omni-sharp-server/omni";
 import {OmnisharpClientStatus} from "omnisharp-client";
 import {server} from "../atom/server-information";

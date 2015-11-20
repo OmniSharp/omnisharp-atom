@@ -1,4 +1,4 @@
-import * as _ from "lodash";
+const _ : _.LoDashStatic = require("lodash");
 import {Observable, AsyncSubject, CompositeDisposable, Disposable} from "rx";
 import * as path from "path";
 import * as fs from "fs";

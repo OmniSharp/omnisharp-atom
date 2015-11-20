@@ -13,7 +13,6 @@ class ServerInformation implements IFeature {
         output: Observable<OutputMessage[]>;
         projects: Observable<IProjectViewModel[]>;
         model: Observable<ViewModel>;
-        updates: Observable<Rx.ObjectObserveChange<ServerInformation>>;
     };
 
     public model: ViewModel;
@@ -26,7 +25,7 @@ class ServerInformation implements IFeature {
         const projects = this.setupProjects();
 
         this.disposable.add(Omni.activeModel.subscribe(z => this.model = z));
-        this.observe = { status, output, projects, model: Omni.activeModel, updates: Observable.ofObjectChanges(this) };
+        this.observe = { status, output, projects, model: Omni.activeModel };
 
         this.disposable.add(dock.addWindow("output", "Omnisharp output", OutputWindow, {}));
     }

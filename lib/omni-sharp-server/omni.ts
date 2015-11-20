@@ -1,7 +1,7 @@
 import {helpers, Observable, ReplaySubject, Subject, CompositeDisposable, BehaviorSubject, Disposable, Scheduler} from "rx";
 import {SolutionManager} from "./solution-manager";
 import {Solution} from "./solution";
-import * as _ from "lodash";
+const _ : _.LoDashStatic = require("lodash");
 import {basename} from "path";
 import {DriverState} from "omnisharp-client";
 import {ProjectViewModel} from "./project-view-model";
@@ -242,9 +242,6 @@ class OmniManager implements Rx.IDisposable {
                 cb();
             }
         }));
-
-        disposable.add(subject);
-        disposable.add(editorSubject);
 
         return Observable.merge(subject, Observable.defer(() => Observable.from(editors))).delay(50);
     }

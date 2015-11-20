@@ -122,9 +122,8 @@ class CommandRunner implements IFeature {
             this._processesChanged.onNext(this.processes);
         }));
 
-        const objectChanges = Observable.ofObjectChanges(process).where(z => z.name === "started");
-        process.disposable.add(objectChanges.where(z => z.object.started).delay(1000).subscribe(() => this._processesChanged.onNext(this.processes)));
-        process.disposable.add(objectChanges.where(z => !z.object.started).subscribe(() => this._processesChanged.onNext(this.processes)));
+        process.disposable.add(process.observeStarted.where(z => z).delay(1000).subscribe(() => this._processesChanged.onNext(this.processes)));
+        process.disposable.add(process.observeStarted.where(z => !z).subscribe(() => this._processesChanged.onNext(this.processes)));
 
         process.start();
     }
@@ -152,6 +151,9 @@ export class RunProcess {
     public update = new Subject<{ message: string }[]>();
     public output: { message: string }[] = [];
     public started = false;
+
+    public observeStarted = new Subject<boolean>();
+
     private id: string;
     private process: any;
 
@@ -190,6 +192,7 @@ export class RunProcess {
         this.output.push({ message: `Starting ${runtime} ${args.join(" ")}` });
 
         this.started = true;
+        this.observeStarted.onNext(this.started);
 
         const process = this.process = spawn(runtime, args, {
             cwd: dirname(this.project.path),
@@ -219,6 +222,7 @@ export class RunProcess {
 
         const disposable = Disposable.create(() => {
             this.started = false;
+            this.observeStarted.onNext(this.started);
             this.process.removeAllListeners();
             this.stop();
             this.disposable.remove(disposable);
@@ -227,6 +231,7 @@ export class RunProcess {
 
         const cb = () => {
             this.started = false;
+            this.observeStarted.onNext(this.started);
             disposable.dispose();
             if (this.watch)
                 this.bootRuntime(runtime);

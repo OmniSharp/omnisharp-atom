@@ -1,4 +1,4 @@
-import * as _ from "lodash";
+const _ : _.LoDashStatic = require("lodash");
 import {CompositeDisposable} from "rx";
 import {RenameView} from "../views/rename-view";
 import {Omni} from "../../omni-sharp-server/omni";

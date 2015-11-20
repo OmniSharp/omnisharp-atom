@@ -1,5 +1,5 @@
 import {OmniSharp} from "../../omnisharp";
-import * as _ from "lodash";
+const _ : _.LoDashStatic = require("lodash");
 import {CompositeDisposable, Observable, Subject, Disposable} from "rx";
 import {Omni} from "../../omni-sharp-server/omni";
 import {dock} from "../atom/dock";
@@ -89,7 +89,7 @@ class CodeCheck implements IFeature {
             codeCheck: this
         }));
 
-        const started = 0, finished = 0;
+        let started = 0, finished = 0;
         this.disposable.add(Observable.combineLatest(
             Omni.listener.packageRestoreStarted.map(x => started++),
             Omni.listener.packageRestoreFinished.map(x => finished++),

@@ -1,6 +1,6 @@
 /* tslint:disable:no-string-literal */
 import {OmniSharp} from "../../omnisharp";
-import * as _ from "lodash";
+const _ : _.LoDashStatic = require("lodash");
 import {Omni} from "../../omni-sharp-server/omni";
 import * as React from "react";
 import * as path from "path";

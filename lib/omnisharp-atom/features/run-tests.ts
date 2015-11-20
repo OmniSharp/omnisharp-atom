@@ -1,5 +1,5 @@
 import {OmniSharp} from "../../omnisharp";
-import {CompositeDisposable, Observable, Disposable} from "rx";
+import {CompositeDisposable, Observable, Disposable, Subject} from "rx";
 import {Omni} from "../../omni-sharp-server/omni";
 import {dock} from "../atom/dock";
 import {TestResultsWindow} from "../views/test-results-window";
@@ -15,23 +15,20 @@ enum TestCommandType {
 class RunTests implements IFeature {
     private disposable: Rx.CompositeDisposable;
     private window: Rx.CompositeDisposable;
+    private _output: Rx.Subject<OutputMessage[]>;
     public testResults: OutputMessage[] = [];
     private lastRun: OmniSharp.Models.GetTestCommandResponse;
 
     public observe: {
-        updated: Observable<Rx.ObjectObserveChange<RunTests>>;
         output: Observable<OutputMessage[]>;
     };
 
     public activate() {
         this.disposable = new CompositeDisposable();
 
-        const updated = Observable.ofObjectChanges(this);
-
-        const output = Observable.ofArrayChanges(this.testResults).map(x => this.testResults);
+        const output = this._output = new Subject<OutputMessage[]>();
         this.observe = {
-            updated: updated,
-            get output() { return output; }
+            output: output.asObservable()
         };
 
         this.disposable.add(Omni.listener.gettestcontext.subscribe((data) => {
@@ -72,10 +69,12 @@ class RunTests implements IFeature {
 
         child.stdout.on("data", (data: any) => {
             this.testResults.push({ message: data, logLevel: "" });
+            this._output.onNext(this.testResults);
         });
 
         child.stderr.on("data", (data: any) => {
             this.testResults.push({ message: data, logLevel: "fail" });
+            this._output.onNext(this.testResults);
         });
 
         dock.selectWindow("test-output");

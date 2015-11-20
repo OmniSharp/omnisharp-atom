@@ -2,7 +2,7 @@
 /* tslint:disable:variable-name */
 const Convert = require("ansi-to-html");
 /* tslint:enable:variable-name */
-import * as _ from "lodash";
+const _ : _.LoDashStatic = require("lodash");
 import * as React from "react";
 import {ReactClientComponent} from "./react-client-component";
 import {server} from "../atom/server-information";

@@ -1,6 +1,6 @@
 /* tslint:disable:no-string-literal */
 import {Observable} from "rx";
-import * as _ from "lodash";
+const _ : _.LoDashStatic = require("lodash");
 import * as React from "react";
 import {ReactClientComponent} from "./react-client-component";
 
