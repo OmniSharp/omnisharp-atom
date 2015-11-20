@@ -1,7 +1,7 @@
 import * as _ from "lodash";
 import {Observable} from "rx";
 import {Omni} from "../../omni-sharp-server/omni";
-import Manager from "../../omni-sharp-server/solution-manager";
+import {SolutionManager} from "../../omni-sharp-server/solution-manager";
 import {ajax} from "jquery";
 const filter = require("fuzzaldrin").filter;
 
@@ -132,7 +132,7 @@ const nugetName: IAutocompleteProvider = {
         }
         const replacement = searchTokens.slice(0, searchTokens.length - 1).join(".");
 
-        return Manager.getSolutionForEditor(options.editor)
+        return SolutionManager.getSolutionForEditor(options.editor)
         // Get all sources
             .flatMap(z => Observable.from(z.model.packageSources))
             .flatMap(source => {
@@ -187,7 +187,7 @@ const nugetVersion: IAutocompleteProvider = {
         if (versionCache.has(name)) {
             o = versionCache.get(name);
         } else {
-            o = Manager.getSolutionForEditor(options.editor)
+            o = SolutionManager.getSolutionForEditor(options.editor)
             // Get all sources
                 .flatMap(z => Observable.from(z.model.packageSources))
                 .filter(z => {

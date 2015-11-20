@@ -1,19 +1,17 @@
-import {Omni} from "../../lib/omni-sharp-server/omni";
-import {Observable, CompositeDisposable} from "rx";
-import {setupFeature, restoreBuffers, openEditor} from "../test-helpers";
+/// <reference path="../tsd.d.ts" />
+import {expect} from "chai";
+import {setupFeature} from "../test-helpers";
+import {CompositeDisposable} from "rx";
 
 describe("Lookup", () => {
     setupFeature(["features/lookup"]);
 
-    it("adds commands", () => {
+    it("adds commands", (done) => {
         const disposable = new CompositeDisposable();
+        const commands: any = atom.commands;
 
-        runs(() => {
-            const commands: any = atom.commands;
-
-            expect(commands.registeredCommands["omnisharp-atom:type-lookup"]).toBeTruthy();
-            disposable.dispose();
-        });
+        expect(commands.registeredCommands["omnisharp-atom:type-lookup"]).to.be.true;
+        disposable.dispose();
     });
 
     // TODO: Test functionality

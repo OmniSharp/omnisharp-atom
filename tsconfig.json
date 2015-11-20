@@ -123,6 +123,7 @@
     "./spec/features/signature-help-spec.ts",
     "./spec/omnisharp-atom-spec.ts",
     "./spec/test-helpers.ts",
+    "./spec/test-runner.ts",
     "./tsd.d.ts",
     "./lib/typings.d.ts"
   ],

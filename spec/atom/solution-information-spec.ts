@@ -1,6 +1,7 @@
-import {Omni} from "../../lib/omni-sharp-server/omni";
-import {Observable, CompositeDisposable} from "rx";
-import {setupFeature, restoreBuffers, openEditor} from "../test-helpers";
+/// <reference path="../tsd.d.ts" />
+import {expect} from "chai";
+import {CompositeDisposable} from "rx";
+import {setupFeature} from "../test-helpers";
 
 describe("Solution Information", () => {
     setupFeature(["atom/solution-information"]);
@@ -8,17 +9,15 @@ describe("Solution Information", () => {
     it("adds commands", () => {
         const disposable = new CompositeDisposable();
 
-        runs(() => {
-            const commands: any = atom.commands;
+        const commands: any = atom.commands;
 
-            expect(commands.registeredCommands["omnisharp-atom:next-solution-status"]).toBeTruthy();
-            expect(commands.registeredCommands["omnisharp-atom:solution-status"]).toBeTruthy();
-            expect(commands.registeredCommands["omnisharp-atom:previous-solution-status"]).toBeTruthy();
-            expect(commands.registeredCommands["omnisharp-atom:stop-server"]).toBeTruthy();
-            expect(commands.registeredCommands["omnisharp-atom:start-server"]).toBeTruthy();
-            expect(commands.registeredCommands["omnisharp-atom:restart-server"]).toBeTruthy();
-            disposable.dispose();
-        });
+        expect(commands.registeredCommands["omnisharp-atom:next-solution-status"]).to.be.true;
+        expect(commands.registeredCommands["omnisharp-atom:solution-status"]).to.be.true;
+        expect(commands.registeredCommands["omnisharp-atom:previous-solution-status"]).to.be.true;
+        expect(commands.registeredCommands["omnisharp-atom:stop-server"]).to.be.true;
+        expect(commands.registeredCommands["omnisharp-atom:start-server"]).to.be.true;
+        expect(commands.registeredCommands["omnisharp-atom:restart-server"]).to.be.true;
+        disposable.dispose();
     });
 
     // TODO: Test functionality

@@ -1,25 +1,24 @@
-import {Omni} from "../../lib/omni-sharp-server/omni";
-import {Observable, CompositeDisposable} from "rx";
-import {setupFeature, restoreBuffers, openEditor} from "../test-helpers";
+/// <reference path="../tsd.d.ts" />
+import {expect} from "chai";
+import {CompositeDisposable} from "rx";
+import {setupFeature} from "../test-helpers";
 
 describe("Find Usages", () => {
     setupFeature(["features/find-usages"]);
 
-    it("adds commands", () => {
+    it("adds commands", (done) => {
         const disposable = new CompositeDisposable();
+        const commands: any = atom.commands;
 
-        runs(() => {
-            const commands: any = atom.commands;
-
-            expect(commands.registeredCommands["omnisharp-atom:find-usages"]).toBeTruthy();
-            expect(commands.registeredCommands["omnisharp-atom:go-to-implementation"]).toBeTruthy();
-            expect(commands.registeredCommands["omnisharp-atom:next-usage"]).toBeTruthy();
-            expect(commands.registeredCommands["omnisharp-atom:go-to-usage"]).toBeTruthy();
-            expect(commands.registeredCommands["omnisharp-atom:previous-usage"]).toBeTruthy();
-            expect(commands.registeredCommands["omnisharp-atom:go-to-next-usage"]).toBeTruthy();
-            expect(commands.registeredCommands["omnisharp-atom:go-to-previous-usage"]).toBeTruthy();
-            disposable.dispose();
-        });
+        expect(commands.registeredCommands["omnisharp-atom:find-usages"]).to.be.true;
+        expect(commands.registeredCommands["omnisharp-atom:go-to-implementation"]).to.be.true;
+        expect(commands.registeredCommands["omnisharp-atom:next-usage"]).to.be.true;
+        expect(commands.registeredCommands["omnisharp-atom:go-to-usage"]).to.be.true;
+        expect(commands.registeredCommands["omnisharp-atom:previous-usage"]).to.be.true;
+        expect(commands.registeredCommands["omnisharp-atom:go-to-next-usage"]).to.be.true;
+        expect(commands.registeredCommands["omnisharp-atom:go-to-previous-usage"]).to.be.true;
+        disposable.dispose();
+        done();
     });
 
     // TODO: Test functionality

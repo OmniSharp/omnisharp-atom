@@ -1,9 +1,8 @@
+/// <reference path="tsd.d.ts" />
 import {SolutionManager} from "../lib/omni-sharp-server/solution-manager";
-import {CompositeDisposable, Disposable, Observable} from "rx";
+import {Observable} from "rx";
+import {CompositeDisposable, Disposable} from "rx";
 import {DriverState} from "omnisharp-client";
-
-if ((<any>jasmine.getEnv()).defaultTimeoutInterval < 30000) (<any>jasmine.getEnv()).defaultTimeoutInterval = 30000;
-if ((<any>jasmine.getEnv()).defaultTimeoutInterval === 60000) (<any>jasmine.getEnv()).defaultTimeoutInterval = 60000 * 3;
 
 //SolutionManager.solutionObserver.errors.subscribe(error => console.error(JSON.stringify(error)));
 SolutionManager.solutionObserver.events.subscribe(event => console.info(`server event: ${JSON.stringify(event) }`));
@@ -11,8 +10,8 @@ SolutionManager.solutionObserver.requests.subscribe(r => console.info(`request: 
 SolutionManager.solutionObserver.responses.subscribe(r => console.info(`response: ${JSON.stringify(r) }`));
 
 export function setupFeature(features: string[], unitTestMode = true) {
-    const cd: CompositeDisposable;
-    beforeEach(function() {
+    let cd: CompositeDisposable;
+    beforeEach(function(done) {
         cd = new CompositeDisposable();
         SolutionManager._unitTestMode_ = unitTestMode;
         SolutionManager._kick_in_the_pants_ = true;
@@ -20,10 +19,10 @@ export function setupFeature(features: string[], unitTestMode = true) {
         atom.config.set("omnisharp-atom:feature-white-list", true);
         atom.config.set("omnisharp-atom:feature-list", features);
 
-        waitsForPromise(() => atom.packages.activatePackage("language-csharp")
+        atom.packages.activatePackage("language-csharp")
             .then(() => atom.packages.activatePackage("omnisharp-atom"))
             .then((pack: Atom.Package) => pack.mainModule._activated.toPromise())
-        );
+            .then(done);
     });
 
     afterEach(() => {
@@ -37,16 +36,17 @@ export function setupFeature(features: string[], unitTestMode = true) {
 
 export function restoreBuffers() {
     return Disposable.empty;
-    const disposable = new CompositeDisposable();
+    /*
+    let disposable = new CompositeDisposable();
     const buffers = new Map<string, string>();
 
     if (SolutionManager._unitTestMode_) {
         disposable.add(SolutionManager.solutionObserver.responses
-            .where(z =>
+            .filter(z =>
                 z.request.FileName && z.request.Buffer)
             .map(z =>
                 ({ fileName: <string>z.request.FileName, buffer: <string>z.request.Buffer }))
-            .where(({fileName}) =>
+            .filter(({fileName}) =>
                 !buffers.has(fileName))
             .subscribe(({fileName, buffer}) => {
                 buffers.set(fileName, buffer);
@@ -57,7 +57,7 @@ export function restoreBuffers() {
         disposable.dispose();
         // Reset the buffers to their original state
         if (SolutionManager._unitTestMode_) {
-            const results: Rx.Observable<any>[] = [];
+            const results: Observable<any>[] = [];
             const iterator = buffers.entries();
             const iteratee = iterator.next();
             while (!iteratee.done) {
@@ -76,16 +76,16 @@ export function restoreBuffers() {
                 iteratee = iterator.next();
             }
         }
-    });
+    });*/
 }
 
 export function openEditor(file: string) {
-    return Observable.fromPromise(atom.workspace.open(file))
+    return Observable.fromPromise<Atom.TextEditor>(<any>atom.workspace.open(file))
         .flatMap(editor =>
             SolutionManager.getSolutionForEditor(editor).map(solution => ({ editor, solution }))
         )
-        .flatMap(({editor, solution}) => solution.state.startWith(solution.currentState).map(state=> ({ editor, solution, state: state })))
-        .where(z => z.state === DriverState.Connected)
-        .take(1)
-        .toPromise();
+        .flatMap(({editor, solution}) => solution.state.startWith(solution.currentState)
+        .map(state => ({ editor, solution, state: state })))
+        .filter(z => z.state === DriverState.Connected)
+        .take(1);
 }
