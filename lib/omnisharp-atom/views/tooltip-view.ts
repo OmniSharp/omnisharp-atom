@@ -8,7 +8,13 @@ interface Rect {
     bottom: number;
 }
 
-class TooltipView extends spacePen.View {
+export class TooltipView extends spacePen.View {
+
+    public static content() {
+        return this.div({ class: "atom-typescript-tooltip tooltip" }, () => {
+            this.div({ class: "tooltip-inner", outlet: "inner" });
+        });
+    }
 
     constructor(public rect: Rect) {
         super();
@@ -18,40 +24,33 @@ class TooltipView extends spacePen.View {
 
     private inner: JQuery;
 
-    static content() {
-        return this.div({ class: "atom-typescript-tooltip tooltip" }, () => {
-            this.div({ class: "tooltip-inner", outlet: "inner" })
-        });
-    }
-
-    updateText(text: string) {
+    public updateText(text: string) {
         this.inner.html(text);
-        this.inner.css({"white-space" : "pre", "text-align" : "left"});
+        this.inner.css({ "white-space": "pre", "text-align": "left" });
         this.updatePosition();
         (<any>this).fadeTo(300, 1);
     }
 
-    updatePosition() {
+    public updatePosition() {
         const offset = 10;
-        const left = this.rect.right;
-        const top = this.rect.bottom;
-        const right = undefined;
+        let left = this.rect.right;
+        let top = this.rect.bottom;
+        let right: number = undefined;
 
         // X axis adjust
         if (left + this[0].offsetWidth >= $(document.body).width())
             left = $(document.body).width() - this[0].offsetWidth - offset;
         if (left < 0) {
-            this.css({ "white-space": "pre-wrap" })
-            left = offset
-            right = offset
+            this.css({ "white-space": "pre-wrap" });
+            left = offset;
+            right = offset;
         }
 
         // Y axis adjust
         if (top + this[0].offsetHeight >= $(document.body).height()) {
-            top = this.rect.top - this[0].offsetHeight
+            top = this.rect.top - this[0].offsetHeight;
         }
 
         this.css({ left, top, right });
     }
 }
-export = TooltipView;

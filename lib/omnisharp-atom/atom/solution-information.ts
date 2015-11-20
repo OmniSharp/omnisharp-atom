@@ -1,17 +1,13 @@
 import {Observable, CompositeDisposable, Disposable} from "rx";
-import Omni = require("../../omni-sharp-server/omni");
 import * as _ from "lodash";
-import {dock} from "../atom/dock";
 import {SolutionStatusCard, ICardProps} from "../views/solution-status-view";
 import {ViewModel} from "../../omni-sharp-server/view-model";
 import manager from "../../omni-sharp-server/solution-manager";
 import {DriverState} from "omnisharp-client";
 import * as React from "react";
-import * as $ from "jquery";
 
 class SolutionInformation implements IFeature {
     private disposable: CompositeDisposable;
-    private window: CompositeDisposable;
     public selectedIndex: number = 0;
     private card: SolutionStatusCard<ICardProps>;
     private cardDisposable: Disposable;
@@ -20,7 +16,7 @@ class SolutionInformation implements IFeature {
     public observe: {
         solutions: Observable<ViewModel[]>;
         updates: Observable<Rx.ObjectObserveChange<SolutionInformation>>;
-    }
+    };
 
     public solutions: ViewModel[] = [];
 
@@ -59,7 +55,7 @@ class SolutionInformation implements IFeature {
         this.disposable.add(atom.commands.add("atom-workspace", "omnisharp-atom:restart-server", () => {
             const solution = manager.activeSolutions[this.selectedIndex];
             solution.state
-                .where(z => z == DriverState.Disconnected)
+                .where(z => z === DriverState.Disconnected)
                 .take(1)
                 .delay(500)
                 .subscribe(() => {
@@ -108,6 +104,7 @@ class SolutionInformation implements IFeature {
             workspace.appendChild(container);
         }
 
+        let notice: any;
         if (this.solutions.length) {
             const element: SolutionStatusCard<ICardProps> = <any>React.render(React.createElement(SolutionStatusCard, {
                 model: this.solutions[this.selectedIndex],
@@ -132,7 +129,7 @@ class SolutionInformation implements IFeature {
                 this.cardDisposable.dispose();
             }
 
-            const notice = <any>React.render(React.DOM.div({}, "Solution not loaded!"), this.container);
+            notice = <any>React.render(React.DOM.div({}, "Solution not loaded!"), this.container);
 
             disposable.add(Disposable.create(() => {
                 React.unmountComponentAtNode(this.container);

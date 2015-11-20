@@ -1,13 +1,11 @@
 import * as _ from "lodash";
 import {basename} from "path";
-import Omni = require("../../omni-sharp-server/omni")
 import * as React from "react";
 import {ReactClientComponent} from "./react-client-component";
 import {solutionInformation} from "../atom/solution-information";
 import {ViewModel} from "../../omni-sharp-server/view-model";
 import {DriverState} from "omnisharp-client";
 import * as $ from "jquery";
-import {Observable} from "rx";
 
 interface ICardState {
     model: ViewModel;
@@ -26,7 +24,7 @@ interface ISolutionStatusWindowProps {
     solutionInformation: typeof solutionInformation;
 }
 
-function truncateStringReverse(str: string, maxLength: number = 55) {
+function truncateStringReverse(str: string, maxLength = 55) {
     const reversedString = _.toArray(str).reverse().join("");
     return _.toArray(_.trunc(reversedString, maxLength)).reverse().join("");
 }
@@ -85,7 +83,7 @@ export class SolutionStatusCard<T extends ICardProps> extends ReactClientCompone
     }
 
     private getButtons() {
-        const buttons = [];
+        const buttons: any[] = [];
 
         if (this.state.model.isReady) {
             buttons.push(React.DOM.button({
@@ -113,11 +111,10 @@ export class SolutionStatusCard<T extends ICardProps> extends ReactClientCompone
     }
 
     private getProjects() {
-        const projects = [];
         return this.state.model.projects.map(
             project => {
                 const path = truncateStringReverse(project.path.replace(this.state.model.path, ""), 24);
-                return React.DOM.div({ className: "project name", title: `${path} [${project.frameworks.filter(z => z.Name !== "all").map(x => x.FriendlyName) }]` }, project.name);
+                return React.DOM.div({ className: "project name", title: `${path} [${project.frameworks.filter(z => z.Name !== "all").map(x => x.FriendlyName)}]` }, project.name);
             });
     }
 
@@ -146,7 +143,7 @@ export class SolutionStatusCard<T extends ICardProps> extends ReactClientCompone
                     className: "btn-group"
                 },
                     this.getButtons())
-                )
+            )
         ];
 
         stats.unshift(React.DOM.span({
@@ -169,8 +166,9 @@ export class SolutionStatusCard<T extends ICardProps> extends ReactClientCompone
                 }, this.state.model.runtime)));
         }
 
+        let projects: any;
         if (this.state.model.projects.length) {
-            const projects = React.DOM.div({ className: "meta meta-projects" },
+            projects = React.DOM.div({ className: "meta meta-projects" },
                 React.DOM.div({ className: "header" }, "Projects"),
                 this.getProjects());
         }
@@ -183,7 +181,7 @@ export class SolutionStatusCard<T extends ICardProps> extends ReactClientCompone
                     className: "name"
                 },
                     React.DOM.span({
-                    }, `${basename(this.state.model.path) } (${this.state.model.index})`)),
+                    }, `${basename(this.state.model.path)} (${this.state.model.index})`)),
                 React.DOM.span({
                     className: "description"
                 }, path), ...stats),
@@ -201,7 +199,7 @@ export class SolutionStatusCard<T extends ICardProps> extends ReactClientCompone
                         className: "btn btn-xs icon icon-triangle-right",
                         onClick: (e) => atom.commands.dispatch(atom.views.getView(atom.workspace), "omnisharp-atom:next-solution-status")
                     }))
-                );
+            );
         }
 
         return React.DOM.div({

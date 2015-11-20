@@ -7,10 +7,12 @@ import {SolutionObserver, SolutionAggregateObserver} from "./composite-solution"
 import {DriverState, findCandidates} from "omnisharp-client";
 import {GenericSelectListView} from "../omnisharp-atom/views/generic-list-view";
 
-const openSelectList: GenericSelectListView;
+let openSelectList: GenericSelectListView;
 class SolutionManager {
+    /* tslint:disable:variable-name */
     public _unitTestMode_ = false;
     public _kick_in_the_pants_ = false;
+    /* tslint:enable:variable-name */
     private _disposable: CompositeDisposable;
     private _solutionDisposable: CompositeDisposable;
     private _atomProjects: AtomProjectTracker;
@@ -138,10 +140,11 @@ class SolutionManager {
             candidate = path.dirname(candidate);
         }
 
+        let solution: Solution;
         if (this._solutions.has(candidate)) {
-            const solution = this._solutions.get(candidate);
+            solution = this._solutions.get(candidate);
         } else if (project && this._solutionProjects.has(project)) {
-            const solution = this._solutionProjects.get(project);
+            solution = this._solutionProjects.get(project);
         }
 
         if (solution && !solution.isDisposed) {
@@ -151,7 +154,7 @@ class SolutionManager {
             disposer.dispose();
         }
 
-        const solution = new Solution({
+        solution = new Solution({
             projectPath: projectPath,
             index: ++this._nextIndex,
             temporary: temporary,
@@ -194,7 +197,7 @@ class SolutionManager {
         cd.add(this._combination.add(solution));
 
         if (temporary) {
-            const tempD = Disposable.create(() => { });
+            const tempD = Disposable.create(() => { /* */ });
             tempD.dispose();
             this._temporarySolutions.set(solution, new RefCountDisposable(tempD));
         }
@@ -217,7 +220,7 @@ class SolutionManager {
 
         cd.add(errorResult.subscribe(() => result.onCompleted())); // If this solution errors move on to the next
 
-        cd.add(solution.model.observe.projectAdded.subscribe(project => this._solutionProjects.set(project.path, solution)))
+        cd.add(solution.model.observe.projectAdded.subscribe(project => this._solutionProjects.set(project.path, solution)));
         cd.add(solution.model.observe.projectRemoved.subscribe(project => this._solutionProjects.delete(project.path)));
 
         // Wait for the projects to return from the solution
@@ -261,19 +264,7 @@ class SolutionManager {
         }
     }
 
-    private _getSolutionForActiveEditor() {
-        const editor = atom.workspace.getActiveTextEditor();
-        const solution: Observable<Solution>;
-        if (editor)
-            solution = this.getSolutionForEditor(editor);
-
-        if (solution) return solution;
-        // No active text editor
-        return Observable.empty<Solution>();
-    }
-
     public getSolutionForPath(path: string) {
-        const solution: Observable<Solution>;
         if (!path)
             // No text editor found
             return Observable.empty<Solution>();
@@ -286,15 +277,15 @@ class SolutionManager {
             return Observable.empty<Solution>();
         }
 
-        const [intersect, solutionValue] = this._getSolutionForUnderlyingPath(location, isFolderPerFile);
+        const [, solutionValue] = this._getSolutionForUnderlyingPath(location, isFolderPerFile);
 
         if (solutionValue)
             return Observable.just(solutionValue);
 
         return this._findSolutionForUnderlyingPath(location, isFolderPerFile)
             .map(z => {
-                const [p, solution, temporary] = z;
-                return solution;
+                const [, sln] = z;
+                return sln;
             });
     }
 
@@ -303,14 +294,14 @@ class SolutionManager {
     }
 
     private _getSolutionForEditor(editor: Atom.TextEditor) {
-        const solutionResult: Observable<Solution>;
+        let solutionResult: Observable<Solution>;
         if (!editor)
             // No text editor found
             return Observable.empty<Solution>();
 
         const isFolderPerFile = _.any(this.__specialCaseExtensions, ext => _.endsWith(editor.getPath(), ext));
 
-        const p = (<any>editor).omniProject;
+        let p = (<any>editor).omniProject;
         // Not sure if we should just add properties onto editors...
         // but it works...
         if (p && this._solutions.has(p)) {
@@ -367,22 +358,22 @@ class SolutionManager {
 
         return this._findSolutionForUnderlyingPath(location, isFolderPerFile)
             .map(z => {
-                const [p, solution, temporary] = z;
-                (<any>editor).omniProject = p;
-                (<any>editor).__omniClient__ = solution;
-                const view: HTMLElement = <any>atom.views.getView(editor);
-                view.classList.add("omnisharp-editor");
+                const [pa, sln, temporary] = z;
+                (<any>editor).omniProject = pa;
+                (<any>editor).__omniClient__ = sln;
+                const vw: HTMLElement = <any>atom.views.getView(editor);
+                vw.classList.add("omnisharp-editor");
 
-                solution.disposable.add(Disposable.create(() => {
+                sln.disposable.add(Disposable.create(() => {
                     delete (<any>editor).omniProject;
                     delete (<any>editor).__omniClient__;
-                    view.classList.remove("omnisharp-editor");
+                    vw.classList.remove("omnisharp-editor");
                 }));
 
                 if (temporary) {
-                    this._setupDisposableForTemporarySolution(solution, editor);
+                    this._setupDisposableForTemporarySolution(sln, editor);
                 }
-                return solution;
+                return sln;
             });
     }
 
@@ -487,10 +478,9 @@ class SolutionManager {
                     }
                     subject.onCompleted();
                 }));
-        }
+        };
 
-        const foundCandidates = this._candidateFinder(directory, console)
-            .subscribe(cb);
+        this._candidateFinder(directory, console).subscribe(cb);
 
         return subject;
     }
@@ -525,10 +515,11 @@ class SolutionManager {
                     // Show the view
                     if (openSelectList) {
                         openSelectList.onClosed.subscribe(() => {
-                            if (!_.any(slns, x => this._candidateFinderCache.has(x.path)))
+                            if (!_.any(slns, x => this._candidateFinderCache.has(x.path))) {
                                 _.defer(() => listView.toggle());
-                            else
+                            } else {
                                 asyncResult.onCompleted();
+                            }
                         });
                     } else {
                         _.defer(() => listView.toggle());
@@ -545,15 +536,17 @@ class SolutionManager {
     }
 
     private _setupDisposableForTemporarySolution(solution: Solution, editor: Atom.TextEditor) {
+        /* tslint:disable:no-string-literal */
         if (solution && !editor["__setup_temp__"] && this._temporarySolutions.has(solution)) {
             const refCountDisposable = this._temporarySolutions.get(solution);
             const disposable = refCountDisposable.getDisposable();
-            editor["__setup_temp__"] = true
+            editor["__setup_temp__"] = true;
             editor.onDidDestroy(() => {
                 disposable.dispose();
                 this._removeSolution(solution.path);
             });
         }
+        /* tslint:enable:no-string-literal */
     }
 
     public registerConfiguration(callback: (solution: Solution) => void) {
@@ -599,29 +592,29 @@ function addCandidatesInOrder(candidates: { path: string; isProject: boolean; }[
 
     const cds = candidates.slice();
     const candidate = cds.shift();
-    const handleCandidate = (candidate: { path: string; isProject: boolean; }) => {
-        cb(candidate.path, candidate.isProject)
+    const handleCandidate = (cand: { path: string; isProject: boolean; }) => {
+        cb(cand.path, cand.isProject)
             .subscribeOnCompleted(() => {
                 if (cds.length) {
-                    candidate = cds.shift();
-                    handleCandidate(candidate);
+                    cand = cds.shift();
+                    handleCandidate(cand);
                 } else {
-                    asyncSubject.onNext(candidates)
+                    asyncSubject.onNext(candidates);
                     asyncSubject.onCompleted();
                 }
-            })
-    }
+            });
+    };
     handleCandidate(candidate);
     return asyncSubject.asObservable();
 }
 
 function fromIterator<T>(iterator: IterableIterator<T>) {
     const items: T[] = [];
-    const {done, value} = iterator.next();
-    while (!done) {
-        items.push(value);
+    let result = iterator.next();
+    while (!result.done) {
+        items.push(result.value);
 
-        const {done, value} = iterator.next();
+        result = iterator.next();
     }
 
     return items;

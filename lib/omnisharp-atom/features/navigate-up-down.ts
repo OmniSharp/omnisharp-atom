@@ -1,5 +1,6 @@
+import {OmniSharp} from "../../omnisharp";
 import {CompositeDisposable} from "rx";
-import Omni = require("../../omni-sharp-server/omni")
+import {Omni} from "../../omni-sharp-server/omni";
 
 class Navigate implements IFeature {
     private disposable: Rx.CompositeDisposable;

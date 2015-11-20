@@ -1,10 +1,9 @@
+import {OmniSharp} from "../../omnisharp";
 import * as _ from "lodash";
-import {CompositeDisposable, Observable, ReplaySubject, Subject, Disposable} from "rx";
-import Omni = require("../../omni-sharp-server/omni");
-const currentlyEnabled = false;
+import {CompositeDisposable, Observable, Subject, Disposable} from "rx";
+import {Omni} from "../../omni-sharp-server/omni";
 import {dock} from "../atom/dock";
-import {CodeCheckOutputWindow, ICodeCheckOutputWindowProps} from "../views/codecheck-output-pane-view";
-import {DriverState} from "omnisharp-client";
+import {CodeCheckOutputWindow} from "../views/codecheck-output-pane-view";
 import {reloadWorkspace} from "./reload-workspace";
 
 class CodeCheck implements IFeature {
@@ -127,7 +126,7 @@ class CodeCheck implements IFeature {
 
     private filterOnlyWarningsAndErrors(quickFixes): OmniSharp.Models.DiagnosticLocation[] {
         return _.filter(quickFixes, (quickFix: OmniSharp.Models.DiagnosticLocation) => {
-            return quickFix.LogLevel != "Hidden";
+            return quickFix.LogLevel !== "Hidden";
         });
     }
 

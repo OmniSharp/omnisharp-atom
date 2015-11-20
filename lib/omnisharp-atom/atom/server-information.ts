@@ -1,10 +1,10 @@
 import {Observable, CompositeDisposable} from "rx";
-import Omni = require("../../omni-sharp-server/omni");
-import * as _ from "lodash";
+import {Omni} from "../../omni-sharp-server/omni";
 import {OmnisharpClientStatus} from "omnisharp-client";
 import {dock} from "../atom/dock";
 import {OutputWindow} from "../views/omni-output-pane-view";
 import {ViewModel} from "../../omni-sharp-server/view-model";
+import {IProjectViewModel} from "../../omnisharp";
 
 class ServerInformation implements IFeature {
     private disposable: CompositeDisposable;
@@ -14,7 +14,7 @@ class ServerInformation implements IFeature {
         projects: Observable<IProjectViewModel[]>;
         model: Observable<ViewModel>;
         updates: Observable<Rx.ObjectObserveChange<ServerInformation>>;
-    }
+    };
 
     public model: ViewModel;
 

@@ -1,5 +1,6 @@
-const _ = require("lodash");
-import Omni = require("../../omni-sharp-server/omni");
+import {OmniSharp} from "../../omnisharp";
+import * as _ from "lodash";
+import {Omni} from "../../omni-sharp-server/omni";
 import {CompositeDisposable} from "rx";
 import * as path from "path";
 import * as $ from "jquery";
@@ -15,7 +16,7 @@ class NotificationHandler implements IFeature {
 
         this.disposable.add(Omni.listener.packageRestoreStarted.subscribe(e =>
             this.packageRestoreNotification.handlePackageRestoreStarted(e)));
-            
+
         this.disposable.add(Omni.listener.packageRestoreFinished.subscribe(e =>
             this.packageRestoreNotification.handlePackageRestoreFinished(e)));
 
@@ -57,7 +58,7 @@ class PackageRestoreNotification {
         if (this.notification.isDismissed()) {
             this.notification.show("Package restore started", "Starting..");
         }
-    }
+    };
 
     public handleUnresolvedDependencies = (event: OmniSharp.Models.UnresolvedDependenciesMessage) => {
         // Sometimes UnresolvedDependencies event is sent before PackageRestoreStarted
@@ -68,7 +69,7 @@ class PackageRestoreNotification {
         const projectName = this.findProjectNameFromFileName(event.FileName);
         // Client gets more than one of each UnresolvedDependencies events for each project
         // Don"t show multiple instances of a project in the notification
-        if (!_.any(this.knownProjects, (knownProject) => { return knownProject == projectName })) {
+        if (!_.any(this.knownProjects, (knownProject) => { return knownProject === projectName; })) {
             this.knownProjects.push(projectName);
             this.notification.addDetail(`Unresolved dependencies for ${projectName}:`, true);
             if (event.UnresolvedDependencies) {
@@ -77,7 +78,7 @@ class PackageRestoreNotification {
                 });
             }
         }
-    }
+    };
 
     public handlePackageRestoreFinished = (event: OmniSharp.Models.PackageRestoreMessage) => {
         // Count how many of these we get so we know when to dismiss the notification
@@ -88,11 +89,11 @@ class PackageRestoreNotification {
             this.packageRestoreFinished = 0;
             this.knownProjects = [];
         }
-    }
+    };
 
     public handleEvents = (event: OmniSharp.Stdio.Protocol.EventPacket) => {
         this.setPackageInstalled(event.Body.Message);
-    }
+    };
 
     private findProjectNameFromFileName(fileName: string): string {
         const split = fileName.split(path.sep);
@@ -124,7 +125,7 @@ class OmniNotification {
     public addDetail(detail: string, newline?: boolean) {
         const details = this.getDetailElement();
         if (!detail) return;
-        if (newline) details.append("<br />")
+        if (newline) details.append("<br />");
         details.append(`<div class="line">${detail}</div>`);
     }
 
@@ -164,9 +165,9 @@ class OmniNotification {
     private getFromDom(element: JQuery, selector: string): JQuery {
         const el = element[0];
         if (!el) return;
-        const found = (<any> el).querySelectorAll(selector);
+        const found = (<any>el).querySelectorAll(selector);
         return $(found[0]);
     }
 }
 
-export const notificationHandler = new NotificationHandler
+export const notificationHandler = new NotificationHandler;

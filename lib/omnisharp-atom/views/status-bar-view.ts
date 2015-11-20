@@ -1,26 +1,26 @@
-import {CompositeDisposable, Disposable, Scheduler, Observable} from "rx";
+/* tslint:disable:no-string-literal */
+import {CompositeDisposable, Observable} from "rx";
 import * as _ from "lodash";
-import Omni = require("../../omni-sharp-server/omni")
-import {Solution} from "../../omni-sharp-server/solution";
+import {Omni} from "../../omni-sharp-server/omni";
 import {OmnisharpClientStatus} from "omnisharp-client";
 import {server} from "../atom/server-information";
 import {solutionInformation} from "../atom/solution-information";
-import {commandRunner, RunProcess} from "../atom/command-runner";
+import {commandRunner} from "../atom/command-runner";
 import {read, write} from "fastdom";
 
 function addClassIfNotContains(icon: HTMLElement, ...cls: string[]) {
     read(() => {
-        _.each(cls, cls => {
-            if (!icon.classList.contains(cls))
-                write(() => icon.classList.add(cls));
+        _.each(cls, c => {
+            if (!icon.classList.contains(c))
+                write(() => icon.classList.add(c));
         });
     });
 }
 function removeClassIfContains(icon: HTMLElement, ...cls: string[]) {
     read(() => {
-        _.each(cls, cls => {
-            if (icon.classList.contains(cls))
-                write(() => icon.classList.remove(cls));
+        _.each(cls, c => {
+            if (icon.classList.contains(c))
+                write(() => icon.classList.remove(c));
         });
     });
 }
@@ -34,7 +34,7 @@ interface StatusBarState {
     status?: OmnisharpClientStatus;
 }
 
-function updateState(self, state) {
+function updateState(self: any, state: any) {
     _.each(Omni.viewModelStatefulProperties, x => {
         if (_.has(state, x)) {
             self[x] = state[x];
@@ -50,7 +50,7 @@ export class FlameElement extends HTMLAnchorElement implements WebComponent {
         isReady?: boolean;
         isError?: boolean;
         status?: OmnisharpClientStatus;
-    }
+    };
 
     private _icon: HTMLSpanElement;
     private _outgoing: HTMLSpanElement;
@@ -137,7 +137,7 @@ export class CommandRunnerElement extends HTMLAnchorElement implements WebCompon
     public updateState(state: CommandRunnerState) {
         if (this._state !== state) {
             this._state = state;
-            if (state == CommandRunnerState.Running) {
+            if (state === CommandRunnerState.Running) {
                 addClassIfNotContains(this, "text-info");
                 removeClassIfContains(this, "text-subtle", "icon-flame-loading");
             } else {
@@ -258,7 +258,6 @@ export class ProjectCountElement extends HTMLAnchorElement implements WebCompone
 export class StatusBarElement extends HTMLElement implements WebComponent, Rx.IDisposable {
     private _state: StatusBarState;
     private _disposable: CompositeDisposable;
-    private _shadow: HTMLElement;
     private _flame: FlameElement;
     private _commandRunner: CommandRunnerElement;
     private _diagnostics: DiagnosticsElement;
@@ -297,15 +296,15 @@ export class StatusBarElement extends HTMLElement implements WebComponent, Rx.ID
             this._diagnostics.updateState({
                 errorCount: counts["Error"] || 0,
                 warningCount: counts["Warning"] || 0
-            })
+            });
         }));
 
         this._disposable.add(Observable.merge(Omni.activeModel, Omni.activeModel.flatMap(x => x.observe.state))
             .subscribe(model => {
-                    this._flame.updateState(model);
-                    updateState(this._state, model);
+                this._flame.updateState(model);
+                updateState(this._state, model);
 
-                    this._updateVisible();
+                this._updateVisible();
             }));
 
         this._disposable.add(server.observe.projects
@@ -327,12 +326,13 @@ export class StatusBarElement extends HTMLElement implements WebComponent, Rx.ID
 
         this._disposable.add(commandRunner.observe.processes
             .subscribe(processes => {
-                if (_.all(processes, process => process.started))
+                if (_.all(processes, process => process.started)) {
                     this._commandRunner.updateState(CommandRunnerState.Started);
-                else if (processes.length > 0)
+                } else if (processes.length > 0) {
                     this._commandRunner.updateState(CommandRunnerState.Running);
-                else
+                } else {
                     this._commandRunner.updateState(CommandRunnerState.Off);
+                }
             }));
 
         this._disposable.add(solutionInformation.observe.solutions
@@ -361,15 +361,15 @@ export class StatusBarElement extends HTMLElement implements WebComponent, Rx.ID
 
     private _showOnStateItems() {
         read(() => {
-            this._diagnostics.style.display === "none" && write(() => this._diagnostics.style.display = "")
-            this._projectCount.projects.style.display === "none" && write(() => this._projectCount.projects.style.display = "");
+            if (this._diagnostics.style.display === "none") { write(() => this._diagnostics.style.display = ""); }
+            if (this._projectCount.projects.style.display === "none") { write(() => this._projectCount.projects.style.display = ""); }
         });
     }
 
     private _hideOnStateItems() {
         read(() => {
-            this._diagnostics.style.display !== "none" && write(() => this._diagnostics.style.display = "none")
-            this._projectCount.projects.style.display !== "none" && write(() => this._projectCount.projects.style.display = "none");
+            if (this._diagnostics.style.display !== "none") { write(() => this._diagnostics.style.display = "none"); }
+            if (this._projectCount.projects.style.display !== "none") { write(() => this._projectCount.projects.style.display = "none"); }
         });
     }
 

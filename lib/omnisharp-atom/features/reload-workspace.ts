@@ -1,6 +1,5 @@
-import * as _ from "lodash";
-import {CompositeDisposable, AsyncSubject, Observable, Scheduler} from "rx";
-import Omni = require("../../omni-sharp-server/omni");
+import {CompositeDisposable, Observable, Scheduler} from "rx";
+import {Omni} from "../../omni-sharp-server/omni";
 import {exists} from "fs";
 const oexists = Observable.fromCallback(exists);
 

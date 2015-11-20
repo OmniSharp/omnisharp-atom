@@ -1,5 +1,6 @@
 import * as _ from "lodash";
-import {Observable, Subject, CompositeDisposable, Disposable} from "rx";
+import {OmniSharp} from "../omnisharp";
+import {Observable, Subject, CompositeDisposable} from "rx";
 import {ClientV2, DriverState, OmnisharpClientOptions} from "omnisharp-client";
 
 interface SolutionOptions extends OmnisharpClientOptions {
@@ -11,6 +12,8 @@ interface SolutionOptions extends OmnisharpClientOptions {
 import {ViewModel} from "./view-model";
 
 export class Solution extends ClientV2 {
+    private static _regex = new RegExp(String.fromCharCode(0xFFFD), "g");
+
     public model: ViewModel;
     public logs: Observable<OutputMessage>;
     public path: string;
@@ -32,17 +35,16 @@ export class Solution extends ClientV2 {
         this.temporary = options.temporary;
         this.model = new ViewModel(this);
         this.path = options.projectPath;
-        this.index = options["index"];
+        this.index = options.index;
         this.repository = options.repository;
         this.setupRepository();
         this._solutionDisposable.add(this.model);
 
-        this.registerFixup((action: string, request: any, options?: OmniSharp.RequestOptions) => this._fixupRequest(action, request));
+        this.registerFixup((action: string, request: any, opts?: OmniSharp.RequestOptions) => this._fixupRequest(action, request));
     }
 
     public toggle() {
         if (this.currentState === DriverState.Disconnected) {
-            const path = atom && atom.project && atom.project.getPaths()[0];
             this.connect();
         } else {
             this.disconnect();
@@ -93,8 +95,6 @@ export class Solution extends ClientV2 {
         this._currentEditor = editor;
         return this;
     }
-
-    private static _regex = new RegExp(String.fromCharCode(0xFFFD), "g");
     private _fixupRequest<TRequest, TResponse>(action: string, request: TRequest) {
         // Only send changes for requests that really need them.
         if (this._currentEditor && _.isObject(request)) {
@@ -124,9 +124,11 @@ export class Solution extends ClientV2 {
             */
         }
 
+        /* tslint:disable:no-string-literal */
         if (request["Buffer"]) {
             request["Buffer"] = request["Buffer"].replace(Solution._regex, "");
         }
+        /* tslint:enable:no-string-literal */
     }
 
     public request<TRequest, TResponse>(action: string, request?: TRequest, options?: OmniSharp.RequestOptions): Rx.Observable<TResponse> {
@@ -158,7 +160,7 @@ export class Solution extends ClientV2 {
             this._solutionDisposable.add(branchSubject);
 
             this._solutionDisposable.add(this.repository.onDidChangeStatuses(() => {
-                branchSubject.onNext(this.repository["branch"]);
+                branchSubject.onNext((<any>this.repository).branch);
             }));
         }
     }

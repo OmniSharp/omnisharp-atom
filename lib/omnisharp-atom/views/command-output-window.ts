@@ -1,6 +1,6 @@
-import {Disposable, Observable} from "rx";
+/* tslint:disable:no-string-literal */
+import {Observable} from "rx";
 import * as _ from "lodash";
-import Omni = require("../../omni-sharp-server/omni")
 import * as React from "react";
 import {ReactClientComponent} from "./react-client-component";
 
@@ -10,8 +10,6 @@ interface ICommandOutputWindowState {
 
 export class CommandOutputWindow extends ReactClientComponent<{ update: Observable<{ message: string }[]>; output: { message: string }[] }, ICommandOutputWindowState>  {
     public displayName = "CommandOutputWindow";
-
-    private _convert;
 
     constructor(props?: { update: Observable<{ id: number; message: string }[]>; output: { message: string }[] }, context?: any) {
         super(props, context);

@@ -1,6 +1,5 @@
 import {CompositeDisposable} from "rx";
-import Omni = require("../../omni-sharp-server/omni");
-import * as path from "path";
+import {Omni} from "../../omni-sharp-server/omni";
 
 class PackageRestore implements IFeature {
     private disposable: Rx.CompositeDisposable;

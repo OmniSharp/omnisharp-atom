@@ -1,19 +1,18 @@
 // Inspiration : https://atom.io/packages/ide-haskell
 // and https://atom.io/packages/ide-flow
 // https://atom.io/packages/atom-typescript
+import {OmniSharp} from "../../omnisharp";
 import {CompositeDisposable, Observable, Disposable} from "rx";
-import Omni = require("../../omni-sharp-server/omni");
-import * as path from "path";
-import * as fs from "fs";
-import TooltipView = require("../views/tooltip-view");
+import {Omni} from "../../omni-sharp-server/omni";
+import {TooltipView} from "../views/tooltip-view";
 import * as $ from "jquery";
 const escape = require("escape-html");
-import * as _ from "lodash";
 
 class TypeLookup implements IFeature {
     private disposable: Rx.CompositeDisposable;
 
     public activate() {
+        /* tslint:disable:no-string-literal */
         this.disposable = new CompositeDisposable();
         this.disposable.add(Omni.switchActiveEditor((editor, cd) => {
             // subscribe for tooltips
@@ -32,8 +31,9 @@ class TypeLookup implements IFeature {
             Omni.activeEditor.first().subscribe(editor => {
                 const tooltip = <Tooltip>editor["__omniTooltip"];
                 tooltip.showExpressionTypeOnCommand();
-            })
+            });
         }));
+        /* tslint:enable:no-string-literal */
     }
 
     public dispose() {
@@ -46,8 +46,6 @@ class TypeLookup implements IFeature {
 }
 
 class Tooltip implements Rx.Disposable {
-
-    private exprTypeTimeout = null;
     private exprTypeTooltip: TooltipView = null;
     private keydown: Rx.Observable<KeyboardEvent>;
     private keydownSubscription: Rx.IDisposable;
@@ -63,7 +61,7 @@ class Tooltip implements Rx.Disposable {
         if (!scroll[0]) return;
 
         // to debounce mousemove event"s firing for some reason on some machines
-        const lastExprTypeBufferPt: any;
+        let lastExprTypeBufferPt: any;
 
         const mousemove = Observable.fromEvent<MouseEvent>(scroll[0], "mousemove");
         const mouseout = Observable.fromEvent<MouseEvent>(scroll[0], "mouseout");
@@ -90,13 +88,13 @@ class Tooltip implements Rx.Disposable {
 
         cd.add(mouseout.subscribe((e) => this.hideExpressionType()));
 
-        cd.add(Omni.switchActiveEditor((editor, cd) => {
-            cd.add(Disposable.create(() => this.hideExpressionType()));
+        cd.add(Omni.switchActiveEditor((edit, innerCd) => {
+            innerCd.add(Disposable.create(() => this.hideExpressionType()));
         }));
 
         cd.add(Disposable.create(() => {
             this.hideExpressionType();
-        }))
+        }));
     }
 
     private subcribeKeyDown() {
@@ -107,7 +105,6 @@ class Tooltip implements Rx.Disposable {
     public showExpressionTypeOnCommand() {
         if (this.editor.cursors.length < 1) return;
 
-        const buffer = this.editor.getBuffer();
         const bufferPt = this.editor.getCursorBufferPosition();
 
         if (!this.checkPosition(bufferPt)) return;
@@ -148,18 +145,20 @@ class Tooltip implements Rx.Disposable {
         this.showToolTip(bufferPt, tooltipRect);
     }
 
-    private checkPosition(bufferPt) {
+    private checkPosition(bufferPt: TextBuffer.Point) {
         const curCharPixelPt = this.rawView.pixelPositionForBufferPosition([bufferPt.row, bufferPt.column]);
         const nextCharPixelPt = this.rawView.pixelPositionForBufferPosition([bufferPt.row, bufferPt.column + 1]);
 
-        if (curCharPixelPt.left >= nextCharPixelPt.left) { return false; }
-        else { return true };
+        if (curCharPixelPt.left >= nextCharPixelPt.left) {
+            return false;
+        } else {
+            return true;
+        }
     }
 
-    private showToolTip(bufferPt, tooltipRect) {
+    private showToolTip(bufferPt: TextBuffer.Point, tooltipRect: any) {
         this.exprTypeTooltip = new TooltipView(tooltipRect);
 
-        const buffer = this.editor.getBuffer();
         // Actually make the program manager query
         Omni.request(solution => solution.typelookup({
             IncludeDocumentation: true,
@@ -169,9 +168,9 @@ class Tooltip implements Rx.Disposable {
             if (response.Type === null) {
                 return;
             }
-            const message = `<b>${escape(response.Type) }</b>`;
+            let message = `<b>${escape(response.Type)}</b>`;
             if (response.Documentation) {
-                message = message + `<br/><i>${escape(response.Documentation) }</i>`;
+                message = message + `<br/><i>${escape(response.Documentation)}</i>`;
             }
             // Sorry about this "if". It"s in the code I copied so I guess its there for a reason
             if (this.exprTypeTooltip) {
@@ -198,22 +197,18 @@ class Tooltip implements Rx.Disposable {
 
     private getFromShadowDom(element: JQuery, selector: string): JQuery {
         const el = element[0];
-        const found = (<any> el).rootElement.querySelectorAll(selector);
+        const found = (<any>el).rootElement.querySelectorAll(selector);
         return $(found[0]);
     }
 
-    private pixelPositionFromMouseEvent(editorView, event: MouseEvent) {
+    private pixelPositionFromMouseEvent(editorView: any, event: MouseEvent) {
         const clientX = event.clientX, clientY = event.clientY;
         const linesClientRect = this.getFromShadowDom(editorView, ".lines")[0].getBoundingClientRect();
-        const top = clientY - linesClientRect.top;
-        const left = clientX - linesClientRect.left;
+        let top = clientY - linesClientRect.top;
+        let left = clientX - linesClientRect.left;
         top += (<any>this.editor).getScrollTop();
         left += (<any>this.editor).getScrollLeft();
         return { top: top, left: left };
-    }
-
-    private screenPositionFromMouseEvent(editorView, event) {
-        return editorView.getModel().screenPositionForPixelPosition(this.pixelPositionFromMouseEvent(editorView, event));
     }
 }
 

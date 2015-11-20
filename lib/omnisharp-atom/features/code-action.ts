@@ -1,6 +1,7 @@
+import {OmniSharp} from "../../omnisharp";
 import * as _ from "lodash";
 import {CompositeDisposable, Subject, Observable, Scheduler} from "rx";
-import Omni = require("../../omni-sharp-server/omni")
+import {Omni} from "../../omni-sharp-server/omni";
 import * as SpacePen from "atom-space-pen-views";
 import {applyAllChanges} from "../services/apply-changes";
 import codeActionsView from "../views/code-actions-view";
@@ -17,28 +18,27 @@ class CodeAction implements IFeature {
             //store the editor that this was triggered by.
             const editor = atom.workspace.getActiveTextEditor();
             this.getCodeActionsRequest(editor)
-                .subscribe(ctx => {
-                    const {request, response} = ctx;
+                .subscribe(({request, response}) => {
                     //pop ui to user.
                     this.view = codeActionsView({
                         items: response.CodeActions,
                         confirmed: (item) => {
                             if (!editor || editor.isDestroyed()) return;
 
-                            const range = editor.getSelectedBufferRange();
                             this.runCodeActionRequest(editor, request, item.Identifier)
-                                .subscribe((response) => applyAllChanges(response.Changes));
+                                .subscribe((resp) => applyAllChanges(resp.Changes));
                         }
                     }, editor);
                 });
         }));
 
         this.disposable.add(Omni.switchActiveEditor((editor, cd) => {
-            const cd = new CompositeDisposable();
+            let word: string, marker: Atom.Marker, subscription: Rx.Disposable;
+
             cd.add(Omni.listener.getcodeactions
                 .where(z => z.request.FileName === editor.getPath())
                 .where(ctx => ctx.response.CodeActions.length > 0)
-                .subscribe(({response, request}) => {
+                .subscribe(({request}) => {
                     if (marker) {
                         marker.destroy();
                         marker = null;
@@ -48,13 +48,9 @@ class CodeAction implements IFeature {
                     marker = editor.markBufferRange(range);
                     editor.decorateMarker(marker, { type: "line-number", class: "quickfix" });
                 }));
-
-            const word, marker: Atom.Marker, subscription: Rx.Disposable;
             const makeLightbulbRequest = (position: TextBuffer.Point) => {
                 if (subscription) subscription.dispose();
                 if (!editor || editor.isDestroyed()) return;
-
-                const range = editor.getSelectedBufferRange();
 
                 this.getCodeActionsRequest(editor, true)
                     .subscribe(ctx => {
@@ -65,8 +61,8 @@ class CodeAction implements IFeature {
                                 marker = null;
                             }
 
-                            const range = [[position.row, 0], [position.row, 0]];
-                            marker = editor.markBufferRange(range);
+                            const rng = [[position.row, 0], [position.row, 0]];
+                            marker = editor.markBufferRange(rng);
                             editor.decorateMarker(marker, { type: "line-number", class: "quickfix" });
                         }
                     });
@@ -89,7 +85,7 @@ class CodeAction implements IFeature {
                 .subscribe(cursor => update(cursor.newBufferPosition)));
 
             cd.add(editor.onDidStopChanging(_.debounce(() => !onDidStopChanging.isDisposed && onDidStopChanging.onNext(true), 1000)));
-            cd.add(editor.onDidChangeCursorPosition(_.debounce(e => {
+            cd.add(editor.onDidChangeCursorPosition(_.debounce((e: any) => {
                 const oldPos = e.oldBufferPosition;
                 const newPos = e.newBufferPosition;
 
@@ -102,7 +98,9 @@ class CodeAction implements IFeature {
                     }
                 }
 
-                !onDidChangeCursorPosition.isDisposed && onDidChangeCursorPosition.onNext(e);
+                if (!onDidChangeCursorPosition.isDisposed) {
+                    onDidChangeCursorPosition.onNext(e);
+                }
             }, 1000)));
         }));
     }
@@ -127,7 +125,7 @@ class CodeAction implements IFeature {
     private getRequest(editor: Atom.TextEditor, codeAction: string): OmniSharp.Models.V2.RunCodeActionRequest;
     private getRequest(editor: Atom.TextEditor, codeAction?: string) {
         const range = <any>editor.getSelectedBufferRange();
-        const request = <OmniSharp.Models.V2.RunCodeActionRequest>{
+        const request: OmniSharp.Models.V2.RunCodeActionRequest = {
             WantsTextChanges: true,
             Selection: {
                 Start: {

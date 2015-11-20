@@ -6,11 +6,10 @@ export interface SelectListViewOptions<T> {
 }
 
 export default function <T>(options: SelectListViewOptions<T>, editor: Atom.TextEditor): CodeActionsView<T> {
-    const codeActionView = (<any>editor).codeActionView;
+    let codeActionView = (<any>editor).codeActionView;
     if (!codeActionView) {
         (<any>editor).codeActionView = codeActionView = new CodeActionsView<T>(options, editor);
-    }
-    else {
+    } else {
         codeActionView.options = options;
     }
 
@@ -21,7 +20,6 @@ export default function <T>(options: SelectListViewOptions<T>, editor: Atom.Text
 
 class CodeActionsView<T> extends SpacePen.SelectListView {
 
-    private panel: Atom.Panel;
     private _overlayDecoration: any;
     private _vimMode: boolean;
     private _editorElement: any;
@@ -40,10 +38,10 @@ class CodeActionsView<T> extends SpacePen.SelectListView {
 
     public setItems() {
         //super.setItems(this.options.items)
-        SpacePen.SelectListView.prototype.setItems.call(this, this.options.items)
+        SpacePen.SelectListView.prototype.setItems.call(this, this.options.items);
     }
 
-    public confirmed(item) {
+    public confirmed(item: any): any {
         this.cancel(); //will close the view
 
         this.options.confirmed(item);
@@ -52,7 +50,7 @@ class CodeActionsView<T> extends SpacePen.SelectListView {
         return null;
     }
 
-    show() {
+    public show() {
         this.storeFocusedElement();
         this.disableVimMode();
         this.destroyOverlay();
@@ -62,29 +60,29 @@ class CodeActionsView<T> extends SpacePen.SelectListView {
         setTimeout(() => this.focusFilterEditor(), 100);
     }
 
-    hide() {
+    public hide() {
         this.restoreFocus();
         this.enableVimMode();
         this.destroyOverlay();
     }
 
-    destroyOverlay() {
+    public destroyOverlay() {
         if (this._overlayDecoration)
             this._overlayDecoration.destroy();
     }
 
 
-    cancelled() {
+    public cancelled() {
         this.hide();
     }
 
-    enableVimMode() {
+    public enableVimMode() {
         if (this._vimMode) {
             this._editorElement.classList.add("vim-mode");
         }
     }
 
-    disableVimMode() {
+    public disableVimMode() {
         if (this._vimMode) {
             this._editorElement.classList.remove("vim-mode");
         }
@@ -92,7 +90,7 @@ class CodeActionsView<T> extends SpacePen.SelectListView {
 
     public getFilterKey() { return "Name"; }
 
-    public viewForItem(item) {
+    public viewForItem(item: any) {
 
         return SpacePen.$$(function() {
             return this.li({

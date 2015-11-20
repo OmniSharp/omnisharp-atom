@@ -1,7 +1,9 @@
-import {Observable} from "rx";
-import Omni = require("../../omni-sharp-server/omni")
-import * as React from "react";
+/* tslint:disable:no-string-literal */
+/* tslint:disable:variable-name */
 const Convert = require("ansi-to-html");
+/* tslint:enable:variable-name */
+import {Observable} from "rx";
+import * as React from "react";
 import * as _ from "lodash";
 import {ReactClientComponent} from "./react-client-component";
 import {runTests} from "../features/run-tests";
@@ -22,7 +24,7 @@ interface TestWindowProps {
 export class TestResultsWindow extends ReactClientComponent<TestWindowProps, TestWindowState> {
     public displayName = "TestResultsWindow";
 
-    private _convert;
+    private _convert: any;
 
     constructor(props?: TestWindowProps, context?: any) {
         super(props, context);

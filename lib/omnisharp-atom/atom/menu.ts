@@ -1,5 +1,5 @@
-import {CompositeDisposable, Observable} from "rx";
-import Omni = require("../../omni-sharp-server/omni")
+import {CompositeDisposable} from "rx";
+import {Omni} from "../../omni-sharp-server/omni";
 import {readFileSync} from "fs";
 
 class Menu implements IFeature {
@@ -12,8 +12,6 @@ class Menu implements IFeature {
             const menuJsonFile = Omni.packageDir + "/omnisharp-atom/menus/omnisharp-menu.json";
             this._json = JSON.parse(readFileSync(menuJsonFile, "utf8")).menu;
         }
-
-        const cd = new CompositeDisposable();
 
         this.disposable.add(Omni.switchActiveSolution((solution, cd) => {
             if (solution) {

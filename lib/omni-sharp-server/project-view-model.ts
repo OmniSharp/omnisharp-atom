@@ -1,9 +1,8 @@
+import {OmniSharp, IProjectViewModel} from "../omnisharp";
 import * as _ from "lodash";
 import {Observable, ReplaySubject} from "rx";
-import {basename, dirname, normalize} from "path";
-import {Solution} from "./solution";
 
-const projectFactories: { [key: string]: { new (project: any, solutionPath: string); }; } = {
+const projectFactories: { [key: string]: { new (project: any, solutionPath: string): any; }; } = {
     MsBuildProject: <any>MsBuildProjectViewModel,
     DnxProject: <any>DnxProjectViewModel
 };
@@ -16,7 +15,7 @@ export function projectViewModelFactory(omnisharpProject: OmniSharp.Models.Proje
         console.log(`Missing factory for project type ${missing}`);
     }
 
-    const results: ProjectViewModel<any>[] = []
+    const results: ProjectViewModel<any>[] = [];
     _.each(projectTypes, projectType => {
         if (projectType && projectFactories[projectType]) {
             results.push(new projectFactories[projectType](omnisharpProject[projectType], solutionPath));
@@ -39,9 +38,8 @@ const workspaceFactories: { [key: string]: (workspace: any, solutionPath: string
     },
 };
 
-const supportedWorkspaceTypes = _.keys(projectFactories);
 export function workspaceViewModelFactory(omnisharpWorkspace: OmniSharp.Models.WorkspaceInformationResponse, solutionPath: string) {
-    const projects = [];
+    const projects: any[] = [];
     _.forIn(omnisharpWorkspace, (item, key) => {
         const factory = workspaceFactories[key];
         if (factory) {
@@ -98,7 +96,9 @@ export abstract class ProjectViewModel<T> implements IProjectViewModel {
      }
     public set activeFramework(value) {
         this._activeFramework = value;
-        !this._subjectActiveFramework.isDisposed && this._subjectActiveFramework.onNext(this._activeFramework);
+        if (!this._subjectActiveFramework.isDisposed) {
+            this._subjectActiveFramework.onNext(this._activeFramework);
+        }
     }
 
     private _frameworks: OmniSharp.Models.DnxFramework[] = [{ FriendlyName: "All", Name: "all", ShortName: "all" }];
@@ -122,7 +122,7 @@ export abstract class ProjectViewModel<T> implements IProjectViewModel {
         activeFramework: Observable<OmniSharp.Models.DnxFramework>;
     };
 
-    public abstract init(value: T);
+    public abstract init(value: T): void;
     public update(other: ProjectViewModel<T>) {
         this.name = other.name;
         this.path = other.path;
@@ -130,7 +130,7 @@ export abstract class ProjectViewModel<T> implements IProjectViewModel {
         this.sourceFiles = other.sourceFiles;
         this.frameworks = other.frameworks;
         this.activeFramework = this._activeFramework;
-        this.configurations = other.configurations
+        this.configurations = other.configurations;
         this.commands = other.commands;
     }
 

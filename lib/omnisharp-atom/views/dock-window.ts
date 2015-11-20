@@ -1,10 +1,8 @@
 //const Convert = require("ansi-to-html")
 import * as _ from "lodash";
-import {Observable, SingleAssignmentDisposable, Disposable, CompositeDisposable, Subject} from "rx";
-import Omni = require("../../omni-sharp-server/omni");
+import {Observable,   CompositeDisposable, Subject} from "rx";
 import * as React from "react";
 import {ReactClientComponent} from "./react-client-component";
-import {findUsages} from "../features/find-usages";
 
 interface IDockWindowState {
     selected?: string;
@@ -130,11 +128,9 @@ export class DockWindow<T extends IDockWindowProps> extends ReactClientComponent
 
     public get selected() { return this.state.selected; }
     private visible = false;
-    public get isOpen() { return this.visible }
+    public get isOpen() { return this.visible; }
     private height = 0;
     private tempHeight = 0;
-
-    private _convert;
 
     constructor(props?: T, context?: any) {
         super(props, context);
@@ -238,7 +234,7 @@ export class DockWindow<T extends IDockWindowProps> extends ReactClientComponent
 
         if (window) {
             const props = _.clone(window.props);
-            props.className = (this.isSelected((window.id)) + " " + (props.className || ""))
+            props.className = (this.isSelected((window.id)) + " " + (props.className || ""));
             props.key = window.id;
             return React.createElement(window.view, props);
         }
@@ -253,7 +249,7 @@ export class DockWindow<T extends IDockWindowProps> extends ReactClientComponent
             });
         }
 
-        const fontSize = this.state.fontSize - 1;
+        let fontSize = this.state.fontSize - 1;
         if (fontSize <= 0)
             fontSize = 1;
 
@@ -290,12 +286,12 @@ function makeRxReactEventHandler<T>() {
     return {
         handler: <(value: T) => void> subject.onNext.bind(subject),
         observable: subject.asObservable()
-    }
+    };
 }
 
 interface IResizeProps {
-    update(location: { left: number; top: number });
-    done();
+    update(location: { left: number; top: number }): void;
+    done(): void;
     className: string;
 }
 
@@ -304,7 +300,6 @@ export class Resizer<T extends IResizeProps> extends React.Component<T, {}> {
     private disposable = new CompositeDisposable();
 
     public componentDidMount() {
-        const node = React.findDOMNode(this);
         const mousemove = Observable.fromEvent<MouseEvent>(document.body, "mousemove").share();
         const mouseup = Observable.fromEvent<MouseEvent>(document.body, "mouseup").share();
         const mousedown = this._mousedown.observable;
@@ -325,12 +320,11 @@ export class Resizer<T extends IResizeProps> extends React.Component<T, {}> {
             }).takeUntil(mouseup);
         });
 
-        mousedown.flatMapLatest(x => mousemove.skipUntil(mouseup)).subscribe(() => this.props.done())
+        mousedown.flatMapLatest(x => mousemove.skipUntil(mouseup)).subscribe(() => this.props.done());
         this.disposable.add(mousedrag.subscribe(this.props.update));
     }
 
     public componentWillUnmount() {
-        const node = React.findDOMNode(this);
         this.disposable.dispose();
     }
 

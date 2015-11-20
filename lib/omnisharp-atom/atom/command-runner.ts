@@ -1,25 +1,25 @@
 import {Solution} from "../../omni-sharp-server/solution";
 import {CompositeDisposable, Disposable, Observable, Subject} from "rx";
-import Omni = require("../../omni-sharp-server/omni");
+import {Omni} from "../../omni-sharp-server/omni";
 import {ProjectViewModel} from "../../omni-sharp-server/project-view-model";
 import {any, each, contains, pull} from "lodash";
-import {spawn, ChildProcess} from "child_process";
+import {spawn} from "child_process";
 import {CommandOutputWindow} from "../views/command-output-window";
 import * as readline from "readline";
 import {dock} from "../atom/dock";
 import {normalize, join, dirname} from "path";
 
 const win32 = process.platform === "win32";
-
+let env: typeof process.env;
 const daemonFlags = [
     "Microsoft.AspNet.Hosting", // Old (pre beta 8)
     "Microsoft.AspNet.Server.Kestrel", // New post beta8
     "Microsoft.AspNet.Server.WebListener"
 ];
 if (win32) {
-    const env = <typeof process.env>{};
+    env = <typeof process.env>{};
 } else {
-    const env = process.env;
+    env = process.env;
 }
 
 class CommandRunner implements IFeature {
@@ -62,6 +62,9 @@ class CommandRunner implements IFeature {
                 }
             }));
 
+        // Auto restart the process if a file changes for a project that applies
+        const restart = new Subject<Atom.TextEditor>();
+
         this.disposable.add(Omni.eachEditor((editor, cd) => {
             cd.add(editor.onDidSave(() => restart.onNext(editor)));
             cd.add(editor.getBuffer().onDidReload(() => restart.onNext(editor)));
@@ -69,9 +72,6 @@ class CommandRunner implements IFeature {
 
         const processes = this._processesChanged = new Subject<RunProcess[]>();
         this.observe = { processes };
-
-        // Auto restart the process if a file changes for a project that applies
-        const restart = new Subject<Atom.TextEditor>();
 
         this.disposable.add(restart
             .where(z => !!this._watchProcesses.length)
@@ -155,7 +155,7 @@ export class RunProcess {
     private id: string;
     private process: any;
 
-    constructor(public project: ProjectViewModel<any>, private command: string, private watch: boolean = false) {
+    constructor(public project: ProjectViewModel<any>, private command: string, private watch = false) {
         this.id = `${this.project.name}${this.command}`;
         this.disposable.add(dock.addWindow(this.id, `${this.project.name} ${this.watch ? "--watch" : ""} ${this.command}`, CommandOutputWindow, this, {
             closeable: true,
@@ -173,7 +173,7 @@ export class RunProcess {
     }
 
     public stop() {
-        try { this.process.kill(); } catch (e) { }
+        try { this.process.kill(); } catch (e) { /* */ }
     }
 
     private bootRuntime(runtime: string) {
@@ -187,7 +187,7 @@ export class RunProcess {
             args.unshift("--watch");
         }
 
-        this.output.push({ message: `Starting ${runtime} ${args.join(" ") }` });
+        this.output.push({ message: `Starting ${runtime} ${args.join(" ")}` });
 
         this.started = true;
 
@@ -202,7 +202,7 @@ export class RunProcess {
             output: undefined
         });
 
-        out.on("line", (data) => {
+        out.on("line", (data: any) => {
             this.output.push({ message: data });
             this.update.onNext(this.output);
         });
@@ -212,7 +212,7 @@ export class RunProcess {
             output: undefined
         });
 
-        error.on("line", (data) => {
+        error.on("line", (data: any) => {
             this.output.push({ message: data });
             this.update.onNext(this.output);
         });
@@ -244,4 +244,4 @@ export class RunProcess {
     }
 }
 
-export const commandRunner = new CommandRunner
+export const commandRunner = new CommandRunner;

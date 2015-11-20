@@ -1,5 +1,5 @@
-import Omni = require("../lib/omni-sharp-server/omni");
-import SolutionManager from "../lib/omni-sharp-server/solution-manager";
+import {Omni} from "../lib/omni-sharp-server/omni";
+import {SolutionManager} from "../lib/omni-sharp-server/solution-manager";
 import {DriverState} from "omnisharp-client";
 import {Observable} from "rx";
 import {setupFeature} from "./test-helpers";

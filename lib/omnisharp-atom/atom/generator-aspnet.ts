@@ -1,15 +1,7 @@
-import {CompositeDisposable, Disposable, Observable} from "rx";
-import Omni = require("../../omni-sharp-server/omni")
-import StatusBarComponent = require("../views/status-bar-view");
-import * as React from "react";
-import {each, delay, any, endsWith, filter} from "lodash";
-import * as fs from "fs";
+import {CompositeDisposable, Observable} from "rx";
+import {each, endsWith, filter} from "lodash";
 import * as path from "path";
 import {solutionInformation} from "../atom/solution-information";
-import {DriverState} from "omnisharp-client";
-
-const readdir = Observable.fromNodeCallback(fs.readdir);
-const stat = Observable.fromNodeCallback(fs.stat);
 
 // TODO: Make sure it stays in sync with
 const commands = [
@@ -78,7 +70,7 @@ class GeneratorAspnet implements IFeature {
 
         each(commands, command => {
             this.disposable.add(atom.commands.add("atom-workspace", `omnisharp-atom:aspnet-${command}`, () => this.loadCsFile(this.run(`aspnet:${command}`))));
-        })
+        });
     }
 
     private loadCsFile(promise: Promise<any>) {
@@ -111,7 +103,7 @@ class GeneratorAspnet implements IFeature {
         return this.generator.run(command, undefined, { promptOnZeroDirectories: true });
     }
 
-    public setup(generator) {
+    public setup(generator: any) {
         this.generator = generator;
     }
 

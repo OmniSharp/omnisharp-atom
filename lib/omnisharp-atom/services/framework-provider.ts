@@ -1,6 +1,6 @@
 import * as _ from "lodash";
 import {Observable} from "rx";
-import Omni = require("../../omni-sharp-server/omni");
+import {Omni} from "../../omni-sharp-server/omni";
 import Manager from "../../omni-sharp-server/solution-manager";
 import {ajax} from "jquery";
 const filter = require("fuzzaldrin").filter;
@@ -80,7 +80,7 @@ const nugetName: IAutocompleteProvider = {
     pathMatch(path) {
         return path && !!path.match(nameRegex);
     },
-    dispose() { }
+    dispose() { /* */ }
 }
 
 const nugetVersion: IAutocompleteProvider = {
@@ -97,7 +97,7 @@ const nugetVersion: IAutocompleteProvider = {
     pathMatch(path) {
         return path && !!path.match(versionRegex);
     },
-    dispose() { }
+    dispose() { /* */ }
 }
 
 const providers = [nugetName, nugetVersion];

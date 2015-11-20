@@ -1,5 +1,5 @@
 import {Solution} from "../../lib/omni-sharp-server/solution";
-import Omni = require("../../lib/omni-sharp-server/omni");
+import {Omni} from "../../lib/omni-sharp-server/omni";
 import {Observable, CompositeDisposable} from "rx";
 import {setupFeature, restoreBuffers, openEditor} from "../test-helpers";
 const win32 = process.platform === "win32";

@@ -1,5 +1,6 @@
+import {OmniSharp} from "../../omnisharp";
 import {CompositeDisposable} from "rx";
-import Omni = require("../../omni-sharp-server/omni")
+import {Omni} from "../../omni-sharp-server/omni";
 import {applyChanges} from "../services/apply-changes";
 
 class CodeFormat implements IFeature {
@@ -62,4 +63,4 @@ class CodeFormat implements IFeature {
     public title = "Code Format";
     public description = "Support for code formatting.";
 }
-export const codeFormat = new CodeFormat
+export const codeFormat = new CodeFormat;

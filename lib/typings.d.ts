@@ -25,15 +25,6 @@ interface OutputMessage {
     logLevel?: string;
 }
 
-interface IProjectViewModel {
-    name: string;
-    path: string;
-    activeFramework: OmniSharp.Models.DnxFramework;
-    frameworks: OmniSharp.Models.DnxFramework[];
-    configurations: string[];
-    commands: { [key: string]: string };
-}
-
 interface WebComponent {
     createdCallback?: () => void;
     attachedCallback?: () => void;

@@ -1,4 +1,4 @@
-import SolutionManager from "../lib/omni-sharp-server/solution-manager";
+import {SolutionManager} from "../lib/omni-sharp-server/solution-manager";
 import {CompositeDisposable, Disposable, Observable} from "rx";
 import {DriverState} from "omnisharp-client";
 

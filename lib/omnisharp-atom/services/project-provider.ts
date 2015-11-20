@@ -1,6 +1,6 @@
 import * as _ from "lodash";
 import {Observable} from "rx";
-import Omni = require("../../omni-sharp-server/omni");
+import {Omni} from "../../omni-sharp-server/omni";
 import Manager from "../../omni-sharp-server/solution-manager";
 import {ajax} from "jquery";
 const filter = require("fuzzaldrin").filter;
@@ -45,7 +45,7 @@ function fetchFromGithub(source: string, prefix: string, searchPrefix: string): 
     source = _.trim(source, "/").replace("www.", "").replace("https://", "").replace("http://", "").replace(/\/|\:/g, "-");
 
     // Get the file from github
-    const result = ajax(`https://raw.githubusercontent.com/OmniSharp/omnisharp-nuget/resources/resources/${source}/${prefix.toLowerCase() }.json`).then(res => JSON.parse(res), () => {});
+    const result = ajax(`https://raw.githubusercontent.com/OmniSharp/omnisharp-nuget/resources/resources/${source}/${prefix.toLowerCase() }.json`).then(res => JSON.parse(res), () => { /* */ });
 
     // The non key files have an object layout
     if (prefix !== "_keys") {
@@ -173,7 +173,7 @@ const nugetName: IAutocompleteProvider = {
     pathMatch(path) {
         return path && !!path.match(nameRegex);
     },
-    dispose() { }
+    dispose() { /* */ }
 }
 
 const nugetVersion: IAutocompleteProvider = {
@@ -222,7 +222,7 @@ const nugetVersion: IAutocompleteProvider = {
     pathMatch(path) {
         return path && !!path.match(versionRegex);
     },
-    dispose() { }
+    dispose() { /* */ }
 }
 
 const providers = [nugetName, nugetVersion];

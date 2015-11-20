@@ -1,6 +1,5 @@
+import {OmniSharp} from "../../omnisharp";
 import * as SpacePen from "atom-space-pen-views";
-import {CompositeDisposable, Disposable, Scheduler, Observable} from "rx";
-import * as _ from "lodash";
 import * as React from "react";
 import {ReactClientComponent} from "./react-client-component";
 import {frameworkSelector} from "../atom/framework-selector";
@@ -47,9 +46,7 @@ export class FrameworkSelectorComponent extends ReactClientComponent<{ alignLeft
     }
 }
 
-class FrameworkSelectorSelectListView extends SpacePen.SelectListView {
-    private panel: Atom.Panel;
-
+export class FrameworkSelectorSelectListView extends SpacePen.SelectListView {
     constructor(public editor: Atom.TextEditor, private options: { alignLeft: boolean; attachTo: string; items: OmniSharp.Models.DnxFramework[]; save(item: any): void }) {
         super();
         this.$.addClass("code-actions-overlay");
@@ -61,17 +58,17 @@ class FrameworkSelectorSelectListView extends SpacePen.SelectListView {
     }
 
     public setItems() {
-        SpacePen.SelectListView.prototype.setItems.call(this, this.options.items)
+        SpacePen.SelectListView.prototype.setItems.call(this, this.options.items);
     }
 
-    public confirmed(item) {
+    public confirmed(item: any): any {
         this.cancel(); //will close the view
 
         this.options.save(item);
         return null;
     }
 
-    show() {
+    public show() {
         this.storeFocusedElement();
         setTimeout(() => this.focusFilterEditor(), 100);
         const width = 180;
@@ -97,21 +94,18 @@ class FrameworkSelectorSelectListView extends SpacePen.SelectListView {
         }
     }
 
-    hide() {
+    public hide() {
         this.restoreFocus();
         this.remove();
     }
 
-    cancelled() {
+    public cancelled() {
         this.hide();
     }
 
     public getFilterKey() { return "Name"; }
 
-    public viewForItem(item) {
-        if (!item) {
-
-        }
+    public viewForItem(item: any) {
         return SpacePen.$$(function() {
             return this.li({
                 "class": "event",

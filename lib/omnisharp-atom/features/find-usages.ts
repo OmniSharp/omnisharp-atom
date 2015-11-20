@@ -1,5 +1,6 @@
-import {CompositeDisposable, Observable, Subject, Disposable} from "rx";
-import Omni = require("../../omni-sharp-server/omni");
+import {OmniSharp} from "../../omnisharp";
+import {CompositeDisposable, Observable, Disposable} from "rx";
+import {Omni} from "../../omni-sharp-server/omni";
 import {dock} from "../atom/dock";
 import {FindWindow} from "../views/find-pane-view";
 
@@ -79,7 +80,7 @@ class FindUsages implements IFeature {
             this.usages = s;
         }));
 
-        this.disposable.add(Observable.merge(findUsages.observe.find.map(z => true), findUsages.observe.open.map(z => true)).subscribe(() => {
+        this.disposable.add(Observable.merge(this.observe.find.map(z => true), this.observe.open.map(z => true)).subscribe(() => {
             this.ensureWindowIsCreated();
             dock.selectWindow("find");
         }));
@@ -92,7 +93,7 @@ class FindUsages implements IFeature {
 
 
         this.disposable.add(Omni.listener.findimplementations.subscribe((data) => {
-            if (data.response.QuickFixes.length == 1) {
+            if (data.response.QuickFixes.length === 1) {
                 Omni.navigateTo(data.response.QuickFixes[0]);
             }
         }));
@@ -112,7 +113,7 @@ class FindUsages implements IFeature {
             this.window = new CompositeDisposable();
             const windowDisposable = dock.addWindow("find", "Find", FindWindow, {
                 scrollTop: () => this.scrollTop,
-                setScrollTop: (scrollTop) => this.scrollTop = scrollTop,
+                setScrollTop: (scrollTop: number) => this.scrollTop = scrollTop,
                 findUsages: this
             }, {
                     priority: 2000,

@@ -1,13 +1,13 @@
-import {CompositeDisposable, Observable, Disposable} from "rx";
+import {OmniSharp} from "../../omnisharp";
+import {CompositeDisposable, Disposable} from "rx";
 import {ProjectViewModel} from "../../omni-sharp-server/project-view-model";
-import Omni = require("../../omni-sharp-server/omni")
+import {Omni} from "../../omni-sharp-server/omni";
 import {FrameworkSelectorComponent} from "../views/framework-selector-view";
 import * as React from "react";
 
 class FrameworkSelector implements IAtomFeature {
     private disposable: Rx.CompositeDisposable;
     private view: HTMLSpanElement;
-    private tile: any;
     private statusBar: any;
     private _active = false;
     public project: ProjectViewModel<any>;
@@ -17,7 +17,7 @@ class FrameworkSelector implements IAtomFeature {
         this.disposable = new CompositeDisposable();
     }
 
-    public setup(statusBar) {
+    public setup(statusBar: any) {
         this.statusBar = statusBar;
 
         if (this._active) {
@@ -35,14 +35,15 @@ class FrameworkSelector implements IAtomFeature {
         this.view.classList.add("inline-block");
         this.view.classList.add("framework-selector");
         this.view.style.display = "none";
-        
+
+        let tile: any;
         if (atom.config.get("grammar-selector.showOnRightSideOfStatusBar")) {
-            const tile = this.statusBar.addRightTile({
+            tile = this.statusBar.addRightTile({
                 item: this.view,
                 priority: 9
             });
         } else {
-            const tile = this.statusBar.addLeftTile({
+            tile = this.statusBar.addLeftTile({
                 item: this.view,
                 priority: 11
             });
@@ -90,7 +91,7 @@ class FrameworkSelector implements IAtomFeature {
     public setActiveFramework(framework: OmniSharp.Models.DnxFramework) {
         if (this.project) {
             this.project.activeFramework = framework;
-            this._component.setState({ activeFramework: framework })
+            this._component.setState({ activeFramework: framework });
         }
     }
 

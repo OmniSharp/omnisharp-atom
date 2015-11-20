@@ -1,6 +1,6 @@
-import * as _ from "lodash";
-import {CompositeDisposable, Subject, Observable, Disposable} from "rx";
-import Omni = require("../../omni-sharp-server/omni")
+import {OmniSharp} from "../../omnisharp";
+import {CompositeDisposable, Observable, Disposable} from "rx";
+import {Omni} from "../../omni-sharp-server/omni";
 import {dock} from "../atom/dock";
 import {TestResultsWindow} from "../views/test-results-window";
 import * as childProcess from "child_process";
@@ -70,11 +70,11 @@ class RunTests implements IFeature {
 
         const child = childProcess.exec(response.TestCommand, { cwd: response.Directory });
 
-        child.stdout.on("data", (data) => {
+        child.stdout.on("data", (data: any) => {
             this.testResults.push({ message: data, logLevel: "" });
         });
 
-        child.stderr.on("data", (data) => {
+        child.stderr.on("data", (data: any) => {
             this.testResults.push({ message: data, logLevel: "fail" });
         });
 

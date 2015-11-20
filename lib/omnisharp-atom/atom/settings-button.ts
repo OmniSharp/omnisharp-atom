@@ -1,16 +1,13 @@
-import {CompositeDisposable, Disposable} from "rx";
-import Omni = require("../../omni-sharp-server/omni")
-import StatusBarComponent = require("../views/status-bar-view");
+import {CompositeDisposable} from "rx";
 import * as React from "react";
 import {dock} from "../atom/dock";
 
 class SettingsButton implements IFeature {
     private disposable: Rx.CompositeDisposable;
-    private _active = false;
 
     public activate() {
         this.disposable = new CompositeDisposable();
-        const tooltip :Rx.IDisposable;
+        let tooltip :Rx.IDisposable;
         const button = React.DOM.a({
             className: `btn icon-gear`,
             onClick: () => atom.commands.dispatch(atom.views.getView(atom.workspace), "omnisharp-atom:settings"),

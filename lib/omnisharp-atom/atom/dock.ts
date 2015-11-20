@@ -1,6 +1,5 @@
 import {CompositeDisposable, SingleAssignmentDisposable, Disposable} from "rx";
 import * as _ from "lodash";
-import Omni = require("../../omni-sharp-server/omni")
 import {DockWindow, DockPane, DockButton, IDockWindowProps, DocPaneOptions, DocButtonOptions} from "../views/dock-window";
 import * as React from "react";
 

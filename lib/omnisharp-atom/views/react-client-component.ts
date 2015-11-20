@@ -12,7 +12,7 @@ export class ReactClientComponent<P, S> extends React.Component<P, S> {
         this.disposable = new CompositeDisposable();
     }
 
-    public componentDidMount() { }
+    public componentDidMount() { /* */ }
 
     public componentWillUnmount() {
         this.disposable.dispose();

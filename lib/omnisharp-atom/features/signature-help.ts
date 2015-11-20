@@ -1,13 +1,14 @@
+import {OmniSharp} from "../../omnisharp";
 import {CompositeDisposable, Observable, Disposable, Subject} from "rx";
-import Omni = require("../../omni-sharp-server/omni");
+import {Omni} from "../../omni-sharp-server/omni";
 import * as _ from "lodash";
 import {SignatureView} from "../views/signature-help-view";
 
 interface IDecoration {
-    destroy();
+    destroy(): void;
     getMarker(): Atom.Marker;
-    getProperties(): any
-    setProperties(props: any);
+    getProperties(): any;
+    setProperties(props: any): any;
 }
 
 class SignatureHelp implements IFeature {
@@ -115,7 +116,6 @@ class SignatureBubble implements Rx.IDisposable {
     private _decoration: IDecoration;
     private _disposable = new CompositeDisposable();
     private _element: SignatureView;
-    private _path: string;
     private _marker: Atom.Marker;
     private _position: TextBuffer.Point;
     private _member: OmniSharp.Models.SignatureHelp;
@@ -129,7 +129,7 @@ class SignatureBubble implements Rx.IDisposable {
 
         this._disposable.add(Disposable.create(() => {
             editorView.classList.remove("signature-help-active");
-        }))
+        }));
 
         this._disposable.add(
             atom.commands.add("atom-text-editor:not(.autocomplete-active).signature-help-active",

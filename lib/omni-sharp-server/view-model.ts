@@ -1,8 +1,9 @@
 import * as _ from "lodash";
+import {OmniSharp} from "../omnisharp";
 import {Solution} from "./solution";
 import {DriverState, OmnisharpClientStatus} from "omnisharp-client";
-import {Observable, Subject, ReplaySubject, CompositeDisposable, Disposable} from "rx";
-import {basename, dirname, normalize, join} from "path";
+import {Observable, Subject, CompositeDisposable, Disposable} from "rx";
+import {basename, normalize, join} from "path";
 import {ProjectViewModel, projectViewModelFactory, workspaceViewModelFactory} from "./project-view-model";
 const win32 = process.platform === "win32";
 
@@ -21,7 +22,7 @@ export class ViewModel implements VMViewState, Rx.IDisposable {
     public isReady: boolean;
     public isError: boolean;
 
-    private _uniqueId;
+    private _uniqueId: string;
     private _disposable = new CompositeDisposable();
     public get uniqueId() { return this._solution.uniqueId; }
 
@@ -29,7 +30,7 @@ export class ViewModel implements VMViewState, Rx.IDisposable {
     public get path() { return this._solution.path; }
     public output: OutputMessage[] = [];
     public diagnostics: OmniSharp.Models.DiagnosticLocation[] = [];
-    public get state() { return this._solution.currentState };
+    public get state() { return this._solution.currentState; };
     public packageSources: string[] = [];
     public runtime = "";
     public runtimePath: string;
@@ -75,7 +76,7 @@ export class ViewModel implements VMViewState, Rx.IDisposable {
         const _projectRemovedStream = this._projectRemovedStream.share();
         const _projectChangedStream = this._projectChangedStream.share();
         const projects = Observable.merge(_projectAddedStream, _projectRemovedStream, _projectChangedStream)
-            .startsWith(<any>[])
+            .startWith(<any>[])
             .debounce(200)
             .map(z => this.projects)
             .share();
@@ -100,7 +101,9 @@ export class ViewModel implements VMViewState, Rx.IDisposable {
 
         this._disposable.add(_solution.state.subscribe(_.bind(this._updateState, this)));
 
+        /* tslint:disable */
         (window["clients"] || (window["clients"] = [])).push(this);  //TEMP
+        /* tslint:enable */
 
         this._disposable.add(_solution.state.where(z => z === DriverState.Connected)
             .subscribe(() => {
@@ -117,8 +120,7 @@ export class ViewModel implements VMViewState, Rx.IDisposable {
         }));
 
         this._disposable.add(_solution.observe.projectAdded.subscribe(projectInformation => {
-            const projects = projectViewModelFactory(projectInformation, _solution.projectPath);
-            _.each(projects, project => {
+            _.each(projectViewModelFactory(projectInformation, _solution.projectPath), project => {
                 if (!_.any(this.projects, { path: project.path })) {
                     this.projects.push(project);
                     this._projectAddedStream.onNext(project);
@@ -127,8 +129,7 @@ export class ViewModel implements VMViewState, Rx.IDisposable {
         }));
 
         this._disposable.add(_solution.observe.projectRemoved.subscribe(projectInformation => {
-            const projects = projectViewModelFactory(projectInformation, _solution.projectPath);
-            _.each(projects, project => {
+            _.each(projectViewModelFactory(projectInformation, _solution.projectPath), project => {
                 const found: ProjectViewModel<any> = _.find(this.projects, { path: project.path });
                 if (found) {
                     _.pull(this.projects, found);
@@ -138,8 +139,7 @@ export class ViewModel implements VMViewState, Rx.IDisposable {
         }));
 
         this._disposable.add(_solution.observe.projectChanged.subscribe(projectInformation => {
-            const projects = projectViewModelFactory(projectInformation, _solution.projectPath);
-            _.each(projects, project => {
+            _.each(projectViewModelFactory(projectInformation, _solution.projectPath), project => {
                 const found: ProjectViewModel<any> = _.find(this.projects, { path: project.path });
                 if (found) {
                     found.update(project);
@@ -149,8 +149,7 @@ export class ViewModel implements VMViewState, Rx.IDisposable {
         }));
 
         this._disposable.add(_solution.observe.projects.subscribe(context => {
-            const projects = workspaceViewModelFactory(context.response, _solution.projectPath);
-            _.each(projects, project => {
+            _.each(workspaceViewModelFactory(context.response, _solution.projectPath), project => {
                 const found: ProjectViewModel<any> = _.find(this.projects, { path: project.path });
                 if (found) {
                     found.update(project);
@@ -169,7 +168,7 @@ export class ViewModel implements VMViewState, Rx.IDisposable {
                 if (system.RuntimePath) {
                     this.runtime = basename(system.RuntimePath);
 
-                    const path = normalize(system.RuntimePath);
+                    let path = normalize(system.RuntimePath);
                     if (win32) {
                         const home = process.env.HOME || process.env.USERPROFILE;
                         if (home && home.trim()) {
@@ -233,7 +232,7 @@ export class ViewModel implements VMViewState, Rx.IDisposable {
         }
     }
 
-    private _updateState(state) {
+    private _updateState(state: any) {
         this.isOn = state === DriverState.Connecting || state === DriverState.Connected;
         this.isOff = state === DriverState.Disconnected;
         this.isConnecting = state === DriverState.Connecting;
@@ -255,7 +254,7 @@ export class ViewModel implements VMViewState, Rx.IDisposable {
             _solution.observe.codecheck
                 .where(z => !!z.request.FileName)
                 .map((ctx) => {
-                    const {request, response} = ctx;
+                    let {request, response} = ctx;
                     if (!response) response = <any>{};
                     const results = _.filter(this.diagnostics, (fix: OmniSharp.Models.DiagnosticLocation) => request.FileName !== fix.FileName);
                     results.unshift(...<OmniSharp.Models.DiagnosticLocation[]>response.QuickFixes || []);

@@ -5,7 +5,7 @@ import * as path from "path";
 import * as fs from "fs";
 
 // TODO: Remove these at some point to stream line startup.
-import Omni = require("../omni-sharp-server/omni");
+import {Omni} from "../omni-sharp-server/omni";
 const win32 = process.platform === "win32";
 
 class OmniSharpAtom {
@@ -14,7 +14,7 @@ class OmniSharpAtom {
     private _started: AsyncSubject<boolean>;
     private _activated: AsyncSubject<boolean>;
 
-    private restartLinter: () => void = () => { };
+    private restartLinter: () => void = () => { /* */ };
 
     public activate(state) {
         this.disposable = new CompositeDisposable;

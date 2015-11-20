@@ -1,12 +1,9 @@
 import {CompositeDisposable, Disposable} from "rx";
-import Omni = require("../../omni-sharp-server/omni")
 import {StatusBarElement} from "../views/status-bar-view";
-import * as React from "react";
 
 class StatusBar implements IAtomFeature {
     private disposable: Rx.CompositeDisposable;
     private view: StatusBarElement;
-    private tile: any;
     private statusBar: any;
     private _active = false;
 
@@ -15,7 +12,7 @@ class StatusBar implements IAtomFeature {
         this.disposable.add(Disposable.create(() => this._active = false));
     }
 
-    public setup(statusBar) {
+    public setup(statusBar: any) {
         this.statusBar = statusBar;
 
         if (this._active) {

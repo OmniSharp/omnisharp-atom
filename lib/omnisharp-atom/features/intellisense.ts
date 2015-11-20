@@ -1,7 +1,6 @@
 import {CompositeDisposable} from "rx";
-import {defer, delay} from "lodash";
-import Omni = require("../../omni-sharp-server/omni")
-import {CompletionProvider} from "../services/completion-provider";
+import {delay} from "lodash";
+import {Omni} from "../../omni-sharp-server/omni";
 
 class Intellisense implements IFeature {
     private disposable: Rx.CompositeDisposable;
@@ -28,7 +27,6 @@ class Intellisense implements IFeature {
     private complete(event: Event, char: string) {
         const editor = atom.workspace.getActiveTextEditor();
         if (editor) {
-            const view = atom.views.getView(editor);
             atom.commands.dispatch(atom.views.getView(editor), "autocomplete-plus:confirm");
             editor.insertText(char);
 
@@ -43,4 +41,4 @@ class Intellisense implements IFeature {
     public title = "Intellisense";
     public description = "Augments some of the issues with Atoms autocomplete-plus package";
 }
-export const intellisense = new Intellisense
+export const intellisense = new Intellisense;

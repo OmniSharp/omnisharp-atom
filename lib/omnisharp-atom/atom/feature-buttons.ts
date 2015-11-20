@@ -1,7 +1,6 @@
 import {CompositeDisposable, Disposable} from "rx";
 import {each} from "lodash";
-import Omni = require("../../omni-sharp-server/omni")
-import StatusBarComponent = require("../views/status-bar-view");
+import {Omni} from "../../omni-sharp-server/omni";
 import * as React from "react";
 import {dock} from "../atom/dock";
 
@@ -29,7 +28,6 @@ class FeatureEditorButtons implements IAtomFeature {
     private disposable: Rx.CompositeDisposable;
     private statusBar: any;
     private _active = false;
-    private _showInEditor = true;
 
     public activate() {
         this.disposable = new CompositeDisposable();
@@ -39,7 +37,7 @@ class FeatureEditorButtons implements IAtomFeature {
         this.disposable.dispose();
     }
 
-    public setup(statusBar) {
+    public setup(statusBar: any) {
         this.statusBar = statusBar;
 
         if (this._active) {
@@ -63,7 +61,7 @@ class FeatureEditorButtons implements IAtomFeature {
         view.style.display = "none";
         view.onclick = () => atom.config.set(config, !atom.config.get(config));
 
-        const tooltipDisposable: Rx.IDisposable;
+        let tooltipDisposable: Rx.IDisposable;
         view.onmouseenter = () => {
             tooltipDisposable = atom.tooltips.add(view, { title: tooltip });
             this.disposable.add(tooltipDisposable);
@@ -73,15 +71,16 @@ class FeatureEditorButtons implements IAtomFeature {
                 this.disposable.remove(tooltipDisposable);
                 tooltipDisposable.dispose();
             }
-        }
+        };
 
+        let tile: any;
         if (atom.config.get("grammar-selector.showOnRightSideOfStatusBar")) {
-            const tile = this.statusBar.addRightTile({
+            tile = this.statusBar.addRightTile({
                 item: view,
                 priority: 9 - index - 1
             });
         } else {
-            const tile = this.statusBar.addLeftTile({
+            tile = this.statusBar.addLeftTile({
                 item: view,
                 priority: 11 + index + 1
             });
@@ -112,9 +111,6 @@ class FeatureEditorButtons implements IAtomFeature {
 
 class FeatureButtons implements IFeature {
     private disposable: Rx.CompositeDisposable;
-    private statusBar: any;
-    private _active = false;
-    private _showInEditor = true;
 
     public activate() {
         this.disposable = new CompositeDisposable();
@@ -126,9 +122,9 @@ class FeatureButtons implements IFeature {
     }
 
     private _button(button: IButton, index: number) {
-        const {name, config, icon, tooltip} = button;
+        const {config} = button;
 
-        const buttonDisposable: Rx.IDisposable;
+        let buttonDisposable: Rx.IDisposable;
         this.disposable.add(atom.config.observe(config, (value: boolean) => {
             if (buttonDisposable) {
                 this.disposable.remove(buttonDisposable);
@@ -147,7 +143,7 @@ class FeatureButtons implements IFeature {
     private _makeButton(button: IButton, index: number, enabled: boolean) {
         const {name, config, icon, tooltip} = button;
 
-        const tooltipDisposable: Rx.IDisposable;
+        let tooltipDisposable: Rx.IDisposable;
         const reactButton = React.DOM.a({
             id: `${icon}-name`,
             className: `btn ${icon} ${enabled ? "btn-success" : ""}`,

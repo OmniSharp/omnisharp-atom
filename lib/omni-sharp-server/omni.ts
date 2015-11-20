@@ -8,6 +8,7 @@ import {ProjectViewModel} from "./project-view-model";
 import {ViewModel} from "./view-model";
 import * as fs from "fs";
 import * as path from "path";
+import {ExtendApi, OmniSharp} from "../omnisharp";
 
 // Time we wait to try and do our active switch tasks.
 const DEBOUNCE_TIMEOUT = 100;
@@ -21,13 +22,13 @@ function wrapEditorObservable(observable: Observable<Atom.TextEditor>) {
         .where(editor => !editor || !editor.isDestroyed());
 }
 
-class Omni implements Rx.IDisposable {
+class OmniManager implements Rx.IDisposable {
     private disposable: CompositeDisposable;
 
     private _editors: Observable<Atom.TextEditor>;
     private _configEditors: Observable<Atom.TextEditor>;
 
-    public get viewModelStatefulProperties() { return statefulProperties }
+    public get viewModelStatefulProperties() { return statefulProperties; }
 
     private _activeEditorSubject = new BehaviorSubject<Atom.TextEditor>(null);
     private _activeEditor = wrapEditorObservable(this._activeEditorSubject)
@@ -67,8 +68,8 @@ class Omni implements Rx.IDisposable {
         // we are only off if all our solutions are disconncted or erroed.
         this.disposable.add(manager.solutionAggregateObserver.state.subscribe(z => this._isOff = _.all(z, x => x.value === DriverState.Disconnected || x.value === DriverState.Error)));
 
-        this._editors = Omni.createTextEditorObservable(this._supportedExtensions, this.disposable);
-        this._configEditors = Omni.createTextEditorObservable([".json"], this.disposable);
+        this._editors = OmniManager.createTextEditorObservable(this._supportedExtensions, this.disposable);
+        this._configEditors = OmniManager.createTextEditorObservable([".json"], this.disposable);
 
         this.disposable.add(atom.workspace.observeActivePaneItem((pane: any) => {
             if (pane && pane.getGrammar) {
@@ -220,7 +221,6 @@ class Omni implements Rx.IDisposable {
 
         disposable.add(atom.workspace.observeTextEditors((editor: Atom.TextEditor) => {
             const cb = () => {
-                const p = editor.getPath();
                 if (_.any(extensions, ext => _.endsWith(editor.getPath(), ext))) {
                     editors.push(editor);
                     if (!subject.isDisposed) {
@@ -303,7 +303,7 @@ class Omni implements Rx.IDisposable {
             }
         };
 
-        const result: Observable<T>;
+        let result: Observable<T>;
 
         if (editor) {
             result = manager.getSolutionForEditor(<Atom.TextEditor>editor)
@@ -543,9 +543,7 @@ class Omni implements Rx.IDisposable {
     }
 }
 
-const instance = new Omni;
-
-export = instance;
+export const Omni = new OmniManager;
 
 import {TextEditor} from "atom";
 const metadataUri = "omnisharp://metadata/";
@@ -564,8 +562,8 @@ function makeOpener(): Rx.IDisposable {
 
             (<any>editor).omniProject = (<any>solution).path;
             (<any>editor).__omniClient__ = solution;
-            editor.save = function() { };
-            editor.saveAs = function() { };
+            editor.save = function() { /* */ };
+            editor.saveAs = function() { /* */ };
             (<any>editor)._metadataEditor = true;
 
             return editor;

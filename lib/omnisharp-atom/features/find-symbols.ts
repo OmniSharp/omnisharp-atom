@@ -1,11 +1,10 @@
 import {CompositeDisposable} from "rx";
-import Omni = require("../../omni-sharp-server/omni")
-import FindSymbolsView = require("../views/find-symbols-view");
+import {Omni} from "../../omni-sharp-server/omni";
+import {FindSymbolsView} from "../views/find-symbols-view";
 
 class FindSymbols implements IFeature {
     private disposable: Rx.CompositeDisposable;
     private view: FindSymbolsView;
-    private editor: Atom.TextEditor;
 
     public activate() {
         this.disposable = new CompositeDisposable();

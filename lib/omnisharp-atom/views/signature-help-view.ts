@@ -1,19 +1,14 @@
+/* tslint:disable:no-string-literal */
+import {OmniSharp} from "../../omnisharp";
 import {read, write} from "fastdom";
 import * as _ from "lodash";
-
-function _d(cb: (value: Function) => Function) {
-    return <MethodDecorator>function(target: Function, key: string, descriptor: any) {
-        descriptor.value = cb(descriptor.value);
-        return descriptor;
-    }
-}
 
 const parseString = (function() {
     const parser = new DOMParser();
 
     return function(xml: string) {
         return parser.parseFromString(xml, "text/xml");
-    }
+    };
 })();
 
 export class SignatureView extends HTMLDivElement { /* implements WebComponent */
@@ -50,10 +45,10 @@ export class SignatureView extends HTMLDivElement { /* implements WebComponent *
 
         this._setupArrows();
 
-        const open = document.createElement("span");
+        let open = document.createElement("span");
         open.innerText = "(";
 
-        const close = document.createElement("span");
+        let close = document.createElement("span");
         close.innerText = ")";
 
         this.appendChild(this._inner);
@@ -66,10 +61,10 @@ export class SignatureView extends HTMLDivElement { /* implements WebComponent *
         this._inner.appendChild(this._parameters);
         this._inner.appendChild(close);
 
-        const open = document.createElement("span");
+        open = document.createElement("span");
         open.innerText = " [";
 
-        const close = document.createElement("span");
+        close = document.createElement("span");
         close.innerText = "]";
 
         this._inner.appendChild(open);
@@ -130,8 +125,9 @@ export class SignatureView extends HTMLDivElement { /* implements WebComponent *
         }
 
         const signature = member.Signatures[this._selectedIndex];
+        let docs: Document;
         if (signature.Documentation)
-            const docs = parseString(signature.Documentation);
+            docs = parseString(signature.Documentation);
 
         if (this._lastIndex !== this._selectedIndex) {
             this._lastIndex = this._selectedIndex;
@@ -198,6 +194,7 @@ export class SignatureView extends HTMLDivElement { /* implements WebComponent *
 
         const currentParameter = signature.Parameters[member.ActiveParameter];
         read(() => {
+            let summary: string;
             if (signature.Documentation) {
                 const paramDocs = parseString(currentParameter.Documentation);
 
@@ -206,7 +203,7 @@ export class SignatureView extends HTMLDivElement { /* implements WebComponent *
                     if (s.length) {
                         const summaryElement = s[0];
                         if (summaryElement)
-                            const summary = _.trim(summaryElement.innerHTML);
+                            summary = _.trim(summaryElement.innerHTML);
                     }
                 }
             }

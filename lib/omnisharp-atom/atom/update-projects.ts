@@ -1,9 +1,9 @@
 import {CompositeDisposable, Observable} from "rx";
 import * as _ from "lodash";
-import Omni = require("../../omni-sharp-server/omni");
+import {Omni} from "../../omni-sharp-server/omni";
 import {ProjectViewModel} from "../../omni-sharp-server/project-view-model";
 import * as fs from "fs";
-const stat = Observable.fromNodeCallback(fs.stat);
+const stat = Observable.fromNodeCallback<fs.Stats>(fs.stat);
 import {dirname} from "path";
 
 class UpdateProject implements IAtomFeature {
@@ -26,7 +26,7 @@ class UpdateProject implements IAtomFeature {
 
         // We"re keeping track of paths, just so we have a local reference
         this._paths = atom.project.getPaths();
-        atom.project.onDidChangePaths(paths => this._paths = paths);
+        atom.project.onDidChangePaths((paths: any[]) => this._paths = paths);
 
         this.disposable.add(Omni.listener.model.projectAdded
             .where(z => this._autoAddExternalProjects || this._nagAddExternalProjects)
@@ -79,16 +79,16 @@ class UpdateProject implements IAtomFeature {
     }
 
     private adjustTreeView(oldPath: string, newPath: string) {
-        const newPaths = this._paths.slice()
+        const newPaths = this._paths.slice();
         newPaths.splice(_.findIndex(this._paths, oldPath), 1, newPath);
         atom.project.setPaths(<any>newPaths);
     }
 
     private getProjectDirectories(projects: ProjectViewModel<any>[]) {
         return Observable.from(_.unique(projects.map(z => z.path)))
-            .flatMap(project => stat(project).map(stat => ({ stat, project })))
-            .map(({project, stat}) => {
-                if (stat.isDirectory()) {
+            .flatMap(project => stat(project).map(st => ({ st, project })))
+            .map(({project, st}) => {
+                if (st.isDirectory()) {
                     return project;
                 } else {
                     return dirname(project);
@@ -132,8 +132,6 @@ class UpdateProject implements IAtomFeature {
             });
     }
 
-    private _notifications: { [key: string]: Atom.Notification } = {};
-
     private handleProjectRemoved(projects: ProjectViewModel<any>[]) {
         this.getProjectDirectories(projects)
             .subscribe(paths => {
@@ -168,7 +166,7 @@ class UpdateProject implements IAtomFeature {
             });
     }
 
-    public attach() { }
+    public attach() { /* */ }
 
     public dispose() {
         this.disposable.dispose();

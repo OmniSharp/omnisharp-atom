@@ -1,8 +1,8 @@
 import * as path from "path";
 import * as fs from "fs";
-import Omni = require("../../omni-sharp-server/omni");
+import {Omni} from "../../omni-sharp-server/omni";
 import * as _ from "lodash";
-import {Observable, Disposable, CompositeDisposable, Subject} from "rx";
+import {Observable, CompositeDisposable, Subject} from "rx";
 import {File} from "atom";
 import {ProjectViewModel} from "../../omni-sharp-server/project-view-model";
 import {Solution} from "../../omni-sharp-server/solution";
@@ -10,14 +10,14 @@ import {Solution} from "../../omni-sharp-server/solution";
 function projectLock(solution: Solution, project: ProjectViewModel<any>, filePath: string) {
     const disposable = new CompositeDisposable();
     const subject = new Subject<string>();
-    const file = new File(filePath),
+    let file = new File(filePath),
         onDidChange = file.onDidChange(() => subject.onNext(filePath)),
         onWillThrowWatchError = file.onWillThrowWatchError(() => {
             subject.onNext(filePath);
             disposable.remove(onDidChange);
             onDidChange.dispose();
             _.delay(() => {
-                onDidChange = file.onDidChange(() => subject.onNext(filePath))
+                onDidChange = file.onDidChange(() => subject.onNext(filePath));
                 disposable.add(onDidChange);
             }, 5000);
         });
@@ -56,7 +56,7 @@ class FileMonitor implements IFeature {
 
         const changes = Observable.merge(Omni.listener.model.projectAdded, Omni.listener.model.projectChanged)
             .map(project => ({ project, filePath: path.join(project.path, "project.lock.json") }))
-            .where(({ project, filePath}) => fs.existsSync(filePath))
+            .where(({ filePath}) => fs.existsSync(filePath))
             .flatMap(({ project, filePath}) =>
                 Omni.getSolutionForProject(project).map(solution => ({ solution, project, filePath })))
             .where(x => !!x.solution)
@@ -76,10 +76,10 @@ class FileMonitor implements IFeature {
 
         this.disposable.add(changes
             .buffer(changes.throttle(1000), () => Observable.timer(1000))
-            .subscribe(changes => {
-                _.each(_.groupBy(changes, x => x.solution.uniqueId), changes => {
-                    const solution = changes[0].solution;
-                    const paths = _.unique(changes.map(x => x.filePath));
+            .subscribe(changs => {
+                _.each(_.groupBy(changs, x => x.solution.uniqueId), chang => {
+                    const solution = chang[0].solution;
+                    const paths = _.unique(chang.map(x => x.filePath));
                     solution.filesChanged(paths.map(z => ({ FileName: z })));
                 });
             }));

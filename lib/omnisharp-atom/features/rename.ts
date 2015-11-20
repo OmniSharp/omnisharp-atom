@@ -1,7 +1,7 @@
 import * as _ from "lodash";
-import {CompositeDisposable, Observable} from "rx";
-import RenameView = require("../views/rename-view");
-import Omni = require("../../omni-sharp-server/omni");
+import {CompositeDisposable} from "rx";
+import {RenameView} from "../views/rename-view";
+import {Omni} from "../../omni-sharp-server/omni";
 import {applyAllChanges} from "../services/apply-changes";
 
 class Rename implements IFeature {
@@ -29,8 +29,9 @@ class Rename implements IFeature {
 
     public rename() {
         const editor = atom.workspace.getActiveTextEditor();
+        let wordToRename: string;
         if (editor) {
-            const wordToRename: string = <any>editor.getWordUnderCursor();
+            wordToRename = <any>editor.getWordUnderCursor();
             // Word under cursor can sometimes return the open bracket if the word is selected.
             wordToRename = _.trimRight(wordToRename, "(");
             atom.workspace.addTopPanel({
@@ -44,4 +45,4 @@ class Rename implements IFeature {
     public title = "Rename";
     public description = "Adds command to rename symbols.";
 }
-export const rename = new Rename
+export const rename = new Rename;

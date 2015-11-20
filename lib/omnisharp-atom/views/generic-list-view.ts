@@ -3,18 +3,6 @@ import * as _ from "lodash";
 import {AsyncSubject} from "rx";
 
 export class GenericSelectListView extends spacePen.SelectListView {
-    private panel: Atom.Panel;
-    private previouslyFocusedElement: Node;
-    private eventElement: any;
-    private _onClosed = new AsyncSubject<boolean>();
-    public get onClosed() : Rx.Observable<boolean> { return this._onClosed; };
-
-    public message: JQuery;
-
-    constructor(private messageText: string, public _items: { displayName: string; name: string; }[], public onConfirm: (result: any) => void, public onCancel: () => void) {
-        super();
-    }
-
     public static content() {
         return this.div({}, () => {
             this.p({
@@ -25,7 +13,19 @@ export class GenericSelectListView extends spacePen.SelectListView {
         });
     }
 
-    public keyBindings = null;
+    private panel: Atom.Panel;
+    private previouslyFocusedElement: Node;
+    private eventElement: any;
+    private _onClosed = new AsyncSubject<boolean>();
+    public get onClosed(): Rx.Observable<boolean> { return this._onClosed; };
+
+    public message: JQuery;
+
+    constructor(private messageText: string, public _items: { displayName: string; name: string; }[], public onConfirm: (result: any) => void, public onCancel: () => void) {
+        super();
+    }
+
+    public keyBindings: any = null;
 
     public initialize() {
         (<any>spacePen.SelectListView).prototype.initialize.call(this);
@@ -79,22 +79,23 @@ export class GenericSelectListView extends spacePen.SelectListView {
         this._onClosed.onNext(true);
         this._onClosed.onCompleted();
 
-        this.panel && this.panel.hide();
+        if (this.panel) {
+            this.panel.hide();
+        }
         this.panel.destroy();
         this.panel = null;
     }
 
     public viewForItem(item: { displayName: string; name: string; }) {
-        const keyBindings = this.keyBindings;
         return spacePen.$$(function() {
             return this.li({
                 "class": "event",
                 "data-event-name": item.name
             }, () => {
-                    return this.span(item.displayName, {
-                        title: item.name
-                    });
+                return this.span(item.displayName, {
+                    title: item.name
                 });
+            });
         });
     }
 

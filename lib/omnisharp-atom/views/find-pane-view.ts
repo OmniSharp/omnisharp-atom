@@ -1,5 +1,7 @@
+/* tslint:disable:no-string-literal */
+import {OmniSharp} from "../../omnisharp";
 import * as _ from "lodash";
-import Omni = require("../../omni-sharp-server/omni")
+import {Omni} from "../../omni-sharp-server/omni";
 import * as React from "react";
 import * as path from "path";
 import * as $ from "jquery";
@@ -48,7 +50,7 @@ export class FindWindow extends ReactClientComponent<FindWindowProps, FindWindow
         super.componentDidMount();
 
         React.findDOMNode(this).scrollTop = this.props.scrollTop();
-        (<any>React.findDOMNode(this)).onkeydown = (e) => this.keydownPane(e);
+        (<any>React.findDOMNode(this)).onkeydown = (e: any) => this.keydownPane(e);
     }
 
     public componentWillUnmount() {
@@ -70,20 +72,19 @@ export class FindWindow extends ReactClientComponent<FindWindowProps, FindWindow
         const desiredTop = item.position().top + scrollTop;
         const desiredBottom = desiredTop + item.outerHeight();
 
-        if (desiredTop < scrollTop)
+        if (desiredTop < scrollTop) {
             pane.scrollTop(desiredTop);
-        else if (desiredBottom > pane.scrollBottom())
+        } else if (desiredBottom > pane.scrollBottom()) {
             pane.scrollBottom(desiredBottom);
+        }
     }
 
     private keydownPane(e: any) {
-        if (e.keyIdentifier == "Down") {
+        if (e.keyIdentifier === "Down") {
             atom.commands.dispatch(atom.views.getView(atom.workspace), "omnisharp-atom:next-usage");
-        }
-        else if (e.keyIdentifier == "Up") {
+        } else if (e.keyIdentifier === "Up") {
             atom.commands.dispatch(atom.views.getView(atom.workspace), "omnisharp-atom:previous-usage");
-        }
-        else if (e.keyIdentifier == "Enter") {
+        } else if (e.keyIdentifier === "Enter") {
             atom.commands.dispatch(atom.views.getView(atom.workspace), "omnisharp-atom:go-to-usage");
         }
     }
@@ -103,9 +104,9 @@ export class FindWindow extends ReactClientComponent<FindWindowProps, FindWindow
         },
             React.DOM.ol({
                 style: <any>{ cursor: "pointer" },
-            }, _.map(this.state.usages, (usage: OmniSharp.Models.QuickFix, index) =>
+            }, _.map(this.state.usages, (usage: OmniSharp.Models.QuickFix, index: number) =>
                 React.DOM.li({
-                    key: `quick-fix-${usage.FileName}-(${usage.Line}-${usage.Column})-(${usage.EndLine}-${usage.EndColumn})-(${usage.Projects.join("-") })`,
+                    key: `quick-fix-${usage.FileName}-(${usage.Line}-${usage.Column})-(${usage.EndLine}-${usage.EndColumn})-(${usage.Projects.join("-")})`,
                     className: "find-usages" + (index === this.state.selectedIndex ? " selected" : ""),
                     onClick: (e) => this.gotoUsage(usage, index)
                 },
@@ -114,11 +115,11 @@ export class FindWindow extends ReactClientComponent<FindWindowProps, FindWindow
                     }, usage.Text),
                     React.DOM.pre({
                         className: "inline-block"
-                    }, `${path.basename(usage.FileName) }(${usage.Line},${usage.Column})`),
+                    }, `${path.basename(usage.FileName)}(${usage.Line},${usage.Column})`),
                     React.DOM.pre({
                         className: "text-subtle inline-block"
-                    }, `${path.dirname(usage.FileName) }`)
-                    ))
-                ));
+                    }, `${path.dirname(usage.FileName)}`)
+                ))
+            ));
     }
 }

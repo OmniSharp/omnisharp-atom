@@ -1,4 +1,4 @@
-import Omni = require("../../omni-sharp-server/omni")
+import {Omni} from "../../omni-sharp-server/omni";
 const Range = require("atom").Range;
 import * as _ from "lodash";
 import {Observable, CompositeDisposable, Subject} from "rx";

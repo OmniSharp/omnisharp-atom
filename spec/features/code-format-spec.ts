@@ -1,4 +1,4 @@
-import Omni = require("../../lib/omni-sharp-server/omni");
+import {Omni} from "../../lib/omni-sharp-server/omni";
 import {CompositeDisposable} from "rx";
 import {setupFeature, restoreBuffers, openEditor} from "../test-helpers";
 import {codeFormat} from "../../lib/omnisharp-atom/features/code-format";

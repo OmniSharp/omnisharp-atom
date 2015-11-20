@@ -1,6 +1,8 @@
-const Convert = require("ansi-to-html")
+/* tslint:disable:no-string-literal */
+/* tslint:disable:variable-name */
+const Convert = require("ansi-to-html");
+/* tslint:enable:variable-name */
 import * as _ from "lodash";
-import Omni = require("../../omni-sharp-server/omni");
 import * as React from "react";
 import {ReactClientComponent} from "./react-client-component";
 import {server} from "../atom/server-information";
@@ -12,7 +14,7 @@ interface IBuildOutputWindowState {
 export class BuildOutputWindow<T> extends ReactClientComponent<T, IBuildOutputWindowState> {
     public displayName = "BuildOutputWindow";
 
-    private _convert;
+    private _convert: any;
 
     constructor(props?: T, context?: any) {
         super(props, context);
