@@ -1,7 +1,10 @@
+import {OmniSharp} from "../../omnisharp";
 import {Omni} from "../../omni-sharp-server/omni";
+/* tslint:disable:variable-name */
 const Range = require("atom").Range;
+/* tslint:enable:variable-name */
 import * as _ from "lodash";
-import {Observable, CompositeDisposable, Subject} from "rx";
+import {Observable, CompositeDisposable} from "rx";
 import {codeCheck} from "../features/code-check";
 
 interface LinterError {
@@ -17,7 +20,7 @@ function getWordAt(str: string, pos: number) {
     const wordLocation = {
         start: pos,
         end: pos
-    }
+    };
 
     if (str === undefined) {
         return wordLocation;
@@ -71,7 +74,7 @@ function hideLinter() {
 
 export function init() {
     const disposable = new CompositeDisposable();
-    const cd: CompositeDisposable;
+    let cd: CompositeDisposable;
     disposable.add(atom.config.observe("omnisharp-atom.hideLinterInterface", hidden => {
         if (hidden) {
             cd = new CompositeDisposable();
@@ -100,7 +103,7 @@ export function init() {
 
 export const provider = [
     {
-        get grammarScopes() { return Omni.grammars.map((x: any) => x.scopeName) },
+        get grammarScopes() { return Omni.grammars.map((x: any) => x.scopeName); },
         scope: "file",
         lintOnFly: true,
         lint: (editor: Atom.TextEditor) => {
@@ -118,7 +121,7 @@ export const provider = [
                 .toPromise();
         }
     }, {
-        get grammarScopes() { return Omni.grammars.map((x: any) => x.scopeName) },
+        get grammarScopes() { return Omni.grammars.map((x: any) => x.scopeName); },
         scope: "project",
         lintOnFly: false,
         lint: (editor: Atom.TextEditor) => {
@@ -126,7 +129,7 @@ export const provider = [
 
             return Omni.activeModel
                 .flatMap(x => Observable.from(x.diagnostics))
-                .where(z => z.LogLevel != "Hidden")
+                .where(z => z.LogLevel !== "Hidden")
                 .map(error => mapValues(editor, error))
                 .toArray()
                 .toPromise();

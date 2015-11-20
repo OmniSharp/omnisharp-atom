@@ -1,9 +1,7 @@
 import {Omni} from "../../omni-sharp-server/omni";
-import {OmniSharpAtom} from "../omnisharp-atom";
-
+import {OmniSharp} from "../../omnisharp";
 import * as _ from "lodash";
-import {Subject, BehaviorSubject, Observable, CompositeDisposable, Scheduler} from "rx";
-import * as Promise from "bluebird";
+import {CompositeDisposable} from "rx";
 const filter = require("fuzzaldrin").filter;
 
 interface RequestOptions {
@@ -56,7 +54,7 @@ let _useIcons: boolean;
 let _useLeftLabelColumnForSuggestions: boolean;
 
 let previous: RequestOptions;
-let results: Rx.Promise<any>;
+let results: Rx.Promise<OmniSharp.Models.AutoCompleteResponse[]>;
 
 let setupSubscriptions = () => {
     if (_initialized) return;
@@ -81,12 +79,12 @@ let setupSubscriptions = () => {
     }));
 
     _initialized = true;
-}
+};
 
 function makeSuggestion(item: OmniSharp.Models.AutoCompleteResponse) {
-    const description, leftLabel, iconHTML, type;
+    let description: any, leftLabel: any, iconHTML: any, type: any;
 
-    if (_useLeftLabelColumnForSuggestions == true) {
+    if (_useLeftLabelColumnForSuggestions === true) {
         description = item.RequiredNamespaceImport;
         leftLabel = item.ReturnType;
     } else {
@@ -94,7 +92,7 @@ function makeSuggestion(item: OmniSharp.Models.AutoCompleteResponse) {
         leftLabel = "";
     }
 
-    if (_useIcons == true) {
+    if (_useIcons === true) {
         iconHTML = renderIcon(item);
         type = item.Kind;
     } else {
@@ -111,7 +109,7 @@ function makeSuggestion(item: OmniSharp.Models.AutoCompleteResponse) {
         className: "autocomplete-omnisharp-atom",
         description: description,
         leftLabel: leftLabel,
-    }
+    };
 }
 
 function renderReturnType(returnType: string) {
@@ -121,9 +119,9 @@ function renderReturnType(returnType: string) {
     return `Returns: ${returnType}`;
 }
 
-function renderIcon(item) {
+function renderIcon(item: OmniSharp.Models.AutoCompleteResponse) {
     // todo: move additional styling to css
-    return "<img height="16px" width="16px" src="atom://omnisharp-atom/styles/icons/autocomplete_" + item.Kind.toLowerCase() + "@3x.png" /> "
+    return `<img height="16px" width="16px" src="atom://omnisharp-atom/styles/icons/autocomplete_${ item.Kind.toLowerCase() }@3x.png" />`;
 }
 
 function getSuggestions(options: RequestOptions): Rx.IPromise<Suggestion[]> {
@@ -149,13 +147,13 @@ function getSuggestions(options: RequestOptions): Rx.IPromise<Suggestion[]> {
         return;
     }
 
-    const search = options.prefix;
+    let search = options.prefix;
     if (search === ".")
         search = "";
 
     if (!results) results = Omni.request(solution => solution.autocomplete(_.clone(autoCompleteOptions))).toPromise();
 
-    const p = results;
+    let p = results;
     if (search)
         p = p.then(s => filter(s, search, { key: "CompletionText" }));
 
@@ -174,13 +172,14 @@ function dispose() {
     _initialized = false;
 }
 
+/* tslint:disable:variable-name */
 export const CompletionProvider = {
-    get selector() { return Omni.grammars.map((x: any) => `.${x.scopeName}`).join(", ") },
-    get disableForSelector() { return Omni.grammars.map((x: any) => `.${x.scopeName} .comment`).join(", ") },
+    get selector() { return Omni.grammars.map((x: any) => `.${x.scopeName}`).join(", "); },
+    get disableForSelector() { return Omni.grammars.map((x: any) => `.${x.scopeName} .comment`).join(", "); },
     inclusionPriority: 1,
     suggestionPriority: 10,
     excludeLowerPriority: true,
     getSuggestions,
     onDidInsertSuggestion,
     dispose
-}
+};

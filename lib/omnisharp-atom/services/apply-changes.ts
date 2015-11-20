@@ -1,10 +1,10 @@
+import {OmniSharp} from "../../omnisharp";
+/* tslint:disable:variable-name */
 const Range = require("atom").Range;
+/* tslint:enable:variable-name */
 import {Observable} from "rx";
 
-
-export function applyChanges(editor: Atom.TextEditor, response: { Changes: OmniSharp.Models.LinePositionSpanTextChange[]; });
-export function applyChanges(editor: Atom.TextEditor, response: { Buffer: string });
-export function applyChanges(editor: Atom.TextEditor, response: any) {
+export function applyChanges(editor: Atom.TextEditor, response: { Changes?: OmniSharp.Models.LinePositionSpanTextChange[]; Buffer?: string; }) {
     if (response.Changes) {
         const buffer = editor.getBuffer();
         const checkpoint = buffer.createCheckpoint();
@@ -16,7 +16,7 @@ export function applyChanges(editor: Atom.TextEditor, response: any) {
 
         buffer.groupChangesSinceCheckpoint(checkpoint);
     } else if (response.Buffer) {
-        editor.setText(response.Buffer)
+        editor.setText(response.Buffer);
     }
 }
 

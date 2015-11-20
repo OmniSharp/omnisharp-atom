@@ -543,7 +543,9 @@ class OmniManager implements Rx.IDisposable {
     }
 }
 
+/* tslint:disable:variable-name */
 export const Omni = new OmniManager;
+/* tslint:enable:variable-name */
 
 import {TextEditor} from "atom";
 const metadataUri = "omnisharp://metadata/";
