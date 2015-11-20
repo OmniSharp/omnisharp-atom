@@ -1,4 +1,3 @@
-require("./configure-rx");
 import * as _ from "lodash";
 import {Observable, AsyncSubject, CompositeDisposable, Disposable} from "rx";
 import * as path from "path";
