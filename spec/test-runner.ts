@@ -51,7 +51,7 @@ module.exports = function(
 
     const mocha = new mochaCtor({
         ui: "bdd",
-        reporter: headless ? "list" : "html",
+        reporter: headless ? "mocha-unfunk-reporter" : "html",
         timeout: headless ? 60000 : 10000
     });
 

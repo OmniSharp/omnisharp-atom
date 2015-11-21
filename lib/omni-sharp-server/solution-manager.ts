@@ -1,4 +1,4 @@
-const _ : _.LoDashStatic = require("lodash");
+const _: _.LoDashStatic = require("lodash");
 import * as path from "path";
 import {Observable, AsyncSubject, RefCountDisposable, Disposable, CompositeDisposable, BehaviorSubject, Scheduler, Subject} from "rx";
 import {Solution} from "./solution";
@@ -12,6 +12,17 @@ class SolutionInstanceManager {
     /* tslint:disable:variable-name */
     public _unitTestMode_ = false;
     public _kick_in_the_pants_ = false;
+
+    private get logger() {
+        if (this._unitTestMode_ || this._kick_in_the_pants_) {
+            return {
+                log: () => {/* */ },
+                error: () => {/* */ }
+            };
+        }
+
+        return console;
+    }
     /* tslint:enable:variable-name */
     private _disposable: CompositeDisposable;
     private _solutionDisposable: CompositeDisposable;
@@ -126,7 +137,7 @@ class SolutionInstanceManager {
         this._disposable.add(this._atomProjects.added
             .where(project => !this._solutionProjects.has(project))
             .map(project => {
-                return this._candidateFinder(project, console)
+                return this._candidateFinder(project)
                     .flatMap(candidates => addCandidatesInOrder(candidates, (candidate, isProject) => this._addSolution(candidate, isProject, { project })));
             })
             .subscribe(candidateObservable => {
@@ -486,13 +497,13 @@ class SolutionInstanceManager {
                 }));
         };
 
-        this._candidateFinder(directory, console).subscribe(cb);
+        this._candidateFinder(directory).subscribe(cb);
 
         return subject;
     }
 
-    private _candidateFinder(directory: string, console: any) {
-        return findCandidates.withCandidates(directory, console, {
+    private _candidateFinder(directory: string) {
+        return findCandidates.withCandidates(directory, this.logger, {
             solutionIndependentSourceFilesToSearch: this.__specialCaseExtensions.map(z => "*" + z)
         })
             .flatMap(candidates => {
