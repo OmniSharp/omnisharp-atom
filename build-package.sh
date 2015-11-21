@@ -49,6 +49,7 @@ echo "Using APM version:"
 echo "Downloading package dependencies..."
 "$APM_SCRIPT_PATH" clean
 "$APM_SCRIPT_PATH" install
+"$APM_SCRIPT_PATH" link
 
 TEST_PACKAGES="${APM_TEST_PACKAGES:=none}"
 
