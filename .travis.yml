@@ -1,13 +1,12 @@
+language: csharp
+
 notifications:
   email:
     on_success: change
     on_failure: change
 
 before_install:
-  - brew tap aspnet/dnx
-  - brew update
-  - brew install dnvm
-  - source dnvm.sh
+  - curl -sSL https://dist.asp.net/dnvm/dnvminstall.sh | sh && source ~/.dnx/dnvm/dnvm.sh
   - dnvm install 1.0.0-beta4
   - dnvm upgrade
 
