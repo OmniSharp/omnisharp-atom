@@ -11,13 +11,12 @@ const Range: typeof TextBuffer.Range = a.Range;
 describe("Rename", () => {
     setupFeature(["features/rename"]);
 
-    it("adds commands", (done) => {
+    it("adds commands", () => {
         const disposable = new CompositeDisposable();
         const commands: any = atom.commands;
 
         expect(commands.registeredCommands["omnisharp-atom:rename"]).to.be.true;
         disposable.dispose();
-        done();
     });
 
     it("should select rename text appropriately with selection", (done) => {

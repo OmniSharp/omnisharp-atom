@@ -6,7 +6,7 @@ import {CompositeDisposable} from "rx";
 describe("Lookup", () => {
     setupFeature(["features/lookup"]);
 
-    it("adds commands", (done) => {
+    it("adds commands", () => {
         const disposable = new CompositeDisposable();
         const commands: any = atom.commands;
 

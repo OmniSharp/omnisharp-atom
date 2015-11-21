@@ -15,7 +15,6 @@ describe("Run Tests", () => {
         expect(commands.registeredCommands["omnisharp-atom:run-single-test"]).to.be.true;
         expect(commands.registeredCommands["omnisharp-atom:run-last-test"]).to.be.true;
         disposable.dispose();
-        done();
     });
 
     // TODO: Test functionality

@@ -26,7 +26,7 @@ describe("Command Runner", () => {
                 expect(commands.registeredCommands["omnisharp-dnx:commands-[kestrel]-(watch)"]).to.be.true;
                 expect(commands.registeredCommands["omnisharp-dnx:commands-[run]"]).to.be.true;
                 disposable.dispose();
-            }, null, done);
+            }, done, done);
     });
 
     it("returns the correct path for a given environment", (done) => {

@@ -6,13 +6,12 @@ import {setupFeature} from "../test-helpers";
 describe("Find Symbols", () => {
     setupFeature(["features/find-symbols"]);
 
-    it("adds commands", (done) => {
+    it("adds commands", () => {
         const disposable = new CompositeDisposable();
         const commands: any = atom.commands;
 
         expect(commands.registeredCommands["omnisharp-atom:find-symbols"]).to.be.true;
         disposable.dispose();
-        done();
     });
 
     // TODO: Test functionality

@@ -16,7 +16,7 @@ export function setupFeature(features: string[], unitTestMode = true) {
 
         atom.packages.activatePackage("language-csharp")
             .then(() => atom.packages.activatePackage("omnisharp-atom"))
-            .then((pack: Atom.Package) => pack.mainModule._activated.toPromise())
+            .then((pack: Atom.Package) => pack.mainModule._activated.delay(200).toPromise())
             .then(() => done());
     });
 
@@ -82,5 +82,6 @@ export function openEditor(file: string) {
         .flatMap(({editor, solution}) => solution.state.startWith(solution.currentState)
         .map(state => ({ editor, solution, state: state })))
         .filter(z => z.state === DriverState.Connected)
-        .take(1);
+        .take(1)
+        .delay(350);
 }

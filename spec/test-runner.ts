@@ -3,7 +3,7 @@ import {readFileSync} from "fs";
 import {CompositeDisposable} from "rx";
 
 module.exports = function(
-    {testPaths, buildAtomEnvironment, buildDefaultApplicationDelegate}: {
+    {testPaths, buildAtomEnvironment, buildDefaultApplicationDelegate, headless}: {
         testPaths: string[];
         buildAtomEnvironment: (opts: any) => Atom.Atom;
         applicationDelegate: any;
@@ -51,9 +51,8 @@ module.exports = function(
 
     const mocha = new mochaCtor({
         ui: "bdd",
-        reporter: "html",
-        grep: "format",
-        timeout: 30000
+        reporter: headless ? "list" : "html",
+        timeout: headless ? 60000 : 10000
     });
 
     let cd: CompositeDisposable;

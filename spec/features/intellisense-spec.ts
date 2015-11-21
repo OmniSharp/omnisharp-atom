@@ -6,7 +6,7 @@ import {setupFeature} from "../test-helpers";
 describe("Intellisense", () => {
     setupFeature(["features/intellisense"]);
 
-    it("adds commands", (done) => {
+    it("adds commands", () => {
         const disposable = new CompositeDisposable();
         const commands: any = atom.commands;
 

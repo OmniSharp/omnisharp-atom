@@ -6,7 +6,7 @@ import {setupFeature} from "../test-helpers";
 describe("Find Usages", () => {
     setupFeature(["features/find-usages"]);
 
-    it("adds commands", (done) => {
+    it("adds commands", () => {
         const disposable = new CompositeDisposable();
         const commands: any = atom.commands;
 
@@ -18,7 +18,6 @@ describe("Find Usages", () => {
         expect(commands.registeredCommands["omnisharp-atom:go-to-next-usage"]).to.be.true;
         expect(commands.registeredCommands["omnisharp-atom:go-to-previous-usage"]).to.be.true;
         disposable.dispose();
-        done();
     });
 
     // TODO: Test functionality
