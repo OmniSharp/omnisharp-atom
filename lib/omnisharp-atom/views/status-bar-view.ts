@@ -6,24 +6,24 @@ import {OmnisharpClientStatus} from "omnisharp-client";
 import {server} from "../atom/server-information";
 import {solutionInformation} from "../atom/solution-information";
 import {commandRunner} from "../atom/command-runner";
-import {read, write} from "fastdom";
+let fastdom : { read(cb: Function): any; write(cb: Function): any; } = require("fastdom");
 
 function addClassIfNotContains(icon: HTMLElement, ...cls: string[]) {
     if (icon) {
-        read(() => {
+        fastdom.read(() => {
             _.each(cls, c => {
                 if (!icon.classList.contains(c))
-                    write(() => icon.classList.add(c));
+                    fastdom.write(() => icon.classList.add(c));
             });
         });
     }
 }
 function removeClassIfContains(icon: HTMLElement, ...cls: string[]) {
     if (icon) {
-        read(() => {
+        fastdom.read(() => {
             _.each(cls, c => {
                 if (icon.classList.contains(c))
-                    write(() => icon.classList.remove(c));
+                    fastdom.write(() => icon.classList.remove(c));
             });
         });
     }
@@ -115,7 +115,7 @@ export class FlameElement extends HTMLAnchorElement implements WebComponent {
         }
 
         if (status.outgoingRequests !== this._state.status.outgoingRequests) {
-            write(() => this._outgoing.innerText = status.outgoingRequests && status.outgoingRequests.toString() || "0");
+            fastdom.write(() => this._outgoing.innerText = status.outgoingRequests && status.outgoingRequests.toString() || "0");
         }
 
         this._state.status = status || <any>{};
@@ -150,9 +150,9 @@ export class CommandRunnerElement extends HTMLAnchorElement implements WebCompon
             }
 
             if (state === CommandRunnerState.Off) {
-                read(() => this.style.display !== "none" && write(() => this.style.display = "none"));
+                fastdom.read(() => this.style.display !== "none" && fastdom.write(() => this.style.display = "none"));
             } else {
-                read(() => this.style.display === "none" && write(() => this.style.display = ""));
+                fastdom.read(() => this.style.display === "none" && fastdom.write(() => this.style.display = ""));
             }
         }
     }
@@ -201,7 +201,7 @@ export class DiagnosticsElement extends HTMLAnchorElement implements WebComponen
     public updateState(state: typeof DiagnosticsElement.prototype._state) {
         if (!_.isEqual(this._state, state)) {
             this._state = state;
-            write(() => {
+            fastdom.write(() => {
                 if (this._state.errorCount) {
                     this._errors.innerText = this._state.errorCount.toString();
                 } else {
@@ -247,12 +247,12 @@ export class ProjectCountElement extends HTMLAnchorElement implements WebCompone
     public updateState(state: typeof ProjectCountElement.prototype._state) {
         if (!_.isEqual(this._state, state)) {
             this._state = state;
-            write(() => this.projects.innerText = `${this._state.projectCount} Projects`);
+            fastdom.write(() => this.projects.innerText = `${this._state.projectCount} Projects`);
         }
     }
 
     public updateSolutionNumber(solutionNumber: string) {
-        write(() => this._solutionNunmber.innerText = solutionNumber);
+        fastdom.write(() => this._solutionNunmber.innerText = solutionNumber);
     }
 }
 
@@ -353,7 +353,7 @@ export class StatusBarElement extends HTMLElement implements WebComponent, Rx.ID
         }
 
         if (this._state.isOn) {
-            read(() => this._projectCount.style.display === "none" && write(() => this._projectCount.style.display = ""));
+            fastdom.read(() => this._projectCount.style.display === "none" && fastdom.write(() => this._projectCount.style.display = ""));
         }
 
         if (this._state.isOn && this._hasValidEditor) {
@@ -364,16 +364,16 @@ export class StatusBarElement extends HTMLElement implements WebComponent, Rx.ID
     }
 
     private _showOnStateItems() {
-        read(() => {
-            if (this._diagnostics.style.display === "none") { write(() => this._diagnostics.style.display = ""); }
-            if (this._projectCount.projects.style.display === "none") { write(() => this._projectCount.projects.style.display = ""); }
+        fastdom.read(() => {
+            if (this._diagnostics.style.display === "none") { fastdom.write(() => this._diagnostics.style.display = ""); }
+            if (this._projectCount.projects.style.display === "none") { fastdom.write(() => this._projectCount.projects.style.display = ""); }
         });
     }
 
     private _hideOnStateItems() {
-        read(() => {
-            if (this._diagnostics.style.display !== "none") { write(() => this._diagnostics.style.display = "none"); }
-            if (this._projectCount.projects.style.display !== "none") { write(() => this._projectCount.projects.style.display = "none"); }
+        fastdom.read(() => {
+            if (this._diagnostics.style.display !== "none") { fastdom.write(() => this._diagnostics.style.display = "none"); }
+            if (this._projectCount.projects.style.display !== "none") { fastdom.write(() => this._projectCount.projects.style.display = "none"); }
         });
     }
 

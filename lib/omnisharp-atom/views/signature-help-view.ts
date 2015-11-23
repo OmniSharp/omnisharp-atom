@@ -1,6 +1,7 @@
+/// <reference path="../../typings.d.ts" />
 /* tslint:disable:no-string-literal */
 import {OmniSharp} from "../../omnisharp";
-import {read, write} from "fastdom";
+let fastdom : { read(cb: Function): any; write(cb: Function): any; } = require("fastdom");
 const _ : _.LoDashStatic = require("lodash");
 
 const parseString = (function() {
@@ -86,7 +87,7 @@ export class SignatureView extends HTMLDivElement { /* implements WebComponent *
             this._selectedIndex = 0;
         }
 
-        write(() => this._count.innerText = (this._selectedIndex + 1).toString());
+        fastdom.write(() => this._count.innerText = (this._selectedIndex + 1).toString());
         this.updateMember(this._member);
     }
 
@@ -131,7 +132,7 @@ export class SignatureView extends HTMLDivElement { /* implements WebComponent *
 
         if (this._lastIndex !== this._selectedIndex) {
             this._lastIndex = this._selectedIndex;
-            write(() => {
+            fastdom.write(() => {
                 this._count.innerText = (this._selectedIndex + 1).toString();
                 this._label.innerText = signature.Name;
                 this._documentation.innerText = signature.Documentation;
@@ -161,7 +162,7 @@ export class SignatureView extends HTMLDivElement { /* implements WebComponent *
 
             this._parametersList = [];
 
-            write(() => {
+            fastdom.write(() => {
                 const parameters = signature.Parameters;
                 const parametersElement = document.createElement("span");
                 _.each(parameters, (parameter, i) => {
@@ -186,14 +187,14 @@ export class SignatureView extends HTMLDivElement { /* implements WebComponent *
                 this._parameters = parametersElement;
             });
         } else {
-            write(() => {
+            fastdom.write(() => {
                 _.each(signature.Parameters, (param, i) =>
                     this._parametersList[i].setCurrent(i === member.ActiveParameter));
             });
         }
 
         const currentParameter = signature.Parameters[member.ActiveParameter];
-        read(() => {
+        fastdom.read(() => {
             let summary: string;
             if (signature.Documentation) {
                 const paramDocs = parseString(currentParameter.Documentation);
@@ -227,7 +228,7 @@ export class SignatureView extends HTMLDivElement { /* implements WebComponent *
             }
         });
 
-        write(() => this.style.bottom = `${this.clientHeight + this._editorLineHeight}px`);
+        fastdom.write(() => this.style.bottom = `${this.clientHeight + this._editorLineHeight}px`);
     }
 
     public detachedCallback() {
@@ -253,11 +254,11 @@ export class SignatureParameterView extends HTMLSpanElement { /* implements WebC
     }
 
     public setCurrent(current: boolean) {
-        read(() => {
+        fastdom.read(() => {
             if (!current && this.style.fontWeight === "bold") {
-                write(() => this.style.fontWeight = "");
+                fastdom.write(() => this.style.fontWeight = "");
             } else if (current && this.style.fontWeight !== "bold") {
-                write(() => this.style.fontWeight = "bold");
+                fastdom.write(() => this.style.fontWeight = "bold");
             }
         });
     }

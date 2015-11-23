@@ -1,8 +1,9 @@
+/// <reference path="../../typings.d.ts" />
 import {OmniSharp} from "../../omnisharp";
 const _ : _.LoDashStatic = require("lodash");
 import {CompositeDisposable, Observable, Disposable, Subject, Scheduler} from "rx";
 import {Omni} from "../../omni-sharp-server/omni";
-import {read, write} from "fastdom";
+let fastdom : { read(cb: Function): any; write(cb: Function): any; } = require("fastdom");
 
 interface IDecoration {
     destroy(): any;
@@ -250,9 +251,9 @@ export class Lens implements Rx.IDisposable {
         if (this._decoration && this._element) {
             const element = this._element;
             if (isVisible) {
-                read(() => element.style.display === "none" && write(() => element.style.display = ""));
+                fastdom.read(() => element.style.display === "none" && fastdom.write(() => element.style.display = ""));
             } else {
-                read(() => element.style.display !== "none" && write(() => element.style.display = "none"));
+                fastdom.read(() => element.style.display !== "none" && fastdom.write(() => element.style.display = "none"));
             }
         }
     }

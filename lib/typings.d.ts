@@ -32,7 +32,7 @@ interface WebComponent {
     attributeChangedCallback?: (attrName: string, oldVal: any, newVal: any) => void;
 }
 
-declare module "fastdom" {
+declare module Fastdom {
     export function read(cb: Function): any;
     export function write(cb: Function): any;
     export function defer(frames: number, cb: Function): any;
