@@ -52,7 +52,8 @@ module.exports = function(
     const mocha = new mochaCtor({
         ui: "bdd",
         reporter: headless ? "mocha-unfunk-reporter" : "html",
-        timeout: headless ? 60000 : 10000
+        timeout: headless ? 60000 : 20000,
+        //grep: new RegExp("editor switch")
     });
 
     let cd: CompositeDisposable;

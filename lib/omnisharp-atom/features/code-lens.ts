@@ -72,7 +72,7 @@ class CodeLens implements IFeature {
 
             cd.add(editor.getBuffer().onDidSave(() => !subject.isDisposed && subject.onNext(true)));
             cd.add(editor.getBuffer().onDidReload(() => !subject.isDisposed && subject.onNext(true)));
-            cd.add(Omni.whenEditorConnected(editor).subscribe(() => subject.onNext(true)));
+            cd.add(Observable.timer(1000).subscribe(() => subject.onNext(true)));
 
             cd.add(editor.onDidChangeScrollTop(() => this.updateDecoratorVisiblility(editor)));
 

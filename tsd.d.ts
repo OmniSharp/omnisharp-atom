@@ -19,6 +19,8 @@
 /// <reference path="typings/semver/semver.d.ts" />
 /// <reference path="typings/assertion-error/assertion-error.d.ts" />
 /// <reference path="typings/q/Q.d.ts" />
+/// <reference path="typings/chai/chai.d.ts" />
+/// <reference path="typings/mixto/mixto.d.ts" />
 /// <reference path="node_modules/rx/ts/rx.all.es6.d.ts" />
 
 declare module _ {

@@ -1,5 +1,8 @@
 {
-  "externalTranspiler": "babel",
+  "externalTranspiler": {
+    "name": "babel",
+    "options": {}
+  },
   "compilerOptions": {
     "target": "es6",
     "module": "es6",
@@ -15,6 +18,7 @@
   "formatCodeOptions": {
     "indentSize": 4,
     "tabSize": 4,
+    "indentStyle": "smart",
     "convertTabsToSpaces": true,
     "insertSpaceAfterCommaDelimiter": true,
     "insertSpaceAfterSemicolonInForStatements": true,
@@ -102,7 +106,6 @@
     "./spec/atom/solution-information-spec.ts",
     "./spec/atom/status-bar-spec.ts",
     "./spec/atom/update-project-spec.ts",
-    "./spec/client-manager-spec.ts",
     "./spec/features/code-format-spec.ts",
     "./spec/features/code-lens-spec.ts",
     "./spec/features/command-runner-spec.ts",
@@ -121,6 +124,7 @@
     "./spec/features/server-information-spec.ts",
     "./spec/features/signature-help-spec.ts",
     "./spec/omnisharp-atom-spec.ts",
+    "./spec/solution-manager-spec.ts",
     "./spec/test-helpers.ts",
     "./spec/test-runner.ts",
     "./tsd.d.ts",

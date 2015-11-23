@@ -32,13 +32,10 @@ describe("Code Format", () => {
                 execute(editor);
             });
 
-
         function execute(editor: Atom.TextEditor) {
-
-            var sub = Omni.listener.formatRange
+            Omni.listener.formatRange
                 .take(1)
                 .subscribe(({request}) => {
-
                     expect(editor.getPath()).to.be.eql(request.FileName);
                     const expected = `public class UnformattedClass{    public const int TheAnswer = 42;}`;
                     const result = editor.getText().replace(/\r|\n/g, "");
@@ -56,8 +53,7 @@ describe("Code Format", () => {
                         if (tries === -1) {
                             disposable.dispose();
                             done(1);
-                        }
-                        if (tries === 0) {
+                        } else if (tries === 0) {
                             disposable.dispose();
                             done();
                         }
@@ -65,8 +61,6 @@ describe("Code Format", () => {
                     }
                 });
             codeFormat.format();
-
-            return sub;
         }
     });
 });

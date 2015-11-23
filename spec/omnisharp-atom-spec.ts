@@ -20,7 +20,7 @@ describe("OmniSharp Atom", () => {
                 }, null, done);
         });
 
-        it("connect-simple2", (done) => {
+        xit("connect-simple2", (done) => {
             Observable.fromPromise(
                 Promise.all([
                     atom.workspace.open("simple/code-lens/CodeLens.cs"),
@@ -31,7 +31,7 @@ describe("OmniSharp Atom", () => {
                 .flatMap(editor => SolutionManager.getSolutionForEditor(editor))
                 .flatMap(x => x.state.startWith(x.currentState))
                 .filter(z => z === DriverState.Connected)
-                .take(2)
+                .take(1)
                 .subscribe(null, null, () => {
                     expect(SolutionManager.connected).to.be.true;
                     expect(SolutionManager.activeSolutions.length).to.be.eql(2);

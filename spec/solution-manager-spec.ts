@@ -5,10 +5,10 @@ import {setupFeature, openEditor} from "./test-helpers";
 import {DriverState} from "omnisharp-client";
 import {GenericSelectListView} from "../lib/omnisharp-atom/views/generic-list-view";
 
-describe("OmniSharp Atom", () => {
+describe("Solution Manager", () => {
     setupFeature([], false);
 
-    it("Works with single cs files", function(done) {
+    xit("Works with single cs files", function(done) {
         openEditor("single-cs/class.cs")
             .subscribe(({solution}) => {
                 expect(solution.currentState).to.be.eql(DriverState.Connected);
