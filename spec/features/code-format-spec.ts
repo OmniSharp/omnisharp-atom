@@ -24,7 +24,6 @@ describe("Code Format", () => {
         const d = restoreBuffers();
         const disposable = new CompositeDisposable();
         disposable.add(d);
-        disposable.add({ dispose: done });
 
         let tries = 5;
         atom.workspace.open("simple/code-format/UnformattedClass.cs")
