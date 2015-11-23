@@ -11,7 +11,7 @@ const identifierRegex = /^identifier|identifier$|\.identifier\./;
 class GoToDefinition implements IFeature {
     private disposable: Rx.CompositeDisposable;
     private enhancedHighlighting: boolean;
-    private marker: any;
+    private marker: Atom.Marker;
     private wantMetadata: boolean;
 
     public activate() {
@@ -146,8 +146,8 @@ class GoToDefinition implements IFeature {
 
     private underlineIfNavigable(editor: Atom.TextEditor, bufferPt: TextBuffer.Point, wordRange: TextBuffer.Range) {
         if (this.marker &&
-            this.marker.bufferMarker.range &&
-            this.marker.bufferMarker.range.compare(wordRange) === 0)
+            (this.marker.bufferMarker as any).range &&
+            (this.marker.bufferMarker as any).range.compare(wordRange) === 0)
             return;
 
         let decoration: Atom.Marker;

@@ -1,7 +1,7 @@
 /* tslint:disable:no-string-literal */
 import {OmniSharp} from "../../omnisharp";
 import {Omni} from "../../omni-sharp-server/omni";
-import {each, extend, has, contains, any, range, remove, pull, find, chain, unique, set, findIndex, all, isEqual, min, debounce, sortBy} from "lodash";
+import {each, extend, has, contains, any, range, remove, pull, find, chain, unique, findIndex, all, isEqual, min, debounce, sortBy} from "lodash";
 import {Observable, Subject, ReplaySubject, CompositeDisposable, Disposable} from "rx";
 /* tslint:disable:variable-name */
 const AtomGrammar = require((<any>atom).config.resourcePath + "/node_modules/first-mate/lib/grammar.js");
@@ -238,21 +238,6 @@ interface IHighlightingGrammar extends FirstMate.Grammar {
     responses: Map<number, OmniSharp.Models.HighlightSpan[]>;
     fullyTokenized: boolean;
 }
-
-enum HighlightClassification {
-    Name = 1,
-    Comment = 2,
-    String = 3,
-    Operator = 4,
-    Punctuation = 5,
-    Keyword = 6,
-    Number = 7,
-    Identifier = 8,
-    PreprocessorKeyword = 9,
-    ExcludedCode = 10
-}
-
-set(global, "OmniSharp.Models.HighlightClassification", HighlightClassification);
 
 class Grammar {
     public isObserveRetokenizing: ReplaySubject<boolean>;

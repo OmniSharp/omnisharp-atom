@@ -272,7 +272,9 @@ export class Lens implements Rx.IDisposable {
         this._decoration = <any>this._editor.decorateMarker(this._marker, { type: "overlay", class: `codelens`, item: this._element, position: "head" });
         this._disposable.add(Disposable.create(() => {
             this._element.remove();
+            if (this._decoration) {
             this._decoration.destroy();
+        }
             this._element = null;
         }));
 
