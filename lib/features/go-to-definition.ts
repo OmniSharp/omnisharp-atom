@@ -189,7 +189,7 @@ class GoToDefinition implements IFeature {
     }
 
     private removeMarker() {
-        if (this.marker !== null) {
+        if (this.marker != null) {
             this.marker.destroy();
             this.marker = null;
         }

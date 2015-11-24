@@ -4,7 +4,7 @@ const _: _.LoDashStatic = require("lodash");
 import {Omni} from "../server/omni";
 import {OmnisharpClientStatus} from "omnisharp-client";
 import {server} from "../atom/server-information";
-import {solutionInformation} from "../atom/solution-information";
+import {SolutionManager} from "../server/solution-manager";
 import {commandRunner} from "../atom/command-runner";
 let fastdom : { read(cb: Function): any; write(cb: Function): any; } = require("fastdom");
 
@@ -320,7 +320,7 @@ export class StatusBarElement extends HTMLElement implements WebComponent, Rx.ID
 
         this._disposable.add(server.observe.model
             .subscribe(model => {
-                const solutionNumber = solutionInformation.solutions.length > 1 ? _.trim(server.model && (<any>server.model).index, "client") : "";
+                const solutionNumber = SolutionManager.activeSolutions.length > 1 ? _.trim(server.model && (<any>server.model).index, "client") : "";
                 this._projectCount.updateSolutionNumber(solutionNumber);
             }));
 
@@ -339,9 +339,9 @@ export class StatusBarElement extends HTMLElement implements WebComponent, Rx.ID
                 }
             }));
 
-        this._disposable.add(solutionInformation.observe.solutions
+        this._disposable.add(SolutionManager.activeSolution
             .subscribe(solutions => {
-                const solutionNumber = solutions.length > 1 ? _.trim(server.model && (<any>server.model).index, "client") : "";
+                const solutionNumber = SolutionManager.activeSolutions.length > 1 ? _.trim(server.model && (<any>server.model).index, "client") : "";
                 this._projectCount.updateSolutionNumber(solutionNumber);
             }));
     }
@@ -390,7 +390,7 @@ export class StatusBarElement extends HTMLElement implements WebComponent, Rx.ID
     }
 
     public toggleErrorWarningPanel() {
-        atom.commands.dispatch(atom.views.getView(atom.workspace), "omnisharp-atom:toggle-errors");
+        atom.commands.dispatch(atom.views.getView(atom.workspace), "omnisharp-atom:dock-toggle-errors");
     }
 
     public toggleSolutionInformation() {

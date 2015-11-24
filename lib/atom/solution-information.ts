@@ -1,7 +1,6 @@
-import {Observable, CompositeDisposable, Disposable} from "rx";
+import {CompositeDisposable, Disposable} from "rx";
 const _ : _.LoDashStatic = require("lodash");
 import {SolutionStatusCard, ICardProps} from "../views/solution-status-view";
-import {ViewModel} from "../server/view-model";
 import {SolutionManager} from "../server/solution-manager";
 import {DriverState} from "omnisharp-client";
 import * as React from "react";
@@ -13,19 +12,13 @@ class SolutionInformation implements IFeature {
     private cardDisposable: Disposable;
     private container: Element;
 
-    public observe: {
-        solutions: Observable<ViewModel[]>;
-    };
-
-    public solutions: ViewModel[] = [];
-
     public activate() {
         this.disposable = new CompositeDisposable();
 
-        const solutions = this.setupSolutions();
-        this.observe = { solutions };
-
-        this.disposable.add(SolutionManager.activeSolution.subscribe(model => this.selectedIndex = _.findIndex(SolutionManager.activeSolutions, { index: model.index })));
+        this.disposable.add(SolutionManager.activeSolution.subscribe(sln => {
+            this.selectedIndex = _.findIndex(SolutionManager.activeSolutions, { index: sln.model.index });
+            this.updateSelectedItem(this.selectedIndex);
+        }));
 
         this.disposable.add(atom.commands.add("atom-workspace", "omnisharp-atom:next-solution-status", () => {
             this.updateSelectedItem(this.selectedIndex + 1);
@@ -66,27 +59,18 @@ class SolutionInformation implements IFeature {
 
     private updateSelectedItem(index: number) {
         if (index < 0)
-            index = this.solutions.length - 1;
-        if (index >= this.solutions.length)
+            index = SolutionManager.activeSolutions.length - 1;
+        if (index >= SolutionManager.activeSolutions.length)
             index = 0;
         if (this.selectedIndex !== index)
             this.selectedIndex = index;
 
         if (this.card) {
             this.card.updateCard({
-                model: this.solutions[this.selectedIndex],
-                count: this.solutions.length
+                model: SolutionManager.activeSolutions[this.selectedIndex].model,
+                count: SolutionManager.activeSolutions.length
             });
         }
-    }
-
-    private setupSolutions() {
-        var vms = SolutionManager.observeActiveSolutions.map(x => x.map(z => z.model));
-        this.disposable.add(vms.subscribe(o => {
-            this.solutions = o;
-            this.updateSelectedItem(this.selectedIndex);
-        }));
-        return vms;
     }
 
     private createSolutionCard() {
@@ -99,10 +83,10 @@ class SolutionInformation implements IFeature {
         }
 
         let notice: any;
-        if (this.solutions.length) {
+        if (SolutionManager.activeSolutions.length) {
             const element: SolutionStatusCard<ICardProps> = <any>React.render(React.createElement(SolutionStatusCard, {
-                model: this.solutions[this.selectedIndex],
-                count: this.solutions.length,
+                model: SolutionManager.activeSolutions[this.selectedIndex].model,
+                count: SolutionManager.activeSolutions.length,
                 attachTo: ".projects-icon"
             }), this.container);
 

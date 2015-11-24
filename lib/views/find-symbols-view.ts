@@ -13,7 +13,7 @@ export class FindSymbolsView extends OmniSelectListView {
     public viewForItem(item: Models.SymbolLocation) {
         return `<li>
             <span>
-            <img style="margin-right: 0.75em;" height="16px" width="16px" src="atom://styles/icons/autocomplete_${ item.Kind.toLowerCase() }@3x.png" />
+            <img style="margin-right: 0.75em;" height="16px" width="16px" src="atom://omnisharp-atom/styles/icons/autocomplete_${ item.Kind.toLowerCase() }@3x.png" />
             <span>${ item.Text }</span>
             </span>
             <br/>

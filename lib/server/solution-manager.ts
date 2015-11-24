@@ -44,10 +44,6 @@ class SolutionInstanceManager {
     private _specialCaseExtensions = [".csx", /*".cake"*/];
     public get __specialCaseExtensions() { return this._specialCaseExtensions; }
 
-    private _subjectActiveSolutions = new Subject<Solution[]>();
-    private _observeActiveSolutions = this._subjectActiveSolutions.shareReplay(1);
-    public get observeActiveSolutions() { return this._observeActiveSolutions; }
-
     private _activeSolutions: Solution[] = [];
     public get activeSolutions() {
         return this._activeSolutions;
@@ -192,7 +188,6 @@ class SolutionInstanceManager {
         cd.add(Disposable.create(() => {
             this._solutionDisposable.remove(cd);
             _.pull(this._activeSolutions, solution);
-            this._subjectActiveSolutions.onNext(this._activeSolutions.slice());
             this._solutions.delete(candidate);
 
             if (this._temporarySolutions.has(solution)) {
@@ -219,7 +214,6 @@ class SolutionInstanceManager {
         }
 
         this._activeSolutions.push(solution);
-        this._subjectActiveSolutions.onNext(this._activeSolutions.slice());
         if (this._activeSolutions.length === 1)
             this._activeSolution.onNext(solution);
 

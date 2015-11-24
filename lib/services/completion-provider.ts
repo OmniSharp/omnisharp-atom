@@ -121,7 +121,7 @@ function renderReturnType(returnType: string) {
 
 function renderIcon(item: Models.AutoCompleteResponse) {
     // todo: move additional styling to css
-    return `<img height="16px" width="16px" src="atom://styles/icons/autocomplete_${ item.Kind.toLowerCase() }@3x.png" />`;
+    return `<img height="16px" width="16px" src="atom://omnisharp-atom/styles/icons/autocomplete_${ item.Kind.toLowerCase() }@3x.png" />`;
 }
 
 function getSuggestions(options: RequestOptions): Rx.IPromise<Suggestion[]> {
