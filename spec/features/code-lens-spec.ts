@@ -1,9 +1,9 @@
 import {Observable} from "rx";
 /// <reference path="../tsd.d.ts" />
 import {expect} from "chai";
-import {Omni} from "../../lib/omni-sharp-server/omni";
+import {Omni} from "../../lib/server/omni";
 import {setupFeature, openEditor} from "../test-helpers";
-import {Lens} from "../../lib/omnisharp-atom/features/code-lens";
+import {Lens} from "../../lib/features/code-lens";
 
 describe("Code Lens", () => {
     setupFeature(["features/code-lens"]);

@@ -1,9 +1,9 @@
 /// <reference path="../tsd.d.ts" />
 import {expect} from "chai";
-import {Omni} from "../../lib/omni-sharp-server/omni";
+import {Omni} from "../../lib/server/omni";
 import {CompositeDisposable} from "rx";
 import {setupFeature, restoreBuffers} from "../test-helpers";
-import {codeFormat} from "../../lib/omnisharp-atom/features/code-format";
+import {codeFormat} from "../../lib/features/code-format";
 
 describe("Code Format", () => {
     setupFeature(["features/code-format"]);

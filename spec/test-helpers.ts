@@ -1,5 +1,5 @@
 /// <reference path="tsd.d.ts" />
-import {SolutionManager} from "../lib/omni-sharp-server/solution-manager";
+import {SolutionManager} from "../lib/server/solution-manager";
 import {Observable} from "rx";
 import {CompositeDisposable, Disposable} from "rx";
 import {DriverState} from "omnisharp-client";

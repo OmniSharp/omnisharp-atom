@@ -1,6 +1,6 @@
 /// <reference path="tsd.d.ts" />
 import {expect} from "chai";
-import {SolutionManager} from "../lib/omni-sharp-server/solution-manager";
+import {SolutionManager} from "../lib/server/solution-manager";
 import {DriverState} from "omnisharp-client";
 import {Observable} from "rx";
 import {setupFeature} from "./test-helpers";

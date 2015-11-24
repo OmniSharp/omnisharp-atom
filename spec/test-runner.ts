@@ -59,7 +59,7 @@ module.exports = function(
     let cd: CompositeDisposable;
 
     /* tslint:disable:variable-name */
-    const {SolutionManager} = require("../lib/omni-sharp-server/solution-manager");
+    const {SolutionManager} = require("../lib/server/solution-manager");
     /* tslint:enable:variable-name */
 
     (<any>mocha).suite.beforeEach(() => {

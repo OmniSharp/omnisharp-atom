@@ -2,7 +2,7 @@
 import {expect} from "chai";
 import {CompositeDisposable} from "rx";
 import {setupFeature, openEditor} from "../test-helpers";
-import {RenameView} from "../../lib/omnisharp-atom/views/rename-view";
+import {RenameView} from "../../lib/views/rename-view";
 const a = require("atom");
 /* tslint:disable:variable-name */
 const Range: typeof TextBuffer.Range = a.Range;

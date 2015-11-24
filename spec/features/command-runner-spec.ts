@@ -3,7 +3,7 @@ import {expect} from "chai";
 import {CompositeDisposable} from "rx";
 import {setupFeature, openEditor} from "../test-helpers";
 const win32 = process.platform === "win32";
-import {getDnxExe} from "../../lib/omnisharp-atom/atom/command-runner";
+import {getDnxExe} from "../../lib/atom/command-runner";
 
 describe("Command Runner", () => {
     setupFeature(["atom/command-runner"]);
