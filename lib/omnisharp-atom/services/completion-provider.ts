@@ -1,5 +1,5 @@
 import {Omni} from "../../omni-sharp-server/omni";
-import {OmniSharp} from "../../omnisharp";
+import {Models} from "omnisharp-client";
 const _ : _.LoDashStatic = require("lodash");
 import {CompositeDisposable} from "rx";
 const filter = require("fuzzaldrin").filter;
@@ -39,7 +39,7 @@ function calcuateMovement(previous: RequestOptions, current: RequestOptions) {
     return { reset: row || column || false, previous: previous, current: current };
 }
 
-const autoCompleteOptions = <OmniSharp.Models.AutoCompleteRequest>{
+const autoCompleteOptions = <Models.AutoCompleteRequest>{
     WordToComplete: "",
     WantDocumentationForEveryCompletionResult: false,
     WantKind: true,
@@ -54,7 +54,7 @@ let _useIcons: boolean;
 let _useLeftLabelColumnForSuggestions: boolean;
 
 let previous: RequestOptions;
-let results: Rx.Promise<OmniSharp.Models.AutoCompleteResponse[]>;
+let results: Rx.Promise<Models.AutoCompleteResponse[]>;
 
 let setupSubscriptions = () => {
     if (_initialized) return;
@@ -81,7 +81,7 @@ let setupSubscriptions = () => {
     _initialized = true;
 };
 
-function makeSuggestion(item: OmniSharp.Models.AutoCompleteResponse) {
+function makeSuggestion(item: Models.AutoCompleteResponse) {
     let description: any, leftLabel: any, iconHTML: any, type: any;
 
     if (_useLeftLabelColumnForSuggestions === true) {
@@ -119,7 +119,7 @@ function renderReturnType(returnType: string) {
     return `Returns: ${returnType}`;
 }
 
-function renderIcon(item: OmniSharp.Models.AutoCompleteResponse) {
+function renderIcon(item: Models.AutoCompleteResponse) {
     // todo: move additional styling to css
     return `<img height="16px" width="16px" src="atom://omnisharp-atom/styles/icons/autocomplete_${ item.Kind.toLowerCase() }@3x.png" />`;
 }

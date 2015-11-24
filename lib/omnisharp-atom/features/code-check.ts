@@ -1,4 +1,4 @@
-import {OmniSharp} from "../../omnisharp";
+import {Models} from "omnisharp-client";
 const _ : _.LoDashStatic = require("lodash");
 import {CompositeDisposable, Observable, Subject, Disposable} from "rx";
 import {Omni} from "../../omni-sharp-server/omni";
@@ -9,10 +9,10 @@ import {reloadWorkspace} from "./reload-workspace";
 class CodeCheck implements IFeature {
     private disposable: Rx.CompositeDisposable;
 
-    public displayDiagnostics: OmniSharp.Models.DiagnosticLocation[] = [];
+    public displayDiagnostics: Models.DiagnosticLocation[] = [];
     public selectedIndex: number = 0;
     private scrollTop: number = 0;
-    private _editorSubjects = new WeakMap<Atom.TextEditor, () => Rx.Observable<OmniSharp.Models.DiagnosticLocation[]>>();
+    private _editorSubjects = new WeakMap<Atom.TextEditor, () => Rx.Observable<Models.DiagnosticLocation[]>>();
     private _fullCodeCheck: Subject<any>;
 
     public activate() {
@@ -85,7 +85,7 @@ class CodeCheck implements IFeature {
 
         this.disposable.add(dock.addWindow("errors", "Errors & Warnings", CodeCheckOutputWindow, {
             scrollTop: () => this.scrollTop,
-            setScrollTop: (scrollTop) => this.scrollTop = scrollTop,
+            setScrollTop: (scrollTop: number) => this.scrollTop = scrollTop,
             codeCheck: this
         }));
 
@@ -124,8 +124,8 @@ class CodeCheck implements IFeature {
         this._fullCodeCheck.onNext(true);
     }
 
-    private filterOnlyWarningsAndErrors(quickFixes): OmniSharp.Models.DiagnosticLocation[] {
-        return _.filter(quickFixes, (quickFix: OmniSharp.Models.DiagnosticLocation) => {
+    private filterOnlyWarningsAndErrors(quickFixes: Models.DiagnosticLocation[]): Models.DiagnosticLocation[] {
+        return _.filter(quickFixes, (quickFix: Models.DiagnosticLocation) => {
             return quickFix.LogLevel !== "Hidden";
         });
     }

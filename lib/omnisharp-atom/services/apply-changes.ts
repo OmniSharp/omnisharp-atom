@@ -1,10 +1,11 @@
-import {OmniSharp} from "../../omnisharp";
+import {Models} from "omnisharp-client";
 /* tslint:disable:variable-name */
 const Range = require("atom").Range;
 /* tslint:enable:variable-name */
 import {Observable} from "rx";
 
-export function applyChanges(editor: Atom.TextEditor, response: { Changes?: OmniSharp.Models.LinePositionSpanTextChange[]; Buffer?: string; }) {
+export function applyChanges(editor: Atom.TextEditor, response: { Changes?: Models.LinePositionSpanTextChange[]; Buffer?: string; }) {
+    if (!response) return;
     if (response.Changes) {
         const buffer = editor.getBuffer();
         const checkpoint = buffer.createCheckpoint();
@@ -39,7 +40,7 @@ function resetPreviewTab() {
     }
 }
 
-export function applyAllChanges(changes: OmniSharp.Models.ModifiedFileResponse[]) {
+export function applyAllChanges(changes: Models.ModifiedFileResponse[]) {
     resetPreviewTab();
     return Observable.from(changes)
         .concatMap(change => atom.workspace.open(change.FileName, undefined)

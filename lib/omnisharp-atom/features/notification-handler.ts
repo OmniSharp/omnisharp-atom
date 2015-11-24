@@ -1,4 +1,4 @@
-import {OmniSharp} from "../../omnisharp";
+import {Models} from "omnisharp-client";
 const _ : _.LoDashStatic = require("lodash");
 import {Omni} from "../../omni-sharp-server/omni";
 import {CompositeDisposable} from "rx";
@@ -25,7 +25,7 @@ class NotificationHandler implements IFeature {
 
         this.disposable.add(Omni.listener.events
             .where(z => z.Event === "log")
-            .where(z => z.Body.Name === "OmniSharp.Dnx.PackagesRestoreTool")
+            .where(z => z.Body.Name === "Dnx.PackagesRestoreTool")
             .where(z => z.Body.Message.startsWith("Installing"))
             .subscribe(e => this.packageRestoreNotification.handleEvents(e)));
     }
@@ -52,7 +52,7 @@ class PackageRestoreNotification {
     private packageRestoreFinished: number;
     private knownProjects: Array<string>;
 
-    public handlePackageRestoreStarted = (event: OmniSharp.Models.PackageRestoreMessage) => {
+    public handlePackageRestoreStarted = (event: Models.PackageRestoreMessage) => {
         // Count how many of these we get so we know when to dismiss the notification
         this.packageRestoreStarted++;
         if (this.notification.isDismissed()) {
@@ -60,7 +60,7 @@ class PackageRestoreNotification {
         }
     };
 
-    public handleUnresolvedDependencies = (event: OmniSharp.Models.UnresolvedDependenciesMessage) => {
+    public handleUnresolvedDependencies = (event: Models.UnresolvedDependenciesMessage) => {
         // Sometimes UnresolvedDependencies event is sent before PackageRestoreStarted
         if (this.notification.isDismissed()) {
             this.notification.show("Package restore started", "Starting..");
@@ -80,7 +80,7 @@ class PackageRestoreNotification {
         }
     };
 
-    public handlePackageRestoreFinished = (event: OmniSharp.Models.PackageRestoreMessage) => {
+    public handlePackageRestoreFinished = (event: Models.PackageRestoreMessage) => {
         // Count how many of these we get so we know when to dismiss the notification
         this.packageRestoreFinished++;
         if (this.packageRestoreStarted === this.packageRestoreFinished) {
@@ -91,7 +91,7 @@ class PackageRestoreNotification {
         }
     };
 
-    public handleEvents = (event: OmniSharp.Stdio.Protocol.EventPacket) => {
+    public handleEvents = (event: Stdio.Protocol.EventPacket) => {
         this.setPackageInstalled(event.Body.Message);
     };
 

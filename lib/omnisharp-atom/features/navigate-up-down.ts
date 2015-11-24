@@ -1,4 +1,4 @@
-import {OmniSharp} from "../../omnisharp";
+import {Models} from "omnisharp-client";
 import {CompositeDisposable} from "rx";
 import {Omni} from "../../omni-sharp-server/omni";
 
@@ -32,7 +32,7 @@ class Navigate implements IFeature {
         Omni.request(solution => solution.navigatedown({}));
     }
 
-    private navigateTo(data: OmniSharp.Models.NavigateResponse) {
+    private navigateTo(data: Models.NavigateResponse) {
         const editor = atom.workspace.getActiveTextEditor();
         Omni.navigateTo({ FileName: editor.getURI(), Line: data.Line, Column: data.Column });
     }

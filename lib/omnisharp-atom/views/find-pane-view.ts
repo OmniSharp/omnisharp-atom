@@ -1,16 +1,16 @@
 /* tslint:disable:no-string-literal */
-import {OmniSharp} from "../../omnisharp";
-const _ : _.LoDashStatic = require("lodash");
+import {Models} from "omnisharp-client";
+const _: _.LoDashStatic = require("lodash");
 import {Omni} from "../../omni-sharp-server/omni";
 import * as React from "react";
 import * as path from "path";
-const $ : JQueryStatic = require("jquery");
+const $: JQueryStatic = require("jquery");
 import {ReactClientComponent} from "./react-client-component";
 import {findUsages} from "../features/find-usages";
 
 interface FindWindowState {
     selectedIndex?: number;
-    usages?: OmniSharp.Models.DiagnosticLocation[];
+    usages?: Models.DiagnosticLocation[];
 }
 
 interface FindWindowProps {
@@ -32,17 +32,10 @@ export class FindWindow extends ReactClientComponent<FindWindowProps, FindWindow
 
     public componentWillMount() {
         super.componentWillMount();
-        this.disposable.add(this.model.observe
-            .updated
-            .where(z => z.name === "usages")
-            .subscribe(z => this.setState({
-                usages: this.model.usages
-            })));
+        this.disposable.add(this.model.observe.reset.merge(this.model.observe.find.map(z => true))
+            .subscribe(() => this.setState({ usages: this.model.usages })));
 
-        this.disposable.add(this.model.observe
-            .updated
-            .where(z => z.name === "selectedIndex")
-            .delay(0)
+        this.disposable.add(this.model.observe.selected.delay(0)
             .subscribe(z => this.updateStateAndScroll()));
     }
 
@@ -89,7 +82,7 @@ export class FindWindow extends ReactClientComponent<FindWindowProps, FindWindow
         }
     }
 
-    private gotoUsage(quickfix: OmniSharp.Models.QuickFix, index: number) {
+    private gotoUsage(quickfix: Models.QuickFix, index: number) {
         Omni.navigateTo(quickfix);
         this.model.selectedIndex = index;
     }
@@ -104,7 +97,7 @@ export class FindWindow extends ReactClientComponent<FindWindowProps, FindWindow
         },
             React.DOM.ol({
                 style: <any>{ cursor: "pointer" },
-            }, _.map(this.state.usages, (usage: OmniSharp.Models.QuickFix, index: number) =>
+            }, _.map(this.state.usages, (usage: Models.QuickFix, index: number) =>
                 React.DOM.li({
                     key: `quick-fix-${usage.FileName}-(${usage.Line}-${usage.Column})-(${usage.EndLine}-${usage.EndColumn})-(${usage.Projects.join("-")})`,
                     className: "find-usages" + (index === this.state.selectedIndex ? " selected" : ""),

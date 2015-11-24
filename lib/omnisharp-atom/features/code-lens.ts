@@ -1,5 +1,5 @@
 /// <reference path="../../typings.d.ts" />
-import {OmniSharp} from "../../omnisharp";
+import {Models} from "omnisharp-client";
 const _ : _.LoDashStatic = require("lodash");
 import {CompositeDisposable, Observable, Disposable, Subject, Scheduler} from "rx";
 import {Omni} from "../../omni-sharp-server/omni";
@@ -176,7 +176,7 @@ export class Lens implements Rx.IDisposable {
 
     public loaded: boolean = false;
 
-    constructor(private _editor: Atom.TextEditor, private _member: OmniSharp.Models.QuickFix, private _marker: Atom.Marker, private _range: TextBuffer.Range, disposer: Rx.IDisposable) {
+    constructor(private _editor: Atom.TextEditor, private _member: Models.QuickFix, private _marker: Atom.Marker, private _range: TextBuffer.Range, disposer: Rx.IDisposable) {
         this._row = _range.getRows()[0];
         this._update = new Subject<any>();
         this._disposable.add(this._update);

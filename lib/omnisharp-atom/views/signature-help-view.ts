@@ -1,6 +1,6 @@
 /// <reference path="../../typings.d.ts" />
 /* tslint:disable:no-string-literal */
-import {OmniSharp} from "../../omnisharp";
+import {Models} from "omnisharp-client";
 let fastdom : { read(cb: Function): any; write(cb: Function): any; } = require("fastdom");
 const _ : _.LoDashStatic = require("lodash");
 
@@ -13,7 +13,7 @@ const parseString = (function() {
 })();
 
 export class SignatureView extends HTMLDivElement { /* implements WebComponent */
-    private _member: OmniSharp.Models.SignatureHelp;
+    private _member: Models.SignatureHelp;
     private _inner: HTMLDivElement;
     private _label: HTMLSpanElement;
     private _documentation: HTMLDivElement;
@@ -114,7 +114,7 @@ export class SignatureView extends HTMLDivElement { /* implements WebComponent *
     }
 
     //@_d(m => _.debounce(m, 200, { leading: true, trailing: true }))
-    public updateMember(member: OmniSharp.Models.SignatureHelp) {
+    public updateMember(member: Models.SignatureHelp) {
         this._member = member;
 
         if (this._selectedIndex === -1) {
@@ -240,7 +240,7 @@ export class SignatureView extends HTMLDivElement { /* implements WebComponent *
 (<any>exports).SignatureView = (<any>document).registerElement("omnisharp-signature-help", { prototype: SignatureView.prototype });
 
 export class SignatureParameterView extends HTMLSpanElement { /* implements WebComponent */
-    private _member: OmniSharp.Models.SignatureHelpParameter;
+    private _member: Models.SignatureHelpParameter;
     private _label: HTMLSpanElement;
 
     public createdCallback() {
@@ -248,7 +248,7 @@ export class SignatureParameterView extends HTMLSpanElement { /* implements WebC
         this.appendChild(this._label);
     }
 
-    public setMember(member: OmniSharp.Models.SignatureHelpParameter) {
+    public setMember(member: Models.SignatureHelpParameter) {
         this._member = member;
         this._label.innerText = member.Label;
     }

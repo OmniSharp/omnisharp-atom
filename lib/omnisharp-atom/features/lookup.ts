@@ -1,7 +1,7 @@
 // Inspiration : https://atom.io/packages/ide-haskell
 // and https://atom.io/packages/ide-flow
 // https://atom.io/packages/atom-typescript
-import {OmniSharp} from "../../omnisharp";
+import {Models} from "omnisharp-client";
 import {CompositeDisposable, Observable, Disposable} from "rx";
 import {Omni} from "../../omni-sharp-server/omni";
 import {TooltipView} from "../views/tooltip-view";
@@ -164,7 +164,7 @@ class Tooltip implements Rx.Disposable {
             IncludeDocumentation: true,
             Line: bufferPt.row,
             Column: bufferPt.column
-        })).subscribe((response: OmniSharp.Models.TypeLookupResponse) => {
+        })).subscribe((response: Models.TypeLookupResponse) => {
             if (response.Type === null) {
                 return;
             }

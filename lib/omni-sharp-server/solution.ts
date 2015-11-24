@@ -1,5 +1,5 @@
 const _ : _.LoDashStatic = require("lodash");
-import {OmniSharp} from "../omnisharp";
+import {Models, RequestOptions} from "omnisharp-client";
 import {Observable, Subject, CompositeDisposable} from "rx";
 import {ClientV2, DriverState, OmnisharpClientOptions} from "omnisharp-client";
 
@@ -40,7 +40,7 @@ export class Solution extends ClientV2 {
         this.setupRepository();
         this._solutionDisposable.add(this.model);
 
-        this.registerFixup((action: string, request: any, opts?: OmniSharp.RequestOptions) => this._fixupRequest(action, request));
+        this.registerFixup((action: string, request: any, opts?: RequestOptions) => this._fixupRequest(action, request));
     }
 
     public toggle() {
@@ -105,12 +105,12 @@ export class Solution extends ClientV2 {
             /*
             TODO: Update once rename/code actions don"t apply changes to the workspace
             const omniChanges: { oldRange: { start: TextBuffer.Point, end: TextBuffer.Point }; newRange: { start: TextBuffer.Point, end: TextBuffer.Point }; oldText: string; newText: string; }[] = (<any>editor).__omniChanges__ || [];
-            const computedChanges: OmniSharp.Models.LinePositionSpanTextChange[];
+            const computedChanges: Models.LinePositionSpanTextChange[];
 
             if (_.any(["goto", "navigate", "find", "package"], x => _.startsWith(action, x))) {
                 computedChanges = null;
             } else {
-                computedChanges = omniChanges.map(change => <OmniSharp.Models.LinePositionSpanTextChange>{
+                computedChanges = omniChanges.map(change => <Models.LinePositionSpanTextChange>{
                     NewText: change.newText,
                     StartLine: change.oldRange.start.row,
                     StartColumn: change.oldRange.start.column,
@@ -131,7 +131,7 @@ export class Solution extends ClientV2 {
         /* tslint:enable:no-string-literal */
     }
 
-    public request<TRequest, TResponse>(action: string, request?: TRequest, options?: OmniSharp.RequestOptions): Rx.Observable<TResponse> {
+    public request<TRequest, TResponse>(action: string, request?: TRequest, options?: RequestOptions): Rx.Observable<TResponse> {
         if (this._currentEditor) {
             const editor = this._currentEditor;
             this._currentEditor = null;
@@ -141,7 +141,7 @@ export class Solution extends ClientV2 {
             }
         }
 
-        const tempR: OmniSharp.Models.Request = request;
+        const tempR: Models.Request = request;
         if (tempR && _.endsWith(tempR.FileName, ".json")) {
             tempR.Buffer = null;
             tempR.Changes = null;

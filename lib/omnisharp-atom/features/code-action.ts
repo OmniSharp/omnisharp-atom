@@ -1,4 +1,4 @@
-import {OmniSharp} from "../../omnisharp";
+import {Models} from "omnisharp-client";
 const _ : _.LoDashStatic = require("lodash");
 import {CompositeDisposable, Subject, Observable, Scheduler} from "rx";
 import {Omni} from "../../omni-sharp-server/omni";
@@ -106,26 +106,26 @@ class CodeAction implements IFeature {
     }
 
     private getCodeActionsRequest(editor: Atom.TextEditor, silent = true) {
-        if (!editor || editor.isDestroyed()) return Observable.empty<{ request: OmniSharp.Models.V2.GetCodeActionsRequest; response: OmniSharp.Models.V2.GetCodeActionsResponse }>();
+        if (!editor || editor.isDestroyed()) return Observable.empty<{ request: Models.V2.GetCodeActionsRequest; response: Models.V2.GetCodeActionsResponse }>();
 
         const request = this.getRequest(editor);
         return Omni.request(editor, solution => solution.getcodeactions(request))
             .map(response => ({ request, response }));
     }
 
-    private runCodeActionRequest(editor: Atom.TextEditor, getRequest: OmniSharp.Models.V2.GetCodeActionsRequest, codeAction: string) {
-        if (!editor || editor.isDestroyed()) return Observable.empty<OmniSharp.Models.V2.RunCodeActionResponse>();
+    private runCodeActionRequest(editor: Atom.TextEditor, getRequest: Models.V2.GetCodeActionsRequest, codeAction: string) {
+        if (!editor || editor.isDestroyed()) return Observable.empty<Models.V2.RunCodeActionResponse>();
 
         const request = this.getRequest(editor, codeAction);
         request.Selection = getRequest.Selection;
         return Omni.request(editor, solution => solution.runcodeaction(request));
     }
 
-    private getRequest(editor: Atom.TextEditor): OmniSharp.Models.V2.GetCodeActionsRequest;
-    private getRequest(editor: Atom.TextEditor, codeAction: string): OmniSharp.Models.V2.RunCodeActionRequest;
+    private getRequest(editor: Atom.TextEditor): Models.V2.GetCodeActionsRequest;
+    private getRequest(editor: Atom.TextEditor, codeAction: string): Models.V2.RunCodeActionRequest;
     private getRequest(editor: Atom.TextEditor, codeAction?: string) {
         const range = <any>editor.getSelectedBufferRange();
-        const request: OmniSharp.Models.V2.RunCodeActionRequest = {
+        const request: Models.V2.RunCodeActionRequest = {
             WantsTextChanges: true,
             Selection: {
                 Start: {

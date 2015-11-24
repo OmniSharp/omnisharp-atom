@@ -1,4 +1,4 @@
-import {OmniSharp} from "../../omnisharp";
+import {Models} from "omnisharp-client";
 import {CompositeDisposable, Observable, Disposable, Subject} from "rx";
 import {Omni} from "../../omni-sharp-server/omni";
 const _ : _.LoDashStatic = require("lodash");
@@ -118,7 +118,7 @@ class SignatureBubble implements Rx.IDisposable {
     private _element: SignatureView;
     private _marker: Atom.Marker;
     private _position: TextBuffer.Point;
-    private _member: OmniSharp.Models.SignatureHelp;
+    private _member: Models.SignatureHelp;
     private _lineHeight: number;
 
     constructor(private _editor: Atom.TextEditor, disposer: Rx.IDisposable) {
@@ -161,7 +161,7 @@ class SignatureBubble implements Rx.IDisposable {
         }));
     }
 
-    public update(position: TextBuffer.Point, member: OmniSharp.Models.SignatureHelp) {
+    public update(position: TextBuffer.Point, member: Models.SignatureHelp) {
         this._position = position;
         const range = [[position.row, position.column], [position.row, position.column]];
         if (!this._marker) {
@@ -196,7 +196,7 @@ class SignatureBubble implements Rx.IDisposable {
 
     }
 
-    private _updateMember(member: OmniSharp.Models.SignatureHelp) {
+    private _updateMember(member: Models.SignatureHelp) {
         this._member = member;
         this._element.updateMember(member);
     }

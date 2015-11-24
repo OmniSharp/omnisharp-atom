@@ -1,4 +1,4 @@
-import {OmniSharp} from "../../omnisharp";
+import {Models} from "omnisharp-client";
 import {Omni} from "../../omni-sharp-server/omni";
 /* tslint:disable:variable-name */
 const Range = require("atom").Range;
@@ -39,7 +39,7 @@ function getWordAt(str: string, pos: number) {
     return wordLocation;
 }
 
-function mapValues(editor: Atom.TextEditor, error: OmniSharp.Models.DiagnosticLocation): LinterError {
+function mapValues(editor: Atom.TextEditor, error: Models.DiagnosticLocation): LinterError {
     const line = error.Line;
     const column = error.Column;
     const text = editor.lineTextForBufferRow(line);

@@ -1,4 +1,4 @@
-import {OmniSharp} from "../../omnisharp";
+import {Models} from "omnisharp-client";
 import * as SpacePen from "atom-space-pen-views";
 const $ : JQueryStatic = require("jquery");
 
@@ -15,7 +15,7 @@ export class OmniSelectListView extends SpacePen.SelectListView {
         this.focusFilterEditor();
     }
 
-    public addToList(symbols : OmniSharp.Models.QuickFix[]) : void {
+    public addToList(symbols : Models.QuickFix[]) : void {
         this.list.empty();
 
         if (symbols.length > 0) {

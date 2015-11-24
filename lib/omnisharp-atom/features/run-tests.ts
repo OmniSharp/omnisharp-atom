@@ -1,4 +1,4 @@
-import {OmniSharp} from "../../omnisharp";
+import {Models} from "omnisharp-client";
 import {CompositeDisposable, Observable, Disposable, Subject} from "rx";
 import {Omni} from "../../omni-sharp-server/omni";
 import {dock} from "../atom/dock";
@@ -17,7 +17,7 @@ class RunTests implements IFeature {
     private window: Rx.CompositeDisposable;
     private _output: Rx.Subject<OutputMessage[]>;
     public testResults: OutputMessage[] = [];
-    private lastRun: OmniSharp.Models.GetTestCommandResponse;
+    private lastRun: Models.GetTestCommandResponse;
 
     public observe: {
         output: Observable<OutputMessage[]>;
@@ -61,7 +61,7 @@ class RunTests implements IFeature {
         Omni.request(solution => solution.gettestcontext({ Type: <any>type }));
     }
 
-    private executeTests(response: OmniSharp.Models.GetTestCommandResponse) {
+    private executeTests(response: Models.GetTestCommandResponse) {
         this.testResults.length = 0;
         this.lastRun = response;
 

@@ -1,5 +1,5 @@
 /* tslint:disable:no-string-literal */
-import {OmniSharp} from "../../omnisharp";
+import {Models} from "omnisharp-client";
 const _ : _.LoDashStatic = require("lodash");
 import * as path from "path";
 import {Omni} from "../../omni-sharp-server/omni";
@@ -9,7 +9,7 @@ import {ReactClientComponent} from "./react-client-component";
 import {codeCheck} from "../features/code-check";
 
 interface ICodeCheckOutputWindowState {
-    diagnostics?: OmniSharp.Models.DiagnosticLocation[];
+    diagnostics?: Models.DiagnosticLocation[];
     selectedIndex?: number;
 }
 
@@ -55,7 +55,7 @@ export class CodeCheckOutputWindow<T extends ICodeCheckOutputWindowProps> extend
         (<any>React.findDOMNode(this)).onkeydown = undefined;
     }
 
-    private goToLine(location: OmniSharp.Models.DiagnosticLocation, index: number) {
+    private goToLine(location: Models.DiagnosticLocation, index: number) {
         Omni.navigateTo(location);
         this.model.selectedIndex = index;
     }

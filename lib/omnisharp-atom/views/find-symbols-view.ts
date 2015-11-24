@@ -1,4 +1,4 @@
-import {OmniSharp} from "../../omnisharp";
+import {Models} from "omnisharp-client";
 import {OmniSelectListView} from "../services/omni-select-list-view";
 import {Omni} from "../../omni-sharp-server/omni";
 
@@ -10,7 +10,7 @@ export class FindSymbolsView extends OmniSelectListView {
         this.setMaxItems(50);
     }
 
-    public viewForItem(item: OmniSharp.Models.SymbolLocation) {
+    public viewForItem(item: Models.SymbolLocation) {
         return `<li>
             <span>
             <img style="margin-right: 0.75em;" height="16px" width="16px" src="atom://omnisharp-atom/styles/icons/autocomplete_${ item.Kind.toLowerCase() }@3x.png" />

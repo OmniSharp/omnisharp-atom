@@ -1,7 +1,6 @@
 const _ : _.LoDashStatic = require("lodash");
-import {OmniSharp} from "../omnisharp";
 import {Solution} from "./solution";
-import {DriverState, OmnisharpClientStatus} from "omnisharp-client";
+import {Models, DriverState, OmnisharpClientStatus} from "omnisharp-client";
 import {Observable, Subject, CompositeDisposable, Disposable} from "rx";
 import {basename, normalize, join} from "path";
 import {ProjectViewModel, projectViewModelFactory, workspaceViewModelFactory} from "./project-view-model";
@@ -29,7 +28,7 @@ export class ViewModel implements VMViewState, Rx.IDisposable {
     public get index() { return this._solution.index; }
     public get path() { return this._solution.path; }
     public output: OutputMessage[] = [];
-    public diagnostics: OmniSharp.Models.DiagnosticLocation[] = [];
+    public diagnostics: Models.DiagnosticLocation[] = [];
     public get state() { return this._solution.currentState; };
     public packageSources: string[] = [];
     public runtime = "";
@@ -41,7 +40,7 @@ export class ViewModel implements VMViewState, Rx.IDisposable {
     private _stateStream = new Subject<ViewModel>();
 
     public observe: {
-        codecheck: Rx.Observable<OmniSharp.Models.DiagnosticLocation[]>;
+        codecheck: Rx.Observable<Models.DiagnosticLocation[]>;
         output: Rx.Observable<OutputMessage[]>;
         status: Rx.Observable<OmnisharpClientStatus>;
         state: Rx.Observable<ViewModel>;
@@ -248,7 +247,7 @@ export class ViewModel implements VMViewState, Rx.IDisposable {
             _solution.observe.codecheck
                 .where(z => !z.request.FileName)
                 .map(z => z.response || <any>{})
-                .map(z => <OmniSharp.Models.DiagnosticLocation[]>z.QuickFixes || []),
+                .map(z => <Models.DiagnosticLocation[]>z.QuickFixes || []),
             // Evict diagnostics from a code check for the given file
             // Then insert the new diagnostics
             _solution.observe.codecheck
@@ -256,8 +255,8 @@ export class ViewModel implements VMViewState, Rx.IDisposable {
                 .map((ctx) => {
                     let {request, response} = ctx;
                     if (!response) response = <any>{};
-                    const results = _.filter(this.diagnostics, (fix: OmniSharp.Models.DiagnosticLocation) => request.FileName !== fix.FileName);
-                    results.unshift(...<OmniSharp.Models.DiagnosticLocation[]>response.QuickFixes || []);
+                    const results = _.filter(this.diagnostics, (fix: Models.DiagnosticLocation) => request.FileName !== fix.FileName);
+                    results.unshift(...<Models.DiagnosticLocation[]>response.QuickFixes || []);
                     return results;
                 }))
             .map(data => _.sortBy(data, quickFix => quickFix.LogLevel))

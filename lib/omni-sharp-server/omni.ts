@@ -8,7 +8,8 @@ import {ProjectViewModel} from "./project-view-model";
 import {ViewModel} from "./view-model";
 import * as fs from "fs";
 import * as path from "path";
-import {ExtendApi, OmniSharp} from "../omnisharp";
+import {ExtendApi} from "../omnisharp";
+import {Models} from "omnisharp-client";
 
 // Time we wait to try and do our active switch tasks.
 const DEBOUNCE_TIMEOUT = 100;
@@ -51,7 +52,7 @@ class OmniManager implements Rx.IDisposable {
         .flatMapLatest(project => project.observe.activeFramework.map(framework => ({ project, framework })))
         .shareReplay(1);
 
-    private _diagnostics: Observable<OmniSharp.Models.DiagnosticLocation[]>;
+    private _diagnostics: Observable<Models.DiagnosticLocation[]>;
     public get diagnostics() { return this._diagnostics; }
 
     private _isOff = true;
@@ -143,12 +144,12 @@ class OmniManager implements Rx.IDisposable {
                 if (enabled) {
                     return combinationObservable
                         .debounce(200)
-                        .map(data => _.flatten<OmniSharp.Models.DiagnosticLocation>(data));
+                        .map(data => _.flatten<Models.DiagnosticLocation>(data));
                 } else if (model) {
                     return model.observe.codecheck;
                 }
 
-                return Observable.just(<OmniSharp.Models.DiagnosticLocation[]>[]);
+                return Observable.just(<Models.DiagnosticLocation[]>[]);
             })
             .startWith([])
             .share();

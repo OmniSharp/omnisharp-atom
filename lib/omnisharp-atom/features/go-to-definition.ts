@@ -1,4 +1,4 @@
-import {OmniSharp} from "../../omnisharp";
+import {Models} from "omnisharp-client";
 const _ : _.LoDashStatic = require("lodash");
 import {CompositeDisposable, Observable} from "rx";
 import {Omni} from "../../omni-sharp-server/omni";
@@ -107,7 +107,7 @@ class GoToDefinition implements IFeature {
             Omni.request(editor, solution => solution.gotodefinition({
                 WantMetadata: this.wantMetadata
             }))
-                .subscribe((data: OmniSharp.Models.GotoDefinitionResponse) => {
+                .subscribe((data: Models.GotoDefinitionResponse) => {
                     if (data.FileName != null) {
                         Omni.navigateTo(data);
                     } else if (data.MetadataSource) {

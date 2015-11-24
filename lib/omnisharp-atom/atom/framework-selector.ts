@@ -1,4 +1,4 @@
-import {OmniSharp} from "../../omnisharp";
+import {Models} from "omnisharp-client";
 import {CompositeDisposable, Disposable} from "rx";
 import {ProjectViewModel} from "../../omni-sharp-server/project-view-model";
 import {Omni} from "../../omni-sharp-server/omni";
@@ -88,7 +88,7 @@ class FrameworkSelector implements IAtomFeature {
         this.disposable.dispose();
     }
 
-    public setActiveFramework(framework: OmniSharp.Models.DnxFramework) {
+    public setActiveFramework(framework: Models.DnxFramework) {
         if (this.project) {
             this.project.activeFramework = framework;
             this._component.setState({ activeFramework: framework });

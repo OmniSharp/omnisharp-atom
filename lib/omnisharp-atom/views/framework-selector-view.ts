@@ -1,4 +1,4 @@
-import {OmniSharp} from "../../omnisharp";
+import {Models} from "omnisharp-client";
 import * as SpacePen from "atom-space-pen-views";
 import * as React from "react";
 import {ReactClientComponent} from "./react-client-component";
@@ -6,8 +6,8 @@ import {frameworkSelector} from "../atom/framework-selector";
 const $ : JQueryStatic = require("jquery");
 
 interface FrameworkSelectorState {
-    frameworks?: OmniSharp.Models.DnxFramework[];
-    activeFramework?: OmniSharp.Models.DnxFramework;
+    frameworks?: Models.DnxFramework[];
+    activeFramework?: Models.DnxFramework;
     alignLeft?: boolean;
 }
 
@@ -16,8 +16,8 @@ export class FrameworkSelectorComponent extends ReactClientComponent<{ alignLeft
     constructor(props?: { alignLeft: boolean }, context?: any) {
         super(props, context);
         this.state = {
-            frameworks: <OmniSharp.Models.DnxFramework[]>[],
-            activeFramework: <OmniSharp.Models.DnxFramework>{}
+            frameworks: <Models.DnxFramework[]>[],
+            activeFramework: <Models.DnxFramework>{}
         };
     }
 
@@ -33,7 +33,7 @@ export class FrameworkSelectorComponent extends ReactClientComponent<{ alignLeft
                     attachTo: ".framework-selector",
                     alignLeft: this.props.alignLeft,
                     items: this.state.frameworks,
-                    save: (framework: OmniSharp.Models.DnxFramework) => {
+                    save: (framework: Models.DnxFramework) => {
                         frameworkSelector.setActiveFramework(framework);
                         view.hide();
                     }
@@ -47,7 +47,7 @@ export class FrameworkSelectorComponent extends ReactClientComponent<{ alignLeft
 }
 
 export class FrameworkSelectorSelectListView extends SpacePen.SelectListView {
-    constructor(public editor: Atom.TextEditor, private options: { alignLeft: boolean; attachTo: string; items: OmniSharp.Models.DnxFramework[]; save(item: any): void }) {
+    constructor(public editor: Atom.TextEditor, private options: { alignLeft: boolean; attachTo: string; items: Models.DnxFramework[]; save(item: any): void }) {
         super();
         this.$.addClass("code-actions-overlay");
         (<any>this).filterEditorView.model.placeholderText = "Filter list";

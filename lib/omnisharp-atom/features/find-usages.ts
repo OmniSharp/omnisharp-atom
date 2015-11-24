@@ -1,5 +1,5 @@
-import {OmniSharp} from "../../omnisharp";
-import {CompositeDisposable, Observable, Disposable} from "rx";
+import {Models} from "omnisharp-client";
+import {CompositeDisposable, Observable, Disposable, Subject} from "rx";
 import {Omni} from "../../omni-sharp-server/omni";
 import {dock} from "../atom/dock";
 import {FindWindow} from "../views/find-pane-view";
@@ -9,12 +9,13 @@ class FindUsages implements IFeature {
     private window: Rx.CompositeDisposable;
     public selectedIndex: number = 0;
     private scrollTop: number = 0;
-    public usages: OmniSharp.Models.DiagnosticLocation[] = [];
+    public usages: Models.DiagnosticLocation[] = [];
 
     public observe: {
-        find: Observable<OmniSharp.Models.DiagnosticLocation[]>;
+        find: Observable<Models.DiagnosticLocation[]>;
         open: Observable<boolean>;
         reset: Observable<boolean>;
+        selected: Observable<number>;
     };
 
     public activate() {
@@ -28,8 +29,10 @@ class FindUsages implements IFeature {
                 .where(z => z.response.QuickFixes && z.response.QuickFixes.length > 1)
         )
             // For the UI we only need the qucik fixes.
-            .map(z => <OmniSharp.Models.DiagnosticLocation[]>z.response.QuickFixes || [])
+            .map(z => <Models.DiagnosticLocation[]>z.response.QuickFixes || [])
             .share();
+
+        const selected = new Subject<number>();
 
         this.observe = {
             find: observable,
@@ -37,6 +40,7 @@ class FindUsages implements IFeature {
             //      just goes to the item if only one comes back.
             open: Omni.listener.requests.where(z => !z.silent && z.command === "findusages").map(() => true),
             reset: Omni.listener.requests.where(z => !z.silent && (z.command === "findimplementations" || z.command === "findusages")).map(() => true),
+            selected: selected.asObservable()
         };
 
         this.disposable.add(Omni.addTextEditorCommand("omnisharp-atom:find-usages", () => {
@@ -48,7 +52,7 @@ class FindUsages implements IFeature {
         }));
 
         this.disposable.add(atom.commands.add("atom-workspace", "omnisharp-atom:next-usage", () => {
-            this.updateSelectedItem(this.selectedIndex + 1);
+            this.updateSelectedItem(selected, this.selectedIndex + 1);
         }));
 
         this.disposable.add(atom.commands.add("atom-workspace", "omnisharp-atom:go-to-usage", () => {
@@ -57,17 +61,17 @@ class FindUsages implements IFeature {
         }));
 
         this.disposable.add(atom.commands.add("atom-workspace", "omnisharp-atom:previous-usage", () => {
-            this.updateSelectedItem(this.selectedIndex - 1);
+            this.updateSelectedItem(selected, this.selectedIndex - 1);
         }));
 
         this.disposable.add(atom.commands.add("atom-workspace", "omnisharp-atom:go-to-next-usage", () => {
-            this.updateSelectedItem(this.selectedIndex + 1);
+            this.updateSelectedItem(selected, this.selectedIndex + 1);
             if (this.usages[this.selectedIndex])
                 Omni.navigateTo(this.usages[this.selectedIndex]);
         }));
 
         this.disposable.add(atom.commands.add("atom-workspace", "omnisharp-atom:go-to-previous-usage", () => {
-            this.updateSelectedItem(this.selectedIndex - 1);
+            this.updateSelectedItem(selected, this.selectedIndex - 1);
             if (this.usages[this.selectedIndex])
                 Omni.navigateTo(this.usages[this.selectedIndex]);
         }));
@@ -95,13 +99,15 @@ class FindUsages implements IFeature {
         }));
     }
 
-    private updateSelectedItem(index: number) {
+    private updateSelectedItem(selected: Subject<number>, index: number) {
         if (index < 0)
             index = 0;
         if (index >= this.usages.length)
             index = this.usages.length - 1;
-        if (this.selectedIndex !== index)
+        if (this.selectedIndex !== index) {
             this.selectedIndex = index;
+            selected.onNext(index);
+        }
     }
 
     private ensureWindowIsCreated() {

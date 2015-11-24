@@ -1,4 +1,5 @@
-import {OmniSharp, IProjectViewModel} from "../omnisharp";
+import {IProjectViewModel} from "../omnisharp";
+import {Models, ScriptCs} from "omnisharp-client";
 const _ : _.LoDashStatic = require("lodash");
 import {Observable, ReplaySubject} from "rx";
 
@@ -8,7 +9,7 @@ const projectFactories: { [key: string]: { new (project: any, solutionPath: stri
 };
 
 const supportedProjectTypes = _.keys(projectFactories);
-export function projectViewModelFactory(omnisharpProject: OmniSharp.Models.ProjectInformationResponse, solutionPath: string) {
+export function projectViewModelFactory(omnisharpProject: Models.ProjectInformationResponse, solutionPath: string) {
     const projectTypes = _.filter(supportedProjectTypes, type => _.has(omnisharpProject, type));
     const missing = _.difference(_.keys(omnisharpProject), supportedProjectTypes);
     if (missing.length) {
@@ -25,20 +26,20 @@ export function projectViewModelFactory(omnisharpProject: OmniSharp.Models.Proje
 }
 
 const workspaceFactories: { [key: string]: (workspace: any, solutionPath: string) => ProjectViewModel<any>[] } = {
-    MsBuild: (workspace: OmniSharp.Models.MsBuildWorkspaceInformation, solutionPath: string) => {
+    MsBuild: (workspace: Models.MsBuildWorkspaceInformation, solutionPath: string) => {
         return _.map(workspace.Projects, projectInformation => new MsBuildProjectViewModel(projectInformation, solutionPath));
     },
-    Dnx: (workspace: OmniSharp.Models.DnxWorkspaceInformation, solutionPath: string) => {
+    Dnx: (workspace: Models.DnxWorkspaceInformation, solutionPath: string) => {
         return _.map(workspace.Projects, projectInformation => new DnxProjectViewModel(projectInformation, solutionPath));
     },
-    ScriptCs: (workspace: OmniSharp.ScriptCs.ScriptCsContext, solutionPath: string) => {
+    ScriptCs: (workspace: ScriptCs.ScriptCsContext, solutionPath: string) => {
         if (workspace.CsxFiles.length > 0)
             return [new ScriptCsProjectViewModel(workspace, solutionPath)];
         return [];
     },
 };
 
-export function workspaceViewModelFactory(omnisharpWorkspace: OmniSharp.Models.WorkspaceInformationResponse, solutionPath: string) {
+export function workspaceViewModelFactory(omnisharpWorkspace: Models.WorkspaceInformationResponse, solutionPath: string) {
     const projects: any[] = [];
     _.forIn(omnisharpWorkspace, (item, key) => {
         const factory = workspaceFactories[key];
@@ -86,8 +87,8 @@ export abstract class ProjectViewModel<T> implements IProjectViewModel {
         return this._filesSet;
     }
 
-    private _subjectActiveFramework = new ReplaySubject<OmniSharp.Models.DnxFramework>(1);
-    private _activeFramework: OmniSharp.Models.DnxFramework;
+    private _subjectActiveFramework = new ReplaySubject<Models.DnxFramework>(1);
+    private _activeFramework: Models.DnxFramework;
     public get activeFramework() {
         if (!this._activeFramework) {
             this._activeFramework = this.frameworks[0];
@@ -101,7 +102,7 @@ export abstract class ProjectViewModel<T> implements IProjectViewModel {
         }
     }
 
-    private _frameworks: OmniSharp.Models.DnxFramework[] = [{ FriendlyName: "All", Name: "all", ShortName: "all" }];
+    private _frameworks: Models.DnxFramework[] = [{ FriendlyName: "All", Name: "all", ShortName: "all" }];
     public get frameworks() { return this._frameworks; }
     public set frameworks(value) {
         this._frameworks = [{ FriendlyName: "All", Name: "all", ShortName: "all" }].concat(value);
@@ -119,7 +120,7 @@ export abstract class ProjectViewModel<T> implements IProjectViewModel {
     public set commands(value) { this._commands = value || {}; }
 
     public observe: {
-        activeFramework: Observable<OmniSharp.Models.DnxFramework>;
+        activeFramework: Observable<Models.DnxFramework>;
     };
 
     public abstract init(value: T): void;
@@ -150,8 +151,8 @@ class ProxyProjectViewModel extends ProjectViewModel<ProjectViewModel<any>> {
     }
 }
 
-class MsBuildProjectViewModel extends ProjectViewModel<OmniSharp.Models.MSBuildProject> {
-    public init(project: OmniSharp.Models.MSBuildProject) {
+class MsBuildProjectViewModel extends ProjectViewModel<Models.MSBuildProject> {
+    public init(project: Models.MSBuildProject) {
         const frameworks = [{
             FriendlyName: project.TargetFramework,
             Name: project.TargetFramework,
@@ -165,8 +166,8 @@ class MsBuildProjectViewModel extends ProjectViewModel<OmniSharp.Models.MSBuildP
     }
 }
 
-class DnxProjectViewModel extends ProjectViewModel<OmniSharp.Models.DnxProject> {
-    public init(project: OmniSharp.Models.DnxProject) {
+class DnxProjectViewModel extends ProjectViewModel<Models.DnxProject> {
+    public init(project: Models.DnxProject) {
         this.name = project.Name;
         this.path = project.Path;
         this.frameworks = project.Frameworks;
@@ -176,8 +177,8 @@ class DnxProjectViewModel extends ProjectViewModel<OmniSharp.Models.DnxProject> 
     }
 }
 
-class ScriptCsProjectViewModel extends ProjectViewModel<OmniSharp.ScriptCs.ScriptCsContext> {
-    public init(project: OmniSharp.ScriptCs.ScriptCsContext) {
+class ScriptCsProjectViewModel extends ProjectViewModel<ScriptCs.ScriptCsContext> {
+    public init(project: ScriptCs.ScriptCsContext) {
         this.name = "ScriptCs";
         this.path = project.Path;
         this.sourceFiles = project.CsxFiles;

@@ -1,4 +1,4 @@
-import {OmniSharp} from "../../omnisharp";
+import {Models} from "omnisharp-client";
 import {CompositeDisposable} from "rx";
 import {Omni} from "../../omni-sharp-server/omni";
 import {applyChanges} from "../services/apply-changes";
@@ -25,7 +25,7 @@ class CodeFormat implements IFeature {
         if (editor) {
             const buffer = editor.getBuffer();
             Omni.request(editor, solution => {
-                const request = <OmniSharp.Models.FormatRangeRequest>{
+                const request = <Models.FormatRangeRequest>{
                     Line: 0,
                     Column: 0,
                     EndLine: buffer.getLineCount() - 1,
@@ -45,7 +45,7 @@ class CodeFormat implements IFeature {
             editor.insertText(char);
 
             Omni.request(editor, solution => {
-                const request = <OmniSharp.Models.FormatAfterKeystrokeRequest>{
+                const request = <Models.FormatAfterKeystrokeRequest>{
                     Character: char
                 };
 

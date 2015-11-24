@@ -1,5 +1,5 @@
 /* tslint:disable:no-string-literal */
-import {OmniSharp} from "../../omnisharp";
+import {Models} from "omnisharp-client";
 import {Omni} from "../../omni-sharp-server/omni";
 import {each, extend, has, contains, any, range, remove, pull, find, chain, unique, findIndex, all, isEqual, min, debounce, sortBy} from "lodash";
 import {Observable, Subject, ReplaySubject, CompositeDisposable, Disposable} from "rx";
@@ -170,11 +170,11 @@ class Highlight implements IFeature {
                     ProjectNames: projects,
                     Lines: <any>linesToFetch,
                     ExcludeClassifications: [
-                        OmniSharp.Models.HighlightClassification.Comment,
-                        OmniSharp.Models.HighlightClassification.String,
-                        OmniSharp.Models.HighlightClassification.Punctuation,
-                        OmniSharp.Models.HighlightClassification.Operator,
-                        OmniSharp.Models.HighlightClassification.Keyword
+                        Models.HighlightClassification.Comment,
+                        Models.HighlightClassification.String,
+                        Models.HighlightClassification.Punctuation,
+                        Models.HighlightClassification.Operator,
+                        Models.HighlightClassification.Keyword
                     ]
                 })).map(z => ({ projects, response: z }));
             })
@@ -212,7 +212,7 @@ class Highlight implements IFeature {
     public default = false;
 }
 
-function isObserveRetokenizing(observable: Rx.Observable<{ editor: Atom.TextEditor; request: OmniSharp.Models.HighlightRequest; response: OmniSharp.Models.HighlightResponse }>) {
+function isObserveRetokenizing(observable: Rx.Observable<{ editor: Atom.TextEditor; request: Models.HighlightRequest; response: Models.HighlightResponse }>) {
     return observable
         .where(z => !!z && !!z.editor && !!z.editor.getGrammar)
         .where(z => !!(<Observable<boolean>>(<any>z.editor.getGrammar()).isObserveRetokenizing))
@@ -235,7 +235,7 @@ interface IHighlightingGrammar extends FirstMate.Grammar {
     isObserveRetokenizing: Rx.Subject<boolean>;
     linesToFetch: number[];
     linesToTokenize: number[];
-    responses: Map<number, OmniSharp.Models.HighlightSpan[]>;
+    responses: Map<number, Models.HighlightSpan[]>;
     fullyTokenized: boolean;
 }
 
@@ -245,13 +245,13 @@ class Grammar {
     public linesToFetch: any[];
     public linesToTokenize: any[];
     public activeFramework: any;
-    public responses: Map<number, OmniSharp.Models.HighlightSpan[]>;
+    public responses: Map<number, Models.HighlightSpan[]>;
 
     constructor(editor: Atom.TextEditor, base: FirstMate.Grammar) {
         this.isObserveRetokenizing = new ReplaySubject<boolean>(1);
 
         this.editor = editor;
-        const responses = this.responses = new Map<number, OmniSharp.Models.HighlightSpan[]>();
+        const responses = this.responses = new Map<number, Models.HighlightSpan[]>();
         this.linesToFetch = [];
         this.linesToTokenize = [];
         this.activeFramework = {};
@@ -283,7 +283,7 @@ class Grammar {
                         newFrom = newRange.start.column;
 
                     //responses.delete(lines[0]);
-                    remove(responseLine, (span: OmniSharp.Models.HighlightSpan) => {
+                    remove(responseLine, (span: Models.HighlightSpan) => {
                         if (span.StartLine < lines[0]) {
                             return true;
                         }
@@ -323,16 +323,16 @@ class Grammar {
         });
     }
 
-    public setResponses = (value: OmniSharp.Models.HighlightSpan[], enableExcludeCode: boolean) => {
+    public setResponses = (value: Models.HighlightSpan[], enableExcludeCode: boolean) => {
         const results = chain(value).chain();
 
         const groupedItems = <any>results.map(highlight => range(highlight.StartLine, highlight.EndLine + 1)
             .map(line => ({ line, highlight })))
-            .flatten<{ line: number; highlight: OmniSharp.Models.HighlightSpan }>()
+            .flatten<{ line: number; highlight: Models.HighlightSpan }>()
             .groupBy(z => z.line)
             .value();
 
-        each(groupedItems, (item: { highlight: OmniSharp.Models.HighlightSpan }[], key: number) => {
+        each(groupedItems, (item: { highlight: Models.HighlightSpan }[], key: number) => {
             let k = +key, mappedItem = item.map(x => x.highlight);
 
             if (!enableExcludeCode || any(mappedItem, i => i.Kind === "preprocessor keyword") && all(mappedItem, i => i.Kind === "excluded code" || i.Kind === "preprocessor keyword")) {
@@ -382,7 +382,7 @@ Grammar.prototype["tokenizeLine"] = function(line: string, ruleStack: any[], fir
     return baseResult;
 };
 
-(Grammar.prototype as any).getCsTokensForLine = function(highlights: OmniSharp.Models.HighlightSpan[], line: string, row: number, ruleStack: any[], firstLine: boolean, tags: number[]) {
+(Grammar.prototype as any).getCsTokensForLine = function(highlights: Models.HighlightSpan[], line: string, row: number, ruleStack: any[], firstLine: boolean, tags: number[]) {
     ruleStack = [{ rule: this.getInitialRule() }];
 
     each(highlights, (highlight) => {
@@ -515,7 +515,7 @@ const getIdForScope = (function() {
 
 /// NOTE: best way I have found for these is to just look at theme "less" files
 // Alternatively just inspect the token for a .js file
-function getAtomStyleForToken(grammar: string, tags: number[], token: OmniSharp.Models.HighlightSpan, index: number, indexEnd: number, str: string) {
+function getAtomStyleForToken(grammar: string, tags: number[], token: Models.HighlightSpan, index: number, indexEnd: number, str: string) {
     const previousScopes: any[] = [];
     for (let i = index - 1; i >= 0; i--) {
         if (tags[i] > 0)
