@@ -14,8 +14,6 @@ describe("Code Format", () => {
         const commands: any = atom.commands;
 
         expect(commands.registeredCommands["omnisharp-atom:code-format"]).to.be.true;
-        expect(commands.registeredCommands["omnisharp-atom:code-format-on-semicolon"]).to.be.true;
-        expect(commands.registeredCommands["omnisharp-atom:code-format-on-curly-brace"]).to.be.true;
 
         disposable.dispose();
     });

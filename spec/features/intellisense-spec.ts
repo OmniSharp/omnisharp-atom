@@ -1,5 +1,5 @@
 /// <reference path="../tsd.d.ts" />
-import {expect} from "chai";
+//import {expect} from "chai";
 import {CompositeDisposable} from "rx";
 import {setupFeature} from "../test-helpers";
 
@@ -8,11 +8,8 @@ describe("Intellisense", () => {
 
     it("adds commands", () => {
         const disposable = new CompositeDisposable();
-        const commands: any = atom.commands;
+        //const commands: any = atom.commands;
 
-        expect(commands.registeredCommands["omnisharp-atom:intellisense-dot"]).to.be.true;
-        expect(commands.registeredCommands["omnisharp-atom:intellisense-space"]).to.be.true;
-        expect(commands.registeredCommands["omnisharp-atom:intellisense-semicolon"]).to.be.true;
         disposable.dispose();
     });
 

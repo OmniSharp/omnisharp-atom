@@ -22,8 +22,6 @@
   'ctrl-k ctrl-d': 'omnisharp-atom:code-format'
   'ctrl-k ctrl-c': 'editor:toggle-line-comments'
   'ctrl-k ctrl-u': 'editor:toggle-line-comments'
-  ';': 'omnisharp-atom:code-format-on-semicolon'
-  '}': 'omnisharp-atom:code-format-on-curly-brace'
   'alt-r': 'omnisharp-atom:rename'
   'f2': 'omnisharp-atom:rename'
   'ctrl-r ctrl-r': 'omnisharp-atom:rename'
@@ -53,7 +51,4 @@
   'cmd-d': 'omnisharp-atom:go-to-definition'
 
 '.autocomplete-active:not([mini]).omnisharp-editor':
-  'space': 'omnisharp-atom:intellisense-space'
-  '.': 'omnisharp-atom:intellisense-dot'
-  ';': 'omnisharp-atom:intellisense-semicolon'
   'enter': 'autocomplete-plus:confirm'

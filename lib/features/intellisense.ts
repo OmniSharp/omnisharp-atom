@@ -1,43 +1,38 @@
 import {CompositeDisposable} from "rx";
-import {delay} from "lodash";
 import {Omni} from "../server/omni";
+import {defer} from "lodash";
 
 class Intellisense implements IFeature {
     private disposable: Rx.CompositeDisposable;
 
     public activate() {
         this.disposable = new CompositeDisposable();
-        this.disposable.add(Omni.addTextEditorCommand("omnisharp-atom:intellisense-dot",
-            (event) => {
-                this.complete(event, ".");
-                delay(() => atom.commands.dispatch(atom.views.getView(atom.workspace.getActiveTextEditor()), "autocomplete-plus:activate"), 100);
+
+        this.disposable.add(Omni.switchActiveEditor((editor, cd) => {
+            cd.add(editor.onWillInsertText(event => {
+                if (event.text.length > 1) return;
+
+                if (event.text === " " || event.text === ";" || event.text === ".") {
+                    atom.commands.dispatch(atom.views.getView(editor), "autocomplete-plus:confirm");
+                }
             }));
 
-        this.disposable.add(Omni.addTextEditorCommand("omnisharp-atom:intellisense-space",
-            (event) => this.complete(event, " ")));
+            cd.add(editor.onDidInsertText(event => {
+                if (event.text.length > 1) return;
 
-        this.disposable.add(Omni.addTextEditorCommand("omnisharp-atom:intellisense-semicolon",
-            (event) => this.complete(event, ";")));
+                if (event.text === ".") {
+                    defer(() => atom.commands.dispatch(atom.views.getView(editor), "autocomplete-plus:activate"));
+                }
+            }));
+        }));
     }
 
     public dispose() {
         this.disposable.dispose();
     }
 
-    private complete(event: Event, char: string) {
-        const editor = atom.workspace.getActiveTextEditor();
-        if (editor) {
-            atom.commands.dispatch(atom.views.getView(editor), "autocomplete-plus:confirm");
-            editor.insertText(char);
-
-            event.preventDefault();
-            event.stopImmediatePropagation();
-            event.stopPropagation();
-            return false;
-        }
-    }
-
-    public required = true;
+    public required = false;
+    public default = true;
     public title = "Intellisense";
     public description = "Augments some of the issues with Atoms autocomplete-plus package";
 }

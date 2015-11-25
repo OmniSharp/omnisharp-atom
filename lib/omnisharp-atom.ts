@@ -1,4 +1,4 @@
-const _ : _.LoDashStatic = require("lodash");
+const _: _.LoDashStatic = require("lodash");
 import {Observable, AsyncSubject, CompositeDisposable, Disposable} from "rx";
 import * as path from "path";
 import * as fs from "fs";
@@ -27,6 +27,21 @@ class OmniSharpAtom {
                     atom.workspace.open("atom://config/packages/omnisharp-atom");
                 }
             })));
+
+        const grammars = (<any>atom.grammars);
+        var grammarCb = (grammar: { scopeName: string; }) => {
+            if (_.find(Omni.grammars, (gmr: any) => gmr.scopeName === grammar.scopeName)) {
+                // ensure the scope has been inited
+                atom.grammars.startIdForScope(grammar.scopeName);
+
+                const omnisharpScopeName = `${grammar.scopeName}.omnisharp`;
+                const scopeId = grammars.idsByScope[grammar.scopeName];
+                grammars.idsByScope[omnisharpScopeName] = scopeId;
+                grammars.scopesById[scopeId] = omnisharpScopeName;
+            }
+        };
+        _.each(grammars.grammars, grammarCb);
+        this.disposable.add(atom.grammars.onDidAddGrammar(grammarCb));
 
         require("atom-package-deps").install("omnisharp-atom")
             .then(() => {
@@ -260,9 +275,7 @@ class OmniSharpAtom {
     }
 
     public provideAutocomplete() {
-        const {CompletionProvider} = require("./services/completion-provider");
-        this.disposable.add(CompletionProvider);
-        return CompletionProvider;
+        return require("./services/completion-provider");
     }
 
     public provideLinter() {

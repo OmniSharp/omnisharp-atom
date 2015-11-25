@@ -1,6 +1,6 @@
 import {Omni} from "../server/omni";
 import {Models} from "omnisharp-client";
-const _ : _.LoDashStatic = require("lodash");
+const _: _.LoDashStatic = require("lodash");
 import {CompositeDisposable} from "rx";
 const filter = require("fuzzaldrin").filter;
 
@@ -47,71 +47,6 @@ const autoCompleteOptions = <Models.AutoCompleteRequest>{
     WantReturnType: true
 };
 
-let _disposable: CompositeDisposable;
-let _initialized = false;
-
-let _useIcons: boolean;
-let _useLeftLabelColumnForSuggestions: boolean;
-
-let previous: RequestOptions;
-let results: Rx.Promise<Models.AutoCompleteResponse[]>;
-
-let setupSubscriptions = () => {
-    if (_initialized) return;
-
-    const disposable = _disposable = new CompositeDisposable();
-
-    // Clear when auto-complete is opening.
-    // TODO: Update atom typings
-    disposable.add(atom.commands.onWillDispatch(function(event: Event) {
-        if (event.type === "autocomplete-plus:activate" || event.type === "autocomplete-plus:confirm" || event.type === "autocomplete-plus:cancel") {
-            results = null;
-        }
-    }));
-
-    // TODO: Dispose of these when not needed
-    disposable.add(atom.config.observe("omnisharp-atom.useIcons", (value) => {
-        _useIcons = value;
-    }));
-
-    disposable.add(atom.config.observe("omnisharp-atom.useLeftLabelColumnForSuggestions", (value) => {
-        _useLeftLabelColumnForSuggestions = value;
-    }));
-
-    _initialized = true;
-};
-
-function makeSuggestion(item: Models.AutoCompleteResponse) {
-    let description: any, leftLabel: any, iconHTML: any, type: any;
-
-    if (_useLeftLabelColumnForSuggestions === true) {
-        description = item.RequiredNamespaceImport;
-        leftLabel = item.ReturnType;
-    } else {
-        description = renderReturnType(item.ReturnType);
-        leftLabel = "";
-    }
-
-    if (_useIcons === true) {
-        iconHTML = renderIcon(item);
-        type = item.Kind;
-    } else {
-        iconHTML = null;
-        type = item.Kind.toLowerCase();
-    }
-
-    return {
-        _search: item.CompletionText,
-        snippet: item.Snippet,
-        type: type,
-        iconHTML: iconHTML,
-        displayText: item.DisplayText,
-        className: "autocomplete-omnisharp-atom",
-        description: description,
-        leftLabel: leftLabel,
-    };
-}
-
 function renderReturnType(returnType: string) {
     if (returnType === null) {
         return;
@@ -121,65 +56,129 @@ function renderReturnType(returnType: string) {
 
 function renderIcon(item: Models.AutoCompleteResponse) {
     // todo: move additional styling to css
-    return `<img height="16px" width="16px" src="atom://omnisharp-atom/styles/icons/autocomplete_${ item.Kind.toLowerCase() }@3x.png" />`;
+    return `<img height="16px" width="16px" src="atom://omnisharp-atom/styles/icons/autocomplete_${item.Kind.toLowerCase()}@3x.png" />`;
 }
 
-function getSuggestions(options: RequestOptions): Rx.IPromise<Suggestion[]> {
-    if (!_initialized) setupSubscriptions();
+class CompletionProvider implements Rx.IDisposable {
+    private _disposable: CompositeDisposable;
 
-    if (results && previous && calcuateMovement(previous, options).reset) {
-        results = null;
+    private _initialized = false;
+
+    private _useIcons: boolean;
+    private _useLeftLabelColumnForSuggestions: boolean;
+
+    private previous: RequestOptions;
+    private results: Rx.Promise<Models.AutoCompleteResponse[]>;
+
+    public selector = ".source.omnisharp";
+    public disableForSelector = ".source.omnisharp .comment";
+    public inclusionPriority = 1;
+    public suggestionPriority = 10;
+    public excludeLowerPriority = false;
+
+    public getSuggestions(options: RequestOptions): Rx.IPromise<Suggestion[]> {
+        if (!this._initialized) this._setupSubscriptions();
+
+        if (this.results && this.previous && calcuateMovement(this.previous, options).reset) {
+            this.results = null;
+        }
+
+        if (this.results && options.prefix === "." || (options.prefix && !_.trim(options.prefix)) || !options.prefix || options.activatedManually) {
+            this.results = null;
+        }
+
+        this.previous = options;
+
+        const buffer = options.editor.getBuffer();
+        const end = options.bufferPosition.column;
+
+        const data = buffer.getLines()[options.bufferPosition.row].substring(0, end + 1);
+        const lastCharacterTyped = data[end - 1];
+
+        if (!/[A-Z_0-9.]+/i.test(lastCharacterTyped)) {
+            return;
+        }
+
+        let search = options.prefix;
+        if (search === ".")
+            search = "";
+
+        if (!this.results) this.results = Omni.request(solution => solution.autocomplete(_.clone(autoCompleteOptions))).toPromise();
+
+        let p = this.results;
+        if (search)
+            p = p.then(s => filter(s, search, { key: "CompletionText" }));
+
+        return p.then(response => response.map(s => this._makeSuggestion(s)));
     }
 
-    if (results && options.prefix === "." || (options.prefix && !_.trim(options.prefix)) || !options.prefix || options.activatedManually) {
-        results = null;
+    public onDidInsertSuggestion(editor: Atom.TextEditor, triggerPosition: TextBuffer.Point, suggestion: any) {
+        this.results = null;
     }
 
-    previous = options;
+    public dispose() {
+        if (this._disposable)
+            this._disposable.dispose();
 
-    const buffer = options.editor.getBuffer();
-    const end = options.bufferPosition.column;
-
-    const data = buffer.getLines()[options.bufferPosition.row].substring(0, end + 1);
-    const lastCharacterTyped = data[end - 1];
-
-    if (!/[A-Z_0-9.]+/i.test(lastCharacterTyped)) {
-        return;
+        this._disposable = null;
+        this._initialized = false;
     }
 
-    let search = options.prefix;
-    if (search === ".")
-        search = "";
+    private _setupSubscriptions() {
+        if (this._initialized) return;
 
-    if (!results) results = Omni.request(solution => solution.autocomplete(_.clone(autoCompleteOptions))).toPromise();
+        const disposable = this._disposable = new CompositeDisposable();
 
-    let p = results;
-    if (search)
-        p = p.then(s => filter(s, search, { key: "CompletionText" }));
+        // Clear when auto-complete is opening.
+        // TODO: Update atom typings
+        disposable.add(atom.commands.onWillDispatch((event: Event) => {
+            if (event.type === "autocomplete-plus:activate" || event.type === "autocomplete-plus:confirm" || event.type === "autocomplete-plus:cancel") {
+                this.results = null;
+            }
+        }));
 
-    return p.then(response => response.map(s => makeSuggestion(s)));
+        // TODO: Dispose of these when not needed
+        disposable.add(atom.config.observe("omnisharp-atom.useIcons", (value) => {
+            this._useIcons = value;
+        }));
+
+        disposable.add(atom.config.observe("omnisharp-atom.useLeftLabelColumnForSuggestions", (value) => {
+            this._useLeftLabelColumnForSuggestions = value;
+        }));
+
+        this._initialized = true;
+    }
+
+    private _makeSuggestion(item: Models.AutoCompleteResponse) {
+        let description: any, leftLabel: any, iconHTML: any, type: any;
+
+        if (this._useLeftLabelColumnForSuggestions === true) {
+            description = item.RequiredNamespaceImport;
+            leftLabel = item.ReturnType;
+        } else {
+            description = renderReturnType(item.ReturnType);
+            leftLabel = "";
+        }
+
+        if (this._useIcons === true) {
+            iconHTML = renderIcon(item);
+            type = item.Kind;
+        } else {
+            iconHTML = null;
+            type = item.Kind.toLowerCase();
+        }
+
+        return {
+            _search: item.CompletionText,
+            snippet: item.Snippet,
+            type: type,
+            iconHTML: iconHTML,
+            displayText: item.DisplayText,
+            className: "autocomplete-omnisharp-atom",
+            description: description,
+            leftLabel: leftLabel,
+        };
+    }
 }
 
-function onDidInsertSuggestion(editor: Atom.TextEditor, triggerPosition: TextBuffer.Point, suggestion: any) {
-    results = null;
-}
-
-function dispose() {
-    if (_disposable)
-        _disposable.dispose();
-
-    _disposable = null;
-    _initialized = false;
-}
-
-/* tslint:disable:variable-name */
-export const CompletionProvider = {
-    get selector() { return Omni.grammars.map((x: any) => `.${x.scopeName}`).join(", "); },
-    get disableForSelector() { return Omni.grammars.map((x: any) => `.${x.scopeName} .comment`).join(", "); },
-    inclusionPriority: 1,
-    suggestionPriority: 10,
-    excludeLowerPriority: true,
-    getSuggestions,
-    onDidInsertSuggestion,
-    dispose
-};
+module.exports = [new CompletionProvider()];

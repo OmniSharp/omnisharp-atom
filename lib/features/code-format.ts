@@ -8,12 +8,18 @@ class CodeFormat implements IFeature {
 
     public activate() {
         this.disposable = new CompositeDisposable();
-        this.disposable.add(Omni.addTextEditorCommand("omnisharp-atom:code-format",
-            () => this.format()));
-        this.disposable.add(Omni.addTextEditorCommand("omnisharp-atom:code-format-on-semicolon",
-            (event) => this.formatOnKeystroke(event, ";")));
-        this.disposable.add(Omni.addTextEditorCommand("omnisharp-atom:code-format-on-curly-brace",
-            (event) => this.formatOnKeystroke(event, "}")));
+        this.disposable.add(Omni.addTextEditorCommand("omnisharp-atom:code-format", () => this.format()));
+
+        this.disposable.add(Omni.switchActiveEditor((editor, cd) => {
+            cd.add(editor.onDidInsertText(event => {
+                if (event.text.length > 1) return;
+
+                if (event.text === ";" || event.text === "}" || event.text === "{" || event.text.charCodeAt(0) === 10) {
+                    Omni.request(editor, solution => solution.formatAfterKeystroke({ Character: event.text }))
+                        .subscribe(data => applyChanges(editor, data));
+                }
+            }));
+        }));
     }
 
     public dispose() {
@@ -39,27 +45,7 @@ class CodeFormat implements IFeature {
         }
     }
 
-    public formatOnKeystroke(event: Event, char: string): any {
-        const editor = atom.workspace.getActiveTextEditor();
-        if (editor) {
-            editor.insertText(char);
-
-            Omni.request(editor, solution => {
-                const request = <Models.FormatAfterKeystrokeRequest>{
-                    Character: char
-                };
-
-                return solution.formatAfterKeystroke(request)
-                    .tapOnNext((data) => applyChanges(editor, data));
-            });
-        }
-        event.preventDefault();
-        event.stopImmediatePropagation();
-        event.stopPropagation();
-        return false;
-    }
-
-    public required = true;
+    public required = false;
     public title = "Code Format";
     public description = "Support for code formatting.";
 }
