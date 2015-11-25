@@ -42,8 +42,6 @@ class ServerInformation implements IFeature {
         // We want to make sure that the output field is
         return Omni.activeModel
             .flatMapLatest(z => z.observe.output)
-        // This starts us off with the current models output
-            .merge(Omni.activeModel.map(z => z.output))
             .startWith([])
             .share();
     }
@@ -51,8 +49,6 @@ class ServerInformation implements IFeature {
     private setupProjects() {
         return Omni.activeModel
             .flatMapLatest(model => model.observe.projects)
-        // This starts us off with the current projects output
-            .merge(Omni.activeModel.map(z => z.projects))
             .share();
     }
 

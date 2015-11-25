@@ -78,7 +78,7 @@ export class ViewModel implements VMViewState, Rx.IDisposable {
             .startWith(<any>[])
             .debounce(200)
             .map(z => this.projects)
-            .share();
+            .shareReplay(1);
 
         const outputObservable = _solution.logs
             .window(_solution.logs.throttle(100), () => Observable.timer(100))
