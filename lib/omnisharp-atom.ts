@@ -410,7 +410,7 @@ class OmniSharpAtom {
             default: true
         },
         wantMetadata: {
-            title: "Want metadata",
+            title: "Request metadata definition with Goto Definition",
             descrption: "Request symbol metadata from the server, when using go-to-definition.  This is disabled by default on Linux, due to issues with Roslyn on Mono.",
             type: "boolean",
             default: win32

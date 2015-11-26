@@ -1,37 +1,28 @@
 language: csharp
-
+sudo: false
 notifications:
   email:
     on_success: change
     on_failure: change
-
 before_install:
   - curl -sSL https://dist.asp.net/dnvm/dnvminstall.sh | sh && source ~/.dnx/dnvm/dnvm.sh
   - dnvm install 1.0.0-beta4
   - dnvm upgrade
-
 script:
   - ./build-package.sh
-
-git:
-  depth: 10
-
 os:
   - linux
   - osx
-
 env:
   global:
     - APM_TEST_PACKAGES='atom-yeoman linter json-schema advanced-open-file'
-
   matrix:
     - ATOM_CHANNEL=stable
     - ATOM_CHANNEL=beta
-
 addons:
   apt:
     packages:
-    - build-essential
-    - git
-    - libgnome-keyring-dev
-    - fakeroot
+      - build-essential
+      - git
+      - libgnome-keyring-dev
+      - fakeroot
