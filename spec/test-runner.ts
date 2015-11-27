@@ -77,6 +77,7 @@ module.exports = function(
     (<any>mocha).suite.afterEach(() => {
         cd.dispose();
         atom.packages.deactivatePackages();
+        (atom as any).reset();
     });
 
     return Promise.all(testPaths.map(path => globby([join(path, "**/*-spec.js")])))
