@@ -1,8 +1,8 @@
 import {Models} from "omnisharp-client";
-const _ : _.LoDashStatic = require("lodash");
+const _: _.LoDashStatic = require("lodash");
 import {CompositeDisposable, Observable} from "rx";
 import {Omni} from "../server/omni";
-const $ : JQueryStatic = require("jquery");
+const $: JQueryStatic = require("jquery");
 /* tslint:disable:variable-name */
 const Range: typeof TextBuffer.Range = require("atom").Range;
 /* tslint:enable:variable-name */
@@ -183,9 +183,13 @@ class GoToDefinition implements IFeature {
     }
 
     private getFromShadowDom(element: JQuery, selector: string): JQuery {
-        const el = element[0];
-        const found = (<any>el).rootElement.querySelectorAll(selector);
-        return $(found[0]);
+        try {
+            const el = element[0];
+            const found = (<any>el).rootElement.querySelectorAll(selector);
+            return $(found[0]);
+        } catch (e) {
+            return $(document.createElement("div"));
+        }
     }
 
     private removeMarker() {

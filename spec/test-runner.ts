@@ -36,10 +36,10 @@ module.exports = function(
     (window as any).atom = atom;
     (global as any).atom = atom;
 
-    //const atomDiv = document.createElement("div");
-    //atomDiv.style.display = "none";
-    //document.body.appendChild(atomDiv);
-    //atomDiv.appendChild(atom.views.getView(atom.workspace));
+    const atomDiv = document.createElement("div");
+    atomDiv.style.display = "none";
+    document.body.appendChild(atomDiv);
+    atomDiv.appendChild(<any>atom.views.getView(atom.workspace));
 
     const mochaDiv = document.createElement("div");
     mochaDiv.id = "mocha";
