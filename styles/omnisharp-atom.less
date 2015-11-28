@@ -530,8 +530,49 @@ omnisharp-signature-help {
     position: relative !important;
     opacity: 1 !important;
     pointer-events: all;
-    
+
     .tooltip-inner {
         text-align: left !important;
+    }
+}
+
+@import "ui-variables";
+atom-text-editor::shadow .linter-highlight,
+.linter-highlight {
+    &.info {
+        /* Style for Message Badges */
+        &:not(.line-number) {
+            background-color: @background-color-info;
+            color: white;
+        }
+        /* Style for Gutter */
+        .linter-gutter {
+            color: @background-color-info;
+        }
+        /* Style for the text editor highlight */
+        .region {
+            border-bottom: 1px dashed @background-color-info;
+        }
+    }
+    &.hidden {
+        /* Style for Message Badges */
+        &:not(.line-number) {
+            background-color: @background-color-info;
+            color: white;
+        }
+        /* Style for Gutter */
+        .linter-gutter {
+            color: @background-color-info;
+        }
+        /* Style for the text editor highlight */
+        .region {
+            border-bottom: 1px dashed @background-color-info;
+        }
+    }
+}
+
+atom-text-editor, atom-text-editor::shadow {
+    .unused {
+        opacity: 0.6;
     }
 }

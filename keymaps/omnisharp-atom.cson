@@ -10,10 +10,10 @@
 'atom-workspace':
   'esc': 'omnisharp-atom:hide'
   'ctrl-alt-o': 'omnisharp-atom:toggle'
-  'ctrl-alt-x': 'omnisharp-atom:show-omni'
-  'ctrl-alt-e': 'omnisharp-atom:show-errors'
-  'ctrl-alt-b': 'omnisharp-atom:show-build'
-  'ctrl-shift-b': 'omnisharp-atom:build'
+  'ctrl-alt-x': 'omnisharp-atom:dock-show-output'
+  'ctrl-alt-e': 'omnisharp-atom:dock-show-errors'
+  #'ctrl-alt-b': 'omnisharp-atom:show-build'
+  #'ctrl-shift-b': 'omnisharp-atom:build'
 
 'atom-text-editor:not([mini]).omnisharp-editor':
   'f12': 'omnisharp-atom:go-to-definition'
