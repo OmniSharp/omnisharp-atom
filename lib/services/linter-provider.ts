@@ -3,7 +3,7 @@ import {Omni} from "../server/omni";
 /* tslint:disable:variable-name */
 const Range = require("atom").Range;
 /* tslint:enable:variable-name */
-const _ : _.LoDashStatic = require("lodash");
+const _: _.LoDashStatic = require("lodash");
 import {Observable, CompositeDisposable} from "rx";
 import {codeCheck} from "../features/code-check";
 
@@ -16,43 +16,14 @@ interface LinterError {
     [key: string]: any;
 }
 
-function getWordAt(str: string, pos: number) {
-    const wordLocation = {
-        start: pos,
-        end: pos
-    };
-
-    if (str === undefined) {
-        return wordLocation;
-    }
-
-    while (pos < str.length && /\W/.test(str[pos])) {
-        ++pos;
-    }
-
-    const left = str.slice(0, pos + 1).search(/\W(?!.*\W)/);
-    const right = str.slice(pos).search(/(\W|$)/);
-
-    wordLocation.start = left + 1;
-    wordLocation.end = wordLocation.start + right;
-
-    return wordLocation;
-}
-
 function mapValues(editor: Atom.TextEditor, error: Models.DiagnosticLocation): LinterError {
-    const line = error.Line;
-    const column = error.Column;
-    const text = editor.lineTextForBufferRow(line);
-    const wordLocation = getWordAt(text, column);
     const level = error.LogLevel.toLowerCase();
 
     return {
         type: level,
-        text: `${error.Text} [${Omni.getFrameworks(error.Projects) }] `,
+        text: `${error.Text} [${Omni.getFrameworks(error.Projects)}] `,
         filePath: editor.getPath(),
-        line: line + 1,
-        col: column + 1,
-        range: new Range([line, wordLocation.start], [line, wordLocation.end])
+        range: new Range([error.Line, error.Column], [error.EndLine, error.EndColumn])
     };
 }
 
@@ -103,30 +74,25 @@ export function init() {
 
 export const provider = [
     {
+        name: "c#",
         get grammarScopes() { return Omni.grammars.map((x: any) => x.scopeName); },
         scope: "file",
         lintOnFly: true,
         lint: (editor: Atom.TextEditor) => {
-            if (!Omni.isValidGrammar(editor.getGrammar())) return Promise.resolve([]);
-
-            codeCheck.doCodeCheck(editor);
             const path = editor.getPath();
-            return Omni.diagnostics
-                .take(1)
+            return codeCheck.doCodeCheck(editor)
                 .flatMap(x => x)
-                .where(z =>z.FileName === path)
-                .where(z => z.LogLevel !== "Hidden")
+                .where(z => z.FileName === path)
                 .map(error => mapValues(editor, error))
                 .toArray()
                 .toPromise();
         }
     }, {
+        name: "c#",
         get grammarScopes() { return Omni.grammars.map((x: any) => x.scopeName); },
         scope: "project",
         lintOnFly: false,
         lint: (editor: Atom.TextEditor) => {
-            if (!Omni.isValidGrammar(editor.getGrammar())) return Promise.resolve([]);
-
             return Omni.activeModel
                 .flatMap(x => Observable.from(x.diagnostics))
                 .where(z => z.LogLevel !== "Hidden")

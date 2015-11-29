@@ -21,6 +21,7 @@ class OmniSharpAtom {
         this.configureKeybindings();
 
         this.disposable.add(atom.commands.add("atom-workspace", "omnisharp-atom:toggle", () => this.toggle()));
+        this.disposable.add(atom.commands.add("atom-workspace", "omnisharp-atom:fix-usings", () => Omni.request(solution => solution.fixusings({}))));
         this.disposable.add(atom.commands.add("atom-workspace", "omnisharp-atom:settings", () => atom.workspace.open("atom://config/packages")
             .then(tab => {
                 if (tab && tab.getURI && tab.getURI() !== "atom://config/packages/omnisharp-atom") {
@@ -38,6 +39,7 @@ class OmniSharpAtom {
                 const scopeId = grammars.idsByScope[grammar.scopeName];
                 grammars.idsByScope[omnisharpScopeName] = scopeId;
                 grammars.scopesById[scopeId] = omnisharpScopeName;
+                grammar.scopeName = omnisharpScopeName;
             }
         };
         _.each(grammars.grammars, grammarCb);

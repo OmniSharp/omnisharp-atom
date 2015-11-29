@@ -8,6 +8,20 @@ const AtomGrammar = require((<any>atom).config.resourcePath + "/node_modules/fir
 /* tslint:enable:variable-name */
 const DEBOUNCE_TIME = 240/*240*/;
 
+function getHighlightsFromQuickFixes(path: string, quickFixes: Models.DiagnosticLocation[], projectNames: string[]) {
+    return chain(quickFixes)
+        .filter(x => x.FileName === path)
+        .map(x => ({
+            StartLine: x.Line,
+            StartColumn: x.Column,
+            EndLine: x.EndLine,
+            EndColumn: x.EndColumn,
+            Kind: "unused code",
+            Projects: projectNames
+        } as Models.HighlightSpan))
+        .value();
+}
+
 class Highlight implements IFeature {
     private disposable: Rx.CompositeDisposable;
     private editors: Array<Atom.TextEditor>;
@@ -18,34 +32,6 @@ class Highlight implements IFeature {
 
         this.disposable.add(Omni.eachEditor((editor, cd) => this.setupEditor(editor, cd)));
 
-        this.disposable.add(
-            isObserveRetokenizing(
-                Omni.activeEditor.take(1)
-                    .where(x => !!x)
-                    .flatMap(editor => Omni.listener.highlight
-                        .where(z => z.request.FileName === editor.getPath())
-                        .map(z => ({ editor, request: z.request, response: z.response }))
-                        .take(1))
-            )
-                .subscribe(({editor, request, response}) => {
-                    if (editor.getGrammar) {
-                        (<any>editor.getGrammar()).setResponses(response.Highlights, request.ProjectNames.length > 0);
-                    }
-                    editor.displayBuffer.tokenizedBuffer.retokenizeLines();
-                }));
-
-        this.disposable.add(
-            isObserveRetokenizing(
-                Omni.listener.highlight
-                    .map(z => ({ editor: find(this.editors, editor => editor.getPath() === z.request.FileName), request: z.request, response: z.response }))
-                    .flatMap(z => Omni.activeEditor.take(1).where(x => x !== z.editor).map(x => z))
-            )
-                .subscribe(({editor, request, response}) => {
-                    if (editor.getGrammar) {
-                        (<any>editor.getGrammar()).setResponses(response.Highlights, request.ProjectNames.length > 0);
-                    }
-                }));
-
         this.disposable.add(isEditorObserveRetokenizing(
             Observable.merge(Omni.activeEditor,
                 Omni.activeFramework
@@ -55,8 +41,7 @@ class Highlight implements IFeature {
                         .take(1))
                     .flatMap(z => Omni.activeEditor))
                 .debounce(DEBOUNCE_TIME)
-                .where(z => !!z)
-        )
+                .where(z => !!z))
             .subscribe(editor => {
                 editor.displayBuffer.tokenizedBuffer["silentRetokenizeLines"]();
             }));
@@ -70,6 +55,28 @@ class Highlight implements IFeature {
 
     private setupEditor(editor: Atom.TextEditor, disposable: CompositeDisposable) {
         if (editor["_oldGrammar"] || !editor.getGrammar) return;
+
+        var path = editor.getPath();
+        disposable.add(Omni.getSolutionForEditor(editor)
+            .flatMap(solution =>
+                isObserveRetokenizing(
+                    solution.observe.highlight.where(z => z.request.FileName === path)
+                        .combineLatest(
+                        solution.model.observe.unusedCodeRows,
+                        (highlight, quickfixes) => ({
+                            editor,
+                            highlights: highlight.response.Highlights.concat(getHighlightsFromQuickFixes(path, quickfixes, highlight.request.ProjectNames)),
+                            projectNames: highlight.request.ProjectNames
+                        }))))
+            .tapOnNext(({highlights, projectNames}) => {
+                if (editor.getGrammar) {
+                    (<any>editor.getGrammar()).setResponses(highlights, projectNames.length > 0);
+                }
+            })
+            .flatMap(z => Omni.activeEditor.take(1).where(x => x === editor).map(x => z))
+            .subscribe(() => {
+                editor.displayBuffer.tokenizedBuffer["silentRetokenizeLines"]();
+            }));
 
         this.editors.push(editor);
         this.disposable.add(disposable);
@@ -177,15 +184,7 @@ class Highlight implements IFeature {
                         Models.HighlightClassification.Keyword
                     ]
                 })).map(z => ({ projects, response: z }));
-            })
-            .subscribe(ctx => {
-                const {response, projects} = ctx;
-                if (editor.getGrammar) {
-                    (<any>editor.getGrammar()).setResponses(response.Highlights, projects.length > 0);
-                }
-                editor.displayBuffer.tokenizedBuffer["silentRetokenizeLines"]();
-            })
-        );
+            }).subscribe());
 
         disposable.add(Omni.getProject(editor)
             .flatMap(z => z.observe.activeFramework).subscribe(() => {
@@ -212,7 +211,7 @@ class Highlight implements IFeature {
     public default = false;
 }
 
-function isObserveRetokenizing(observable: Rx.Observable<{ editor: Atom.TextEditor; request: Models.HighlightRequest; response: Models.HighlightResponse }>) {
+function isObserveRetokenizing<T extends { editor: Atom.TextEditor; }>(observable: Rx.Observable<T>) {
     return observable
         .where(z => !!z && !!z.editor && !!z.editor.getGrammar)
         .where(z => !!(<Observable<boolean>>(<any>z.editor.getGrammar()).isObserveRetokenizing))
@@ -324,7 +323,7 @@ class Grammar {
     }
 
     public setResponses = (value: Models.HighlightSpan[], enableExcludeCode: boolean) => {
-        const results = chain(value).chain();
+        const results = chain(value);
 
         const groupedItems = <any>results.map(highlight => range(highlight.StartLine, highlight.EndLine + 1)
             .map(line => ({ line, highlight })))
@@ -425,7 +424,7 @@ Grammar.prototype["tokenizeLine"] = function(line: string, ruleStack: any[], fir
             }
             tags.splice(index, 1, ...values);
             if (prev) index = index + 1;
-            getAtomStyleForToken(this.name, tags, highlight, index, index, str);
+            getAtomStyleForToken(this.name, tags, highlight, index, index + 1, str);
         } else if (tags[index] < size) {
             let backtrackIndex = index;
             let backtrackDistance = 0;
@@ -449,14 +448,17 @@ Grammar.prototype["tokenizeLine"] = function(line: string, ruleStack: any[], fir
             }
 
             let forwardtrackIndex = index;
+            let remainingSize = size;
             for (i = index + 1; i < tags.length; i++) {
-                if (tags[i] > 0 || tags[i] % 2 === -1) {
+                if ((remainingSize < 0 && tags[i] > 0)/* || tags[i] % 2 === -1*/) {
                     forwardtrackIndex = i - 1;
                     break;
                 }
-                // Handles case where there is a closing tag
-                // but no opening tag here.
-                if (tags[i] % 2 === 0) {
+                if (tags[i] > 0) {
+                    remainingSize -= tags[i];
+                } else if (tags[i] % 2 === 0) {
+                    // Handles case where there is a closing tag
+                    // but no opening tag here.
                     let openFound = false;
                     for (let h = i; h >= 0; h--) {
                         if (tags[h] === tags[i] + 1) {
@@ -559,13 +561,13 @@ function getAtomStyleForToken(grammar: string, tags: number[], token: Models.Hig
         replacements.unshift({
             start: index,
             end: indexEnd,
-            replacement: tags.slice(index, indexEnd + 1)
+            replacement: tags.slice(index, indexEnd)
         });
     } else {
         replacements.unshift({
             start: internalIndex,
             end: indexEnd,
-            replacement: tags.slice(internalIndex, indexEnd + 1)
+            replacement: tags.slice(internalIndex, indexEnd)
         });
     }
 
@@ -605,10 +607,13 @@ function getAtomStyleForToken(grammar: string, tags: number[], token: Models.Hig
             add(`support.class.type.identifier.interface`);
             break;
         case "preprocessor keyword":
-            add(`constant.other.symbo`);
+            add(`constant.other.symbol`);
             break;
         case "excluded code":
             add(`comment.block`);
+            break;
+        case "unused code":
+            add(`unused`);
             break;
         default:
             console.log("unhandled Kind " + token.Kind);
@@ -617,7 +622,7 @@ function getAtomStyleForToken(grammar: string, tags: number[], token: Models.Hig
 
     each(replacements, ctx => {
         const {replacement, end, start} = ctx;
-        tags.splice(start, end - start + 1, ...replacement);
+        tags.splice(start, end - start, ...replacement);
     });
 }
 

@@ -19,7 +19,7 @@ export class SignatureView extends HTMLDivElement { /* implements WebComponent *
     private _documentation: HTMLDivElement;
     private _parameterDocumentation: HTMLDivElement;
     private _arrows: HTMLSpanElement;
-    private _parametersList: SignatureParameterView[];
+    private _parametersList: SignatureParameterView[] = [];
     private _parameters: HTMLSpanElement;
     private _count: HTMLSpanElement;
     private _selectedIndex: number;
@@ -189,14 +189,14 @@ export class SignatureView extends HTMLDivElement { /* implements WebComponent *
         } else {
             fastdom.write(() => {
                 _.each(signature.Parameters, (param, i) =>
-                    this._parametersList[i].setCurrent(i === member.ActiveParameter));
+                    this._parametersList[i] && this._parametersList[i].setCurrent(i === member.ActiveParameter));
             });
         }
 
         const currentParameter = signature.Parameters[member.ActiveParameter];
         fastdom.read(() => {
             let summary: string;
-            if (signature.Documentation) {
+            if (currentParameter.Documentation) {
                 const paramDocs = parseString(currentParameter.Documentation);
 
                 if (paramDocs) {
@@ -233,7 +233,7 @@ export class SignatureView extends HTMLDivElement { /* implements WebComponent *
 
     public detachedCallback() {
         _.each(this._parametersList, parameter => parameter.remove());
-        this._parametersList = null;
+        this._parametersList = [];
     }
 }
 

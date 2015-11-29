@@ -333,6 +333,10 @@ class OmniManager implements Rx.IDisposable {
         );
     }
 
+    public getSolutionForEditor(editor: Atom.TextEditor) {
+        return SolutionManager.getSolutionForEditor(editor);
+    }
+
     /**
      * Allows for views to observe the active model as it changes between editors
      */

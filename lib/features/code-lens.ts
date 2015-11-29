@@ -1,9 +1,9 @@
 /// <reference path="../typings.d.ts" />
 import {Models} from "omnisharp-client";
-const _ : _.LoDashStatic = require("lodash");
+const _: _.LoDashStatic = require("lodash");
 import {CompositeDisposable, Observable, Disposable, Subject, Scheduler} from "rx";
 import {Omni} from "../server/omni";
-let fastdom : { read(cb: Function): any; write(cb: Function): any; } = require("fastdom");
+let fastdom: { read(cb: Function): any; write(cb: Function): any; } = require("fastdom");
 
 interface IDecoration {
     destroy(): any;
@@ -228,8 +228,9 @@ export class Lens implements Rx.IDisposable {
     }
 
     public invalidate() {
-        this._updateObservable
+        const self : Rx.IDisposable = this._updateObservable
             .take(1)
+            .tapOnNext(() => this._disposable.remove(self))
             .subscribe(x => {
                 if (x <= 0) {
                     this.dispose();
@@ -237,6 +238,7 @@ export class Lens implements Rx.IDisposable {
                     if (this._element) { (this._element.textContent = x.toString()); }
                 }
             });
+        this._disposable.add(self);
     }
 
     public isEqual(marker: Atom.Marker) {
@@ -273,8 +275,8 @@ export class Lens implements Rx.IDisposable {
         this._disposable.add(Disposable.create(() => {
             this._element.remove();
             if (this._decoration) {
-            this._decoration.destroy();
-        }
+                this._decoration.destroy();
+            }
             this._element = null;
         }));
 
