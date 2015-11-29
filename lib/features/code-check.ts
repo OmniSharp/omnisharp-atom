@@ -48,7 +48,7 @@ class CodeCheck implements IFeature {
             const subject = new Subject<any>();
 
             const o = subject
-                .debounce(500)
+                .debounce(100)
                 .where(() => !editor.isDestroyed())
                 .flatMap(() => this._doCodeCheck(editor))
                 .map(response => response.QuickFixes || [])
@@ -57,7 +57,7 @@ class CodeCheck implements IFeature {
             this._editorSubjects.set(editor, () => {
                 const result = o.take(1);
                 subject.onNext(null);
-                return result;
+                return result as Observable<Models.DiagnosticLocation[]>;
             });
 
             cd.add(o.subscribe());
@@ -147,8 +147,13 @@ class CodeCheck implements IFeature {
         return Omni.request(editor, solution => solution.codecheck({}));
     };
 
-    public doCodeCheck(editor: Atom.TextEditor) {
-        this._doCodeCheck(editor);
+    public doCodeCheck(editor: Atom.TextEditor): Rx.Observable<Models.DiagnosticLocation[]> {
+        const callback = this._editorSubjects.get(editor);
+        if (callback) {
+            return callback();
+        }
+        return Observable.timer(100)
+            .flatMap(() => this.doCodeCheck(editor));
     }
 
     public required = true;

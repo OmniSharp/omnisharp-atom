@@ -29,6 +29,7 @@ export class ViewModel implements VMViewState, Rx.IDisposable {
     public get path() { return this._solution.path; }
     public output: OutputMessage[] = [];
     public diagnostics: Models.DiagnosticLocation[] = [];
+    public unusedCodeRows: Models.DiagnosticLocation[] = [];
     public get state() { return this._solution.currentState; };
     public packageSources: string[] = [];
     public runtime = "";
@@ -41,6 +42,7 @@ export class ViewModel implements VMViewState, Rx.IDisposable {
 
     public observe: {
         codecheck: Rx.Observable<Models.DiagnosticLocation[]>;
+        unusedCodeRows: Rx.Observable<Models.DiagnosticLocation[]>;
         output: Rx.Observable<OutputMessage[]>;
         status: Rx.Observable<OmnisharpClientStatus>;
         state: Rx.Observable<ViewModel>;
@@ -67,7 +69,7 @@ export class ViewModel implements VMViewState, Rx.IDisposable {
             this.diagnostics = [];
         }));
 
-        const codecheck = this._setupCodecheck(_solution);
+        const {codecheck, unusedCodeRows} = this._setupCodecheck(_solution);
         const status = this._setupStatus(_solution);
         const output = this.output;
 
@@ -89,6 +91,7 @@ export class ViewModel implements VMViewState, Rx.IDisposable {
 
         this.observe = {
             get codecheck() { return codecheck; },
+            get unusedCodeRows() { return unusedCodeRows; },
             get output() { return outputObservable; },
             get status() { return status; },
             get state() { return state; },
@@ -242,7 +245,7 @@ export class ViewModel implements VMViewState, Rx.IDisposable {
     }
 
     private _setupCodecheck(_solution: Solution) {
-        const codecheck = Observable.merge(
+        let codecheck = Observable.merge(
             // Catch global code checks
             _solution.observe.codecheck
                 .where(z => !z.request.FileName)
@@ -260,11 +263,17 @@ export class ViewModel implements VMViewState, Rx.IDisposable {
                     return results;
                 }))
             .map(data => _.sortBy(data, quickFix => quickFix.LogLevel))
-            .startWith([])
+            .startWith([]);
+
+        const unusedCodeRows = codecheck
+            .map(results => _.filter(results, x => x.LogLevel === "Hidden"))
+            .distinctUntilChanged()
             .shareReplay(1);
 
+        codecheck = codecheck.shareReplay(1);
+
         this._disposable.add(codecheck.subscribe((data) => this.diagnostics = data));
-        return codecheck;
+        return {codecheck, unusedCodeRows};
     }
 
     private _setupStatus(_solution: Solution) {
