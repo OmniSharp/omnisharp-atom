@@ -1,5 +1,5 @@
 const _: _.LoDashStatic = require("lodash");
-import {Observable, AsyncSubject, ReplaySubject, Subject, CompositeDisposable, Disposable} from "rx";
+import {Observable, AsyncSubject, CompositeDisposable, Disposable} from "rx";
 import * as path from "path";
 import * as fs from "fs";
 
@@ -17,8 +17,6 @@ class OmniSharpAtom {
         this.disposable = new CompositeDisposable;
         this._started = new AsyncSubject<boolean>();
         this._activated = new AsyncSubject<boolean>();
-
-        this._start = new ReplaySubject<boolean>();
 
         this.configureKeybindings();
 
@@ -72,8 +70,7 @@ class OmniSharpAtom {
 
                 // Only activate features once we have a solution!
                 this.disposable.add(startingObservable
-                    .flatMap(() =>
-                        this.loadFeatures(this.getFeatures("features")))
+                    .flatMap(() => this.loadFeatures(this.getFeatures("features")))
                     .subscribeOnCompleted(() => {
                         this.disposable.add(atom.workspace.observeTextEditors((editor: Atom.TextEditor) => {
                             this.detectAutoToggleGrammar(editor);
@@ -84,12 +81,6 @@ class OmniSharpAtom {
                     }));
 
             });
-        this.disposable.add(this._start);
-    }
-
-    private _start: Subject<boolean>;
-    public start() {
-        this._start.onNext(true);
     }
 
     public getFeatures(folder: string) {
