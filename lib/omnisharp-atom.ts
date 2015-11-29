@@ -1,5 +1,5 @@
 const _: _.LoDashStatic = require("lodash");
-import {Observable, AsyncSubject, CompositeDisposable, Disposable} from "rx";
+import {Observable, AsyncSubject, ReplaySubject, Subject, CompositeDisposable, Disposable} from "rx";
 import * as path from "path";
 import * as fs from "fs";
 
@@ -56,7 +56,9 @@ class OmniSharpAtom {
                 this._started.onNext(true);
                 this._started.onCompleted();
             })
-            .then(() => this.loadFeatures(this.getFeatures("atom").delay(Omni['_kick_in_the_pants_'] ? 0 : 2000)).toPromise())
+            /* tslint:disable:no-string-literal */
+            .then(() => this.loadFeatures(this.getFeatures("atom").delay(Omni["_kick_in_the_pants_"] ? 0 : 2000)).toPromise())
+            /* tslint:enable:no-string-literal */
             .then(() => {
                 let startingObservable = Omni.activeSolution
                     .where(z => !!z)
@@ -107,7 +109,7 @@ class OmniSharpAtom {
         }
 
         return Observable.fromNodeCallback<string[], string>(fs.readdir)(featureDir)
-            .flatMap(files => Observable.from(files))
+            .flatMap(files => files)
             .where(file => /\.js$/.test(file))
             .flatMap(file => Observable.fromNodeCallback<fs.Stats, string>(fs.stat)(`${featureDir}/${file}`).map(stat => ({ file, stat })))
             .where(z => !z.stat.isDirectory())
@@ -428,9 +430,9 @@ class OmniSharpAtom {
             default: win32
         },
         altGotoDefinition: {
-            title: 'Alt Go To Definition',
-            descrption: 'Use the alt key instead of the ctrl/cmd key for goto defintion mouse over.',
-            type: 'boolean',
+            title: "Alt Go To Definition",
+            descrption: "Use the alt key instead of the ctrl/cmd key for goto defintion mouse over.",
+            type: "boolean",
             default: false
         }
     };

@@ -16,7 +16,7 @@ class GoToDefinition implements IFeature {
 
     public activate() {
         this.disposable = new CompositeDisposable();
-        var altGotoDefinition: boolean = false;
+        let altGotoDefinition = false;
         this.disposable.add(atom.config.observe("omnisharp-atom:altGotoDefinition", value => altGotoDefinition = value));
 
         this.disposable.add(Omni.switchActiveEditor((editor, cd) => {

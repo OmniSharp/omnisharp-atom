@@ -92,7 +92,9 @@
     "rx": "^4.0.7",
     "semver": "^5.0.3",
     "through2": "^2.0.0",
-    "tsd": "^0.6.5"
+    "tsd": "^0.6.5",
+    "tslint": "^3.0.0",
+    "typescript": "^1.6.2"
   },
   "consumedServices": {
     "status-bar": {
