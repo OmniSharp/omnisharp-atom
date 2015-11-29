@@ -54,7 +54,9 @@ class OmniSharpAtom {
                 this._started.onNext(true);
                 this._started.onCompleted();
             })
-            .then(() => this.loadFeatures(this.getFeatures("atom").delay(2000)).toPromise())
+            /* tslint:disable:no-string-literal */
+            .then(() => this.loadFeatures(this.getFeatures("atom").delay(Omni["_kick_in_the_pants_"] ? 0 : 2000)).toPromise())
+            /* tslint:enable:no-string-literal */
             .then(() => {
                 let startingObservable = Omni.activeSolution
                     .where(z => !!z)
@@ -98,7 +100,7 @@ class OmniSharpAtom {
         }
 
         return Observable.fromNodeCallback<string[], string>(fs.readdir)(featureDir)
-            .flatMap(files => Observable.from(files))
+            .flatMap(files => files)
             .where(file => /\.js$/.test(file))
             .flatMap(file => Observable.fromNodeCallback<fs.Stats, string>(fs.stat)(`${featureDir}/${file}`).map(stat => ({ file, stat })))
             .where(z => !z.stat.isDirectory())
@@ -208,6 +210,7 @@ class OmniSharpAtom {
                 }
                 firstRun = false;
             }));
+
 
             this.disposable.add(atom.commands.add("atom-workspace", `omnisharp-feature:toggle-${_.kebabCase(key)}`, () => atom.config.set(configKey, !atom.config.get(configKey))));
         } else {
@@ -416,6 +419,12 @@ class OmniSharpAtom {
             descrption: "Request symbol metadata from the server, when using go-to-definition.  This is disabled by default on Linux, due to issues with Roslyn on Mono.",
             type: "boolean",
             default: win32
+        },
+        altGotoDefinition: {
+            title: "Alt Go To Definition",
+            descrption: "Use the alt key instead of the ctrl/cmd key for goto defintion mouse over.",
+            type: "boolean",
+            default: false
         }
     };
 }

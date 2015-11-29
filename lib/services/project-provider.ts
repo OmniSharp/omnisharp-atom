@@ -8,14 +8,12 @@ const filter = require("fuzzaldrin").filter;
 const cache = new Map<string, { prefix?: string; results: string[] }>();
 const versionCache = new Map<string, any>();
 Omni.listener.packagesource
-    .map(z => z.response.Sources)
-    .subscribe((sources: string[]) => {
-        _.each(sources, source => {
-            if (!cache.get(source))
-                fetchFromGithub(source, "_keys", "").subscribe(result => {
-                    cache.set(source, result);
-                });
-        });
+    .flatMap(z => z.response && z.response.Sources || [])
+    .subscribe((source: string) => {
+        if (!cache.get(source))
+            fetchFromGithub(source, "_keys", "").subscribe(result => {
+                cache.set(source, result);
+            });
     });
 
 function fetchFromGithub(source: string, prefix: string, searchPrefix: string): Rx.Observable<{ prefix?: string; results: string[] }> {

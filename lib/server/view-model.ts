@@ -164,7 +164,7 @@ export class ViewModel implements VMViewState, Rx.IDisposable {
         }));
 
         this._disposable.add(_solution.observe.projects
-            .where(z => z.response.Dnx != null && z.response.Dnx.Projects.length > 0)
+            .where(z => z.response && z.response.Dnx && z.response.Dnx.Projects.length > 0)
             .map(z => z.response.Dnx)
             .subscribe(system => {
                 if (system.RuntimePath) {

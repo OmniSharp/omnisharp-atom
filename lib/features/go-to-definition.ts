@@ -16,6 +16,9 @@ class GoToDefinition implements IFeature {
 
     public activate() {
         this.disposable = new CompositeDisposable();
+        let altGotoDefinition = false;
+        this.disposable.add(atom.config.observe("omnisharp-atom:altGotoDefinition", value => altGotoDefinition = value));
+
         this.disposable.add(Omni.switchActiveEditor((editor, cd) => {
             const view = $(atom.views.getView(editor));
             const scroll = this.getFromShadowDom(view, ".scroll-view");
@@ -33,13 +36,13 @@ class GoToDefinition implements IFeature {
                 Observable.fromEventPattern(x => { (<any>atom.getCurrentWindow()).on("focus", x); }, x => { (<any>atom.getCurrentWindow()).removeListener("focus", x); }),
                 Observable.fromEventPattern(x => { (<any>atom.getCurrentWindow()).on("blur", x); }, x => { (<any>atom.getCurrentWindow()).removeListener("blur", x); }),
                 Observable.fromEvent<KeyboardEvent>(view[0], "keyup")
-                    .where(x => x.which === 17 || x.which === 224 || x.which === 93 || x.which === 91)
+                    .where(x => altGotoDefinition ? x.which === 18 /*alt*/ : (x.which === 17 /*ctrl*/ || /*meta --> */ x.which === 224 || x.which === 93 || x.which === 92 || x.which === 91))
             )
                 .throttle(100);
 
             const keydown = Observable.fromEvent<KeyboardEvent>(view[0], "keydown")
                 .where(z => !z.repeat)
-                .where(e => e.ctrlKey || e.metaKey)
+                .where(e => altGotoDefinition ? e.altKey : (e.ctrlKey || e.metaKey))
                 .throttle(100);
 
             const specialKeyDown = keydown
@@ -80,6 +83,9 @@ class GoToDefinition implements IFeature {
 
             cd.add(click.subscribe((e) => {
                 if (!e.ctrlKey && !e.metaKey) {
+                    return;
+                }
+                if (altGotoDefinition && !e.altKey) {
                     return;
                 }
 
