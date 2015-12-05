@@ -62,7 +62,7 @@ class SolutionInstanceManager {
     }
 
     private _activeSolution = new BehaviorSubject<Solution>(null);
-    private _activeSolutionObserable = this._activeSolution.shareReplay(1).distinctUntilChanged().where(z => !!z);
+    private _activeSolutionObserable = this._activeSolution.distinctUntilChanged().shareReplay(1);
     public get activeSolution() {
         return this._activeSolutionObserable;
     }
