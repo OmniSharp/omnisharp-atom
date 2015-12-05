@@ -148,6 +148,35 @@ class Highlight implements IFeature {
             });
         };
 
+        (<any>editor.displayBuffer.tokenizedBuffer).scopesFromTags = function(startingScopes: number[], tags: number[]) {
+            const scopes = startingScopes.slice();
+            for (let i = 0, len = tags.length; i < len; i++) {
+                const tag = tags[i];
+                if (tag < 0) {
+                    if ((tag % 2) === -1) {
+                        scopes.push(tag);
+                    } else {
+                        const matchingStartTag = tag + 1;
+                        while (true) {
+                            if (scopes.pop() === matchingStartTag) {
+                                break;
+                            }
+                            if (scopes.length === 0) {
+                                console.info("Encountered an unmatched scope end tag.", {
+                                    filePath: editor.buffer.getPath(),
+                                    grammarScopeName: grammar.scopeName,
+                                    tag,
+                                    unmatchedEndTag: grammar.scopeForId(tag)
+                                });
+                                break;
+                            }
+                        }
+                    }
+                }
+            }
+            return scopes;
+        };
+
         disposable.add(Disposable.create(() => {
             grammar.linesToFetch = [];
             grammar.responses.clear();
@@ -236,6 +265,7 @@ interface IHighlightingGrammar extends FirstMate.Grammar {
     linesToTokenize: number[];
     responses: Map<number, Models.HighlightSpan[]>;
     fullyTokenized: boolean;
+    scopeName: string;
 }
 
 class Grammar {
@@ -450,7 +480,7 @@ Grammar.prototype["tokenizeLine"] = function(line: string, ruleStack: any[], fir
             let forwardtrackIndex = index;
             let remainingSize = size;
             for (i = index + 1; i < tags.length; i++) {
-                if ((remainingSize < 0 && tags[i] > 0)/* || tags[i] % 2 === -1*/) {
+                if ((remainingSize <= 0 && tags[i] > 0)/* || tags[i] % 2 === -1*/) {
                     forwardtrackIndex = i - 1;
                     break;
                 }
@@ -544,14 +574,24 @@ function getAtomStyleForToken(grammar: string, tags: number[], token: Models.Hig
         }
     }
 
-    const unfullfilled = sortBy(opens.concat(closes), x => x.index);
+    let unfullfilled: typeof opens = [];
+    if (closes.length > 0) {
+        unfullfilled = sortBy(opens.concat(closes), x => x.index);
+    } else if (opens.length > 0) {
+        // Grab the last known open, and append from there
+        replacements.unshift({
+            start: opens[opens.length - 1].index,
+            end: indexEnd,
+            replacement: tags.slice(opens[opens.length - 1].index, indexEnd + 1)
+        });
+    }
 
     let internalIndex = index;
     for (let i = 0; i < unfullfilled.length; i++) {
         const v = unfullfilled[i];
         replacements.unshift({
             start: internalIndex,
-            end: v.index - 1,
+            end: v.index,
             replacement: tags.slice(internalIndex, v.index)
         });
         internalIndex = v.index + 1;
@@ -564,11 +604,11 @@ function getAtomStyleForToken(grammar: string, tags: number[], token: Models.Hig
             replacement: tags.slice(index, indexEnd)
         });
     } else {
-        replacements.unshift({
+        /*replacements.unshift({
             start: internalIndex,
             end: indexEnd,
             replacement: tags.slice(internalIndex, indexEnd)
-        });
+        });*/
     }
 
     function add(scope: any) {
@@ -622,7 +662,12 @@ function getAtomStyleForToken(grammar: string, tags: number[], token: Models.Hig
 
     each(replacements, ctx => {
         const {replacement, end, start} = ctx;
-        tags.splice(start, end - start, ...replacement);
+        if (replacement.length === 2) return;
+        let num = end - start;
+        if (num <= 0) {
+            num = 1;
+        }
+        tags.splice(start, num, ...replacement);
     });
 }
 

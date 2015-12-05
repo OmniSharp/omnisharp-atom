@@ -485,7 +485,7 @@ class SolutionInstanceManager {
                             subject.onNext([intersect, this._solutions.get(intersect), !project]); // The boolean means this solution is temporary.
                         }
                     } else {
-                        subject.onError("Could not find a solution for location " + location);
+                        atom.notifications.addInfo(`Could not find a solution for "${location}"`);
                     }
                     subject.onCompleted();
                 }));
