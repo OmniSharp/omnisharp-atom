@@ -65,7 +65,7 @@ class Highlight implements IFeature {
                         solution.model.observe.unusedCodeRows,
                         (highlight, quickfixes) => ({
                             editor,
-                            highlights: highlight.response.Highlights.concat(getHighlightsFromQuickFixes(path, quickfixes, highlight.request.ProjectNames)),
+                            highlights: (highlight.response ? highlight.response.Highlights : []).concat(getHighlightsFromQuickFixes(path, quickfixes, highlight.request.ProjectNames)),
                             projectNames: highlight.request.ProjectNames
                         }))))
             .tapOnNext(({highlights, projectNames}) => {

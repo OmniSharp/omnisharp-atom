@@ -43,7 +43,7 @@ function hideLinter() {
         panel.style.display = "none";
 }
 
-export function init() {
+export function init(linter: { getEditorLinter: (editor: Atom.TextEditor) => { lint: () => void } }) {
     const disposable = new CompositeDisposable();
     let cd: CompositeDisposable;
     disposable.add(atom.config.observe("omnisharp-atom.hideLinterInterface", hidden => {
@@ -67,6 +67,18 @@ export function init() {
             }
             showLinter();
         }
+    }));
+
+
+    disposable.add(Omni.activeEditor.where(z => !!z).take(1).delay(1000).subscribe((e) => {
+        Omni.whenEditorConnected(e).subscribe(() => {
+            atom.workspace.getTextEditors().forEach((editor) => {
+                var editorLinter = linter.getEditorLinter(editor);
+                if (editorLinter) {
+                    editorLinter.lint();
+                }
+            });
+        });
     }));
 
     return disposable;
