@@ -86,7 +86,7 @@
     "mocha": "^2.3.4",
     "mocha-unfunk-reporter": "^0.4.0",
     "ntypescript": "^1.201512040604.1",
-    "omnisharp-client": "^3.1.16",
+    "omnisharp-client": "^3.1.17",
     "react": "^0.14.0",
     "rimraf": "^2.4.4",
     "rx": "^4.0.7",
