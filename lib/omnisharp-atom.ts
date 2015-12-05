@@ -294,7 +294,7 @@ class OmniSharpAtom {
 
     public consumeLinter(linter: any) {
         const LinterProvider = require("./services/linter-provider");
-        const linters = LinterProvider;
+        const linters = LinterProvider.provider;
 
         this.disposable.add(Disposable.create(() => {
             _.each(linters, l => {
@@ -302,7 +302,7 @@ class OmniSharpAtom {
             });
         }));
 
-        this.disposable.add(LinterProvider.init());
+        this.disposable.add(LinterProvider.init(linter));
     }
     /* tslint:enable:variable-name */
 
