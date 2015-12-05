@@ -1,6 +1,7 @@
 import {CompositeDisposable} from "rx";
 import {Omni} from "../server/omni";
 import {readFileSync} from "fs";
+import {join} from "path";
 
 class Menu implements IFeature {
     private disposable: Rx.CompositeDisposable;
@@ -9,7 +10,7 @@ class Menu implements IFeature {
     public activate() {
         this.disposable = new CompositeDisposable();
         if (!this._json) {
-            const menuJsonFile = Omni.packageDir + "/menus/omnisharp-menu.json";
+            const menuJsonFile = join(Omni.packageDir, "omnisharp-atom/menus/omnisharp-menu.json");
             this._json = JSON.parse(readFileSync(menuJsonFile, "utf8")).menu;
         }
 
