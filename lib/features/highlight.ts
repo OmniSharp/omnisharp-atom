@@ -163,7 +163,7 @@ class Highlight implements IFeature {
                             }
                             if (scopes.length === 0) {
                                 // Hack to ensure that all lines always get the proper source lines.
-                                scopes.push(-1);
+                                scopes.push(<any>grammar.startIdForScope(grammar.scopeName));
                                 console.info("Encountered an unmatched scope end tag.", {
                                     filePath: editor.buffer.getPath(),
                                     grammarScopeName: grammar.scopeName,
