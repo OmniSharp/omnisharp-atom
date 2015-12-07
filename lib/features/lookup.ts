@@ -2,10 +2,10 @@
 // and https://atom.io/packages/ide-flow
 // https://atom.io/packages/atom-typescript
 import {Models} from "omnisharp-client";
-import {CompositeDisposable, Observable, Disposable} from "rx";
+import {CompositeDisposable, Observable, Disposable, Scheduler} from "rx";
 import {Omni} from "../server/omni";
 import {TooltipView} from "../views/tooltip-view";
-const $ : JQueryStatic = require("jquery");
+const $: JQueryStatic = require("jquery");
 const escape = require("escape-html");
 
 class TypeLookup implements IFeature {
@@ -67,19 +67,23 @@ class Tooltip implements Rx.Disposable {
         const mouseout = Observable.fromEvent<MouseEvent>(scroll[0], "mouseout");
         this.keydown = Observable.fromEvent<KeyboardEvent>(scroll[0], "keydown");
 
-        cd.add(mousemove.map(event => {
-            const pixelPt = this.pixelPositionFromMouseEvent(editorView, event);
-            const screenPt = editor.screenPositionForPixelPosition(pixelPt);
-            const bufferPt = editor.bufferPositionForScreenPosition(screenPt);
-            if (lastExprTypeBufferPt && lastExprTypeBufferPt.isEqual(bufferPt) && this.exprTypeTooltip)
-                return null;
+        cd.add(mousemove
+            .observeOn(Scheduler.async)
+            .buffer(mousemove.throttle(400), () => Observable.timer(400))
+            .map(events => {
+                for (const event of events.reverse()) {
+                    const pixelPt = this.pixelPositionFromMouseEvent(editorView, event);
+                    const screenPt = editor.screenPositionForPixelPosition(pixelPt);
+                    const bufferPt = editor.bufferPositionForScreenPosition(screenPt);
+                    if (lastExprTypeBufferPt && lastExprTypeBufferPt.isEqual(bufferPt) && this.exprTypeTooltip)
+                        continue;
 
-            lastExprTypeBufferPt = bufferPt;
-            return { bufferPt, event };
-        })
+                    lastExprTypeBufferPt = bufferPt;
+                    return { bufferPt, event };
+                }
+            })
             .where(z => !!z)
             .tapOnNext(() => this.hideExpressionType())
-            .debounce(200)
             .where(x => this.checkPosition(x.bufferPt))
             .tapOnNext(() => this.subcribeKeyDown())
             .subscribe(({bufferPt, event}) => {

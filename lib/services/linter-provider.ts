@@ -43,7 +43,9 @@ function hideLinter() {
         panel.style.display = "none";
 }
 
-export function init(linter: { getEditorLinter: (editor: Atom.TextEditor) => { lint: () => void } }) {
+let showHiddenDiagnostics = true;
+
+export function init(linter: { getEditorLinter: (editor: Atom.TextEditor) => { lint: (shouldLint: boolean) => void } }) {
     const disposable = new CompositeDisposable();
     let cd: CompositeDisposable;
     disposable.add(atom.config.observe("omnisharp-atom.hideLinterInterface", hidden => {
@@ -69,13 +71,22 @@ export function init(linter: { getEditorLinter: (editor: Atom.TextEditor) => { l
         }
     }));
 
+    disposable.add(atom.config.observe("omnisharp-atom.showHiddenDiagnostics", show => {
+        showHiddenDiagnostics = show;
+        atom.workspace.getTextEditors().forEach((editor) => {
+            var editorLinter = linter.getEditorLinter(editor);
+            if (editorLinter) {
+                editorLinter.lint(true);
+            }
+        });
+    }));
 
     disposable.add(Omni.activeEditor.where(z => !!z).take(1).delay(1000).subscribe((e) => {
         Omni.whenEditorConnected(e).subscribe(() => {
             atom.workspace.getTextEditors().forEach((editor) => {
                 var editorLinter = linter.getEditorLinter(editor);
                 if (editorLinter) {
-                    editorLinter.lint();
+                    editorLinter.lint(true);
                 }
             });
         });
@@ -92,9 +103,11 @@ export const provider = [
         lintOnFly: true,
         lint: (editor: Atom.TextEditor) => {
             const path = editor.getPath();
-            return codeCheck.doCodeCheck(editor)
+            var o = Observable.defer(() => codeCheck.doCodeCheck(editor));
+            return o
+                .timeout(30000, Observable.from([]))
                 .flatMap(x => x)
-                .where(z => z.FileName === path)
+                .where(z => z.FileName === path && (showHiddenDiagnostics || z.LogLevel !== "Hidden"))
                 .map(error => mapValues(editor, error))
                 .toArray()
                 .toPromise();
@@ -107,7 +120,7 @@ export const provider = [
         lint: (editor: Atom.TextEditor) => {
             return Omni.activeModel
                 .flatMap(x => Observable.from(x.diagnostics))
-                .where(z => z.LogLevel !== "Hidden")
+                .where(z => showHiddenDiagnostics || z.LogLevel !== "Hidden")
                 .map(error => mapValues(editor, error))
                 .toArray()
                 .toPromise();
