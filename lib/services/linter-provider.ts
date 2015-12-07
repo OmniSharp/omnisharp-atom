@@ -43,6 +43,8 @@ function hideLinter() {
         panel.style.display = "none";
 }
 
+let showHiddenDiagnostics = true;
+
 export function init(linter: { getEditorLinter: (editor: Atom.TextEditor) => { lint: () => void } }) {
     const disposable = new CompositeDisposable();
     let cd: CompositeDisposable;
@@ -69,6 +71,15 @@ export function init(linter: { getEditorLinter: (editor: Atom.TextEditor) => { l
         }
     }));
 
+    disposable.add(atom.config.observe("omnisharp-atom.showHiddenDiagnostics", show => {
+        showHiddenDiagnostics = show;
+        atom.workspace.getTextEditors().forEach((editor) => {
+            var editorLinter = linter.getEditorLinter(editor);
+            if (editorLinter) {
+                editorLinter.lint();
+            }
+        });
+    }));
 
     disposable.add(Omni.activeEditor.where(z => !!z).take(1).delay(1000).subscribe((e) => {
         Omni.whenEditorConnected(e).subscribe(() => {
@@ -94,7 +105,7 @@ export const provider = [
             const path = editor.getPath();
             return codeCheck.doCodeCheck(editor)
                 .flatMap(x => x)
-                .where(z => z.FileName === path)
+                .where(z => z.FileName === path && (showHiddenDiagnostics || z.LogLevel !== "Hidden"))
                 .map(error => mapValues(editor, error))
                 .toArray()
                 .toPromise();
@@ -107,7 +118,7 @@ export const provider = [
         lint: (editor: Atom.TextEditor) => {
             return Omni.activeModel
                 .flatMap(x => Observable.from(x.diagnostics))
-                .where(z => z.LogLevel !== "Hidden")
+                .where(z => showHiddenDiagnostics || z.LogLevel !== "Hidden")
                 .map(error => mapValues(editor, error))
                 .toArray()
                 .toPromise();

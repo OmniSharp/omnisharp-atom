@@ -124,7 +124,7 @@ class CodeCheck implements IFeature {
         this._fullCodeCheck.onNext(true);
     }
 
-    private filterOnlyWarningsAndErrors(quickFixes: Models.DiagnosticLocation[]): Models.DiagnosticLocation[] {
+    public filterOnlyWarningsAndErrors(quickFixes: Models.DiagnosticLocation[]): Models.DiagnosticLocation[] {
         return _.filter(quickFixes, (quickFix: Models.DiagnosticLocation) => {
             return quickFix.LogLevel !== "Hidden";
         });

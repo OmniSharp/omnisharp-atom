@@ -425,6 +425,12 @@ class OmniSharpAtom {
             descrption: "Use the alt key instead of the ctrl/cmd key for goto defintion mouse over.",
             type: "boolean",
             default: false
+        },
+        showHiddenDiagnostics: {
+            title: "Show 'Hidden' diagnostics in the linter",
+            descrption: "Show or hide hidden diagnostics in the linter, this does not affect greying out of namespaces that are unused.",
+            type: "boolean",
+            default: true
         }
     };
 }
