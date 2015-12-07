@@ -45,7 +45,7 @@ function hideLinter() {
 
 let showHiddenDiagnostics = true;
 
-export function init(linter: { getEditorLinter: (editor: Atom.TextEditor) => { lint: () => void } }) {
+export function init(linter: { getEditorLinter: (editor: Atom.TextEditor) => { lint: (shouldLint: boolean) => void } }) {
     const disposable = new CompositeDisposable();
     let cd: CompositeDisposable;
     disposable.add(atom.config.observe("omnisharp-atom.hideLinterInterface", hidden => {
@@ -76,7 +76,7 @@ export function init(linter: { getEditorLinter: (editor: Atom.TextEditor) => { l
         atom.workspace.getTextEditors().forEach((editor) => {
             var editorLinter = linter.getEditorLinter(editor);
             if (editorLinter) {
-                editorLinter.lint();
+                editorLinter.lint(true);
             }
         });
     }));
@@ -86,7 +86,7 @@ export function init(linter: { getEditorLinter: (editor: Atom.TextEditor) => { l
             atom.workspace.getTextEditors().forEach((editor) => {
                 var editorLinter = linter.getEditorLinter(editor);
                 if (editorLinter) {
-                    editorLinter.lint();
+                    editorLinter.lint(true);
                 }
             });
         });
@@ -103,7 +103,9 @@ export const provider = [
         lintOnFly: true,
         lint: (editor: Atom.TextEditor) => {
             const path = editor.getPath();
-            return codeCheck.doCodeCheck(editor)
+            var o = Observable.defer(() => codeCheck.doCodeCheck(editor));
+            return o
+                .timeout(30000, Observable.from([]))
                 .flatMap(x => x)
                 .where(z => z.FileName === path && (showHiddenDiagnostics || z.LogLevel !== "Hidden"))
                 .map(error => mapValues(editor, error))

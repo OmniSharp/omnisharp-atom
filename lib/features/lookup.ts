@@ -72,7 +72,6 @@ class Tooltip implements Rx.Disposable {
             .buffer(mousemove.throttle(400), () => Observable.timer(400))
             .map(events => {
                 for (const event of events.reverse()) {
-                    console.log(event);
                     const pixelPt = this.pixelPositionFromMouseEvent(editorView, event);
                     const screenPt = editor.screenPositionForPixelPosition(pixelPt);
                     const bufferPt = editor.bufferPositionForScreenPosition(screenPt);
