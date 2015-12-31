@@ -68,7 +68,7 @@
     "chai": "^3.4.1",
     "del": "^2.1.0",
     "escape-html": "^1.0.1",
-    "event-kit": "^1.4.1",
+    "event-kit": "^2.0.0",
     "fastdom": "^0.8.6",
     "font-awesome": "^4.5.0",
     "fs-plus": "^2.3.1",
