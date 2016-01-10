@@ -14,7 +14,6 @@
 /// <reference path="typings/jquery/jquery.d.ts" />
 /// <reference path="typings/lodash/lodash.d.ts" />
 /// <reference path="typings/node/node.d.ts" />
-/// <reference path="typings/react/react.d.ts" />
 /// <reference path="typings/semver/semver.d.ts" />
 /// <reference path="typings/assertion-error/assertion-error.d.ts" />
 /// <reference path="typings/q/Q.d.ts" />

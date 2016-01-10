@@ -15,9 +15,9 @@ enum TestCommandType {
 class RunTests implements IFeature {
     private disposable: Rx.CompositeDisposable;
     private window: Rx.CompositeDisposable;
-    private _output: Rx.Subject<OutputMessage[]>;
     public testResults: OutputMessage[] = [];
     private lastRun: Models.GetTestCommandResponse;
+    private _testWindow: TestResultsWindow;
 
     public observe: {
         output: Observable<OutputMessage[]>;
@@ -25,8 +25,9 @@ class RunTests implements IFeature {
 
     public activate() {
         this.disposable = new CompositeDisposable();
+        this._testWindow = new TestResultsWindow;
 
-        const output = this._output = new Subject<OutputMessage[]>();
+        const output = new Subject<OutputMessage[]>();
         this.observe = {
             output: output.asObservable()
         };
@@ -65,16 +66,16 @@ class RunTests implements IFeature {
         this.testResults.length = 0;
         this.lastRun = response;
 
+        this._testWindow.clear();
+
         const child = childProcess.exec(response.TestCommand, { cwd: response.Directory });
 
         child.stdout.on("data", (data: any) => {
-            this.testResults.push({ message: data, logLevel: "" });
-            this._output.onNext(this.testResults);
+            this._testWindow.addMessage({ message: data, logLevel: "" });
         });
 
         child.stderr.on("data", (data: any) => {
-            this.testResults.push({ message: data, logLevel: "fail" });
-            this._output.onNext(this.testResults);
+            this._testWindow.addMessage({ message: data, logLevel: "fail" });
         });
 
         dock.selectWindow("test-output");
@@ -84,12 +85,7 @@ class RunTests implements IFeature {
         if (!this.window) {
             this.window = new CompositeDisposable();
 
-            const windowDisposable = dock.addWindow("test-output", "Test output", TestResultsWindow, {
-                runTests: this
-            }, {
-                    priority: 2000,
-                    closeable: true
-                }, this.window);
+            const windowDisposable = dock.addWindow("test-output", "Test output", this._testWindow, { priority: 2000, closeable: true }, this.window);
             this.window.add(windowDisposable);
             this.window.add(Disposable.create(() => {
                 this.disposable.remove(this.window);

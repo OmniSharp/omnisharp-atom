@@ -26,9 +26,6 @@
     "chai/chai.d.ts": {
       "commit": "fc341765ebbb04b7109981a25dced01f488f4d94"
     },
-    "react/react.d.ts": {
-      "commit": "ac3a1f059f655059484d6aa5ba1f0f85908ae06c"
-    },
     "mocha/mocha.d.ts": {
       "commit": "fc341765ebbb04b7109981a25dced01f488f4d94"
     },

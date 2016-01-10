@@ -1,5 +1,4 @@
 import {CompositeDisposable} from "rx";
-import * as React from "react";
 import {dock} from "../atom/dock";
 
 class SettingsButton implements IFeature {
@@ -8,25 +7,26 @@ class SettingsButton implements IFeature {
     public activate() {
         this.disposable = new CompositeDisposable();
         let tooltip :Rx.IDisposable;
-        const button = React.DOM.a({
-            className: `btn icon-gear`,
-            onClick: () => atom.commands.dispatch(atom.views.getView(atom.workspace), "omnisharp-atom:settings"),
-            onMouseEnter: (e) => {
-                tooltip = atom.tooltips.add(<any>e.currentTarget, { title: this.tooltip });
-                this.disposable.add(tooltip);
-            },
-            onMouseLeave: (e) => {
-                if (tooltip) {
-                    this.disposable.remove(tooltip);
-                    tooltip.dispose();
-                }
+
+        const htmlButton = document.createElement("a");
+        htmlButton.classList.add("btn","icon-gear");
+
+        htmlButton.onclick = () => atom.commands.dispatch(atom.views.getView(atom.workspace), "omnisharp-atom:settings");
+        htmlButton.onmouseenter = (e) => {
+            tooltip = atom.tooltips.add(<any>e.currentTarget, { title: this.tooltip });
+            this.disposable.add(tooltip);
+        };
+        htmlButton.onmouseleave = (e) => {
+            if (tooltip) {
+                this.disposable.remove(tooltip);
+                tooltip.dispose();
             }
-        });
+        };
 
         this.disposable.add(dock.addButton(
             "settings-button",
             "Settings",
-            button,
+            htmlButton,
             { priority: 999 }
         ));
     }

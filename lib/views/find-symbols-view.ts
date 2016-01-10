@@ -3,7 +3,6 @@ import {OmniSelectListView} from "../services/omni-select-list-view";
 import {Omni} from "../server/omni";
 
 export class FindSymbolsView extends OmniSelectListView {
-
     constructor() {
         super("Find Symbols");
 

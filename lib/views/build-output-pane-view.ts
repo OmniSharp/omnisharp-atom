@@ -2,51 +2,38 @@
 /* tslint:disable:variable-name */
 const Convert = require("ansi-to-html");
 /* tslint:enable:variable-name */
-const _ : _.LoDashStatic = require("lodash");
-import * as React from "react";
-import {ReactClientComponent} from "./react-client-component";
+const _: _.LoDashStatic = require("lodash");
+import {Component} from "./component";
 import {server} from "../atom/server-information";
 
-interface IBuildOutputWindowState {
-    output: OutputMessage[];
-}
-
-export class BuildOutputWindow<T> extends ReactClientComponent<T, IBuildOutputWindowState> {
+export class BuildOutputWindow extends Component {
     public displayName = "BuildOutputWindow";
-
     private _convert: any;
+    private _output: OutputMessage[];
 
-    constructor(props?: T, context?: any) {
-        super(props, context);
+    public createdCallback() {
+        super.createdCallback();
+
         this._convert = new Convert();
-        this.state = { output: [] };
+        this._output = [];
+
+        this.classList.add("build-output-pane-view", "native-key-bindings");
+        this.tabIndex = -1;
     }
 
-    public componentDidMount() {
-        super.componentDidMount();
-        this.disposable.add(server.observe.output
-            .subscribe(z => this.setState({ output: z }, () => this.scrollToBottom())));
+    public attachedCallback() {
+        super.attachedCallback();
+
+        this.disposable.add(server.observe.outputElement.subscribe(element => {
+            _.each(this.children, child => child.remove());
+            this.appendChild(element);
+        }));
+        this.disposable.add(server.observe.output.delay(100).subscribe(() => this.scrollToBottom()));
         this.scrollToBottom();
     }
 
     private scrollToBottom() {
-        const item = <any> React.findDOMNode(this).lastElementChild.lastElementChild;
+        const item = <any>this.lastElementChild.lastElementChild;
         if (item) item.scrollIntoViewIfNeeded();
-    }
-
-    private createItem(item: OutputMessage) {
-        return React.DOM.pre({
-            className: item.logLevel,
-        }, this._convert.toHtml(item.message).trim());
-    }
-
-    public render() {
-        return React.DOM.div({
-            className: "build-output-pane-view native-key-bindings " + (this.props["className"] || ""),
-            tabIndex: -1
-        },
-            React.DOM.div({
-                className: "messages-container"
-            }, _.map(this.state.output, item => this.createItem(item))));
     }
 }

@@ -1,118 +1,71 @@
 /* tslint:disable:no-string-literal */
 import {Models} from "omnisharp-client";
-const _: _.LoDashStatic = require("lodash");
 import {Omni} from "../server/omni";
-import * as React from "react";
 import * as path from "path";
-const $: JQueryStatic = require("jquery");
-import {ReactClientComponent} from "./react-client-component";
 import {findUsages} from "../features/find-usages";
+import {OutputElement, MessageElement} from "./output-component";
 
-interface FindWindowState {
-    selectedIndex?: number;
-    usages?: Models.DiagnosticLocation[];
+export class FindMessageElement extends MessageElement<Models.QuickFix> {
+    private _text: HTMLPreElement;
+    private _location: HTMLPreElement;
+    private _filename: HTMLPreElement;
+
+    public createdCallback() {
+        this.classList.add("find-usages");
+
+        const text = this._text = document.createElement("pre");
+        text.classList.add("text-highlight");
+        this.appendChild(text);
+
+        const location = this._location = document.createElement("pre");
+        location.classList.add("inline-block");
+        this.appendChild(location);
+
+        const filename = this._filename = document.createElement("pre");
+        filename.classList.add("text-subtle", "inline-block");
+        this.appendChild(filename);
+    }
+
+    public setMessage(key: string, item: Models.DiagnosticLocation) {
+        super.setMessage(key, item);
+
+        this.classList.add(`${item.LogLevel}`);
+        this._text.innerText = item.Text;
+        this._location.innerText = `${path.basename(item.FileName)}(${item.Line},${item.Column})`;
+        this._filename.innerText = path.dirname(item.FileName);
+    }
 }
 
-interface FindWindowProps {
-    scrollTop: () => number;
-    setScrollTop: (scrollTop: number) => void;
-    findUsages: typeof findUsages;
-}
+(<any>exports).FindMessageElement = (<any>document).registerElement("omnisharp-find-message", { prototype: FindMessageElement.prototype });
 
-export class FindWindow extends ReactClientComponent<FindWindowProps, FindWindowState> {
+export class FindWindow extends OutputElement<Models.QuickFix, FindMessageElement> {
     public displayName = "FindPaneWindow";
 
-    private model: typeof findUsages;
+    public createdCallback() {
+        super.createdCallback();
 
-    constructor(props?: FindWindowProps, context?: any) {
-        super(props, context);
-        this.model = this.props.findUsages;
-        this.state = { usages: this.model.usages, selectedIndex: this.model.selectedIndex };
+        this.classList.add("error-output-pane");
     }
 
-    public componentWillMount() {
-        super.componentWillMount();
-        this.disposable.add(this.model.observe.reset.merge(this.model.observe.find.map(z => true))
-            .subscribe(() => this.setState({ usages: this.model.usages })));
-
-        this.disposable.add(this.model.observe.selected.delay(0)
-            .subscribe(z => this.updateStateAndScroll()));
+    public attachedCallback() {
+        super.attachedCallback();
+        this.disposable.add(findUsages.observe.reset.merge(findUsages.observe.find.map(z => true))
+            .subscribe(() => this.updateOutput(findUsages.usages)));
     }
 
-    public componentDidMount() {
-        super.componentDidMount();
-
-        React.findDOMNode(this).scrollTop = this.props.scrollTop();
-        (<any>React.findDOMNode(this)).onkeydown = (e: any) => this.keydownPane(e);
+    protected getKey(usage: Models.QuickFix) {
+        return `quick-fix-${usage.FileName}-(${usage.Line}-${usage.Column})-(${usage.EndLine}-${usage.EndColumn})-(${usage.Projects.join("-")})`;
     }
 
-    public componentWillUnmount() {
-        super.componentWillUnmount();
-        (<any>React.findDOMNode(this)).onkeydown = undefined;
+    protected update() { /* */ }
+    protected eventName() { return "diagnostic"; }
+    protected elementType() { return exports.FindMessageElement; }
+
+    protected handleClick(item: Models.QuickFix, key: string, index: number) {
+        this.gotoUsage(item);
     }
 
-    private updateStateAndScroll() {
-        this.setState({ selectedIndex: this.model.selectedIndex }, () => this.scrollToItemView());
-    }
-
-    private scrollToItemView() {
-        const self = $(React.findDOMNode(this));
-        const item = self.find(`li.selected`);
-        if (!item || !item.position()) return;
-
-        const pane = self;
-        const scrollTop = pane.scrollTop();
-        const desiredTop = item.position().top + scrollTop;
-        const desiredBottom = desiredTop + item.outerHeight();
-
-        if (desiredTop < scrollTop) {
-            pane.scrollTop(desiredTop);
-        } else if (desiredBottom > pane.scrollBottom()) {
-            pane.scrollBottom(desiredBottom);
-        }
-    }
-
-    private keydownPane(e: any) {
-        if (e.keyIdentifier === "Down") {
-            atom.commands.dispatch(atom.views.getView(atom.workspace), "omnisharp-atom:next-usage");
-        } else if (e.keyIdentifier === "Up") {
-            atom.commands.dispatch(atom.views.getView(atom.workspace), "omnisharp-atom:previous-usage");
-        } else if (e.keyIdentifier === "Enter") {
-            atom.commands.dispatch(atom.views.getView(atom.workspace), "omnisharp-atom:go-to-usage");
-        }
-    }
-
-    private gotoUsage(quickfix: Models.QuickFix, index: number) {
+    private gotoUsage(quickfix: Models.QuickFix) {
         Omni.navigateTo(quickfix);
-        this.model.selectedIndex = index;
-    }
-
-    public render() {
-        return React.DOM.div({
-            className: "error-output-pane " + (this.props["className"] || ""),
-            onScroll: (e) => {
-                this.props.setScrollTop((<any>e.currentTarget).scrollTop);
-            },
-            tabIndex: -1,
-        },
-            React.DOM.ol({
-                style: <any>{ cursor: "pointer" },
-            }, _.map(this.state.usages, (usage: Models.QuickFix, index: number) =>
-                React.DOM.li({
-                    key: `quick-fix-${usage.FileName}-(${usage.Line}-${usage.Column})-(${usage.EndLine}-${usage.EndColumn})-(${usage.Projects.join("-")})`,
-                    className: "find-usages" + (index === this.state.selectedIndex ? " selected" : ""),
-                    onClick: (e) => this.gotoUsage(usage, index)
-                },
-                    React.DOM.pre({
-                        className: "text-highlight"
-                    }, usage.Text),
-                    React.DOM.pre({
-                        className: "inline-block"
-                    }, `${path.basename(usage.FileName)}(${usage.Line},${usage.Column})`),
-                    React.DOM.pre({
-                        className: "text-subtle inline-block"
-                    }, `${path.dirname(usage.FileName)}`)
-                ))
-            ));
     }
 }

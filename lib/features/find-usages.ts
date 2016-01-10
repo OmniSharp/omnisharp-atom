@@ -113,14 +113,7 @@ class FindUsages implements IFeature {
     private ensureWindowIsCreated() {
         if (!this.window) {
             this.window = new CompositeDisposable();
-            const windowDisposable = dock.addWindow("find", "Find", FindWindow, {
-                scrollTop: () => this.scrollTop,
-                setScrollTop: (scrollTop: number) => this.scrollTop = scrollTop,
-                findUsages: this
-            }, {
-                    priority: 2000,
-                    closeable: true
-                }, this.window);
+            const windowDisposable = dock.addWindow("find", "Find", new FindWindow, { priority: 2000, closeable: true }, this.window);
             this.window.add(windowDisposable);
             this.window.add(Disposable.create(() => {
                 this.disposable.remove(this.window);

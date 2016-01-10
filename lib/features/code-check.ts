@@ -3,7 +3,7 @@ const _ : _.LoDashStatic = require("lodash");
 import {CompositeDisposable, Observable, Subject, Disposable} from "rx";
 import {Omni} from "../server/omni";
 import {dock} from "../atom/dock";
-import {CodeCheckOutputWindow} from "../views/codecheck-output-pane-view";
+import {CodeCheckOutputElement} from "../views/codecheck-output-pane-view";
 import {reloadWorkspace} from "./reload-workspace";
 
 class CodeCheck implements IFeature {
@@ -83,11 +83,7 @@ class CodeCheck implements IFeature {
             this.selectedIndex = 0;
         }));
 
-        this.disposable.add(dock.addWindow("errors", "Errors & Warnings", CodeCheckOutputWindow, {
-            scrollTop: () => this.scrollTop,
-            setScrollTop: (scrollTop: number) => this.scrollTop = scrollTop,
-            codeCheck: this
-        }));
+        this.disposable.add(dock.addWindow("errors", "Errors & Warnings", new CodeCheckOutputElement));
 
         let started = 0, finished = 0;
         this.disposable.add(Observable.combineLatest(

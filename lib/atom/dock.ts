@@ -1,14 +1,21 @@
-import {CompositeDisposable, SingleAssignmentDisposable, Disposable} from "rx";
-const _ : _.LoDashStatic = require("lodash");
-import {DockWindow, DockPane, DockButton, IDockWindowProps, DocPaneOptions, DocButtonOptions} from "../views/dock-window";
-import * as React from "react";
+import {CompositeDisposable, Disposable} from "rx";
+const _: _.LoDashStatic = require("lodash");
+import {DockWindow, DocButtonOptions, PaneButtonOptions} from "../views/dock-window";
+
+function fromDock(key?: string) {
+    return function fromDock(target: Object, propertyKey: string, descriptor: TypedPropertyDescriptor<any>) {
+        const internalKey = `${key || propertyKey}`;
+        descriptor.value = function() {
+            if (this.dock)
+                return this.dock[internalKey].apply(this.dock, arguments);
+        };
+    };
+}
 
 class Dock implements IAtomFeature {
     private disposable: Rx.CompositeDisposable;
     private view: Element;
-    private dock: DockWindow<IDockWindowProps>;
-    private _panes: DockPane<any, any>[] = [];
-    private _buttons: DockButton[] = [];
+    private dock: DockWindow;
 
     public activate() {
         this.disposable = new CompositeDisposable();
@@ -29,14 +36,13 @@ class Dock implements IAtomFeature {
 
         this.view = p.item.parentElement;
         this.view.classList.add("omnisharp-atom-pane");
-        this.dock = <any> React.render(React.createElement<IDockWindowProps>(DockWindow, {
-            panes: this._panes,
-            buttons: this._buttons,
-            panel: p
-        }), this.view);
+
+        this.dock = new DockWindow();
+        this.dock.setPanel(p);
+
+        this.view.appendChild(this.dock);
 
         this.disposable.add(Disposable.create(() => {
-            React.unmountComponentAtNode(this.view);
             p.destroy();
             this.view.remove();
         }));
@@ -49,112 +55,26 @@ class Dock implements IAtomFeature {
     public get isOpen() { return this.dock && this.dock.isOpen; }
     public get selected() { return this.dock && this.dock.selected; }
 
-    public toggle() {
-        if (this.dock)
-            this.dock.toggleView();
-    }
+    @fromDock("toggleView")
+    public toggle() { /* */ }
 
-    public show() {
-        if (this.dock)
-            this.dock.showView();
-    }
+    @fromDock("showView")
+    public show() { /* */ };
 
-    public hide() {
-        if (this.dock)
-            this.dock.hideView();
-    }
+    @fromDock("hideView")
+    public hide() { /* */ };
 
-    public toggleWindow(selected: string) {
-        this.dock.toggleWindow(selected);
-    }
+    @fromDock()
+    public addWindow(id: string, title: string, view: Element, options: PaneButtonOptions = { priority: 1000 }, parentDisposable?: Rx.Disposable): Rx.IDisposable { throw new Error(""); }
 
-    public selectWindow(selected: string) {
-        this.dock.selectWindow(selected);
-    }
+    @fromDock()
+    public toggleWindow(selected: string) { /* */ }
 
-    public addWindow<P, S>(id: string, title: string, view: typeof React.Component, props: P, options: DocPaneOptions = { priority: 1000 }, parentDisposable?: Rx.Disposable) {
-        const disposable = new SingleAssignmentDisposable();
-        const cd = new CompositeDisposable();
-        this.disposable.add(disposable);
-        disposable.setDisposable(cd);
+    @fromDock()
+    public selectWindow(selected: string) { /* */ }
 
-        if (parentDisposable)
-            cd.add(parentDisposable);
-
-        this._panes.push({ id, title, view, props, options, disposable });
-
-        cd.add(atom.commands.add("atom-workspace", "omnisharp-atom:dock-show-" + id, () => this.selectWindow(id)));
-        cd.add(atom.commands.add("atom-workspace", "omnisharp-atom:dock-toggle-" + id, () => this.toggleWindow(id)));
-
-        if (options.closeable) {
-            cd.add(atom.commands.add("atom-workspace", "omnisharp-atom:dock-close-" + id, () => {
-                this.disposable.remove(disposable);
-                if (this.dock.selected === id) {
-                    this.dock.state.selected = "output";
-                    this.hide();
-                }
-                disposable.dispose();
-            }));
-        }
-
-        cd.add(Disposable.create(() => {
-            _.remove(this._panes, { id });
-            this.dock.state.selected = "output";
-            this.dock.forceUpdate();
-        }));
-
-        this._update();
-
-        return <Rx.IDisposable>disposable;
-    }
-
-    public addButton<T>(id: string, title: string, view: React.HTMLElement, options: DocButtonOptions = { priority: 1000 }, parentDisposable?: Rx.Disposable) {
-        const disposable = new SingleAssignmentDisposable();
-        const cd = new CompositeDisposable();
-        this.disposable.add(disposable);
-        disposable.setDisposable(cd);
-
-        if (parentDisposable)
-            cd.add(parentDisposable);
-
-        this._buttons.push({ id, title, view, options, disposable });
-
-        cd.add(Disposable.create(() => {
-            _.remove(this._buttons, { id });
-            this.dock.forceUpdate();
-        }));
-
-        this._update();
-
-        return <Rx.IDisposable>disposable;
-    }
-
-    private _update() {
-        // Sort th buttons!
-        this._panes = _(this._panes)
-            .sortBy(z => z.id)
-            .sort((a, b) => {
-                if (a.options.priority === b.options.priority) return 0;
-                if (a.options.priority > b.options.priority) return 1;
-                return -1;
-            })
-            .value();
-
-        this._buttons = _(this._buttons)
-            .sortBy(z => z.id)
-            .sort((a, b) => {
-                if (a.options.priority === b.options.priority) return 0;
-                if (a.options.priority > b.options.priority) return 1;
-                return -1;
-            })
-            .value();
-
-        if (this.dock) {
-            this.dock.props.panes = this._panes;
-            this.dock.props.buttons = this._buttons;
-            this.dock.forceUpdate();
-        }
-    }
+    @fromDock()
+    public addButton(id: string, title: string, view: Element, options: DocButtonOptions = { priority: 1000 }, parentDisposable?: Rx.Disposable): Rx.IDisposable { throw new Error(""); }
 
     public required = true;
     public title = "Dock";
