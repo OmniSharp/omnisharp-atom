@@ -1,7 +1,6 @@
 /// <reference path="typingsTemp/atom/atom.d.ts" />
 /// <reference path="typingsTemp/atom-keymap/atom-keymap.d.ts" />
 /// <reference path="typingsTemp/atom-space-pen-views/atom-space-pen-views.d.ts" />
-/// <reference path="typingsTemp/event-kit/event-kit.d.ts" />
 /// <reference path="typingsTemp/first-mate/first-mate.d.ts" />
 /// <reference path="typingsTemp/linter/linter.d.ts" />
 /// <reference path="typingsTemp/pathwatcher/pathwatcher.d.ts" />
