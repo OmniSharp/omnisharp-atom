@@ -1,7 +1,5 @@
 const _: _.LoDashStatic = require("lodash");
-import {basename} from "path";
 import {Component} from "./component";
-import {solutionInformation} from "../atom/solution-information";
 import {ViewModel} from "../server/view-model";
 import {ProjectViewModel} from "../server/project-view-model";
 import {DriverState} from "omnisharp-client";

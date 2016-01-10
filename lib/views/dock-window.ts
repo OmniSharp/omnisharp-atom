@@ -162,7 +162,7 @@ export class DockWindow extends Component {
             e.stopPropagation();
             e.preventDefault();
             this.selected = id;
-        }
+        };
 
         const internal = <InternalPaneButton>button;
         internal._button = view;

@@ -74,7 +74,7 @@ export function init(linter: { getEditorLinter: (editor: Atom.TextEditor) => { l
     disposable.add(atom.config.observe("omnisharp-atom.showHiddenDiagnostics", show => {
         showHiddenDiagnostics = show;
         atom.workspace.getTextEditors().forEach((editor) => {
-            var editorLinter = linter.getEditorLinter(editor);
+            const editorLinter = linter.getEditorLinter(editor);
             if (editorLinter) {
                 editorLinter.lint(true);
             }
@@ -84,7 +84,7 @@ export function init(linter: { getEditorLinter: (editor: Atom.TextEditor) => { l
     disposable.add(Omni.activeEditor.where(z => !!z).take(1).delay(1000).subscribe((e) => {
         Omni.whenEditorConnected(e).subscribe(() => {
             atom.workspace.getTextEditors().forEach((editor) => {
-                var editorLinter = linter.getEditorLinter(editor);
+                const editorLinter = linter.getEditorLinter(editor);
                 if (editorLinter) {
                     editorLinter.lint(true);
                 }
@@ -103,7 +103,7 @@ export const provider = [
         lintOnFly: true,
         lint: (editor: Atom.TextEditor) => {
             const path = editor.getPath();
-            var o = Observable.defer(() => codeCheck.doCodeCheck(editor));
+            const o = Observable.defer(() => codeCheck.doCodeCheck(editor));
             return o
                 .timeout(30000, Observable.from([]))
                 .flatMap(x => x)

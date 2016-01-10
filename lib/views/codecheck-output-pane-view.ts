@@ -1,6 +1,5 @@
 /* tslint:disable:no-string-literal */
 import {Models} from "omnisharp-client";
-const _: _.LoDashStatic = require("lodash");
 import * as path from "path";
 import {Omni} from "../server/omni";
 import {OutputElement, MessageElement} from "./output-component";

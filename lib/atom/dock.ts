@@ -1,5 +1,4 @@
 import {CompositeDisposable, Disposable} from "rx";
-const _: _.LoDashStatic = require("lodash");
 import {DockWindow, DocButtonOptions, PaneButtonOptions} from "../views/dock-window";
 
 function fromDock(key?: string) {

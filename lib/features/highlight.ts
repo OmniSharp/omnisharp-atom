@@ -56,7 +56,7 @@ class Highlight implements IFeature {
     private setupEditor(editor: Atom.TextEditor, disposable: CompositeDisposable) {
         if (editor["_oldGrammar"] || !editor.getGrammar) return;
 
-        var path = editor.getPath();
+        const path = editor.getPath();
         disposable.add(Omni.getSolutionForEditor(editor)
             .flatMap(solution =>
                 isObserveRetokenizing(
