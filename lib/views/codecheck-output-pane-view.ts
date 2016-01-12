@@ -44,6 +44,10 @@ const getMessageElement = (function() {
         this._filename.innerText = path.dirname(item.FileName);
     }
 
+    function attached() { /* */ }
+
+    function detached() { /* */ }
+
     return function getMessageElement(): CodeCheckMessageElement {
         const element: CodeCheckMessageElement = <any>document.createElement("li");
         element.classList.add("codecheck");
@@ -68,6 +72,8 @@ const getMessageElement = (function() {
         Object.defineProperty(element, "selected", selectedProps);
         Object.defineProperty(element, "inview", inviewProps);
         element.setMessage = setMessage;
+        element.attached = attached;
+        element.detached = detached;
 
         return element;
     };
@@ -89,6 +95,14 @@ export class CodeCheckOutputElement extends HTMLDivElement implements WebCompone
         };
         this._list.eventName = "diagnostic";
         this._list.elementFactory = getMessageElement;
+    }
+
+    public attachedCallback() {
+        this._list.attached();
+    }
+
+    public detachedCallback() {
+        this._list.detached();
     }
 
     public update(output: Models.DiagnosticLocation[]) {

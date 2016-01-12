@@ -24,7 +24,6 @@ export class HighlightElement extends HTMLElement implements WebComponent {
         this._editor.enhance();
     }
 
-    // API
     public set usage(usage: Models.QuickFix) {
         this._editor.usage = usage;
     }

@@ -32,10 +32,17 @@ const getMessageElement = (function() {
         this._inview = false;
 
         this.classList.add(item.LogLevel);
+        this._usage = item;
         this._text.usage = item;
         this._location.innerText = `${path.basename(item.FileName)}(${item.Line},${item.Column})`;
         this._filename.innerText = path.dirname(item.FileName);
     }
+
+    function attached() {
+        this._text.usage = this._usage;
+    }
+
+    function detached() { this._inview = false; }
 
     return function getMessageElement(): FindMessageElement {
         const element: FindMessageElement = <any>document.createElement("li");
@@ -57,6 +64,8 @@ const getMessageElement = (function() {
         Object.defineProperty(element, "selected", selectedProps);
         Object.defineProperty(element, "inview", inviewProps);
         element.setMessage = setMessage;
+        element.attached = attached;
+        element.detached = detached;
 
         return element;
     };
@@ -68,7 +77,6 @@ export class FindWindow extends HTMLDivElement implements WebComponent {
 
     public createdCallback() {
         this.classList.add("find-output-pane");
-
         this._list = new OutputElement<Models.QuickFix, FindMessageElement>();
         this.appendChild(this._list);
         this._list.getKey = (usage: Models.QuickFix) => {
@@ -79,6 +87,14 @@ export class FindWindow extends HTMLDivElement implements WebComponent {
         };
         this._list.eventName = "usage";
         this._list.elementFactory = getMessageElement;
+    }
+
+    public attachedCallback() {
+        this._list.attached();
+    }
+
+    public detachedCallback() {
+        this._list.detached();
     }
 
     public update(output: Models.QuickFix[]) {

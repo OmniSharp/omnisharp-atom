@@ -86,7 +86,7 @@ export class DockWindow extends HTMLDivElement implements WebComponent {
 
         const resizer = new exports.Resizer();
         let _originalHeight = this.clientHeight;
-        resizer.start = () => { _originalHeight = this.clientHeight; }
+        resizer.start = () => { _originalHeight = this.clientHeight; };
         resizer.update = ({top}: { left: number, top: number }) => {
             console.log(top);
             this.style.height = `${_originalHeight + -(top)}px`;

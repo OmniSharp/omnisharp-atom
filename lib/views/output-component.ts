@@ -7,6 +7,8 @@ export interface MessageElement<TItem> extends HTMLLIElement {
     inview: boolean;
     setMessage(key: string, item: TItem): void;
     item: TItem;
+    attached(): void;
+    detached(): void;
 }
 
 export class OutputElement<TItem, TElement extends MessageElement<TItem>> extends HTMLOListElement implements WebComponent {
@@ -76,8 +78,18 @@ export class OutputElement<TItem, TElement extends MessageElement<TItem>> extend
         this._calculateInview();
     }
 
-    public detachedCallback() {
-        this.parentElement.removeEventListener("scroll", this._scroll);
+    public attached() {
+        fastdom.mutate(() => {
+            this._update();
+            _.each(this.children, (x: TElement) => x.attached());
+            this._calculateInview();
+        });
+    }
+
+    public detached() {
+        fastdom.mutate(() => {
+            _.each(this.children, (x: TElement) => x.detached());
+        });
     }
 
     private _calculateInview() {
