@@ -1,7 +1,7 @@
 /* tslint:disable:no-string-literal */
 import {Models} from "omnisharp-client";
 import {Omni} from "../server/omni";
-import {each, extend, has, contains, any, range, remove, pull, find, chain, unique, findIndex, all, isEqual, min, debounce, sortBy} from "lodash";
+import {each, extend, has, contains, any, range, remove, pull, find, chain, unique, findIndex, all, isEqual, min, debounce, sortBy, uniqueId} from "lodash";
 import {Observable, Subject, ReplaySubject, CompositeDisposable, Disposable} from "rx";
 /* tslint:disable:variable-name */
 const AtomGrammar = require((<any>atom).config.resourcePath + "/node_modules/first-mate/lib/grammar.js");
@@ -93,15 +93,11 @@ class Highlight implements IFeature {
         this.disposable.add(disposable);
 
         augmentEditor(editor);
-
-        editor.setGrammar = setGrammar;
         editor.setGrammar(editor.getGrammar());
 
-        const grammar: IHighlightingGrammar = <any>editor.getGrammar();
-
         disposable.add(Disposable.create(() => {
-            grammar.linesToFetch = [];
-            grammar.responses.clear();
+            (editor.getGrammar() as any).linesToFetch = [];
+            if ((editor.getGrammar() as any).responses) (editor.getGrammar() as any).responses.clear();
             editor.displayBuffer.tokenizedBuffer.retokenizeLines();
             delete editor["_oldGrammar"];
         }));
@@ -120,7 +116,7 @@ class Highlight implements IFeature {
                 if (framework)
                     projects = [framework];
 
-                let linesToFetch = unique<number>(grammar.linesToFetch) || [];
+                let linesToFetch = unique<number>((editor.getGrammar() as any).linesToFetch) || [];
                 if (!linesToFetch || !linesToFetch.length)
                     linesToFetch = [];
 
@@ -133,15 +129,15 @@ class Highlight implements IFeature {
 
         disposable.add(Omni.getProject(editor)
             .flatMap(z => z.observe.activeFramework).subscribe(() => {
-                grammar.linesToFetch = [];
-                grammar.responses.clear();
+                (editor.getGrammar() as any).linesToFetch = [];
+                if ((editor.getGrammar() as any).responses) (editor.getGrammar() as any).responses.clear();
                 issueRequest.onNext(true);
             }));
 
         disposable.add(editor.onDidStopChanging(() => issueRequest.onNext(true)));
 
         disposable.add(editor.onDidSave(() => {
-            grammar.linesToFetch = [];
+            (editor.getGrammar() as any).linesToFetch = [];
             issueRequest.onNext(true);
         }));
 
@@ -157,8 +153,6 @@ class Highlight implements IFeature {
 }
 
 export function augmentEditor(editor: Atom.TextEditor) {
-    const grammar: IHighlightingGrammar = <any>editor.getGrammar();
-
     if (!editor["_oldGrammar"])
         editor["_oldGrammar"] = editor.getGrammar();
     if (!editor["_setGrammar"])
@@ -174,15 +168,17 @@ export function augmentEditor(editor: Atom.TextEditor) {
     if (!editor.displayBuffer.tokenizedBuffer["_chunkSize"])
         editor.displayBuffer.tokenizedBuffer["chunkSize"] = 20;
 
+    editor.setGrammar = setGrammar;
+
     (<any>editor.displayBuffer.tokenizedBuffer).buildTokenizedLineForRowWithText = function(row: number) {
-        grammar["__row__"] = row;
+        (editor.getGrammar() as any)["__row__"] = row;
         return editor.displayBuffer.tokenizedBuffer["_buildTokenizedLineForRowWithText"].apply(this, arguments);
     };
 
     if (!(<any>editor.displayBuffer.tokenizedBuffer).silentRetokenizeLines) {
         (<any>editor.displayBuffer.tokenizedBuffer).silentRetokenizeLines = debounce(function() {
-            if (grammar.isObserveRetokenizing)
-                grammar.isObserveRetokenizing.onNext(false);
+            if ((editor.getGrammar() as any).isObserveRetokenizing)
+                (editor.getGrammar() as any).isObserveRetokenizing.onNext(false);
             let lastRow: number;
             lastRow = this.buffer.getLastRow();
             this.tokenizedLines = this.buildPlaceholderTokenizedLinesForRows(0, lastRow);
@@ -197,14 +193,14 @@ export function augmentEditor(editor: Atom.TextEditor) {
     }
 
     (<any>editor.displayBuffer.tokenizedBuffer).markTokenizationComplete = function() {
-        if (grammar.isObserveRetokenizing)
-            grammar.isObserveRetokenizing.onNext(true);
+        if ((editor.getGrammar() as any).isObserveRetokenizing)
+            (editor.getGrammar() as any).isObserveRetokenizing.onNext(true);
         return editor.displayBuffer.tokenizedBuffer["_markTokenizationComplete"].apply(this, arguments);
     };
 
     (<any>editor.displayBuffer.tokenizedBuffer).retokenizeLines = function() {
-        if (grammar.isObserveRetokenizing)
-            grammar.isObserveRetokenizing.onNext(false);
+        if ((editor.getGrammar() as any).isObserveRetokenizing)
+            (editor.getGrammar() as any).isObserveRetokenizing.onNext(false);
         return editor.displayBuffer.tokenizedBuffer["_retokenizeLines"].apply(this, arguments);
     };
 
@@ -223,6 +219,7 @@ export function augmentEditor(editor: Atom.TextEditor) {
 
     (<any>editor.displayBuffer.tokenizedBuffer).scopesFromTags = function(startingScopes: number[], tags: number[]) {
         const scopes = startingScopes.slice();
+        const grammar = (editor.getGrammar() as any);
         for (let i = 0, len = tags.length; i < len; i++) {
             const tag = tags[i];
             if (tag < 0) {
@@ -288,84 +285,81 @@ class Grammar {
     public linesToTokenize: any[];
     public activeFramework: any;
     public responses: Map<number, Models.HighlightSpan[]>;
+    public _gid = uniqueId("og");
 
-    constructor(editor: Atom.TextEditor, base: FirstMate.Grammar) {
+    constructor(editor: Atom.TextEditor, base: FirstMate.Grammar, options: { readonly: boolean }) {
         this.isObserveRetokenizing = new ReplaySubject<boolean>(1);
 
         this.editor = editor;
-        const responses = this.responses = new Map<number, Models.HighlightSpan[]>();
+        this.responses = new Map<number, Models.HighlightSpan[]>();
         this.linesToFetch = [];
         this.linesToTokenize = [];
         this.activeFramework = {};
 
-        Object.defineProperty(this, "responses", {
-            writable: false,
-            value: responses
-        });
+        if (!options || !options.readonly) {
+            editor.getBuffer().preemptDidChange((e: any) => {
+                const {oldRange, newRange} = e;
+                let start: number = oldRange.start.row,
+                    delta: number = newRange.end.row - oldRange.end.row;
 
-        editor.getBuffer().preemptDidChange((e: any) => {
-            const {oldRange, newRange} = e;
-            let start: number = oldRange.start.row,
-                delta: number = newRange.end.row - oldRange.end.row;
+                start = start - 5;
+                if (start < 0) start = 0;
 
-            start = start - 5;
-            if (start < 0) start = 0;
+                const end = editor.buffer.getLineCount() - 1;
 
-            const end = editor.buffer.getLineCount() - 1;
-
-            const lines = range(start, end + 1);
-            if (!responses.keys().next().done) {
-                this.linesToFetch.push(...lines);
-            }
-
-            if (lines.length === 1) {
-                const responseLine = responses.get(lines[0]);
-                if (responseLine) {
-                    const oldFrom = oldRange.start.column,
-                        newFrom = newRange.start.column;
-
-                    //responses.delete(lines[0]);
-                    remove(responseLine, (span: Models.HighlightSpan) => {
-                        if (span.StartLine < lines[0]) {
-                            return true;
-                        }
-                        if (span.StartColumn >= oldFrom || span.EndColumn >= oldFrom) {
-                            return true;
-                        }
-                        if (span.StartColumn >= newFrom || span.EndColumn >= newFrom) {
-                            return true;
-                        }
-                        return false;
-                    });
+                const lines = range(start, end + 1);
+                if (!this.responses.keys().next().done) {
+                    this.linesToFetch.push(...lines);
                 }
-            } else {
-                each(lines, line => { responses.delete(line); });
-            }
 
-            if (delta > 0) {
-                // New line
-                const count = editor.getLineCount();
-                for (let i = count - 1; i > end; i--) {
-                    if (responses.has(i)) {
-                        responses.set(i + delta, responses.get(i));
-                        responses.delete(i);
+                if (lines.length === 1) {
+                    const responseLine = this.responses.get(lines[0]);
+                    if (responseLine) {
+                        const oldFrom = oldRange.start.column,
+                            newFrom = newRange.start.column;
+
+                        remove(responseLine, (span: Models.HighlightSpan) => {
+                            if (span.StartLine < lines[0]) {
+                                return true;
+                            }
+                            if (span.StartColumn >= oldFrom || span.EndColumn >= oldFrom) {
+                                return true;
+                            }
+                            if (span.StartColumn >= newFrom || span.EndColumn >= newFrom) {
+                                return true;
+                            }
+                            return false;
+                        });
+                    }
+                } else {
+                    each(lines, line => { this.responses.delete(line); });
+                }
+
+                if (delta > 0) {
+                    // New line
+                    const count = editor.getLineCount();
+                    for (let i = count - 1; i > end; i--) {
+                        if (this.responses.has(i)) {
+                            this.responses.set(i + delta, this.responses.get(i));
+                            this.responses.delete(i);
+                        }
+                    }
+                } else if (delta < 0) {
+                    // Removed line
+                    const count = editor.getLineCount();
+                    const absDelta = Math.abs(delta);
+                    for (let i = end; i < count; i++) {
+                        if (this.responses.has(i + absDelta)) {
+                            this.responses.set(i, this.responses.get(i + absDelta));
+                            this.responses.delete(i + absDelta);
+                        }
                     }
                 }
-            } else if (delta < 0) {
-                // Removed line
-                const count = editor.getLineCount();
-                const absDelta = Math.abs(delta);
-                for (let i = end; i < count; i++) {
-                    if (responses.has(i + absDelta)) {
-                        responses.set(i, responses.get(i + absDelta));
-                        responses.delete(i + absDelta);
-                    }
-                }
-            }
-        });
+            });
+        }
     }
 
-    public setResponses = (value: Models.HighlightSpan[], enableExcludeCode: boolean) => {
+    public setResponses(value: Models.HighlightSpan[], enableExcludeCode: boolean) {
         const results = chain(value);
 
         const groupedItems = <any>results.map(highlight => range(highlight.StartLine, highlight.EndLine + 1)
@@ -392,7 +386,7 @@ class Grammar {
                 }
             }
         });
-    };
+    }
 
 }
 
@@ -692,10 +686,10 @@ function setGrammar(grammar: FirstMate.Grammar): FirstMate.Grammar {
     return grammar;
 }
 
-export function getEnhancedGrammar(editor: Atom.TextEditor, grammar?: FirstMate.Grammar) {
+export function getEnhancedGrammar(editor: Atom.TextEditor, grammar?: FirstMate.Grammar, options?: { readonly: boolean }) {
     if (!grammar) grammar = editor.getGrammar();
     if (!grammar["omnisharp"] && Omni.isValidGrammar(grammar)) {
-        const newGrammar = new Grammar(editor, grammar);
+        const newGrammar = new Grammar(editor, grammar, options);
         each(grammar, (x, i) => has(grammar, i) && (newGrammar[i] = x));
         grammar = <any>newGrammar;
     }

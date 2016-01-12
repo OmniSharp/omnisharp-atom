@@ -17,8 +17,19 @@ const getMessageElement = (function() {
         get: function key() { return this._key; }
     };
 
+    const inviewProps = {
+        get: function inview() { return this._inview; },
+        set: function inview(value: boolean) {
+            if (!this._inview && value) {
+                this._text.enhance();
+            }
+            this._inview = value;
+        }
+    };
+
     function setMessage(key: string, item: Models.DiagnosticLocation) {
         this._key = key;
+        this._inview = false;
 
         this.classList.add(item.LogLevel);
         this._text.usage = item;
@@ -44,6 +55,7 @@ const getMessageElement = (function() {
 
         Object.defineProperty(element, "key", keyProps);
         Object.defineProperty(element, "selected", selectedProps);
+        Object.defineProperty(element, "inview", inviewProps);
         element.setMessage = setMessage;
 
         return element;
@@ -67,10 +79,6 @@ export class FindWindow extends HTMLDivElement implements WebComponent {
         };
         this._list.eventName = "usage";
         this._list.elementFactory = getMessageElement;
-    }
-
-    public detachedCallback() {
-
     }
 
     public update(output: Models.QuickFix[]) {

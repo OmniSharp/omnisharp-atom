@@ -43,8 +43,14 @@
 
     .font-size (@index) when (@index > 0) {
         .font-size-@{index} {
-            &, .pre, pre {
+            &, pre, omnisharp-highlight-element {
                 font-size: ~"@{index}px" !important;
+            }
+
+            omnisharp-highlight-element {
+                atom-text-editor::shadow {
+                    font-size: ~"@{index}px" !important;
+                }
             }
 
             .codecheck {

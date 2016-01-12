@@ -113,7 +113,7 @@ export class DockWindow extends HTMLDivElement implements WebComponent {
 
     public attachedCallback() {
         this.disposable.add(atom.config.observe("editor.fontSize", (size: number) => {
-            this.classList.remove("font-size-" + this.fontSize);
+            this.className = this.className.replace(/font-size-[\d]*/g, "");
             this.fontSize = size;
             this.classList.add("font-size-" + size);
         }));

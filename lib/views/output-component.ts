@@ -4,6 +4,7 @@ const _: _.LoDashStatic = require("lodash");
 export interface MessageElement<TItem> extends HTMLLIElement {
     key: string;
     selected: boolean;
+    inview: boolean;
     setMessage(key: string, item: TItem): void;
     item: TItem;
 }
@@ -14,6 +15,7 @@ export class OutputElement<TItem, TElement extends MessageElement<TItem>> extend
     private _selectedIndex: number;
     private _selectedElement: TElement;
     private _update: () => void;
+    private _scroll: any;
 
     public createdCallback() {
         this.output = [];
@@ -25,49 +27,79 @@ export class OutputElement<TItem, TElement extends MessageElement<TItem>> extend
         };
 
         this._update = _.throttle(() => {
-            fastdom.mutate(() => {
+            fastdom.measure(() => {
                 for (let i = 0, len = this.children.length > this.output.length ? this.children.length : this.output.length; i < len; i++) {
                     const item = this.output[i];
                     let child: TElement = <any>this.children[i];
-
                     if (!item && child) {
                         this.removeChild(child);
                         continue;
-                    } else if (item && !child) {
-                        child = this.elementFactory();
-                        child.onclick = onclickHandler;
-                        this.appendChild(child);
                     }
-
-                    if (item && child) {
-                        const key = this.getKey(item);
-                        if (child.key !== key) {
-                            child.setMessage(key, item);
-                            child.item = item;
+                    fastdom.mutate(() => {
+                        if (item && !child) {
+                            child = this.elementFactory();
+                            child.onclick = onclickHandler;
+                            this.appendChild(child);
                         }
-                    }
 
-                    if (child) {
-                        if (child.key === this._selectedKey && !child.selected) {
-                            child.selected = true;
-                        } else if (child.selected) {
-                            child.selected = false;
+                        if (item && child) {
+                            const key = this.getKey(item);
+                            if (child.key !== key) {
+                                child.setMessage(key, item);
+                                child.item = item;
+                            }
                         }
-                    }
+
+                        if (child) {
+                            if (child.key === this._selectedKey && !child.selected) {
+                                child.selected = true;
+                            } else if (child.selected) {
+                                child.selected = false;
+                            }
+                        }
+                    });
                 }
 
-                this.scrollToItemView();
+                fastdom.mutate(() => {
+                    this.scrollToItemView();
+                    this._calculateInview();
+                });
             });
         }, 100, { leading: true, trailing: true });
+
+        this.onkeydown = (e: any) => this.keydownPane(e);
+        this._scroll = _.throttle((e: UIEvent) => this._calculateInview(), 100, { leading: true, trailing: true });
     }
 
     public attachedCallback() {
-        this.scrollTop = $(this).scrollTop();
-        this.onkeydown = (e: any) => this.keydownPane(e);
+        this.parentElement.addEventListener("scroll", this._scroll);
+        this._calculateInview();
     }
 
     public detachedCallback() {
-        this.onkeydown = undefined;
+        this.parentElement.removeEventListener("scroll", this._scroll);
+    }
+
+    private _calculateInview() {
+        const self = $(this);
+        fastdom.measure(() => {
+            const top = self.scrollTop();
+            const bottom = top + this.parentElement.clientHeight * 2;
+            for (let i = 0, len = this.children.length; i < len; i++) {
+                const child: TElement = <any>this.children[i];
+                const $child = $(child);
+                const position = $child.position();
+                const height = child.clientHeight;
+
+                const inview = position.top + height > top && position.top < bottom;
+
+                if (child.inview !== inview) {
+                    fastdom.mutate(() => {
+                        child.inview = inview;
+                    });
+                }
+            }
+        });
     }
 
     public getKey: (message: TItem) => string;

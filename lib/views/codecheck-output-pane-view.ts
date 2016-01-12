@@ -15,6 +15,11 @@ const getMessageElement = (function() {
         get: function key() { return this._key; }
     };
 
+    const inviewProps = {
+        get: function inview() { return this._inview; },
+        set: function inview(value: boolean) { this._inview = value; }
+    };
+
     function setMessage(key: string, item: Models.DiagnosticLocation) {
         this._key = key;
 
@@ -61,6 +66,7 @@ const getMessageElement = (function() {
 
         Object.defineProperty(element, "key", keyProps);
         Object.defineProperty(element, "selected", selectedProps);
+        Object.defineProperty(element, "inview", inviewProps);
         element.setMessage = setMessage;
 
         return element;

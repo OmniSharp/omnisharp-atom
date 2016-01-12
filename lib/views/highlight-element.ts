@@ -16,6 +16,14 @@ export class HighlightElement extends HTMLElement implements WebComponent {
         this.removeChild(this._editor);
     }
 
+    public revert() {
+        this._editor.revert();
+    }
+
+    public enhance() {
+        this._editor.enhance();
+    }
+
     // API
     public set usage(usage: Models.QuickFix) {
         this._editor.usage = usage;
