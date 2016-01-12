@@ -152,7 +152,7 @@ class OmniManager implements Rx.IDisposable {
                 return Observable.just(<Models.DiagnosticLocation[]>[]);
             })
             .startWith([])
-            .share();
+            .shareReplay(1);
     }
 
     public dispose() {

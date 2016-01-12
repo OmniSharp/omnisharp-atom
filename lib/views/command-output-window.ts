@@ -1,30 +1,26 @@
 /* tslint:disable:no-string-literal */
 const _ : _.LoDashStatic = require("lodash");
-import {Component} from "./component";
 
-export class CommandOutputWindow extends Component {
+export class CommandOutputWindow extends HTMLDivElement implements WebComponent {
     public displayName = "CommandOutputWindow";
     private _container: HTMLDivElement;
     private _scrollToBottom: () => void;
 
     public createdCallback() {
-        super.createdCallback();
-
         this.classList.add("omni-output-pane-view","native-key-bindings");
         this.tabIndex = -1;
 
         this._container = document.createElement("div");
         this._container.classList.add("messages-container");
+        this.appendChild(this._container);
 
         this._scrollToBottom = _.throttle(() => {
-            const item = <any> this.lastElementChild.lastElementChild;
+            const item = <any>(this.lastElementChild && this.lastElementChild.lastElementChild);
             if (item) item.scrollIntoViewIfNeeded();
         }, 100, { trailing: true });
     }
 
     public attachedCallback() {
-        super.attachedCallback();
-
         _.defer(this._scrollToBottom, this);
     }
 
@@ -33,6 +29,7 @@ export class CommandOutputWindow extends Component {
         pre.innerText = item.message.trim();
 
         this._container.appendChild(pre);
+        this._scrollToBottom();
     }
 }
 

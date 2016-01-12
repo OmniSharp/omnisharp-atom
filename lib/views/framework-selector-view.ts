@@ -18,7 +18,6 @@ export class FrameworkSelectorComponent extends HTMLAnchorElement implements Web
     public alignLeft: boolean;
 
     public createdCallback() {
-        this.href = "#";
         this.onclick = (e) => {
             const view = new FrameworkSelectorSelectListView(atom.workspace.getActiveTextEditor(), {
                 attachTo: ".framework-selector",

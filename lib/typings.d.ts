@@ -33,9 +33,7 @@ interface WebComponent {
 }
 
 declare module Fastdom {
-    export function read(cb: Function): any;
-    export function write(cb: Function): any;
-    export function defer(frames: number, cb: Function): any;
-    export function defer(cb: Function): any;
+    export function measure(cb: Function): any;
+    export function mutate(cb: Function): any;
     export function clear(caller: any): void;
 }

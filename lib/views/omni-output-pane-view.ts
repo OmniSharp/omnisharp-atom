@@ -3,17 +3,16 @@
 const Convert = require("ansi-to-html");
 /* tslint:enable:variable-name */
 const _ : _.LoDashStatic = require("lodash");
-import {Component} from "./component";
 import {server} from "../atom/server-information";
+import {CompositeDisposable} from "rx";
 
-export class OutputWindow extends Component {
+export class OutputWindow extends HTMLDivElement implements WebComponent {
     public displayName = "OutputWindow";
+    private disposable: CompositeDisposable;
     private _convert: any;
     private _output: OutputMessage[];
 
     public createdCallback() {
-        super.createdCallback();
-
         this._convert = new Convert();
         this._output = [];
 
@@ -22,8 +21,7 @@ export class OutputWindow extends Component {
     }
 
     public attachedCallback() {
-        super.attachedCallback();
-
+        this.disposable = new CompositeDisposable();
         this.disposable.add(server.observe.outputElement.subscribe(element => {
             _.each(this.children, child => child.remove());
             this.appendChild(element);
@@ -32,8 +30,14 @@ export class OutputWindow extends Component {
         this.scrollToBottom();
     }
 
+    public detachedCallback() {
+        this.disposable.dispose();
+    }
+
     private scrollToBottom() {
-        const item = <any>this.lastElementChild.lastElementChild;
+        const item = <any>(this.lastElementChild && this.lastElementChild.lastElementChild);
         if (item) item.scrollIntoViewIfNeeded();
     }
 }
+
+(<any>exports).OutputWindow = (<any>document).registerElement("omnisharp-output-window", { prototype: OutputWindow.prototype });

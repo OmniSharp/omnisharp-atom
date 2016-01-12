@@ -1,64 +1,60 @@
-import {Component} from "./component";
+let fastdom: typeof Fastdom = require("fastdom");
+const _: _.LoDashStatic = require("lodash");
 
-export abstract class MessageElement<TItem> extends HTMLLIElement implements WebComponent {
-    private _key: string;
-    public get key() { return this._key; }
-
-    public set selected(value: boolean) { if (value) this.classList.add("selected"); else this.classList.remove("selected"); }
-
-    public setMessage(key: string, item: TItem) {
-        this._key = key;
-    }
+export interface MessageElement<TItem> extends HTMLLIElement {
+    key: string;
+    selected: boolean;
+    setMessage(key: string, item: TItem): void;
+    item: TItem;
 }
 
-export abstract class OutputElement<TItem, TElement extends MessageElement<TItem>> extends Component {
+export class OutputElement<TItem, TElement extends MessageElement<TItem>> extends HTMLOListElement implements WebComponent {
     private output: TItem[];
     private _selectedKey: string;
     private _selectedIndex: number;
     private _selectedElement: TElement;
-    private _container: HTMLOListElement;
     private _update: () => void;
 
     public createdCallback() {
-        super.createdCallback();
         this.output = [];
-        this.tabIndex = -1;
+        this.classList.add("messages-container", "ol");
+        const parent = this;
+        const onclickHandler = function(e: UIEvent) {
+            parent.selected = this.key;
+            parent.handleClick(this.item);
+        };
 
         this._update = _.throttle(() => {
-            const add: TElement[] = [];
-            const remove: Element[] = [];
-            if (this._container.children.length > this.output.length) {
-                for (let i = this._container.children.length - this.output.length - 1; i < this._container.children.length; i++) {
-                    remove.push(this._container.children[i]);
-                }
-            } else {
-                for (let i = this._container.children.length - 1; i < this.output.length; i++) {
-                    add.push(new (this.elementType()));
-                }
-            }
+            fastdom.mutate(() => {
+                for (let i = 0, len = this.children.length > this.output.length ? this.children.length : this.output.length; i < len; i++) {
+                    const item = this.output[i];
+                    let child: TElement = <any>this.children[i];
 
-            window.requestAnimationFrame(() => {
-                _.each(add, x => this._container.appendChild(x));
-                _.each(remove, x => x.remove());
-
-                _.each(this.output, (item, i) => {
-                    const child: TElement = <any>this._container.children[i];
-                    const key = this.getKey(item);
-                    if (child.key !== key) {
-                        child.setMessage(key, item);
+                    if (!item && child) {
+                        this.removeChild(child);
+                        continue;
+                    } else if (item && !child) {
+                        child = this.elementFactory();
+                        child.onclick = onclickHandler;
+                        this.appendChild(child);
                     }
 
-                    this.onclick = (e) => {
-                        this.selected = child.key;
-                        this.handleClick(item, child.key, i);
-                    };
-
-                    if (child.key === this._selectedKey && !child.selected) {
-                        child.selected = true;
-                    } else if (child.selected) {
-                        child.selected = false;
+                    if (item && child) {
+                        const key = this.getKey(item);
+                        if (child.key !== key) {
+                            child.setMessage(key, item);
+                            child.item = item;
+                        }
                     }
-                });
+
+                    if (child) {
+                        if (child.key === this._selectedKey && !child.selected) {
+                            child.selected = true;
+                        } else if (child.selected) {
+                            child.selected = false;
+                        }
+                    }
+                }
 
                 this.scrollToItemView();
             });
@@ -66,54 +62,70 @@ export abstract class OutputElement<TItem, TElement extends MessageElement<TItem
     }
 
     public attachedCallback() {
-        super.attachedCallback();
-
         this.scrollTop = $(this).scrollTop();
         this.onkeydown = (e: any) => this.keydownPane(e);
     }
 
-    protected abstract getKey(message: TItem): string;
-    protected abstract update(): void;
-    protected abstract eventName(): string;
-    protected abstract handleClick(item: TItem, key: string, index: number): void;
-    protected abstract elementType(): { new (): TElement };
+    public getKey: (message: TItem) => string;
+    public eventName: string;
+    public handleClick: (item: TItem) => void;
+    public elementFactory: () => TElement;
 
     public get selected() { return this._selectedKey; }
     public set selected(value: string) {
-        const index = _.findIndex(this._container.children, (e: TElement) => e.key === value);
+        const index = _.findIndex(this.children, (e: TElement) => e.key === value);
         if (index) {
-            const e: TElement = <any>this._container.children[index];
+            const e: TElement = <any>this.children[index];
             this._selectedKey = value;
             this._selectedIndex = index;
-            this._selectedElement.selected = false;
+            if (this._selectedElement) {
+                this._selectedElement.selected = false;
+            }
             this._selectedElement = e;
             e.selected = true;
         }
     }
 
-    protected updateOutput(output: TItem[]) {
-        this.output = output;
+    public get selectedIndex() { return this._selectedIndex; }
+    public set selectedIndex(index) {
+        const e: TElement = <any>this.children[index];
+        if (e) {
+            this.selected = e.key;
+        }
+    }
+
+    public get current() { return this.output[this._selectedIndex]; }
+
+    public next() {
+        this.selectedIndex = this._selectedIndex + 1;
+    }
+
+    public prev() {
+        this.selectedIndex = this._selectedIndex - 1;
+    }
+
+    public updateOutput(output: TItem[]) {
+        this.output = output.slice();
         this._update();
     }
 
     public detachedCallback() {
-        super.detachedCallback();
         this.onkeydown = undefined;
     }
 
     private keydownPane(e: any) {
         if (e.keyIdentifier === "Down") {
-            atom.commands.dispatch(atom.views.getView(atom.workspace), `omnisharp-atom:next-${this.eventName()}`);
+            atom.commands.dispatch(atom.views.getView(atom.workspace), `omnisharp-atom:next-${this.eventName}`);
         } else if (e.keyIdentifier === "Up") {
-            atom.commands.dispatch(atom.views.getView(atom.workspace), `omnisharp-atom:previous-${this.eventName()}`);
+            atom.commands.dispatch(atom.views.getView(atom.workspace), `omnisharp-atom:previous-${this.eventName}`);
         } else if (e.keyIdentifier === "Enter") {
-            atom.commands.dispatch(atom.views.getView(atom.workspace), `omnisharp-atom:go-to-${this.eventName()}`);
+            atom.commands.dispatch(atom.views.getView(atom.workspace), `omnisharp-atom:go-to-${this.eventName}`);
         }
     }
 
     private scrollToItemView() {
         const self = $(this);
-        const item = self.find(`li.selected`);
+        const item = self.find(`.selected`);
         if (!item || !item.position()) return;
 
         const pane = self;
@@ -123,8 +135,10 @@ export abstract class OutputElement<TItem, TElement extends MessageElement<TItem
 
         if (desiredTop < scrollTop) {
             pane.scrollTop(desiredTop);
-        } else if (desiredBottom > pane.scrollBottom()) {
-            pane.scrollBottom(desiredBottom);
+        } else if (desiredBottom > pane.scrollTop() + item.outerHeight()) {
+            pane.scrollTop(desiredBottom + item.outerHeight());
         }
     }
 }
+
+(<any>exports).OutputElement = (<any>document).registerElement("omnisharp-output-list", { prototype: OutputElement.prototype });

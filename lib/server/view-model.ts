@@ -1,11 +1,12 @@
 const _: _.LoDashStatic = require("lodash");
 import {Solution} from "./solution";
 import {Models, DriverState, OmnisharpClientStatus} from "omnisharp-client";
-import {Observable, Subject, CompositeDisposable, Disposable} from "rx";
+import {Observable, Subject, ReplaySubject, CompositeDisposable, Disposable} from "rx";
 import {basename, normalize, join} from "path";
 import {ProjectViewModel, projectViewModelFactory, workspaceViewModelFactory} from "./project-view-model";
 import {OutputMessageElement} from "../views/output-message-element";
 const win32 = process.platform === "win32";
+let fastdom: typeof Fastdom = require("fastdom");
 
 export interface VMViewState {
     isOff: boolean;
@@ -40,7 +41,7 @@ export class ViewModel implements VMViewState, Rx.IDisposable {
     private _projectAddedStream = new Subject<ProjectViewModel<any>>();
     private _projectRemovedStream = new Subject<ProjectViewModel<any>>();
     private _projectChangedStream = new Subject<ProjectViewModel<any>>();
-    private _stateStream = new Subject<ViewModel>();
+    private _stateStream = new ReplaySubject<ViewModel>(1);
 
     public observe: {
         codecheck: Rx.Observable<Models.DiagnosticLocation[]>;
@@ -79,14 +80,11 @@ export class ViewModel implements VMViewState, Rx.IDisposable {
                     }
                 }
 
-                window.requestAnimationFrame(() => {
+                fastdom.mutate(() => {
                     _.each(removals, x => x.remove());
 
                     _.each(items, event => {
-                        const e = new OutputMessageElement();
-                        e.message = event;
-
-                        this.outputElement.appendChild(e);
+                        this.outputElement.appendChild(OutputMessageElement.create(event));
                     });
                 });
             }));
@@ -115,7 +113,7 @@ export class ViewModel implements VMViewState, Rx.IDisposable {
             .flatMap(x => x.startWith(null).last())
             .map(() => output);
 
-        const state = this._stateStream.share();
+        const state = this._stateStream;
 
         this.observe = {
             get codecheck() { return codecheck; },
@@ -211,6 +209,8 @@ export class ViewModel implements VMViewState, Rx.IDisposable {
                         }
                     }
                     this.runtimePath = path;
+
+                    this._stateStream.onNext(this);
                 }
             }));
 
@@ -262,7 +262,7 @@ export class ViewModel implements VMViewState, Rx.IDisposable {
         }
     }
 
-    private _updateState(state: any) {
+    private _updateState(state: DriverState) {
         this.isOn = state === DriverState.Connecting || state === DriverState.Connected;
         this.isOff = state === DriverState.Disconnected;
         this.isConnecting = state === DriverState.Connecting;

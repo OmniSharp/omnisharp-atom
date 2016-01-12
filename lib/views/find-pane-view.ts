@@ -2,70 +2,91 @@
 import {Models} from "omnisharp-client";
 import {Omni} from "../server/omni";
 import * as path from "path";
-import {findUsages} from "../features/find-usages";
 import {OutputElement, MessageElement} from "./output-component";
 
-export class FindMessageElement extends MessageElement<Models.QuickFix> {
-    private _text: HTMLPreElement;
-    private _location: HTMLPreElement;
-    private _filename: HTMLPreElement;
+export interface FindMessageElement extends MessageElement<Models.DiagnosticLocation> { }
 
-    public createdCallback() {
-        this.classList.add("find-usages");
+const getMessageElement = (function() {
+    const selectedProps = {
+        get: function selected() { return this.classList.contains("selected"); },
+        set: function selected(value: boolean) { if (value) this.classList.add("selected"); else this.classList.remove("selected"); }
+    };
 
-        const text = this._text = document.createElement("pre");
-        text.classList.add("text-highlight");
-        this.appendChild(text);
+    const keyProps = {
+        get: function key() { return this._key; }
+    };
 
-        const location = this._location = document.createElement("pre");
-        location.classList.add("inline-block");
-        this.appendChild(location);
-
-        const filename = this._filename = document.createElement("pre");
-        filename.classList.add("text-subtle", "inline-block");
-        this.appendChild(filename);
-    }
-
-    public setMessage(key: string, item: Models.DiagnosticLocation) {
-        super.setMessage(key, item);
+    function setMessage(key: string, item: Models.DiagnosticLocation) {
+        this._key = key;
 
         this.classList.add(`${item.LogLevel}`);
         this._text.innerText = item.Text;
         this._location.innerText = `${path.basename(item.FileName)}(${item.Line},${item.Column})`;
         this._filename.innerText = path.dirname(item.FileName);
     }
-}
 
-(<any>exports).FindMessageElement = (<any>document).registerElement("omnisharp-find-message", { prototype: FindMessageElement.prototype });
+    return function getMessageElement(): FindMessageElement {
+        const element: FindMessageElement = <any>document.createElement("li");
+        element.classList.add("find-usages");
 
-export class FindWindow extends OutputElement<Models.QuickFix, FindMessageElement> {
+        const text = (element as any)._text = document.createElement("pre");
+        text.classList.add("text-highlight");
+        element.appendChild(text);
+
+        const location = (element as any)._location = document.createElement("pre");
+        location.classList.add("inline-block");
+        element.appendChild(location);
+
+        const filename = (element as any)._filename = document.createElement("pre");
+        filename.classList.add("text-subtle", "inline-block");
+        element.appendChild(filename);
+
+        Object.defineProperty(element, "key", keyProps);
+        Object.defineProperty(element, "selected", selectedProps);
+        element.setMessage = setMessage;
+
+        return element;
+    };
+})();
+
+export class FindWindow extends HTMLDivElement implements WebComponent {
     public displayName = "FindPaneWindow";
+    private _list: OutputElement<Models.QuickFix, FindMessageElement>;
 
     public createdCallback() {
-        super.createdCallback();
+        this.classList.add("find-output-pane");
 
-        this.classList.add("error-output-pane");
+        this._list = new OutputElement<Models.QuickFix, FindMessageElement>();
+        this.appendChild(this._list);
+        this._list.getKey = (usage: Models.QuickFix) => {
+            return `quick-fix-${usage.FileName}-(${usage.Line}-${usage.Column})-(${usage.EndLine}-${usage.EndColumn})-(${usage.Projects.join("-")})`;
+        };
+        this._list.handleClick = (item: Models.QuickFix) => {
+            this.gotoUsage(item);
+        };
+        this._list.eventName = "usage";
+        this._list.elementFactory = getMessageElement;
     }
 
-    public attachedCallback() {
-        super.attachedCallback();
-        this.disposable.add(findUsages.observe.reset.merge(findUsages.observe.find.map(z => true))
-            .subscribe(() => this.updateOutput(findUsages.usages)));
+    public update(output: Models.QuickFix[]) {
+        this._list.updateOutput(output);
     }
 
-    protected getKey(usage: Models.QuickFix) {
-        return `quick-fix-${usage.FileName}-(${usage.Line}-${usage.Column})-(${usage.EndLine}-${usage.EndColumn})-(${usage.Projects.join("-")})`;
+    public next() {
+        this._list.next();
     }
 
-    protected update() { /* */ }
-    protected eventName() { return "diagnostic"; }
-    protected elementType() { return exports.FindMessageElement; }
-
-    protected handleClick(item: Models.QuickFix, key: string, index: number) {
-        this.gotoUsage(item);
+    public prev() {
+        this._list.prev();
     }
+
+    public get selectedIndex() { return this._list.selectedIndex; }
+    public set selectedIndex(value) { this._list.selectedIndex = value; }
+    public get current() { return this._list.current; }
 
     private gotoUsage(quickfix: Models.QuickFix) {
         Omni.navigateTo(quickfix);
     }
 }
+
+(<any>exports).FindWindow = (<any>document).registerElement("omnisharp-find-window", { prototype: FindWindow.prototype });

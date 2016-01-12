@@ -30,6 +30,7 @@ class ServerInformation implements IFeature {
         this.observe = { status, output, outputElement, projects, model: Omni.activeModel };
 
         this.disposable.add(dock.addWindow("output", "Omnisharp output", new OutputWindow, {}));
+        dock.selected = "output";
     }
 
     private setupStatus() {

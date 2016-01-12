@@ -50,6 +50,7 @@ class FrameworkSelector implements IAtomFeature {
 
         this._component = new FrameworkSelectorComponent;
         this._component.alignLeft = !atom.config.get("grammar-selector.showOnRightSideOfStatusBar");
+        this.view.appendChild(this._component);
 
         this.disposable.add(Disposable.create(() => {
             tile.destroy();

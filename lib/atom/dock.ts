@@ -1,12 +1,12 @@
-import {CompositeDisposable, Disposable} from "rx";
+import {CompositeDisposable, Disposable, IDisposable} from "rx";
 import {DockWindow, DocButtonOptions, PaneButtonOptions} from "../views/dock-window";
+
 
 function fromDock(key?: string) {
     return function fromDock(target: Object, propertyKey: string, descriptor: TypedPropertyDescriptor<any>) {
         const internalKey = `${key || propertyKey}`;
         descriptor.value = function() {
-            if (this.dock)
-                return this.dock[internalKey].apply(this.dock, arguments);
+            return this.dock[internalKey].apply(this.dock, arguments);
         };
     };
 }
@@ -14,7 +14,7 @@ function fromDock(key?: string) {
 class Dock implements IAtomFeature {
     private disposable: Rx.CompositeDisposable;
     private view: Element;
-    private dock: DockWindow;
+    private dock: DockWindow = new DockWindow;
 
     public activate() {
         this.disposable = new CompositeDisposable();
@@ -35,8 +35,6 @@ class Dock implements IAtomFeature {
 
         this.view = p.item.parentElement;
         this.view.classList.add("omnisharp-atom-pane");
-
-        this.dock = new DockWindow();
         this.dock.setPanel(p);
 
         this.view.appendChild(this.dock);
@@ -51,8 +49,9 @@ class Dock implements IAtomFeature {
         this.disposable.dispose();
     }
 
-    public get isOpen() { return this.dock && this.dock.isOpen; }
-    public get selected() { return this.dock && this.dock.selected; }
+    public get isOpen() { return this.dock.isOpen; }
+    public get selected() { return this.dock.selected; }
+    public set selected(value) { this.dock.selected = value; }
 
     @fromDock("toggleView")
     public toggle() { /* */ }
@@ -64,7 +63,7 @@ class Dock implements IAtomFeature {
     public hide() { /* */ };
 
     @fromDock()
-    public addWindow(id: string, title: string, view: Element, options: PaneButtonOptions = { priority: 1000 }, parentDisposable?: Rx.Disposable): Rx.IDisposable { throw new Error(""); }
+    public addWindow(id: string, title: string, view: Element, options: PaneButtonOptions = { priority: 1000 }, parentDisposable?: IDisposable): IDisposable { throw new Error(""); }
 
     @fromDock()
     public toggleWindow(selected: string) { /* */ }
@@ -73,7 +72,7 @@ class Dock implements IAtomFeature {
     public selectWindow(selected: string) { /* */ }
 
     @fromDock()
-    public addButton(id: string, title: string, view: Element, options: DocButtonOptions = { priority: 1000 }, parentDisposable?: Rx.Disposable): Rx.IDisposable { throw new Error(""); }
+    public addButton(id: string, title: string, view: Element, options: DocButtonOptions = { priority: 1000 }, parentDisposable?: IDisposable): IDisposable { throw new Error(""); }
 
     public required = true;
     public title = "Dock";

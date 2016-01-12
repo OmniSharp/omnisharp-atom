@@ -1,49 +1,36 @@
-/* tslint:disable:no-string-literal */
 import {Models} from "omnisharp-client";
 import * as path from "path";
 import {Omni} from "../server/omni";
 import {OutputElement, MessageElement} from "./output-component";
 
-function makeKey(error: Models.DiagnosticLocation) {
-    return `code-check-${error.LogLevel}-${error.FileName}-(${error.Line}-${error.Column})-(${error.EndLine}-${error.EndColumn})-(${(error.Projects || []).join("-")})`;
-}
+export interface CodeCheckMessageElement extends MessageElement<Models.DiagnosticLocation> { }
 
-export class CodeCheckMessageElement extends MessageElement<Models.DiagnosticLocation> {
-    private _icon: HTMLSpanElement;
-    private _text: HTMLPreElement;
-    private _location: HTMLPreElement;
-    private _filename: HTMLPreElement;
+const getMessageElement = (function() {
+    const selectedProps = {
+        get: function selected() { return this.classList.contains("selected"); },
+        set: function selected(value: boolean) { if (value) this.classList.add("selected"); else this.classList.remove("selected"); }
+    };
 
-    public createdCallback() {
-        this.classList.add("codecheck");
+    const keyProps = {
+        get: function key() { return this._key; }
+    };
 
-        const icon = this._icon = document.createElement("span");
-        icon.classList.add("fa");
-        this.appendChild(icon);
-
-        const text = this._text = document.createElement("pre");
-        text.classList.add("text-highlight");
-        this.appendChild(text);
-
-        const location = this._location = document.createElement("pre");
-        location.classList.add("inline-block");
-        this.appendChild(location);
-
-        const filename = this._filename = document.createElement("pre");
-        filename.classList.add("text-subtle", "inline-block");
-        this.appendChild(filename);
-    }
-
-    public setMessage(key: string, item: Models.DiagnosticLocation) {
-        super.setMessage(key, item);
+    function setMessage(key: string, item: Models.DiagnosticLocation) {
+        this._key = key;
 
         this.classList.add(`${item.LogLevel}`);
 
         if (item.LogLevel === "Error") {
             this._icon.classList.add("fa-times-circle");
             this._icon.classList.remove("fa-exclamation-triangle");
-        } else {
+            this._icon.classList.remove("fa-info");
+        } else if (item.LogLevel === "Warning") {
             this._icon.classList.add("fa-exclamation-triangle");
+            this._icon.classList.remove("fa-times-circle");
+            this._icon.classList.remove("fa-info");
+        } else {
+            this._icon.classList.add("fa-info");
+            this._icon.classList.remove("fa-exclamation-triangle");
             this._icon.classList.remove("fa-times-circle");
         }
 
@@ -51,40 +38,71 @@ export class CodeCheckMessageElement extends MessageElement<Models.DiagnosticLoc
         this._location.innerText = `${path.basename(item.FileName)}(${item.Line},${item.Column})`;
         this._filename.innerText = path.dirname(item.FileName);
     }
-}
 
-(<any>exports).CodeCheckMessageElement = (<any>document).registerElement("omnisharp-codecheck-message", { prototype: CodeCheckMessageElement.prototype });
+    return function getMessageElement(): CodeCheckMessageElement {
+        const element: CodeCheckMessageElement = <any>document.createElement("li");
+        element.classList.add("codecheck");
 
-export class CodeCheckOutputElement extends OutputElement<Models.DiagnosticLocation, CodeCheckMessageElement> {
+        const icon = (element as any)._icon = document.createElement("span");
+        icon.classList.add("fa");
+        element.appendChild(icon);
+
+        const text = (element as any)._text = document.createElement("pre");
+        text.classList.add("text-highlight");
+        element.appendChild(text);
+
+        const location = (element as any)._location = document.createElement("pre");
+        location.classList.add("inline-block");
+        element.appendChild(location);
+
+        const filename = (element as any)._filename = document.createElement("pre");
+        filename.classList.add("text-subtle", "inline-block");
+        element.appendChild(filename);
+
+        Object.defineProperty(element, "key", keyProps);
+        Object.defineProperty(element, "selected", selectedProps);
+        element.setMessage = setMessage;
+
+        return element;
+    };
+})();
+
+export class CodeCheckOutputElement extends HTMLDivElement implements WebComponent {
     public displayName = "FindPaneWindow";
+    private _list: OutputElement<Models.DiagnosticLocation, CodeCheckMessageElement>;
 
     public createdCallback() {
-        super.createdCallback();
         this.classList.add("codecheck-output-pane");
+        this._list = new OutputElement<Models.DiagnosticLocation, CodeCheckMessageElement>();
+        this.appendChild(this._list);
+        this._list.getKey = (error: Models.DiagnosticLocation) => {
+            return `code-check-${error.LogLevel}-${error.FileName}-(${error.Line}-${error.Column})-(${error.EndLine}-${error.EndColumn})-(${(error.Projects || []).join("-")})`;
+        };
+        this._list.handleClick = (item: Models.DiagnosticLocation) => {
+            this.goToLine(item);
+        };
+        this._list.eventName = "diagnostic";
+        this._list.elementFactory = getMessageElement;
     }
 
-    public attachedCallback() {
-        super.attachedCallback();
-        this.disposable.add(Omni.diagnostics
-            .delay(100)
-            .subscribe(diagnostics => this.updateOutput(diagnostics)));
+    public update(output: Models.DiagnosticLocation[]) {
+        this._list.updateOutput(output);
     }
 
-    protected getKey(error: Models.DiagnosticLocation) {
-        return `code-check-${error.LogLevel}-${error.FileName}-(${error.Line}-${error.Column})-(${error.EndLine}-${error.EndColumn})-(${(error.Projects || []).join("-")})`;
+    public next() {
+        this._list.next();
     }
 
-    protected update() { /* */ }
-    protected eventName() { return "diagnostic"; }
-    protected elementType() { return exports.CodeCheckMessageElement; }
-
-    protected handleClick(item: Models.DiagnosticLocation, key: string, index: number) {
-        this.goToLine(item);
+    public prev() {
+        this._list.prev();
     }
+
+    public get selectedIndex() { return this._list.selectedIndex; }
+    public set selectedIndex(value) { this._list.selectedIndex = value; }
+    public get current() { return this._list.current; }
 
     private goToLine(location: Models.DiagnosticLocation) {
         Omni.navigateTo(location);
-        this.selected = makeKey(location);
     }
 }
 

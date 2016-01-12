@@ -87,7 +87,6 @@
     "./lib/views/code-actions-view.ts",
     "./lib/views/codecheck-output-pane-view.ts",
     "./lib/views/command-output-window.ts",
-    "./lib/views/component.ts",
     "./lib/views/dock-window.ts",
     "./lib/views/find-pane-view.ts",
     "./lib/views/find-symbols-view.ts",

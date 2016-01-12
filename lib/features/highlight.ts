@@ -7,6 +7,7 @@ import {Observable, Subject, ReplaySubject, CompositeDisposable, Disposable} fro
 const AtomGrammar = require((<any>atom).config.resourcePath + "/node_modules/first-mate/lib/grammar.js");
 /* tslint:enable:variable-name */
 const DEBOUNCE_TIME = 240/*240*/;
+let fastdom: typeof Fastdom = require("fastdom");
 
 function getHighlightsFromQuickFixes(path: string, quickFixes: Models.DiagnosticLocation[], projectNames: string[]) {
     return chain(quickFixes)
@@ -140,7 +141,7 @@ class Highlight implements IFeature {
                 return;
 
             this.pendingChunk = true;
-            window.requestAnimationFrame(() => {
+            fastdom.mutate(() => {
                 this.pendingChunk = false;
                 if (this.isAlive() && this.buffer.isAlive()) {
                     this.tokenizeNextChunk();

@@ -92,6 +92,7 @@ class SolutionInformation implements IFeature {
             }));
 
             disposable.add(Disposable.create(() => {
+                this.card.remove();
                 this.card = null;
                 this.cardDisposable = null;
             }));

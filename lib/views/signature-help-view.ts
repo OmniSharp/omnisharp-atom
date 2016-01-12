@@ -1,7 +1,7 @@
 /// <reference path="../typings.d.ts" />
 /* tslint:disable:no-string-literal */
 import {Models} from "omnisharp-client";
-let fastdom : { read(cb: Function): any; write(cb: Function): any; } = require("fastdom");
+let fastdom: typeof Fastdom = require("fastdom");
 const _ : _.LoDashStatic = require("lodash");
 
 const parseString = (function() {
@@ -87,19 +87,17 @@ export class SignatureView extends HTMLDivElement { /* implements WebComponent *
             this._selectedIndex = 0;
         }
 
-        fastdom.write(() => this._count.innerText = (this._selectedIndex + 1).toString());
+        fastdom.mutate(() => this._count.innerText = (this._selectedIndex + 1).toString());
         this.updateMember(this._member);
     }
 
     private _setupArrows() {
         const up = document.createElement("a");
         up.classList.add("icon-arrow-up");
-        up.href = "#";
         up.onclick = () => this.moveIndex(-1);
 
         const down = document.createElement("a");
         down.classList.add("icon-arrow-down");
-        down.href = "#";
         down.onclick = () => this.moveIndex(1);
 
         this._arrows.appendChild(up);
@@ -132,7 +130,7 @@ export class SignatureView extends HTMLDivElement { /* implements WebComponent *
 
         if (this._lastIndex !== this._selectedIndex) {
             this._lastIndex = this._selectedIndex;
-            fastdom.write(() => {
+            fastdom.mutate(() => {
                 this._count.innerText = (this._selectedIndex + 1).toString();
                 this._label.innerText = signature.Name;
                 this._documentation.innerText = signature.Documentation;
@@ -162,7 +160,7 @@ export class SignatureView extends HTMLDivElement { /* implements WebComponent *
 
             this._parametersList = [];
 
-            fastdom.write(() => {
+            fastdom.mutate(() => {
                 const parameters = signature.Parameters;
                 const parametersElement = document.createElement("span");
                 _.each(parameters, (parameter, i) => {
@@ -187,14 +185,14 @@ export class SignatureView extends HTMLDivElement { /* implements WebComponent *
                 this._parameters = parametersElement;
             });
         } else {
-            fastdom.write(() => {
+            fastdom.mutate(() => {
                 _.each(signature.Parameters, (param, i) =>
                     this._parametersList[i] && this._parametersList[i].setCurrent(i === member.ActiveParameter));
             });
         }
 
         const currentParameter = signature.Parameters[member.ActiveParameter];
-        fastdom.read(() => {
+        fastdom.measure(() => {
             let summary: string;
             if (currentParameter.Documentation) {
                 const paramDocs = parseString(currentParameter.Documentation);
@@ -228,7 +226,7 @@ export class SignatureView extends HTMLDivElement { /* implements WebComponent *
             }
         });
 
-        fastdom.write(() => this.style.bottom = `${this.clientHeight + this._editorLineHeight}px`);
+        fastdom.mutate(() => this.style.bottom = `${this.clientHeight + this._editorLineHeight}px`);
     }
 
     public detachedCallback() {
@@ -254,11 +252,11 @@ export class SignatureParameterView extends HTMLSpanElement { /* implements WebC
     }
 
     public setCurrent(current: boolean) {
-        fastdom.read(() => {
+        fastdom.measure(() => {
             if (!current && this.style.fontWeight === "bold") {
-                fastdom.write(() => this.style.fontWeight = "");
+                fastdom.mutate(() => this.style.fontWeight = "");
             } else if (current && this.style.fontWeight !== "bold") {
-                fastdom.write(() => this.style.fontWeight = "bold");
+                fastdom.mutate(() => this.style.fontWeight = "bold");
             }
         });
     }

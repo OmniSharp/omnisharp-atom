@@ -1,12 +1,11 @@
-//const Convert = require("ansi-to-html")
 import {Observable, Disposable, CompositeDisposable, SingleAssignmentDisposable} from "rx";
-import {Component} from "./component";
 
 export interface ToggleButton {
     id: string;
     title: string;
-    view: Element;
+    view: HTMLElement;
     options: DocButtonOptions;
+    disposable: CompositeDisposable;
 }
 
 export interface DocButtonOptions {
@@ -20,8 +19,9 @@ interface InternalToggleButton extends ToggleButton {
 export interface PaneButton {
     id: string;
     title: string;
-    view: Element;
+    view: HTMLElement;
     options: PaneButtonOptions;
+    disposable: CompositeDisposable;
 }
 
 export interface PaneButtonOptions {
@@ -30,16 +30,17 @@ export interface PaneButtonOptions {
 }
 
 interface InternalPaneButton extends PaneButton {
-    _button: Element;
+    _button?: Element;
 }
 
-export class DockWindow extends Component {
+export class DockWindow extends HTMLDivElement implements WebComponent {
+    private disposable: CompositeDisposable;
     private _panel: Atom.Panel;
-    private _panes: Map<string, InternalPaneButton>;
     private _selectedPane: InternalPaneButton;
     private _toolbar: HTMLDivElement;
     private _paneButtons: HTMLDivElement;
     private _toggleButtons: HTMLDivElement;
+    private _panes: Map<string, InternalPaneButton>;
     private visible: boolean;
     private tempHeight: number;
     private fontSize: any;
@@ -67,13 +68,12 @@ export class DockWindow extends Component {
     }
 
     public createdCallback() {
-        super.createdCallback();
-
+        this.disposable = new CompositeDisposable();
+        this._panes = new Map<string, InternalPaneButton>();
         this._selected = "output";
         this.visible = false;
         this.tempHeight = 0;
         this.fontSize = atom.config.get<number>("editor.fontSize");
-        this._panes = new Map<string, InternalPaneButton>();
 
         let fontSize = this.fontSize - 1;
         if (fontSize <= 0)
@@ -85,10 +85,14 @@ export class DockWindow extends Component {
         }
 
         const resizer = new exports.Resizer();
+        let _originalHeight = this.clientHeight;
+        resizer.start = () => { _originalHeight = this.clientHeight; }
         resizer.update = ({top}: { left: number, top: number }) => {
             console.log(top);
-            this.clientHeight = top;
+            this.style.height = `${_originalHeight + -(top)}px`;
         };
+        resizer.done = () => { /* */ };
+        this.appendChild(resizer);
 
         const windows = document.createElement("div");
         windows.classList.add("panel-heading", "clearfix");
@@ -100,7 +104,7 @@ export class DockWindow extends Component {
 
         this._paneButtons = document.createElement("div");
         this._paneButtons.classList.add("btn-group", "btn-toggle");
-        windows.appendChild(this._paneButtons);
+        this._toolbar.appendChild(this._paneButtons);
 
         this._toggleButtons = document.createElement("div");
         this._toggleButtons.classList.add("btn-well", "pull-right", "btn-group");
@@ -108,8 +112,6 @@ export class DockWindow extends Component {
     }
 
     public attachedCallback() {
-        super.attachedCallback();
-
         this.disposable.add(atom.config.observe("editor.fontSize", (size: number) => {
             this.classList.remove("font-size-" + this.fontSize);
             this.fontSize = size;
@@ -117,30 +119,24 @@ export class DockWindow extends Component {
         }));
     }
 
-    public detachedCallback() {
-        super.detachedCallback();
-    }
-
     public setPanel(panel: Atom.Panel) {
         this._panel = panel;
     }
 
-    private _addDockButton(button: PaneButton) {
-        const {id, title, options} = button;
+    private _addDockButton(button: InternalPaneButton) {
+        const {id, title, options, disposable} = button;
 
         const view = document.createElement("button");
         view.classList.add("btn", "btn-default", "btn-fix");
         (view as any)._id = id;
         (view as any)._priority = options.priority;
 
-        const disposable = Disposable.create(() => {
+        disposable.add(Disposable.create(() => {
             if (view.classList.contains("selected")) {
                 this.selected = (view.previousElementSibling as any)._id;
             }
             view.remove();
-            this.disposable.remove(disposable);
-        });
-        this.disposable.add(disposable);
+        }));
 
         const text = document.createElement("span");
         text.innerHTML = title;
@@ -154,8 +150,8 @@ export class DockWindow extends Component {
             close.classList.add("fa", "fa-times-circle", "close-pane");
             close.onclick = (e) => {
                 disposable.dispose();
-                view.remove();
             };
+            view.appendChild(close);
         }
 
         view.onclick = (e) => {
@@ -164,24 +160,18 @@ export class DockWindow extends Component {
             this.selected = id;
         };
 
-        const internal = <InternalPaneButton>button;
-        internal._button = view;
+        button._button = view;
 
-        this._panes.set(id, internal);
         this._insertButton(this._paneButtons, view, options.priority, id);
-
-        return disposable;
     }
 
-    private _addToggleButton({id, options, view}: ToggleButton) {
-        const disposable = Disposable.create(() => {
+    private _addToggleButton({id, options, view, disposable}: ToggleButton) {
+        disposable.add(Disposable.create(() => {
             view.remove();
             this.disposable.remove(disposable);
-        });
+        }));
 
-        this._insertButton(this._paneButtons, view, options.priority, id);
-
-        return disposable;
+        this._insertButton(this._toggleButtons, view, options.priority, id);
     }
 
     private _insertButton(parent: Element, element: Element, priority: number, id: string) {
@@ -263,16 +253,19 @@ export class DockWindow extends Component {
         });
     }
 
-    public addWindow(id: string, title: string, view: Element, options: PaneButtonOptions = { priority: 1000 }, parentDisposable?: Rx.Disposable) {
+    public addWindow(id: string, title: string, view: HTMLElement, options: PaneButtonOptions = { priority: 1000 }, parentDisposable?: Rx.Disposable) {
         const disposable = new SingleAssignmentDisposable();
         const cd = new CompositeDisposable();
+        const context = { id, title, view, options, disposable: cd };
+
+        this._panes.set(id, context);
         this.disposable.add(disposable);
         disposable.setDisposable(cd);
 
         if (parentDisposable)
             cd.add(parentDisposable);
 
-        cd.add(this._addDockButton({ id, title, view, options }));
+        view.classList.add("omnisharp-atom-output", `${id}-output`, "selected");
 
         cd.add(atom.commands.add("atom-workspace", "omnisharp-atom:dock-show-" + id, () => this.selectWindow(id)));
         cd.add(atom.commands.add("atom-workspace", "omnisharp-atom:dock-toggle-" + id, () => this.toggleWindow(id)));
@@ -281,22 +274,29 @@ export class DockWindow extends Component {
             cd.add(atom.commands.add("atom-workspace", "omnisharp-atom:dock-close-" + id, () => {
                 this.disposable.remove(disposable);
                 disposable.dispose();
+                this.hideView();
             }));
         }
 
         cd.add(Disposable.create(() => {
             if (this.selected === id) {
                 this.selected = "output";
-                this.hideView();
             }
         }));
 
-        this.appendChild(view);
+        cd.add(Disposable.create(() => {
+            view.remove();
+            this._panes.delete(id);
+        }));
+
+        this._addDockButton(context);
+
+        if (!this.selected) this.selected = id;
 
         return <Rx.IDisposable>disposable;
     }
 
-    public addButton(id: string, title: string, view: Element, options: DocButtonOptions = { priority: 1000 }, parentDisposable?: Rx.Disposable) {
+    public addButton(id: string, title: string, view: HTMLElement, options: DocButtonOptions = { priority: 1000 }, parentDisposable?: Rx.Disposable) {
         const disposable = new SingleAssignmentDisposable();
         const cd = new CompositeDisposable();
         this.disposable.add(disposable);
@@ -305,7 +305,7 @@ export class DockWindow extends Component {
         if (parentDisposable)
             cd.add(parentDisposable);
 
-        cd.add(this._addToggleButton({ id, title, view, options }));
+        this._addToggleButton({ id, title, view, options, disposable: cd });
 
         return <Rx.IDisposable>disposable;
     }
@@ -313,34 +313,42 @@ export class DockWindow extends Component {
 
 (<any>exports).DockWindow = (<any>document).registerElement("omnisharp-dock-window", { prototype: DockWindow.prototype });
 
-export class Resizer extends Component {
+export class Resizer extends HTMLDivElement implements WebComponent {
+    private disposable: CompositeDisposable;
     public update: (location: { left: number; top: number }) => void;
     public done: () => void;
+    public start: () => void;
+
+    public createdCallback() {
+        this.classList.add("omnisharp-atom-output-resizer");
+    }
+
+    public detachedCallback() {
+        this.disposable.dispose();
+    }
 
     public attachedCallback() {
-        super.attachedCallback();
-
+        this.disposable = new CompositeDisposable();
         const mousemove = Observable.fromEvent<MouseEvent>(document.body, "mousemove").share();
         const mouseup = Observable.fromEvent<MouseEvent>(document.body, "mouseup").share();
         const mousedown = Observable.fromEvent<MouseEvent>(document.body, "mousedown").share();
 
         const mousedrag = mousedown.selectMany((md) => {
             const startX = md.clientX + window.scrollX,
-                startY = md.clientY + window.scrollY,
-                startLeft = parseInt((<any>md.target).style.left, 10) || 0,
-                startTop = parseInt((<any>md.target).style.top, 10) || 0;
+                startY = md.clientY + window.scrollY;
 
             return mousemove.map((mm) => {
                 mm.preventDefault();
 
                 return {
-                    left: startLeft + mm.clientX - startX,
-                    top: startTop + mm.clientY - startY
+                    left: (parseInt((<any>md.target).style.left, 10) || 0) + mm.clientX - startX,
+                    top: (parseInt((<any>md.target).style.top, 10) || 0) + mm.clientY - startY
                 };
             }).takeUntil(mouseup);
         });
 
-        this.disposable.add(mousedrag.subscribe((x) => this.update(x)));
+        this.disposable.add(mousedown.subscribe(x => this.start()));
+        this.disposable.add(mousedrag.subscribe((x) => this.update(x), null, () => this.done()));
     }
 }
 

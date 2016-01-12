@@ -4,36 +4,32 @@ const Convert = require("ansi-to-html");
 const convert = new Convert();
 /* tslint:enable:variable-name */
 const _: _.LoDashStatic = require("lodash");
-import {Component} from "./component";
 
 // ctrl-r. ctrl-t run test
 // ctrl-r, ctrl-f run fixture
 // ctrl-r, ctrl-a run all
 // ctrl-r, ctrl-l run last
 
-export class TestResultsWindow extends Component {
+export class TestResultsWindow extends HTMLDivElement implements WebComponent {
     public displayName = "CommandOutputWindow";
     private _container: HTMLDivElement;
     private _scrollToBottom: () => void;
 
     public createdCallback() {
-        super.createdCallback();
-
         this.classList.add("omni-output-pane-view", "native-key-bindings");
         this.tabIndex = -1;
 
         this._container = document.createElement("div");
         this._container.classList.add("messages-container");
+        this.appendChild(this._container);
 
         this._scrollToBottom = _.throttle(() => {
-            const item = <any>this.lastElementChild.lastElementChild;
+            const item = <any>(this.lastElementChild && this.lastElementChild.lastElementChild);
             if (item) item.scrollIntoViewIfNeeded();
         }, 100, { trailing: true });
     }
 
     public attachedCallback() {
-        super.attachedCallback();
-
         _.defer(this._scrollToBottom, this);
     }
 
@@ -43,6 +39,7 @@ export class TestResultsWindow extends Component {
         pre.innerText = convert.toHtml(item.message).trim();
 
         this._container.appendChild(pre);
+        this._scrollToBottom();
     }
 
     public clear() {

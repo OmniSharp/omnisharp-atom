@@ -4,8 +4,19 @@ const Convert = require("ansi-to-html");
 
 const convert = new Convert();
 
-export class OutputMessageElement extends HTMLPreElement implements WebComponent {
-    public set message(value: OutputMessage) { this.innerHTML = convert.toHtml(value.message).trim(); this.className = ""; this.classList.add(value.logLevel); }
-}
+const props = {
+    set: function message(value: OutputMessage) {
+        this.innerHTML = convert.toHtml(value.message).trim();
+        this.classList.add(value.logLevel);
+    }
+};
 
-(<any>exports).OutputMessageElement = (<any>document).registerElement("omnisharp-output-message", { prototype: OutputMessageElement.prototype });
+export namespace OutputMessageElement {
+    export function create(value: OutputMessage) {
+        const pre = document.createElement("pre");
+        Object.defineProperty(pre, "message", props);
+        (pre as any).message = value;
+
+        return pre;
+    }
+};
