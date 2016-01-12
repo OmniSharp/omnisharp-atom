@@ -58,12 +58,16 @@ export class OutputElement<TItem, TElement extends MessageElement<TItem>> extend
 
                 this.scrollToItemView();
             });
-        }, 100, { trailing: true });
+        }, 100, { leading: true, trailing: true });
     }
 
     public attachedCallback() {
         this.scrollTop = $(this).scrollTop();
         this.onkeydown = (e: any) => this.keydownPane(e);
+    }
+
+    public detachedCallback() {
+        this.onkeydown = undefined;
     }
 
     public getKey: (message: TItem) => string;
@@ -107,10 +111,6 @@ export class OutputElement<TItem, TElement extends MessageElement<TItem>> extend
     public updateOutput(output: TItem[]) {
         this.output = output.slice();
         this._update();
-    }
-
-    public detachedCallback() {
-        this.onkeydown = undefined;
     }
 
     private keydownPane(e: any) {

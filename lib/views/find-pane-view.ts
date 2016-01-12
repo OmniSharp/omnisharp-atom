@@ -3,6 +3,7 @@ import {Models} from "omnisharp-client";
 import {Omni} from "../server/omni";
 import * as path from "path";
 import {OutputElement, MessageElement} from "./output-component";
+import {HighlightElement} from "./highlight-element";
 
 export interface FindMessageElement extends MessageElement<Models.DiagnosticLocation> { }
 
@@ -19,8 +20,8 @@ const getMessageElement = (function() {
     function setMessage(key: string, item: Models.DiagnosticLocation) {
         this._key = key;
 
-        this.classList.add(`${item.LogLevel}`);
-        this._text.innerText = item.Text;
+        this.classList.add(item.LogLevel);
+        this._text.usage = item;
         this._location.innerText = `${path.basename(item.FileName)}(${item.Line},${item.Column})`;
         this._filename.innerText = path.dirname(item.FileName);
     }
@@ -29,7 +30,7 @@ const getMessageElement = (function() {
         const element: FindMessageElement = <any>document.createElement("li");
         element.classList.add("find-usages");
 
-        const text = (element as any)._text = document.createElement("pre");
+        const text = (element as any)._text = new HighlightElement();
         text.classList.add("text-highlight");
         element.appendChild(text);
 
@@ -66,6 +67,10 @@ export class FindWindow extends HTMLDivElement implements WebComponent {
         };
         this._list.eventName = "usage";
         this._list.elementFactory = getMessageElement;
+    }
+
+    public detachedCallback() {
+
     }
 
     public update(output: Models.QuickFix[]) {

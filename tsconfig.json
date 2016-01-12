@@ -101,6 +101,7 @@
     "./lib/views/solution-status-view.ts",
     "./lib/views/status-bar-view.ts",
     "./lib/views/test-results-window.ts",
+    "./lib/views/text-editor-pool.ts",
     "./lib/views/tooltip-view.ts",
     "./spec/atom/dock-spec.ts",
     "./spec/atom/framework-selector-spec.ts",

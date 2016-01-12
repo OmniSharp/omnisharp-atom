@@ -1,31 +1,24 @@
-export class HighlightElement extends HTMLElement {
-    public editorElement: Atom.TextEditorComponent;
-    public editor: Atom.TextEditor;
+import {Models} from "omnisharp-client";
+import {EditorElement} from "./text-editor-pool";
+
+export class HighlightElement extends HTMLElement implements WebComponent {
+    private _editor: EditorElement;
 
     public createdCallback() {
-        const preview = this.innerText;
-        this.innerText = "";
+        this._editor = new EditorElement;
+    }
 
-        // Based on markdown editor
-        // https://github.com/atom/markdown-preview/blob/2bcbadac3980f1aeb455f7078bd1fdfb4e6fe6b1/lib/renderer.coffee#L111
-        const editorElement = this.editorElement = <any>document.createElement("atom-text-editor");
-        editorElement.setAttributeNode(document.createAttribute("gutter-hidden"));
-        editorElement.removeAttribute("tabindex"); // make read-only
+    public attachedCallback() {
+        this.appendChild(this._editor);
+    }
 
-        const editor = this.editor = (<any>editorElement).getModel();
-        editor.getDecorations({ class: "cursor-line", type: "line" })[0].destroy(); // remove the default selection of a line in each editor
-        editor.setText(preview);
-
-        const grammar = atom.grammars.grammarForScopeName("source.cs");
-        editor.setGrammar(grammar);
-        editor.setSoftWrapped(true);
-
-        this.appendChild(editorElement);
+    public detachedCallback() {
+        this.removeChild(this._editor);
     }
 
     // API
-    public text(text: string) {
-        this.editor.setText(text);
+    public set usage(usage: Models.QuickFix) {
+        this._editor.usage = usage;
     }
 }
 
