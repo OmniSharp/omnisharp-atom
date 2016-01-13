@@ -130,15 +130,6 @@ class CodeCheck implements IFeature {
         });
     }
 
-    private updateSelectedItem(index: number) {
-        if (index < 0)
-            index = 0;
-        if (index >= this.displayDiagnostics.length)
-            index = this.displayDiagnostics.length - 1;
-        if (this.selectedIndex !== index)
-            this.selectedIndex = index;
-    }
-
     public dispose() {
         this.disposable.dispose();
     }

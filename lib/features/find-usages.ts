@@ -97,17 +97,6 @@ class FindUsages implements IFeature {
         }));
     }
 
-    private updateSelectedItem(selected: Subject<number>, index: number) {
-        if (index < 0)
-            index = 0;
-        if (index >= this.usages.length)
-            index = this.usages.length - 1;
-        if (this._findWindow.selectedIndex !== index) {
-            this._findWindow.selectedIndex = index;
-            selected.onNext(index);
-        }
-    }
-
     private ensureWindowIsCreated() {
         if (!this.window) {
             this.window = new CompositeDisposable();
