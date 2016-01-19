@@ -43,9 +43,14 @@
 
     .font-size (@index) when (@index > 0) {
         .font-size-@{index} {
-            &,
-            pre {
+            &, pre, omnisharp-highlight-element {
                 font-size: ~"@{index}px" !important;
+            }
+
+            omnisharp-highlight-element {
+                atom-text-editor::shadow {
+                    font-size: ~"@{index}px" !important;
+                }
             }
 
             .codecheck {
@@ -108,7 +113,7 @@
         -webkit-animation: processing 1s linear infinite alternate;
     }
 
-    span {
+    .span, span {
         transition: opacity;
         transition-duration: 0.3s;
         transition-timing-function: ease-in-out;
@@ -153,9 +158,12 @@
 }
 
 .messages-container {
-
     //height: 150px;
     overflow-y: scroll;
+
+    > li {
+        display: block;
+    }
 }
 
 .omnisharp-atom-output {
@@ -197,7 +205,7 @@
         }
     }
 
-    pre {
+    .pre, pre {
         background: @base-background-color;
         margin: 0;
         padding: 0;
@@ -220,11 +228,12 @@
 }
 
 .find-output,
-.errors-output {
+.errors-output,
+.codecheck-output {
     background-color: @base-background-color;
 
-    ol,
-    li {
+    ol, .ol,
+    li, .li {
         margin: 0;
         padding: 0;
     }
@@ -241,7 +250,7 @@
             background-color: @background-color-selected;
         }
 
-        pre {
+        .pre, pre {
             background-color: transparent;
             padding: 2px 1px;
         }
@@ -268,7 +277,7 @@
         color: @text-color-warning;
     }
 
-    pre {
+    .pre, pre {
         padding: 2px 0;
     }
 }
@@ -311,6 +320,13 @@ atom-text-editor::shadow {
         z-index: 1 !important;
         cursor: pointer;
     }
+
+    .findusages-underline .region {
+        border: 1px solid @background-color-info !important;
+        pointer-events: auto !important;
+        z-index: 1 !important;
+        cursor: pointer;
+    }
 }
 
 //autocomplete overrides, this is to keep @davidfowl happy
@@ -335,7 +351,7 @@ li.autocomplete-omnisharp-atom {
         text-decoration: none;
     }
 
-    span {
+    .span, span {
         padding-left: 3px;
         padding-right: 3px;
     }
@@ -367,6 +383,13 @@ li.autocomplete-omnisharp-atom {
     }
 }
 
+.status-bar omnisharp-status-bar {
+    overflow: visible !important;
+    omnisharp-project-count, omnisharp-flame {
+        margin-right: 0 !important;
+    }
+}
+
 .error-warning-summary {
     color: @text-color;
     padding-left: 10px;
@@ -383,20 +406,20 @@ li.autocomplete-omnisharp-atom {
         color: @text-color-error;
     }
 
+    .icon-info {
+        color: @text-color-info;
+    }
+
     .icon-alert {
         color: @text-color-warning;
     }
 }
 
-.status-bar omnisharp-status-bar .inline-block {
-    margin-right: 0;
-}
-
-span.filename {
+.filename {
     color: #666;
 }
 
-li.selected span.filename {
+.selected .filename {
     text-shadow: none;
     color: #aaa;
 }
@@ -575,4 +598,12 @@ atom-text-editor, atom-text-editor::shadow {
     .unused {
         opacity: 0.6;
     }
+}
+
+omnisharp-dock-window {
+    min-height: 20em;
+}
+
+omnisharp-codecheck-message, omnisharp-codecheck-output, omnisharp-command-output, omnisharp-dock-window, omnisharp-resizer, omnisharp-find-message, omnisharp-framework-selector, omnisharp-highlight-element, omnisharp-output-window, omnisharp-output-list, omnisharp-output-message, omnisharp-signature-help, omnisharp-signature-parameter, omnisharp-project-element, omnisharp-solution-card, omnisharp-flame, omnisharp-command-runner, omnisharp-diagnostics, omnisharp-project-count, omnisharp-status-bar, omnisharp-test-results {
+    display: block;
 }

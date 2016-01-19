@@ -1,74 +1,50 @@
 /* tslint:disable:no-string-literal */
 /* tslint:disable:variable-name */
 const Convert = require("ansi-to-html");
+const convert = new Convert();
 /* tslint:enable:variable-name */
-import {Observable} from "rx";
-import * as React from "react";
-const _ : _.LoDashStatic = require("lodash");
-import {ReactClientComponent} from "./react-client-component";
-import {runTests} from "../features/run-tests";
+const _: _.LoDashStatic = require("lodash");
 
 // ctrl-r. ctrl-t run test
 // ctrl-r, ctrl-f run fixture
 // ctrl-r, ctrl-a run all
 // ctrl-r, ctrl-l run last
 
-interface TestWindowState {
-    testResults: OutputMessage[];
-}
+export class TestResultsWindow extends HTMLDivElement implements WebComponent {
+    public displayName = "CommandOutputWindow";
+    private _container: HTMLDivElement;
+    private _scrollToBottom: () => void;
 
-interface TestWindowProps {
-    runTests: typeof runTests;
-}
+    public createdCallback() {
+        this.classList.add("omni-output-pane-view", "native-key-bindings");
+        this.tabIndex = -1;
 
-export class TestResultsWindow extends ReactClientComponent<TestWindowProps, TestWindowState> {
-    public displayName = "TestResultsWindow";
+        this._container = document.createElement("div");
+        this._container.classList.add("messages-container");
+        this.appendChild(this._container);
 
-    private _convert: any;
-
-    constructor(props?: TestWindowProps, context?: any) {
-        super(props, context);
-        this._convert = new Convert();
-        this.state = { testResults: props.runTests.testResults };
+        this._scrollToBottom = _.throttle(() => {
+            const item = <any>(this.lastElementChild && this.lastElementChild.lastElementChild);
+            if (item) item.scrollIntoViewIfNeeded();
+        }, 100, { trailing: true });
     }
 
-    public componentWillMount() {
-        super.componentWillMount();
-
-        this.disposable.add(this.props.runTests.observe.output
-            .buffer(this.props.runTests.observe.output.throttle(100), () => Observable.timer(100))
-            .map(arr => arr[0])
-            .subscribe(testResults => this.setState({ testResults })));
-        _.defer(_.bind(this.scrollToBottom, this));
+    public attachedCallback() {
+        _.defer(this._scrollToBottom, this);
     }
 
-    public componentDidMount() {
-        super.componentWillMount();
+    public addMessage(item: OutputMessage) {
+        const pre = document.createElement("pre");
+        pre.classList.add(item.logLevel);
+        pre.innerText = convert.toHtml(item.message).trim();
+
+        this._container.appendChild(pre);
+        this._scrollToBottom();
     }
 
-    public componentWillUnmount() {
-        super.componentWillUnmount();
-    }
-
-    private createItem(item: OutputMessage, index: number) {
-        return React.DOM.pre({
-            key: `output-${index}`,
-            className: item.logLevel
-        }, this._convert.toHtml(item.message).trim());
-    }
-
-    private scrollToBottom() {
-        const item = <any> React.findDOMNode(this).lastElementChild.lastElementChild;
-        if (item) item.scrollIntoViewIfNeeded();
-    }
-
-    public render() {
-        return React.DOM.div({
-            className: "omni-output-pane-view native-key-bindings " + (this.props["className"] || ""),
-            tabIndex: -1
-        },
-            React.DOM.div({
-                className: "messages-container"
-            }, _.map(this.state.testResults, (item, index) => this.createItem(item, index))));
+    public clear() {
+        this._container.innerHTML = "";
     }
 }
+
+(<any>exports).TestResultsWindow = (<any>document).registerElement("omnisharp-test-results", { prototype: TestResultsWindow.prototype });

@@ -11,6 +11,7 @@ class ServerInformation implements IFeature {
     public observe: {
         status: Observable<OmnisharpClientStatus>;
         output: Observable<OutputMessage[]>;
+        outputElement: Observable<HTMLDivElement>;
         projects: Observable<IProjectViewModel[]>;
         model: Observable<ViewModel>;
     };
@@ -22,12 +23,14 @@ class ServerInformation implements IFeature {
 
         const status = this.setupStatus();
         const output = this.setupOutput();
+        const outputElement = this.setupOutputElement();
         const projects = this.setupProjects();
 
         this.disposable.add(Omni.activeModel.subscribe(z => this.model = z));
-        this.observe = { status, output, projects, model: Omni.activeModel };
+        this.observe = { status, output, outputElement, projects, model: Omni.activeModel };
 
-        this.disposable.add(dock.addWindow("output", "Omnisharp output", OutputWindow, {}));
+        this.disposable.add(dock.addWindow("output", "Omnisharp output", new OutputWindow, {}));
+        dock.selected = "output";
     }
 
     private setupStatus() {
@@ -43,6 +46,13 @@ class ServerInformation implements IFeature {
         return Omni.activeModel
             .flatMapLatest(z => z.observe.output)
             .startWith([])
+            .share();
+    }
+
+    private setupOutputElement() {
+        return Omni.activeModel
+            .map(z => z.outputElement)
+            .startWith(document.createElement("div"))
             .share();
     }
 

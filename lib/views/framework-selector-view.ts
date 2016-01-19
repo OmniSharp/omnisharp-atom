@@ -1,9 +1,7 @@
 import {Models} from "omnisharp-client";
 import * as SpacePen from "atom-space-pen-views";
-import * as React from "react";
-import {ReactClientComponent} from "./react-client-component";
 import {frameworkSelector} from "../atom/framework-selector";
-const $ : JQueryStatic = require("jquery");
+const $: JQueryStatic = require("jquery");
 
 interface FrameworkSelectorState {
     frameworks?: Models.DnxFramework[];
@@ -11,40 +9,33 @@ interface FrameworkSelectorState {
     alignLeft?: boolean;
 }
 
-export class FrameworkSelectorComponent extends ReactClientComponent<{ alignLeft: boolean }, FrameworkSelectorState> {
+export class FrameworkSelectorComponent extends HTMLAnchorElement implements WebComponent {
+    public frameworks: Models.DnxFramework[];
+    private _activeFramework: Models.DnxFramework;
+    public get activeFramework() { return this._activeFramework; }
+    public set activeFramework(value) { this._activeFramework = value; this.innerText = this.activeFramework.FriendlyName; }
 
-    constructor(props?: { alignLeft: boolean }, context?: any) {
-        super(props, context);
-        this.state = {
-            frameworks: <Models.DnxFramework[]>[],
-            activeFramework: <Models.DnxFramework>{}
+    public alignLeft: boolean;
+
+    public createdCallback() {
+        this.onclick = (e) => {
+            const view = new FrameworkSelectorSelectListView(atom.workspace.getActiveTextEditor(), {
+                attachTo: ".framework-selector",
+                alignLeft: this.alignLeft,
+                items: this.frameworks,
+                save: (framework: Models.DnxFramework) => {
+                    frameworkSelector.setActiveFramework(framework);
+                    view.hide();
+                }
+            });
+            view.appendTo(<any>atom.views.getView(atom.workspace));
+            view.setItems();
+            view.show();
         };
     }
-
-    public componentWillMount() {
-        super.componentWillMount();
-    }
-
-    public render() {
-        return React.DOM.a({
-            href: "#",
-            onClick: (e) => {
-                const view = new FrameworkSelectorSelectListView(atom.workspace.getActiveTextEditor(), {
-                    attachTo: ".framework-selector",
-                    alignLeft: this.props.alignLeft,
-                    items: this.state.frameworks,
-                    save: (framework: Models.DnxFramework) => {
-                        frameworkSelector.setActiveFramework(framework);
-                        view.hide();
-                    }
-                });
-                view.appendTo(<any>atom.views.getView(atom.workspace));
-                view.setItems();
-                view.show();
-            },
-        }, this.state.activeFramework.FriendlyName);
-    }
 }
+
+(<any>exports).FrameworkSelectorComponent = (<any>document).registerElement("omnisharp-framework-selector", { prototype: FrameworkSelectorComponent.prototype });
 
 export class FrameworkSelectorSelectListView extends SpacePen.SelectListView {
     constructor(public editor: Atom.TextEditor, private options: { alignLeft: boolean; attachTo: string; items: Models.DnxFramework[]; save(item: any): void }) {

@@ -1,7 +1,6 @@
 import {CompositeDisposable, Observable} from "rx";
 import {each, endsWith, filter} from "lodash";
 import * as path from "path";
-import {solutionInformation} from "../atom/solution-information";
 
 // TODO: Make sure it stays in sync with
 const commands = [
@@ -86,16 +85,14 @@ class GeneratorAspnet implements IFeature {
                 .map(file => path.join(messages.cwd, file))
                 .toPromise();
         })
-        .then(file => atom.workspace.open(file));
+            .then(file => atom.workspace.open(file));
     }
 
     private newProject() {
         return this.loadCsFile(this.run("aspnet:app --createInDirectory"))
             .then(() => Observable.timer(2000).toPromise())
             .then(() => {
-                if (solutionInformation.solutions.length) {
-                    atom.commands.dispatch(atom.views.getView(atom.workspace), "omnisharp-atom:restart-server");
-                }
+                atom.commands.dispatch(atom.views.getView(atom.workspace), "omnisharp-atom:restart-server");
             });
     }
 

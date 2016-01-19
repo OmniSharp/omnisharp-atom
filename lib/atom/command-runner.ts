@@ -16,6 +16,7 @@ const daemonFlags = [
     "Microsoft.AspNet.Server.Kestrel", // New post beta8
     "Microsoft.AspNet.Server.WebListener"
 ];
+
 if (win32) {
     env = <typeof process.env>{};
 } else {
@@ -147,19 +148,17 @@ export function getDnxExe(solution: Solution) {
 }
 
 export class RunProcess {
-    public disposable = new CompositeDisposable();
-    public update = new Subject<{ message: string }[]>();
-    public output: { message: string }[] = [];
-    public started = false;
-
-    public observeStarted = new Subject<boolean>();
-
+    private _outputWindow = new CommandOutputWindow;
     private id: string;
     private process: any;
 
+    public disposable = new CompositeDisposable();
+    public started = false;
+    public observeStarted = new Subject<boolean>();
+
     constructor(public project: ProjectViewModel<any>, private command: string, private watch = false) {
         this.id = `${this.project.name}${this.command}`;
-        this.disposable.add(dock.addWindow(this.id, `${this.project.name} ${this.watch ? "--watch" : ""} ${this.command}`, CommandOutputWindow, this, {
+        this.disposable.add(dock.addWindow(this.id, `${this.project.name} ${this.watch ? "--watch" : ""} ${this.command}`, this._outputWindow, {
             closeable: true,
             priority: 1001
         }, this.disposable));
@@ -189,7 +188,7 @@ export class RunProcess {
             args.unshift("--watch");
         }
 
-        this.output.push({ message: `Starting ${runtime} ${args.join(" ")}` });
+        this._outputWindow.addMessage({ message: `Starting ${runtime} ${args.join(" ")}` });
 
         this.started = true;
         this.observeStarted.onNext(this.started);
@@ -206,8 +205,7 @@ export class RunProcess {
         });
 
         out.on("line", (data: any) => {
-            this.output.push({ message: data });
-            this.update.onNext(this.output);
+            this._outputWindow.addMessage({ message: data });
         });
 
         const error = readline.createInterface({
@@ -216,8 +214,7 @@ export class RunProcess {
         });
 
         error.on("line", (data: any) => {
-            this.output.push({ message: data });
-            this.update.onNext(this.output);
+            this._outputWindow.addMessage({ message: data });
         });
 
         const disposable = Disposable.create(() => {

@@ -7,7 +7,7 @@ import {FindWindow} from "../views/find-pane-view";
 class FindUsages implements IFeature {
     private disposable: Rx.CompositeDisposable;
     private window: Rx.CompositeDisposable;
-    public selectedIndex: number = 0;
+    private _findWindow = new FindWindow;
     private scrollTop: number = 0;
     public usages: Models.DiagnosticLocation[] = [];
 
@@ -52,32 +52,30 @@ class FindUsages implements IFeature {
         }));
 
         this.disposable.add(atom.commands.add("atom-workspace", "omnisharp-atom:next-usage", () => {
-            this.updateSelectedItem(selected, this.selectedIndex + 1);
+            this._findWindow.next();
         }));
 
         this.disposable.add(atom.commands.add("atom-workspace", "omnisharp-atom:go-to-usage", () => {
-            if (this.usages[this.selectedIndex])
-                Omni.navigateTo(this.usages[this.selectedIndex]);
+            Omni.navigateTo(this._findWindow.current);
         }));
 
         this.disposable.add(atom.commands.add("atom-workspace", "omnisharp-atom:previous-usage", () => {
-            this.updateSelectedItem(selected, this.selectedIndex - 1);
+            this._findWindow.prev();
         }));
 
         this.disposable.add(atom.commands.add("atom-workspace", "omnisharp-atom:go-to-next-usage", () => {
-            this.updateSelectedItem(selected, this.selectedIndex + 1);
-            if (this.usages[this.selectedIndex])
-                Omni.navigateTo(this.usages[this.selectedIndex]);
+            this._findWindow.next();
+            Omni.navigateTo(this._findWindow.current);
         }));
 
         this.disposable.add(atom.commands.add("atom-workspace", "omnisharp-atom:go-to-previous-usage", () => {
-            this.updateSelectedItem(selected, this.selectedIndex - 1);
-            if (this.usages[this.selectedIndex])
-                Omni.navigateTo(this.usages[this.selectedIndex]);
+            this._findWindow.prev();
+            Omni.navigateTo(this._findWindow.current);
         }));
 
         this.disposable.add(this.observe.find.subscribe(s => {
             this.usages = s;
+            this._findWindow.update(s);
         }));
 
         this.disposable.add(Observable.merge(this.observe.find.map(z => true), this.observe.open.map(z => true)).subscribe(() => {
@@ -88,7 +86,7 @@ class FindUsages implements IFeature {
         this.disposable.add(this.observe.reset.subscribe(() => {
             this.usages = [];
             this.scrollTop = 0;
-            this.selectedIndex = 0;
+            this._findWindow.selectedIndex = 0;
         }));
 
 
@@ -99,28 +97,10 @@ class FindUsages implements IFeature {
         }));
     }
 
-    private updateSelectedItem(selected: Subject<number>, index: number) {
-        if (index < 0)
-            index = 0;
-        if (index >= this.usages.length)
-            index = this.usages.length - 1;
-        if (this.selectedIndex !== index) {
-            this.selectedIndex = index;
-            selected.onNext(index);
-        }
-    }
-
     private ensureWindowIsCreated() {
         if (!this.window) {
             this.window = new CompositeDisposable();
-            const windowDisposable = dock.addWindow("find", "Find", FindWindow, {
-                scrollTop: () => this.scrollTop,
-                setScrollTop: (scrollTop: number) => this.scrollTop = scrollTop,
-                findUsages: this
-            }, {
-                    priority: 2000,
-                    closeable: true
-                }, this.window);
+            const windowDisposable = dock.addWindow("find", "Find", this._findWindow, { priority: 2000, closeable: true }, this.window);
             this.window.add(windowDisposable);
             this.window.add(Disposable.create(() => {
                 this.disposable.remove(this.window);
@@ -135,7 +115,7 @@ class FindUsages implements IFeature {
     }
 
     public navigateToSelectedItem() {
-        Omni.navigateTo(this.usages[this.selectedIndex]);
+        Omni.navigateTo(this.usages[this._findWindow.selectedIndex]);
     }
 
     public required = true;

@@ -3,53 +3,41 @@
 const Convert = require("ansi-to-html");
 /* tslint:enable:variable-name */
 const _ : _.LoDashStatic = require("lodash");
-import * as React from "react";
-import {ReactClientComponent} from "./react-client-component";
 import {server} from "../atom/server-information";
+import {CompositeDisposable} from "rx";
 
-interface IOutputWindowState {
-    output: OutputMessage[];
-}
-
-export class OutputWindow<T> extends ReactClientComponent<T, IOutputWindowState>  {
+export class OutputWindow extends HTMLDivElement implements WebComponent {
     public displayName = "OutputWindow";
-
+    private disposable: CompositeDisposable;
     private _convert: any;
+    private _output: OutputMessage[];
 
-    constructor(props?: T, context?: any) {
-        super(props, context);
+    public createdCallback() {
         this._convert = new Convert();
-        this.state = { output: [] };
+        this._output = [];
+
+        this.classList.add("omni-output-pane-view", "native-key-bindings");
+        this.tabIndex = -1;
     }
 
-    public componentDidMount() {
-        super.componentDidMount();
+    public attachedCallback() {
+        this.disposable = new CompositeDisposable();
+        this.disposable.add(server.observe.outputElement.subscribe(element => {
+            _.each(this.children, child => child.remove());
+            this.appendChild(element);
+        }));
+        this.disposable.add(server.observe.output.delay(100).subscribe(() => this.scrollToBottom()));
+        this.scrollToBottom();
+    }
 
-        this.disposable.add(server.observe.output
-            .subscribe(z => this.setState({ output: z }, () => this.scrollToBottom())));
-        _.defer(_.bind(this.scrollToBottom, this));
+    public detachedCallback() {
+        this.disposable.dispose();
     }
 
     private scrollToBottom() {
-        const item = <any> React.findDOMNode(this).lastElementChild.lastElementChild;
+        const item = <any>(this.lastElementChild && this.lastElementChild.lastElementChild);
         if (item) item.scrollIntoViewIfNeeded();
     }
-
-    private createItem(item: OutputMessage, index: number) {
-        return React.DOM.pre({
-            key: `output-${index}`,
-            className: item.logLevel,
-            dangerouslySetInnerHTML: { __html: this._convert.toHtml(item.message).trim() }
-        });
-    }
-
-    public render() {
-        return React.DOM.div({
-            className: "omni-output-pane-view native-key-bindings " + (this.props["className"] || ""),
-            tabIndex: -1
-        },
-            React.DOM.div({
-                className: "messages-container"
-            }, _.map(this.state.output, (item, index) => this.createItem(item, index))));
-    }
 }
+
+(<any>exports).OutputWindow = (<any>document).registerElement("omnisharp-output-window", { prototype: OutputWindow.prototype });

@@ -1,125 +1,129 @@
-/* tslint:disable:no-string-literal */
 import {Models} from "omnisharp-client";
-const _ : _.LoDashStatic = require("lodash");
 import * as path from "path";
 import {Omni} from "../server/omni";
-import * as React from "react";
-const $ : JQueryStatic = require("jquery");
-import {ReactClientComponent} from "./react-client-component";
-import {codeCheck} from "../features/code-check";
+import {OutputElement, MessageElement} from "./output-component";
 
-interface ICodeCheckOutputWindowState {
-    diagnostics?: Models.DiagnosticLocation[];
-    selectedIndex?: number;
-}
+export interface CodeCheckMessageElement extends MessageElement<Models.DiagnosticLocation> { }
 
-export interface ICodeCheckOutputWindowProps {
-    scrollTop: () => number;
-    setScrollTop: (scrollTop: number) => void;
-    codeCheck: typeof codeCheck;
-}
+const getMessageElement = (function() {
+    const selectedProps = {
+        get: function selected() { return this.classList.contains("selected"); },
+        set: function selected(value: boolean) { if (value) this.classList.add("selected"); else this.classList.remove("selected"); }
+    };
 
-export class CodeCheckOutputWindow<T extends ICodeCheckOutputWindowProps> extends ReactClientComponent<T, ICodeCheckOutputWindowState> {
+    const keyProps = {
+        get: function key() { return this._key; }
+    };
+
+    const inviewProps = {
+        get: function inview() { return this._inview; },
+        set: function inview(value: boolean) { this._inview = value; }
+    };
+
+    function setMessage(key: string, item: Models.DiagnosticLocation) {
+        this._key = key;
+
+        this.classList.add(`${item.LogLevel}`);
+
+        if (item.LogLevel === "Error") {
+            this._icon.classList.add("fa-times-circle");
+            this._icon.classList.remove("fa-exclamation-triangle");
+            this._icon.classList.remove("fa-info");
+        } else if (item.LogLevel === "Warning") {
+            this._icon.classList.add("fa-exclamation-triangle");
+            this._icon.classList.remove("fa-times-circle");
+            this._icon.classList.remove("fa-info");
+        } else {
+            this._icon.classList.add("fa-info");
+            this._icon.classList.remove("fa-exclamation-triangle");
+            this._icon.classList.remove("fa-times-circle");
+        }
+
+        this._text.innerText = item.Text;
+        this._location.innerText = `${path.basename(item.FileName)}(${item.Line},${item.Column})`;
+        this._filename.innerText = path.dirname(item.FileName);
+    }
+
+    function attached() { /* */ }
+
+    function detached() { /* */ }
+
+    return function getMessageElement(): CodeCheckMessageElement {
+        const element: CodeCheckMessageElement = <any>document.createElement("li");
+        element.classList.add("codecheck");
+
+        const icon = (element as any)._icon = document.createElement("span");
+        icon.classList.add("fa");
+        element.appendChild(icon);
+
+        const text = (element as any)._text = document.createElement("pre");
+        text.classList.add("text-highlight");
+        element.appendChild(text);
+
+        const location = (element as any)._location = document.createElement("pre");
+        location.classList.add("inline-block");
+        element.appendChild(location);
+
+        const filename = (element as any)._filename = document.createElement("pre");
+        filename.classList.add("text-subtle", "inline-block");
+        element.appendChild(filename);
+
+        Object.defineProperty(element, "key", keyProps);
+        Object.defineProperty(element, "selected", selectedProps);
+        Object.defineProperty(element, "inview", inviewProps);
+        element.setMessage = setMessage;
+        element.attached = attached;
+        element.detached = detached;
+
+        return element;
+    };
+})();
+
+export class CodeCheckOutputElement extends HTMLDivElement implements WebComponent {
     public displayName = "FindPaneWindow";
-    private model: typeof codeCheck;
+    private _list: OutputElement<Models.DiagnosticLocation, CodeCheckMessageElement>;
 
-    constructor(props?: T, context?: any) {
-        super(props, context);
-
-        this.model = this.props.codeCheck;
-        this.state = { diagnostics: this.model.displayDiagnostics, selectedIndex: this.model.selectedIndex };
+    public createdCallback() {
+        this.classList.add("codecheck-output-pane");
+        this._list = new OutputElement<Models.DiagnosticLocation, CodeCheckMessageElement>();
+        this.appendChild(this._list);
+        this._list.getKey = (error: Models.DiagnosticLocation) => {
+            return `code-check-${error.LogLevel}-${error.FileName}-(${error.Line}-${error.Column})-(${error.EndLine}-${error.EndColumn})-(${(error.Projects || []).join("-")})`;
+        };
+        this._list.handleClick = (item: Models.DiagnosticLocation) => {
+            this.goToLine(item);
+        };
+        this._list.eventName = "diagnostic";
+        this._list.elementFactory = getMessageElement;
     }
 
-    public componentWillMount() {
-        super.componentWillMount();
-        this.disposable.add(Omni.diagnostics
-            .delay(1)
-            .subscribe(z => this.setState({
-                diagnostics: this.model.displayDiagnostics
-            })));
-
-        this.disposable.add(Omni.diagnostics
-            .delay(2)
-            .subscribe(z => this.updateStateAndScroll()));
+    public attachedCallback() {
+        this._list.attached();
     }
 
-    public componentDidMount() {
-        super.componentDidMount();
-
-        React.findDOMNode(this).scrollTop = this.props.scrollTop();
-        (<any>React.findDOMNode(this)).onkeydown = (e: any) => this.keydownPane(e);
+    public detachedCallback() {
+        this._list.detached();
     }
 
-    public componentWillUnmount() {
-        super.componentWillUnmount();
-        (<any>React.findDOMNode(this)).onkeydown = undefined;
+    public update(output: Models.DiagnosticLocation[]) {
+        this._list.updateOutput(output);
     }
 
-    private goToLine(location: Models.DiagnosticLocation, index: number) {
+    public next() {
+        this._list.next();
+    }
+
+    public prev() {
+        this._list.prev();
+    }
+
+    public get selectedIndex() { return this._list.selectedIndex; }
+    public set selectedIndex(value) { this._list.selectedIndex = value; }
+    public get current() { return this._list.current; }
+
+    private goToLine(location: Models.DiagnosticLocation) {
         Omni.navigateTo(location);
-        this.model.selectedIndex = index;
-    }
-
-    private keydownPane(e: any) {
-        if (e.keyIdentifier === "Down") {
-            atom.commands.dispatch(atom.views.getView(atom.workspace), "omnisharp-atom:next-diagnostic");
-        } else if (e.keyIdentifier === "Up") {
-            atom.commands.dispatch(atom.views.getView(atom.workspace), "omnisharp-atom:previous-diagnostic");
-        } else if (e.keyIdentifier === "Enter") {
-            atom.commands.dispatch(atom.views.getView(atom.workspace), "omnisharp-atom:go-to-diagnostic");
-        }
-    }
-
-    private updateStateAndScroll() {
-        this.setState({ selectedIndex: this.model.selectedIndex }, () => this.scrollToItemView());
-    }
-
-    private scrollToItemView() {
-        const self = $(React.findDOMNode(this));
-        const item = self.find(`li.selected`);
-        if (!item || !item.position()) return;
-
-        const pane = self;
-        const scrollTop = pane.scrollTop();
-        const desiredTop = item.position().top + scrollTop;
-        const desiredBottom = desiredTop + item.outerHeight();
-
-        if (desiredTop < scrollTop) {
-            pane.scrollTop(desiredTop);
-        } else if (desiredBottom > pane.scrollBottom()) {
-            pane.scrollBottom(desiredBottom);
-        }
-    }
-
-    public render() {
-        return React.DOM.div({
-            className: "codecheck-output-pane " + (this.props["className"] || ""),
-            onScroll: (e) => {
-                this.props.setScrollTop((<any>e.currentTarget).scrollTop);
-            },
-            tabIndex: -1,
-        },
-            React.DOM.ol({
-                style: <any>{ cursor: "pointer" },
-            }, _.map(this.state.diagnostics, (error, index) =>
-                React.DOM.li({
-                    key: `code-check-${error.LogLevel}-${error.FileName}-(${error.Line}-${error.Column})-(${error.EndLine}-${error.EndColumn})-(${(error.Projects || []).join("-")})`,
-                    className: `codecheck ${error.LogLevel}` + (index === this.state.selectedIndex ? " selected" : ""),
-                    onClick: (e) => this.goToLine(error, index)
-                },
-                    React.DOM.span({
-                        className: error.LogLevel === "Error" ? "fa fa-times-circle" : "fa fa-exclamation-triangle"
-                    }),
-                    React.DOM.pre({
-                        className: "text-highlight"
-                    }, error.Text),
-                    React.DOM.pre({
-                        className: "inline-block"
-                    }, `${path.basename(error.FileName)}(${error.Line},${error.Column})`),
-                    React.DOM.pre({
-                        className: "text-subtle inline-block"
-                    }, `${path.dirname(error.FileName)}`)
-                ))
-            ));
     }
 }
+
+(<any>exports).CodeCheckOutputElement = (<any>document).registerElement("omnisharp-codecheck-output", { prototype: CodeCheckOutputElement.prototype });

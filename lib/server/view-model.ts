@@ -1,10 +1,12 @@
-const _ : _.LoDashStatic = require("lodash");
+const _: _.LoDashStatic = require("lodash");
 import {Solution} from "./solution";
 import {Models, DriverState, OmnisharpClientStatus} from "omnisharp-client";
-import {Observable, Subject, CompositeDisposable, Disposable} from "rx";
+import {Observable, Subject, ReplaySubject, CompositeDisposable, Disposable} from "rx";
 import {basename, normalize, join} from "path";
 import {ProjectViewModel, projectViewModelFactory, workspaceViewModelFactory} from "./project-view-model";
+import {OutputMessageElement} from "../views/output-message-element";
 const win32 = process.platform === "win32";
+let fastdom: typeof Fastdom = require("fastdom");
 
 export interface VMViewState {
     isOff: boolean;
@@ -28,6 +30,7 @@ export class ViewModel implements VMViewState, Rx.IDisposable {
     public get index() { return this._solution.index; }
     public get path() { return this._solution.path; }
     public output: OutputMessage[] = [];
+    public outputElement = document.createElement("div");
     public diagnostics: Models.DiagnosticLocation[] = [];
     public unusedCodeRows: Models.DiagnosticLocation[] = [];
     public get state() { return this._solution.currentState; };
@@ -38,7 +41,7 @@ export class ViewModel implements VMViewState, Rx.IDisposable {
     private _projectAddedStream = new Subject<ProjectViewModel<any>>();
     private _projectRemovedStream = new Subject<ProjectViewModel<any>>();
     private _projectChangedStream = new Subject<ProjectViewModel<any>>();
-    private _stateStream = new Subject<ViewModel>();
+    private _stateStream = new ReplaySubject<ViewModel>(1);
 
     public observe: {
         codecheck: Rx.Observable<Models.DiagnosticLocation[]>;
@@ -56,12 +59,35 @@ export class ViewModel implements VMViewState, Rx.IDisposable {
         this._uniqueId = _solution.uniqueId;
         this._updateState(_solution.currentState);
 
+        this.outputElement.classList.add("messages-container");
+
         // Manage our build log for display
         this._disposable.add(_solution.logs.subscribe(event => {
             this.output.push(event);
-            if (this.output.length > 1000)
+
+            if (this.output.length > 1000) {
                 this.output.shift();
+            }
         }));
+
+        this._disposable.add(_solution.logs
+            .buffer(_solution.logs.throttle(100), () => Observable.timer(100))
+            .subscribe(items => {
+                let removals: Element[] = [];
+                if (this.outputElement.children.length === 1000) {
+                    for (let i = 0; i < items.length; i++) {
+                        removals.push(this.outputElement.children[i]);
+                    }
+                }
+
+                fastdom.mutate(() => {
+                    _.each(removals, x => x.remove());
+
+                    _.each(items, event => {
+                        this.outputElement.appendChild(OutputMessageElement.create(event));
+                    });
+                });
+            }));
 
         this._disposable.add(_solution.state.where(z => z === DriverState.Disconnected).subscribe(() => {
             _.each(this.projects.slice(), project => this._projectRemovedStream.onNext(project));
@@ -87,7 +113,7 @@ export class ViewModel implements VMViewState, Rx.IDisposable {
             .flatMap(x => x.startWith(null).last())
             .map(() => output);
 
-        const state = this._stateStream.share();
+        const state = this._stateStream;
 
         this.observe = {
             get codecheck() { return codecheck; },
@@ -183,6 +209,8 @@ export class ViewModel implements VMViewState, Rx.IDisposable {
                         }
                     }
                     this.runtimePath = path;
+
+                    this._stateStream.onNext(this);
                 }
             }));
 
@@ -234,7 +262,7 @@ export class ViewModel implements VMViewState, Rx.IDisposable {
         }
     }
 
-    private _updateState(state: any) {
+    private _updateState(state: DriverState) {
         this.isOn = state === DriverState.Connecting || state === DriverState.Connected;
         this.isOff = state === DriverState.Disconnected;
         this.isConnecting = state === DriverState.Connecting;
@@ -273,7 +301,7 @@ export class ViewModel implements VMViewState, Rx.IDisposable {
         codecheck = codecheck.shareReplay(1);
 
         this._disposable.add(codecheck.subscribe((data) => this.diagnostics = data));
-        return {codecheck, unusedCodeRows};
+        return { codecheck, unusedCodeRows };
     }
 
     private _setupStatus(_solution: Solution) {

@@ -1,169 +1,202 @@
-//const Convert = require("ansi-to-html")
-const _ : _.LoDashStatic = require("lodash");
-import {Observable,   CompositeDisposable, Subject} from "rx";
-import * as React from "react";
-import {ReactClientComponent} from "./react-client-component";
+import {Observable, Disposable, CompositeDisposable, SingleAssignmentDisposable} from "rx";
 
-interface IDockWindowState {
-    selected?: string;
-    fontSize?: number;
-}
-
-export interface IDockWindowProps {
-    panel: Atom.Panel;
-    panes: DockPane<any, any>[];
-    buttons: DockButton[];
-}
-
-interface IDockWindowButtonsState {
-}
-
-interface IDockWindowButtonsProps {
-    selected: string;
-    setSelected: (selected: string) => void;
-    panes: DockPane<any, any>[];
-    buttons: DockButton[];
-    children: any[];
-}
-
-
-
-export interface DocPaneOptions {
-    priority?: number;
-    closeable?: boolean;
-}
-
-export interface DockPane<P, S> {
+export interface ToggleButton {
     id: string;
     title: string;
-    props: P;
-    view: typeof React.Component;
-    options: DocPaneOptions;
-    disposable: Rx.IDisposable;
+    view: HTMLElement;
+    options: DocButtonOptions;
+    disposable: CompositeDisposable;
 }
-
 
 export interface DocButtonOptions {
     priority?: number;
 }
 
-export interface DockButton {
-    id: string;
-    title: string;
-    view: React.HTMLElement;
-    options: DocButtonOptions;
-    disposable: Rx.IDisposable;
+interface InternalToggleButton extends ToggleButton {
+
 }
 
-export interface DisposableDockPane<P, S> {
+export interface PaneButton {
     id: string;
     title: string;
-    props: P;
-    view: typeof React.Component;
-    options: DocPaneOptions;
-    disposable: Rx.Disposable;
+    view: HTMLElement;
+    options: PaneButtonOptions;
+    disposable: CompositeDisposable;
 }
 
-class DockWindows<T extends IDockWindowButtonsProps> extends ReactClientComponent<T, IDockWindowButtonsState> {
+export interface PaneButtonOptions {
+    priority?: number;
+    closeable?: boolean;
+}
 
-    constructor(props?: T, context?: any) {
-        super(props, context);
-        this.state = {};
-    }
+interface InternalPaneButton extends PaneButton {
+    _button?: Element;
+}
 
-    private panelButton({id, title, options, disposable}: DisposableDockPane<any, any>) {
+export class DockWindow extends HTMLDivElement implements WebComponent {
+    private disposable: CompositeDisposable;
+    private _panel: Atom.Panel;
+    private _selectedPane: InternalPaneButton;
+    private _toolbar: HTMLDivElement;
+    private _paneButtons: HTMLDivElement;
+    private _toggleButtons: HTMLDivElement;
+    private _panes: Map<string, InternalPaneButton>;
+    private visible: boolean;
+    private tempHeight: number;
+    private fontSize: any;
 
-        const children = [React.DOM.span({ className: "text" }, title)];
-        if (options.closeable) {
-            children.push(React.DOM.span({
-                className: "fa fa-times-circle close-pane",
-                key: "close",
-                onClick: (e) => {
-                    e.stopPropagation();
-                    e.preventDefault();
-                    disposable.dispose();
-                }
-            }));
+    public get isOpen() { return this.visible; }
+    //atom.config.get<number>("editor.fontSize")
+
+    private _selected: string;
+    public get selected() { return this._selected; }
+    public set selected(value) {
+        const pane = this._panes.get(value);
+
+        if (this._selectedPane) {
+            this._selectedPane._button.classList.remove("selected");
+            this._selectedPane.view.remove();
         }
 
-        return React.DOM.button({
-            className: `btn btn-default btn-fix ${this.props.selected === id ? "selected" : ""} ${options.closeable ? "closeable" : ""}`,
-            key: id,
-            onClick: (e) => {
-                e.stopPropagation();
-                e.preventDefault();
-                this.props.setSelected(id);
-                this.setState({});
+        if (pane) {
+            this._selectedPane = pane;
+            pane._button.classList.add("selected");
+            this.appendChild(pane.view);
+        }
+
+        this._selected = value;
+    }
+
+    public createdCallback() {
+        this.disposable = new CompositeDisposable();
+        this._panes = new Map<string, InternalPaneButton>();
+        this._selected = "output";
+        this.visible = false;
+        this.tempHeight = 0;
+        this.fontSize = atom.config.get<number>("editor.fontSize");
+
+        let fontSize = this.fontSize - 1;
+        if (fontSize <= 0)
+            fontSize = 1;
+
+        this.classList.add("inset-panel", "font-size-" + fontSize);
+        if (this.clientHeight || this.tempHeight) {
+            this.style.height = this.clientHeight + this.tempHeight + "px";
+        }
+
+        const resizer = new exports.Resizer();
+        let _originalHeight = this.clientHeight;
+        resizer.start = () => { _originalHeight = this.clientHeight; };
+        resizer.update = ({top}: { left: number, top: number }) => {
+            console.log(top);
+            this.style.height = `${_originalHeight + -(top)}px`;
+        };
+        resizer.done = () => { /* */ };
+        this.appendChild(resizer);
+
+        const windows = document.createElement("div");
+        windows.classList.add("panel-heading", "clearfix");
+        this.appendChild(windows);
+
+        this._toolbar = document.createElement("div");
+        this._toolbar.classList.add("btn-toolbar", "pull-left");
+        windows.appendChild(this._toolbar);
+
+        this._paneButtons = document.createElement("div");
+        this._paneButtons.classList.add("btn-group", "btn-toggle");
+        this._toolbar.appendChild(this._paneButtons);
+
+        this._toggleButtons = document.createElement("div");
+        this._toggleButtons.classList.add("btn-well", "pull-right", "btn-group");
+        windows.appendChild(this._toggleButtons);
+    }
+
+    public attachedCallback() {
+        this.disposable.add(atom.config.observe("editor.fontSize", (size: number) => {
+            this.className = this.className.replace(/font-size-[\d]*/g, "");
+            this.fontSize = size;
+            this.classList.add("font-size-" + size);
+        }));
+    }
+
+    public setPanel(panel: Atom.Panel) {
+        this._panel = panel;
+    }
+
+    private _addDockButton(button: InternalPaneButton) {
+        const {id, title, options, disposable} = button;
+
+        const view = document.createElement("button");
+        view.classList.add("btn", "btn-default", "btn-fix");
+        (view as any)._id = id;
+        (view as any)._priority = options.priority;
+
+        disposable.add(Disposable.create(() => {
+            if (view.classList.contains("selected")) {
+                this.selected = (view.previousElementSibling as any)._id;
             }
-        }, ...children);
+            view.remove();
+        }));
+
+        const text = document.createElement("span");
+        text.innerHTML = title;
+        text.classList.add("text");
+        view.appendChild(text);
+
+        if (options.closeable) {
+            view.classList.add("closeable");
+
+            const close = document.createElement("span");
+            close.classList.add("fa", "fa-times-circle", "close-pane");
+            close.onclick = (e) => {
+                disposable.dispose();
+            };
+            view.appendChild(close);
+        }
+
+        view.onclick = (e) => {
+            e.stopPropagation();
+            e.preventDefault();
+            this.selected = id;
+        };
+
+        button._button = view;
+
+        this._insertButton(this._paneButtons, view, options.priority, id);
     }
 
-    private button({view}: DockButton) {
-        return view;
+    private _addToggleButton({id, options, view, disposable}: ToggleButton) {
+        disposable.add(Disposable.create(() => {
+            view.remove();
+            this.disposable.remove(disposable);
+        }));
+
+        this._insertButton(this._toggleButtons, view, options.priority, id);
     }
 
-    private getPanelButtons() {
-        return _.map(this.props.panes, (e) => this.panelButton(e));
+    private _insertButton(parent: Element, element: Element, priority: number, id: string) {
+        let insertIndex = -1;
+        for (let i = 0; i < parent.childNodes.length; i++) {
+            const child = <any>parent.childNodes[i];
+            if (child._id <= id && child._priority <= priority) {
+                insertIndex = i + 1;
+                break;
+            }
+        }
+
+        if (insertIndex > -1 && insertIndex < parent.childNodes.length) {
+            parent.insertBefore(element, parent.childNodes[insertIndex]);
+        } else {
+            parent.appendChild(element);
+        }
     }
 
-    private getButtons() {
-        return _.map(this.props.buttons, (e) => this.button(e));
-    }
-
-    public render() {
-        return React.DOM.div({
-            className: "panel-heading clearfix"
-        }, React.DOM.div({ className: "btn-toolbar pull-left" },
-            React.DOM.div({ className: "btn-group btn-toggle" },
-                this.getPanelButtons())
-            ),
-            React.DOM.div({className:"btn-well pull-right btn-group"},
-                this.getButtons())
-        );
-    }
-}
-
-export class DockWindow<T extends IDockWindowProps> extends ReactClientComponent<T, IDockWindowState> {
-    public displayName = "DockWindow";
-
-    public get selected() { return this.state.selected; }
-    private visible = false;
-    public get isOpen() { return this.visible; }
-    private height = 0;
-    private tempHeight = 0;
-
-    constructor(props?: T, context?: any) {
-        super(props, context);
-        this.state = { selected: "output", fontSize: atom.config.get<number>("editor.fontSize") };
-    }
-
-    public componentWillMount() {
-        super.componentWillMount();
-    }
-
-    public componentDidMount() {
-        super.componentDidMount();
-
-        const node = React.findDOMNode(this);
-        this.height = node.clientHeight;
-
-        atom.config.observe("editor.fontSize", (size: number) => {
-            this.setState({ fontSize: size });
-        });
-    }
-
-    private updateState(cb?: () => void) {
-        this.setState(<any>{}, () => this.updateAtom(cb));
-    }
-
-    private updateAtom(cb: () => void) {
-        if (this.props.panel.visible !== this.visible) {
+    private updateAtom(cb?: () => void) {
+        if (this._panel.visible !== this.visible) {
             if (this.visible) {
-                const node = React.findDOMNode(this);
-                this.props.panel.show();
-                this.height = node.clientHeight;
+                this._panel.show();
             } else {
-                this.props.panel.hide();
+                this._panel.hide();
             }
         }
         if (cb) cb();
@@ -171,7 +204,7 @@ export class DockWindow<T extends IDockWindowProps> extends ReactClientComponent
 
     public showView() {
         this.visible = true;
-        this.updateState();
+        this.updateAtom();
     }
 
     public doShowView() {
@@ -180,7 +213,7 @@ export class DockWindow<T extends IDockWindowProps> extends ReactClientComponent
 
     public hideView() {
         this.doHideView();
-        this.updateState();
+        this.updateAtom();
     }
 
     private doHideView() {
@@ -195,11 +228,11 @@ export class DockWindow<T extends IDockWindowProps> extends ReactClientComponent
         } else {
             this.doShowView();
         }
-        this.updateState();
+        this.updateAtom();
     }
 
     public toggleWindow(selected: string) {
-        if (this.visible && this.state.selected === selected) {
+        if (this.visible && this.selected === selected) {
             this.hideView();
             return;
         }
@@ -207,131 +240,116 @@ export class DockWindow<T extends IDockWindowProps> extends ReactClientComponent
         this.selectWindow(selected);
     }
 
-    private isSelected(key: string) {
-        if (this.state.selected) {
-            return `omnisharp-atom-output ${key}-output selected`;
-        }
-        return "";
-    }
-
     public selectWindow(selected: string) {
         if (!this.visible)
             this.doShowView();
 
-        this.state.selected = selected;
+        this.selected = selected;
 
         // Focus the panel!
-        this.updateState(() => {
-            const panel: any = React.findDOMNode(this).querySelector(".omnisharp-atom-output.selected");
+        this.updateAtom(() => {
+            const panel: any = this.querySelector(".omnisharp-atom-output.selected");
             if (panel) panel.focus();
         });
     }
 
-    private getWindows() {
-        const window = _.find(this.props.panes, { id: this.state.selected });
-        if (!this.state.selected || !window)
-            return React.DOM.span({});
+    public addWindow(id: string, title: string, view: HTMLElement, options: PaneButtonOptions = { priority: 1000 }, parentDisposable?: Rx.Disposable) {
+        const disposable = new SingleAssignmentDisposable();
+        const cd = new CompositeDisposable();
+        const context = { id, title, view, options, disposable: cd };
 
-        if (window) {
-            const props = _.clone(window.props);
-            props.className = (this.isSelected((window.id)) + " " + (props.className || ""));
-            props.key = window.id;
-            return React.createElement(window.view, props);
+        this._panes.set(id, context);
+        this.disposable.add(disposable);
+        disposable.setDisposable(cd);
+
+        if (parentDisposable)
+            cd.add(parentDisposable);
+
+        view.classList.add("omnisharp-atom-output", `${id}-output`, "selected");
+
+        cd.add(atom.commands.add("atom-workspace", "omnisharp-atom:dock-show-" + id, () => this.selectWindow(id)));
+        cd.add(atom.commands.add("atom-workspace", "omnisharp-atom:dock-toggle-" + id, () => this.toggleWindow(id)));
+
+        if (options.closeable) {
+            cd.add(atom.commands.add("atom-workspace", "omnisharp-atom:dock-close-" + id, () => {
+                this.disposable.remove(disposable);
+                disposable.dispose();
+                this.hideView();
+            }));
         }
+
+        cd.add(Disposable.create(() => {
+            if (this.selected === id) {
+                this.selected = "output";
+            }
+        }));
+
+        cd.add(Disposable.create(() => {
+            view.remove();
+            this._panes.delete(id);
+        }));
+
+        this._addDockButton(context);
+
+        if (!this.selected) this.selected = id;
+
+        return <Rx.IDisposable>disposable;
     }
 
-    public render() {
-        if (!this.visible) {
-            return React.DOM.span({
-                style: <any>{
-                    display: "none"
-                }
-            });
-        }
+    public addButton(id: string, title: string, view: HTMLElement, options: DocButtonOptions = { priority: 1000 }, parentDisposable?: Rx.Disposable) {
+        const disposable = new SingleAssignmentDisposable();
+        const cd = new CompositeDisposable();
+        this.disposable.add(disposable);
+        disposable.setDisposable(cd);
 
-        let fontSize = this.state.fontSize - 1;
-        if (fontSize <= 0)
-            fontSize = 1;
+        if (parentDisposable)
+            cd.add(parentDisposable);
 
-        const insetProps = <any> {
-            className: "inset-panel font-size-" + fontSize
-        };
+        this._addToggleButton({ id, title, view, options, disposable: cd });
 
-        if (this.height || this.tempHeight) {
-            insetProps.style = { height: this.height + this.tempHeight };
-        }
-
-        return React.DOM.div(insetProps,
-            React.createElement(Resizer, {
-                className: "omnisharp-atom-output-resizer",
-                update: ({top}: { left: number, top: number }) => {
-                    console.log(top);
-                    this.tempHeight = -(top);
-                    this.setState(<any>{});
-                },
-                done: () => {
-                    this.height = this.height + this.tempHeight;
-                    this.tempHeight = 0;
-                    this.setState(<any>{});
-                }
-            }),
-            React.createElement(DockWindows, { selected: this.state.selected, setSelected: this.selectWindow.bind(this), panes: this.props.panes, buttons: this.props.buttons }),
-            this.getWindows());
+        return <Rx.IDisposable>disposable;
     }
 }
 
-function makeRxReactEventHandler<T>() {
-    const subject = new Subject<T>();
+(<any>exports).DockWindow = (<any>document).registerElement("omnisharp-dock-window", { prototype: DockWindow.prototype });
 
-    return {
-        handler: <(value: T) => void> subject.onNext.bind(subject),
-        observable: subject.asObservable()
-    };
-}
+export class Resizer extends HTMLDivElement implements WebComponent {
+    private disposable: CompositeDisposable;
+    public update: (location: { left: number; top: number }) => void;
+    public done: () => void;
+    public start: () => void;
 
-interface IResizeProps {
-    update(location: { left: number; top: number }): void;
-    done(): void;
-    className: string;
-}
+    public createdCallback() {
+        this.classList.add("omnisharp-atom-output-resizer");
+    }
 
-export class Resizer<T extends IResizeProps> extends React.Component<T, {}> {
-    private _mousedown = makeRxReactEventHandler<React.MouseEvent>();
-    private disposable = new CompositeDisposable();
+    public detachedCallback() {
+        this.disposable.dispose();
+    }
 
-    public componentDidMount() {
+    public attachedCallback() {
+        this.disposable = new CompositeDisposable();
         const mousemove = Observable.fromEvent<MouseEvent>(document.body, "mousemove").share();
         const mouseup = Observable.fromEvent<MouseEvent>(document.body, "mouseup").share();
-        const mousedown = this._mousedown.observable;
+        const mousedown = Observable.fromEvent<MouseEvent>(document.body, "mousedown").share();
 
         const mousedrag = mousedown.selectMany((md) => {
             const startX = md.clientX + window.scrollX,
-                startY = md.clientY + window.scrollY,
-                startLeft = parseInt((<any>md.target).style.left, 10) || 0,
-                startTop = parseInt((<any>md.target).style.top, 10) || 0;
+                startY = md.clientY + window.scrollY;
 
             return mousemove.map((mm) => {
                 mm.preventDefault();
 
                 return {
-                    left: startLeft + mm.clientX - startX,
-                    top: startTop + mm.clientY - startY
+                    left: (parseInt((<any>md.target).style.left, 10) || 0) + mm.clientX - startX,
+                    top: (parseInt((<any>md.target).style.top, 10) || 0) + mm.clientY - startY
                 };
             }).takeUntil(mouseup);
         });
 
-        mousedown.flatMapLatest(x => mousemove.skipUntil(mouseup)).subscribe(() => this.props.done());
-        this.disposable.add(mousedrag.subscribe(this.props.update));
-    }
-
-    public componentWillUnmount() {
-        this.disposable.dispose();
-    }
-
-    public render() {
-        return React.DOM.div({
-            className: this.props.className,
-            onMouseDown: (e) => this._mousedown.handler(e)
-        });
+        this.disposable.add(mousedown.subscribe(x => this.start()));
+        this.disposable.add(mousedrag.subscribe((x) => this.update(x), null, () => this.done()));
     }
 }
+
+(<any>exports).Resizer = (<any>document).registerElement("omnisharp-resizer", { prototype: Resizer.prototype });

@@ -1,118 +1,121 @@
 /* tslint:disable:no-string-literal */
 import {Models} from "omnisharp-client";
-const _: _.LoDashStatic = require("lodash");
 import {Omni} from "../server/omni";
-import * as React from "react";
 import * as path from "path";
-const $: JQueryStatic = require("jquery");
-import {ReactClientComponent} from "./react-client-component";
-import {findUsages} from "../features/find-usages";
+import {OutputElement, MessageElement} from "./output-component";
+import {HighlightElement} from "./highlight-element";
 
-interface FindWindowState {
-    selectedIndex?: number;
-    usages?: Models.DiagnosticLocation[];
-}
+export interface FindMessageElement extends MessageElement<Models.DiagnosticLocation> { }
 
-interface FindWindowProps {
-    scrollTop: () => number;
-    setScrollTop: (scrollTop: number) => void;
-    findUsages: typeof findUsages;
-}
+const getMessageElement = (function() {
+    const selectedProps = {
+        get: function selected() { return this.classList.contains("selected"); },
+        set: function selected(value: boolean) { if (value) this.classList.add("selected"); else this.classList.remove("selected"); }
+    };
 
-export class FindWindow extends ReactClientComponent<FindWindowProps, FindWindowState> {
+    const keyProps = {
+        get: function key() { return this._key; }
+    };
+
+    const inviewProps = {
+        get: function inview() { return this._inview; },
+        set: function inview(value: boolean) {
+            if (!this._inview && value) {
+                this._text.enhance();
+            }
+            this._inview = value;
+        }
+    };
+
+    function setMessage(key: string, item: Models.DiagnosticLocation) {
+        this._key = key;
+        this._inview = false;
+
+        this.classList.add(item.LogLevel);
+        this._usage = item;
+        this._text.usage = item;
+        this._location.innerText = `${path.basename(item.FileName)}(${item.Line},${item.Column})`;
+        this._filename.innerText = path.dirname(item.FileName);
+    }
+
+    function attached() {
+        this._text.usage = this._usage;
+    }
+
+    function detached() { this._inview = false; }
+
+    return function getMessageElement(): FindMessageElement {
+        const element: FindMessageElement = <any>document.createElement("li");
+        element.classList.add("find-usages");
+
+        const text = (element as any)._text = new HighlightElement();
+        text.classList.add("text-highlight");
+        element.appendChild(text);
+
+        const location = (element as any)._location = document.createElement("pre");
+        location.classList.add("inline-block");
+        element.appendChild(location);
+
+        const filename = (element as any)._filename = document.createElement("pre");
+        filename.classList.add("text-subtle", "inline-block");
+        element.appendChild(filename);
+
+        Object.defineProperty(element, "key", keyProps);
+        Object.defineProperty(element, "selected", selectedProps);
+        Object.defineProperty(element, "inview", inviewProps);
+        element.setMessage = setMessage;
+        element.attached = attached;
+        element.detached = detached;
+
+        return element;
+    };
+})();
+
+export class FindWindow extends HTMLDivElement implements WebComponent {
     public displayName = "FindPaneWindow";
+    private _list: OutputElement<Models.QuickFix, FindMessageElement>;
 
-    private model: typeof findUsages;
-
-    constructor(props?: FindWindowProps, context?: any) {
-        super(props, context);
-        this.model = this.props.findUsages;
-        this.state = { usages: this.model.usages, selectedIndex: this.model.selectedIndex };
+    public createdCallback() {
+        this.classList.add("find-output-pane");
+        this._list = new OutputElement<Models.QuickFix, FindMessageElement>();
+        this.appendChild(this._list);
+        this._list.getKey = (usage: Models.QuickFix) => {
+            return `quick-fix-${usage.FileName}-(${usage.Line}-${usage.Column})-(${usage.EndLine}-${usage.EndColumn})-(${usage.Projects.join("-")})`;
+        };
+        this._list.handleClick = (item: Models.QuickFix) => {
+            this.gotoUsage(item);
+        };
+        this._list.eventName = "usage";
+        this._list.elementFactory = getMessageElement;
     }
 
-    public componentWillMount() {
-        super.componentWillMount();
-        this.disposable.add(this.model.observe.reset.merge(this.model.observe.find.map(z => true))
-            .subscribe(() => this.setState({ usages: this.model.usages })));
-
-        this.disposable.add(this.model.observe.selected.delay(0)
-            .subscribe(z => this.updateStateAndScroll()));
+    public attachedCallback() {
+        this._list.attached();
     }
 
-    public componentDidMount() {
-        super.componentDidMount();
-
-        React.findDOMNode(this).scrollTop = this.props.scrollTop();
-        (<any>React.findDOMNode(this)).onkeydown = (e: any) => this.keydownPane(e);
+    public detachedCallback() {
+        this._list.detached();
     }
 
-    public componentWillUnmount() {
-        super.componentWillUnmount();
-        (<any>React.findDOMNode(this)).onkeydown = undefined;
+    public update(output: Models.QuickFix[]) {
+        this._list.updateOutput(output);
     }
 
-    private updateStateAndScroll() {
-        this.setState({ selectedIndex: this.model.selectedIndex }, () => this.scrollToItemView());
+    public next() {
+        this._list.next();
     }
 
-    private scrollToItemView() {
-        const self = $(React.findDOMNode(this));
-        const item = self.find(`li.selected`);
-        if (!item || !item.position()) return;
-
-        const pane = self;
-        const scrollTop = pane.scrollTop();
-        const desiredTop = item.position().top + scrollTop;
-        const desiredBottom = desiredTop + item.outerHeight();
-
-        if (desiredTop < scrollTop) {
-            pane.scrollTop(desiredTop);
-        } else if (desiredBottom > pane.scrollBottom()) {
-            pane.scrollBottom(desiredBottom);
-        }
+    public prev() {
+        this._list.prev();
     }
 
-    private keydownPane(e: any) {
-        if (e.keyIdentifier === "Down") {
-            atom.commands.dispatch(atom.views.getView(atom.workspace), "omnisharp-atom:next-usage");
-        } else if (e.keyIdentifier === "Up") {
-            atom.commands.dispatch(atom.views.getView(atom.workspace), "omnisharp-atom:previous-usage");
-        } else if (e.keyIdentifier === "Enter") {
-            atom.commands.dispatch(atom.views.getView(atom.workspace), "omnisharp-atom:go-to-usage");
-        }
-    }
+    public get selectedIndex() { return this._list.selectedIndex; }
+    public set selectedIndex(value) { this._list.selectedIndex = value; }
+    public get current() { return this._list.current; }
 
-    private gotoUsage(quickfix: Models.QuickFix, index: number) {
+    private gotoUsage(quickfix: Models.QuickFix) {
         Omni.navigateTo(quickfix);
-        this.model.selectedIndex = index;
-    }
-
-    public render() {
-        return React.DOM.div({
-            className: "error-output-pane " + (this.props["className"] || ""),
-            onScroll: (e) => {
-                this.props.setScrollTop((<any>e.currentTarget).scrollTop);
-            },
-            tabIndex: -1,
-        },
-            React.DOM.ol({
-                style: <any>{ cursor: "pointer" },
-            }, _.map(this.state.usages, (usage: Models.QuickFix, index: number) =>
-                React.DOM.li({
-                    key: `quick-fix-${usage.FileName}-(${usage.Line}-${usage.Column})-(${usage.EndLine}-${usage.EndColumn})-(${usage.Projects.join("-")})`,
-                    className: "find-usages" + (index === this.state.selectedIndex ? " selected" : ""),
-                    onClick: (e) => this.gotoUsage(usage, index)
-                },
-                    React.DOM.pre({
-                        className: "text-highlight"
-                    }, usage.Text),
-                    React.DOM.pre({
-                        className: "inline-block"
-                    }, `${path.basename(usage.FileName)}(${usage.Line},${usage.Column})`),
-                    React.DOM.pre({
-                        className: "text-subtle inline-block"
-                    }, `${path.dirname(usage.FileName)}`)
-                ))
-            ));
     }
 }
+
+(<any>exports).FindWindow = (<any>document).registerElement("omnisharp-find-window", { prototype: FindWindow.prototype });

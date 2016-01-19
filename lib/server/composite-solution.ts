@@ -10,6 +10,7 @@ export class SolutionObserver extends ObservationClientV2<Solution> {
 
         this.model = {
             codecheck: this.makeMergeObserable((solution: Solution) => solution.model.observe.codecheck),
+            unusedCodeRows: this.makeMergeObserable((solution: Solution) => solution.model.observe.unusedCodeRows),
             output: this.makeMergeObserable((solution: Solution) => solution.model.observe.output),
             status: this.makeMergeObserable((solution: Solution) => solution.model.observe.status),
             state: this.makeMergeObserable((solution: Solution) => solution.model.observe.state),

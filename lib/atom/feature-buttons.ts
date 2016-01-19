@@ -1,7 +1,6 @@
 import {CompositeDisposable, Disposable} from "rx";
 import {each} from "lodash";
 import {Omni} from "../server/omni";
-import * as React from "react";
 import {dock} from "../atom/dock";
 
 interface IButton {
@@ -144,26 +143,29 @@ class FeatureButtons implements IFeature {
         const {name, config, icon, tooltip} = button;
 
         let tooltipDisposable: Rx.IDisposable;
-        const reactButton = React.DOM.a({
-            id: `${icon}-name`,
-            className: `btn ${icon} ${enabled ? "btn-success" : ""}`,
-            onClick: () => atom.config.set(config, !atom.config.get(config)),
-            onMouseEnter: (e) => {
-                tooltipDisposable = atom.tooltips.add(<any>e.currentTarget, { title: tooltip });
-                this.disposable.add(tooltipDisposable);
-            },
-            onMouseLeave: (e) => {
-                if (tooltipDisposable) {
-                    this.disposable.remove(tooltipDisposable);
-                    tooltipDisposable.dispose();
-                }
+        const htmlButton = document.createElement("a");
+        htmlButton.id = `${icon}-name`;
+        htmlButton.classList.add("btn",icon);
+        if (enabled) {
+            htmlButton.classList.add("btn-success");
+        }
+
+        htmlButton.onclick = () => atom.config.set(config, !atom.config.get(config));
+        htmlButton.onmouseenter = (e) => {
+            tooltipDisposable = atom.tooltips.add(<any>e.currentTarget, { title: tooltip });
+            this.disposable.add(tooltipDisposable);
+        };
+        htmlButton.onmouseleave = (e) => {
+            if (tooltipDisposable) {
+                this.disposable.remove(tooltipDisposable);
+                tooltipDisposable.dispose();
             }
-        });
+        };
 
         const buttonDisposable = dock.addButton(
             `${name}-button`,
             tooltip,
-            reactButton,
+            htmlButton,
             { priority: 500 + index }
         );
 

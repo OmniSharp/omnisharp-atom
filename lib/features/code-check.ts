@@ -3,7 +3,7 @@ const _ : _.LoDashStatic = require("lodash");
 import {CompositeDisposable, Observable, Subject, Disposable} from "rx";
 import {Omni} from "../server/omni";
 import {dock} from "../atom/dock";
-import {CodeCheckOutputWindow} from "../views/codecheck-output-pane-view";
+import {CodeCheckOutputElement} from "../views/codecheck-output-pane-view";
 import {reloadWorkspace} from "./reload-workspace";
 
 class CodeCheck implements IFeature {
@@ -14,6 +14,7 @@ class CodeCheck implements IFeature {
     private scrollTop: number = 0;
     private _editorSubjects = new WeakMap<Atom.TextEditor, () => Rx.Observable<Models.DiagnosticLocation[]>>();
     private _fullCodeCheck: Subject<any>;
+    private _window = new CodeCheckOutputElement;
 
     public activate() {
         this.disposable = new CompositeDisposable();
@@ -22,26 +23,25 @@ class CodeCheck implements IFeature {
         this.disposable.add(this._fullCodeCheck);
 
         this.disposable.add(atom.commands.add("atom-workspace", "omnisharp-atom:next-diagnostic", () => {
-            this.updateSelectedItem(this.selectedIndex + 1);
+            this._window.next();
         }));
 
         this.disposable.add(atom.commands.add("atom-workspace", "omnisharp-atom:go-to-diagnostic", () => {
-            if (this.displayDiagnostics[this.selectedIndex])
-                Omni.navigateTo(this.displayDiagnostics[this.selectedIndex]);
+            Omni.navigateTo(this._window.current);
         }));
 
         this.disposable.add(atom.commands.add("atom-workspace", "omnisharp-atom:previous-diagnostic", () => {
-            this.updateSelectedItem(this.selectedIndex - 1);
+            this._window.prev();
         }));
 
         this.disposable.add(atom.commands.add("atom-workspace", "omnisharp-atom:go-to-next-diagnostic", () => {
-            this.updateSelectedItem(this.selectedIndex + 1);
-            Omni.navigateTo(this.displayDiagnostics[this.selectedIndex]);
+            this._window.next();
+            Omni.navigateTo(this._window.current);
         }));
 
         this.disposable.add(atom.commands.add("atom-workspace", "omnisharp-atom:go-to-previous-diagnostic", () => {
-            this.updateSelectedItem(this.selectedIndex - 1);
-            Omni.navigateTo(this.displayDiagnostics[this.selectedIndex]);
+            this._window.prev();
+            Omni.navigateTo(this._window.current);
         }));
 
         this.disposable.add(Omni.eachEditor((editor, cd) => {
@@ -83,11 +83,11 @@ class CodeCheck implements IFeature {
             this.selectedIndex = 0;
         }));
 
-        this.disposable.add(dock.addWindow("errors", "Errors & Warnings", CodeCheckOutputWindow, {
-            scrollTop: () => this.scrollTop,
-            setScrollTop: (scrollTop: number) => this.scrollTop = scrollTop,
-            codeCheck: this
-        }));
+        this.disposable.add(Omni.diagnostics
+            .delay(100)
+            .subscribe(diagnostics => this._window.update(diagnostics)));
+
+        this.disposable.add(dock.addWindow("errors", "Errors & Warnings", this._window));
 
         let started = 0, finished = 0;
         this.disposable.add(Observable.combineLatest(
@@ -128,15 +128,6 @@ class CodeCheck implements IFeature {
         return _.filter(quickFixes, (quickFix: Models.DiagnosticLocation) => {
             return quickFix.LogLevel !== "Hidden";
         });
-    }
-
-    private updateSelectedItem(index: number) {
-        if (index < 0)
-            index = 0;
-        if (index >= this.displayDiagnostics.length)
-            index = this.displayDiagnostics.length - 1;
-        if (this.selectedIndex !== index)
-            this.selectedIndex = index;
     }
 
     public dispose() {

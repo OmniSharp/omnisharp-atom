@@ -3,7 +3,7 @@ import {Models} from "omnisharp-client";
 const _: _.LoDashStatic = require("lodash");
 import {CompositeDisposable, Observable, Disposable, Subject, Scheduler} from "rx";
 import {Omni} from "../server/omni";
-let fastdom: { read(cb: Function): any; write(cb: Function): any; } = require("fastdom");
+let fastdom: typeof Fastdom = require("fastdom");
 
 interface IDecoration {
     destroy(): any;
@@ -253,9 +253,9 @@ export class Lens implements Rx.IDisposable {
         if (this._decoration && this._element) {
             const element = this._element;
             if (isVisible) {
-                fastdom.read(() => element.style.display === "none" && fastdom.write(() => element.style.display = ""));
+                fastdom.measure(() => element.style.display === "none" && fastdom.mutate(() => element.style.display = ""));
             } else {
-                fastdom.read(() => element.style.display !== "none" && fastdom.write(() => element.style.display = "none"));
+                fastdom.measure(() => element.style.display !== "none" && fastdom.mutate(() => element.style.display = "none"));
             }
         }
     }

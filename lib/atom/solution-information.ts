@@ -1,14 +1,13 @@
 import {CompositeDisposable, Disposable} from "rx";
 const _ : _.LoDashStatic = require("lodash");
-import {SolutionStatusCard, ICardProps} from "../views/solution-status-view";
+import {SolutionStatusCard} from "../views/solution-status-view";
 import {SolutionManager} from "../server/solution-manager";
 import {DriverState} from "omnisharp-client";
-import * as React from "react";
 
 class SolutionInformation implements IFeature {
     private disposable: CompositeDisposable;
     public selectedIndex: number = 0;
-    private card: SolutionStatusCard<ICardProps>;
+    private card: SolutionStatusCard;
     private cardDisposable: Disposable;
     private container: Element;
 
@@ -66,10 +65,7 @@ class SolutionInformation implements IFeature {
             this.selectedIndex = index;
 
         if (this.card) {
-            this.card.updateCard({
-                model: SolutionManager.activeSolutions[this.selectedIndex].model,
-                count: SolutionManager.activeSolutions.length
-            });
+            this.card.updateCard(SolutionManager.activeSolutions[this.selectedIndex].model, SolutionManager.activeSolutions.length);
         }
     }
 
@@ -82,13 +78,11 @@ class SolutionInformation implements IFeature {
             workspace.appendChild(container);
         }
 
-        let notice: any;
         if (SolutionManager.activeSolutions.length) {
-            const element: SolutionStatusCard<ICardProps> = <any>React.render(React.createElement(SolutionStatusCard, {
-                model: SolutionManager.activeSolutions[this.selectedIndex].model,
-                count: SolutionManager.activeSolutions.length,
-                attachTo: ".projects-icon"
-            }), this.container);
+            const element = new SolutionStatusCard;
+            element.attachTo = ".projects-icon";
+            element.updateCard(SolutionManager.activeSolutions[this.selectedIndex].model, SolutionManager.activeSolutions.length);
+            this.container.appendChild(element);
 
             this.card = element;
 
@@ -98,7 +92,7 @@ class SolutionInformation implements IFeature {
             }));
 
             disposable.add(Disposable.create(() => {
-                React.unmountComponentAtNode(this.container);
+                this.card.remove();
                 this.card = null;
                 this.cardDisposable = null;
             }));
@@ -107,10 +101,8 @@ class SolutionInformation implements IFeature {
                 this.cardDisposable.dispose();
             }
 
-            notice = <any>React.render(React.DOM.div({}, "Solution not loaded!"), this.container);
-
             disposable.add(Disposable.create(() => {
-                React.unmountComponentAtNode(this.container);
+                this.card.remove();
                 this.card = null;
                 this.cardDisposable = null;
             }));

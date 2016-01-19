@@ -3,7 +3,6 @@ import {CompositeDisposable, Disposable} from "rx";
 import {ProjectViewModel} from "../server/project-view-model";
 import {Omni} from "../server/omni";
 import {FrameworkSelectorComponent} from "../views/framework-selector-view";
-import * as React from "react";
 
 class FrameworkSelector implements IAtomFeature {
     private disposable: Rx.CompositeDisposable;
@@ -49,10 +48,11 @@ class FrameworkSelector implements IAtomFeature {
             });
         }
 
-        this._component = <any>React.render(React.createElement(FrameworkSelectorComponent, { alignLeft: !atom.config.get("grammar-selector.showOnRightSideOfStatusBar") }), this.view);
+        this._component = new FrameworkSelectorComponent;
+        this._component.alignLeft = !atom.config.get("grammar-selector.showOnRightSideOfStatusBar");
+        this.view.appendChild(this._component);
 
         this.disposable.add(Disposable.create(() => {
-            React.unmountComponentAtNode(this.view);
             tile.destroy();
             this.view.remove();
         }));
@@ -71,7 +71,8 @@ class FrameworkSelector implements IAtomFeature {
 
                 const {frameworks, activeFramework} = project;
                 this.project = project;
-                this._component.setState({ frameworks: frameworks, activeFramework });
+                this._component.frameworks = frameworks;
+                this._component.activeFramework = activeFramework;
             }));
 
         this.disposable.add(Omni.activeFramework
@@ -80,7 +81,8 @@ class FrameworkSelector implements IAtomFeature {
 
                 const {project, framework} = ctx;
                 this.project = project;
-                this._component.setState({ frameworks: project.frameworks, activeFramework: framework });
+                this._component.frameworks = project.frameworks;
+                this._component.activeFramework = framework;
             }));
     }
 
@@ -91,7 +93,7 @@ class FrameworkSelector implements IAtomFeature {
     public setActiveFramework(framework: Models.DnxFramework) {
         if (this.project) {
             this.project.activeFramework = framework;
-            this._component.setState({ activeFramework: framework });
+            this._component.activeFramework = framework;
         }
     }
 

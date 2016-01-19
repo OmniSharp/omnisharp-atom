@@ -6,24 +6,24 @@ import {OmnisharpClientStatus} from "omnisharp-client";
 import {server} from "../atom/server-information";
 import {SolutionManager} from "../server/solution-manager";
 import {commandRunner} from "../atom/command-runner";
-let fastdom : { read(cb: Function): any; write(cb: Function): any; } = require("fastdom");
+let fastdom: typeof Fastdom = require("fastdom");
 
 function addClassIfNotContains(icon: HTMLElement, ...cls: string[]) {
     if (icon) {
-        fastdom.read(() => {
+        fastdom.measure(() => {
             _.each(cls, c => {
                 if (!icon.classList.contains(c))
-                    fastdom.write(() => icon.classList.add(c));
+                    fastdom.mutate(() => icon.classList.add(c));
             });
         });
     }
 }
 function removeClassIfContains(icon: HTMLElement, ...cls: string[]) {
     if (icon) {
-        fastdom.read(() => {
+        fastdom.measure(() => {
             _.each(cls, c => {
                 if (icon.classList.contains(c))
-                    fastdom.write(() => icon.classList.remove(c));
+                    fastdom.mutate(() => icon.classList.remove(c));
             });
         });
     }
@@ -115,7 +115,7 @@ export class FlameElement extends HTMLAnchorElement implements WebComponent {
         }
 
         if (status.outgoingRequests !== this._state.status.outgoingRequests) {
-            fastdom.write(() => this._outgoing.innerText = status.outgoingRequests && status.outgoingRequests.toString() || "0");
+            fastdom.mutate(() => this._outgoing.innerText = status.outgoingRequests && status.outgoingRequests.toString() || "0");
         }
 
         this._state.status = status || <any>{};
@@ -150,9 +150,9 @@ export class CommandRunnerElement extends HTMLAnchorElement implements WebCompon
             }
 
             if (state === CommandRunnerState.Off) {
-                fastdom.read(() => this.style.display !== "none" && fastdom.write(() => this.style.display = "none"));
+                fastdom.measure(() => this.style.display !== "none" && fastdom.mutate(() => this.style.display = "none"));
             } else {
-                fastdom.read(() => this.style.display === "none" && fastdom.write(() => this.style.display = ""));
+                fastdom.measure(() => this.style.display === "none" && fastdom.mutate(() => this.style.display = ""));
             }
         }
     }
@@ -201,7 +201,7 @@ export class DiagnosticsElement extends HTMLAnchorElement implements WebComponen
     public updateState(state: typeof DiagnosticsElement.prototype._state) {
         if (!_.isEqual(this._state, state)) {
             this._state = state;
-            fastdom.write(() => {
+            fastdom.mutate(() => {
                 if (this._state.errorCount) {
                     this._errors.innerText = this._state.errorCount.toString();
                 } else {
@@ -247,12 +247,12 @@ export class ProjectCountElement extends HTMLAnchorElement implements WebCompone
     public updateState(state: typeof ProjectCountElement.prototype._state) {
         if (!_.isEqual(this._state, state)) {
             this._state = state;
-            fastdom.write(() => this.projects.innerText = `${this._state.projectCount} Projects`);
+            fastdom.mutate(() => this.projects.innerText = `${this._state.projectCount} Projects`);
         }
     }
 
     public updateSolutionNumber(solutionNumber: string) {
-        fastdom.write(() => this._solutionNunmber.innerText = solutionNumber);
+        fastdom.mutate(() => this._solutionNunmber.innerText = solutionNumber);
     }
 }
 
@@ -280,7 +280,6 @@ export class StatusBarElement extends HTMLElement implements WebComponent, Rx.ID
         const projectCount = this._projectCount = <ProjectCountElement>new exports.ProjectCountElement();
         this.appendChild(projectCount);
         projectCount.onclick = () => this.toggleSolutionInformation();
-        projectCount.style.display = "none";
         projectCount.projects.style.display = "none";
 
         const diagnostics = this._diagnostics = <DiagnosticsElement>new exports.DiagnosticsElement();
@@ -352,10 +351,6 @@ export class StatusBarElement extends HTMLElement implements WebComponent, Rx.ID
             this._hasValidEditor = hasValidEditor;
         }
 
-        if (this._state.isOn) {
-            fastdom.read(() => this._projectCount.style.display === "none" && fastdom.write(() => this._projectCount.style.display = ""));
-        }
-
         if (this._state.isOn && this._hasValidEditor) {
             this._showOnStateItems();
         } else {
@@ -364,16 +359,16 @@ export class StatusBarElement extends HTMLElement implements WebComponent, Rx.ID
     }
 
     private _showOnStateItems() {
-        fastdom.read(() => {
-            if (this._diagnostics.style.display === "none") { fastdom.write(() => this._diagnostics.style.display = ""); }
-            if (this._projectCount.projects.style.display === "none") { fastdom.write(() => this._projectCount.projects.style.display = ""); }
+        fastdom.measure(() => {
+            if (this._diagnostics.style.display === "none") { fastdom.mutate(() => this._diagnostics.style.display = ""); }
+            if (this._projectCount.projects.style.display === "none") { fastdom.mutate(() => this._projectCount.projects.style.display = ""); }
         });
     }
 
     private _hideOnStateItems() {
-        fastdom.read(() => {
-            if (this._diagnostics.style.display !== "none") { fastdom.write(() => this._diagnostics.style.display = "none"); }
-            if (this._projectCount.projects.style.display !== "none") { fastdom.write(() => this._projectCount.projects.style.display = "none"); }
+        fastdom.measure(() => {
+            if (this._diagnostics.style.display !== "none") { fastdom.mutate(() => this._diagnostics.style.display = "none"); }
+            if (this._projectCount.projects.style.display !== "none") { fastdom.mutate(() => this._projectCount.projects.style.display = "none"); }
         });
     }
 
