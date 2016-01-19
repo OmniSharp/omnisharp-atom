@@ -124,6 +124,8 @@ export class SignatureView extends HTMLDivElement { /* implements WebComponent *
         }
 
         const signature = member.Signatures[this._selectedIndex];
+        if (!signature) return;
+
         let docs: Document;
         if (signature.Documentation)
             docs = parseString(signature.Documentation);
