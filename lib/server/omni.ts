@@ -4,7 +4,7 @@ import {Solution} from "./solution";
 const _: _.LoDashStatic = require("lodash");
 import {basename} from "path";
 import {DriverState} from "omnisharp-client";
-import {ProjectViewModel} from "./project-view-model";
+import {ProjectViewModel, EmptyProjectViewModel} from "./project-view-model";
 import {ViewModel} from "./view-model";
 import * as fs from "fs";
 import * as path from "path";
@@ -607,11 +607,12 @@ export class OmnisharpEditorContext implements Rx.IDisposable {
 
     constructor(editor: Atom.TextEditor, solution: Solution) {
         this._solution = solution;
+        this._project = new EmptyProjectViewModel(null, solution.path);
 
         this._disposable.add(solution.model
             .getProjectForEditor(editor)
             .take(1)
-            .subscribe((project) => this._project = project));
+            .subscribe((project) => this._project.update(project)));
     }
 
     public dispose() {
