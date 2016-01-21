@@ -9,19 +9,20 @@ describe("OmniSharp Atom", () => {
     setupFeature([]);
 
     describe("when the package is activated", () => {
-        it("connect", (done) => {
-            Observable.fromPromise<Atom.TextEditor>(<any>atom.workspace.open("simple/code-lens/CodeLens.cs"))
+        it("connect", () => {
+            return Observable.fromPromise<Atom.TextEditor>(<any>atom.workspace.open("simple/code-lens/CodeLens.cs"))
                 .flatMap(editor => SolutionManager.getSolutionForEditor(editor))
                 .flatMap(x => x.state.startWith(x.currentState))
                 .filter(z => z === DriverState.Connected)
                 .take(1)
-                .subscribe(() => {
+                .do(() => {
                     expect(SolutionManager.connected).to.be.true;
-                }, null, done);
+                })
+                .toPromise();
         });
 
-        xit("connect-simple2", (done) => {
-            Observable.fromPromise(
+        xit("connect-simple2", () => {
+            return Observable.fromPromise(
                 Promise.all([
                     atom.workspace.open("simple/code-lens/CodeLens.cs"),
                     atom.workspace.open("simple2/project.json")
@@ -32,11 +33,11 @@ describe("OmniSharp Atom", () => {
                 .flatMap(x => x.state.startWith(x.currentState))
                 .filter(z => z === DriverState.Connected)
                 .take(1)
-                .subscribe(null, null, () => {
+                .do(null, null, () => {
                     expect(SolutionManager.connected).to.be.true;
                     expect(SolutionManager.activeSolutions.length).to.be.eql(2);
-                    done();
-                });
+                })
+                .toPromise();
         });
     });
 });

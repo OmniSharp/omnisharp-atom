@@ -18,21 +18,22 @@ describe("Code Format", () => {
         disposable.dispose();
     });
 
-    it("formats code", (done) => {
+    it("formats code", () => {
         const d = restoreBuffers();
         const disposable = new CompositeDisposable();
         disposable.add(d);
 
         let tries = 5;
-        atom.workspace.open("simple/code-format/UnformattedClass.cs")
+        return atom.workspace.open("simple/code-format/UnformattedClass.cs")
             .then((editor) => {
-                execute(editor);
+                return execute(editor);
             });
 
-        function execute(editor: Atom.TextEditor) {
-            Omni.listener.formatRange
+        function execute(editor: Atom.TextEditor): any {
+            const promise = Omni.listener.formatRange
                 .take(1)
-                .subscribe(({request}) => {
+                .toPromise()
+                .then(({request}) => {
                     expect(editor.getPath()).to.be.eql(request.FileName);
                     const expected = `public class UnformattedClass{    public const int TheAnswer = 42;}`;
                     const result = editor.getText().replace(/\r|\n/g, "");
@@ -41,7 +42,7 @@ describe("Code Format", () => {
                         tries = 0;
                     } catch (e) {
                         if (tries > 0) {
-                            execute(editor);
+                            return execute(editor);
                         } else {
                             tries = -1;
                             throw e;
@@ -49,15 +50,15 @@ describe("Code Format", () => {
                     } finally {
                         if (tries === -1) {
                             disposable.dispose();
-                            done(1);
+                            throw new Error("Failed!");
                         } else if (tries === 0) {
                             disposable.dispose();
-                            done();
                         }
                         tries--;
                     }
                 });
             codeFormat.format();
+            return promise;
         }
     });
 });

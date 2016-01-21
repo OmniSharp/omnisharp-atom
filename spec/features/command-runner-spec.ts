@@ -8,19 +8,20 @@ import {getDnxExe} from "../../lib/atom/command-runner";
 describe("Command Runner", () => {
     setupFeature(["atom/command-runner"]);
 
-    xit("adds commands", (done) => {
+    xit("adds commands", () => {
         const disposable = new CompositeDisposable();
-        openEditor("commands/project.json")
+        return openEditor("commands/project.json")
             .flatMap(x => x.solution.observe.projects)
             .debounce(1000)
-            .subscribe(() => {
+            .do(() => {
                 const commands: any = atom.commands;
 
                 expect(commands.registeredCommands["omnisharp-dnx:commands-[web]-(watch)"]).to.be.true;
                 expect(commands.registeredCommands["omnisharp-dnx:commands-[kestrel]-(watch)"]).to.be.true;
                 expect(commands.registeredCommands["omnisharp-dnx:commands-[run]"]).to.be.true;
                 disposable.dispose();
-            }, done, done);
+            })
+            .toPromise();
     });
 
     it("returns the correct path for a given environment", () => {

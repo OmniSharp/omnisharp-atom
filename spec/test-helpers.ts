@@ -6,7 +6,7 @@ import {DriverState} from "omnisharp-client";
 
 export function setupFeature(features: string[], unitTestMode = true) {
     let cd: CompositeDisposable;
-    beforeEach(function(done) {
+    beforeEach(function() {
         cd = new CompositeDisposable();
         SolutionManager._unitTestMode_ = unitTestMode;
         SolutionManager._kick_in_the_pants_ = true;
@@ -14,10 +14,9 @@ export function setupFeature(features: string[], unitTestMode = true) {
         atom.config.set("omnisharp-atom:feature-white-list", true);
         atom.config.set("omnisharp-atom:feature-list", features);
 
-        atom.packages.activatePackage("language-csharp")
+        return atom.packages.activatePackage("language-csharp")
             .then(() => atom.packages.activatePackage("omnisharp-atom"))
-            .then((pack: Atom.Package) => pack.mainModule._activated.delay(200).toPromise())
-            .then(() => done());
+            .then((pack: Atom.Package) => pack.mainModule._activated.delay(200).toPromise());
     });
 
     afterEach(() => {
@@ -80,7 +79,7 @@ export function openEditor(file: string) {
             SolutionManager.getSolutionForEditor(editor).map(solution => ({ editor, solution }))
         )
         .flatMap(({editor, solution}) => solution.state.startWith(solution.currentState)
-        .map(state => ({ editor, solution, state: state })))
+            .map(state => ({ editor, solution, state: state })))
         .filter(z => z.state === DriverState.Connected)
         .take(1)
         .delay(350);
