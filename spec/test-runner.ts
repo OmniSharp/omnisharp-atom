@@ -52,7 +52,7 @@ module.exports = function(
     const mocha = new mochaCtor({
         ui: "bdd",
         reporter: headless ? "mocha-unfunk-reporter" : "html",
-        timeout: headless ? 60000 : 20000,
+        timeout: 60000,
         //grep: new RegExp("editor switch")
     });
 
