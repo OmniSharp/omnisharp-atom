@@ -1,4 +1,0 @@
-'body.platform-win32':
-  'ctrl-n': 'advanced-open-file:toggle'
-'body:not(.platform-win32)':
-  'cmd-n': 'advanced-open-file:toggle'

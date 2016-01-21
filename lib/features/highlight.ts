@@ -1,7 +1,7 @@
 /* tslint:disable:no-string-literal */
 import {Models} from "omnisharp-client";
-import {Omni} from "../server/omni";
-import {each, extend, has, contains, any, range, remove, pull, find, chain, unique, findIndex, all, isEqual, min, debounce, sortBy, uniqueId} from "lodash";
+import {Omni, OmnisharpTextEditor} from "../server/omni";
+import {each, extend, has, any, range, remove, pull, find, chain, unique, findIndex, all, isEqual, min, debounce, sortBy, uniqueId} from "lodash";
 import {Observable, Subject, ReplaySubject, CompositeDisposable, Disposable} from "rx";
 /* tslint:disable:variable-name */
 const AtomGrammar = require((<any>atom).config.resourcePath + "/node_modules/first-mate/lib/grammar.js");
@@ -35,7 +35,7 @@ export const ExcludeClassifications = [
 
 class Highlight implements IFeature {
     private disposable: Rx.CompositeDisposable;
-    private editors: Array<Atom.TextEditor>;
+    private editors: Array<OmnisharpTextEditor>;
 
     public activate() {
         this.disposable = new CompositeDisposable();
@@ -43,19 +43,21 @@ class Highlight implements IFeature {
 
         this.disposable.add(Omni.eachEditor((editor, cd) => this.setupEditor(editor, cd)));
 
-        this.disposable.add(isEditorObserveRetokenizing(
-            Observable.merge(Omni.activeEditor,
-                Omni.activeFramework
-                    .flatMap(z => Omni.listener.highlight
-                        .where(x => contains(x.request.ProjectNames, `${z.project.name}+${z.framework.ShortName}`))
-                        .map(x => ({ editor: find(this.editors, editor => editor.getPath() === x.request.FileName), request: x.request, response: x.response }))
-                        .take(1))
-                    .flatMap(z => Omni.activeEditor))
-                .debounce(DEBOUNCE_TIME)
-                .where(z => !!z))
-            .subscribe(editor => {
-                editor.displayBuffer.tokenizedBuffer["silentRetokenizeLines"]();
-            }));
+        this.disposable.add(Omni.switchActiveEditor((editor, cd) => {
+            cd.add(editor.omnisharp.project
+                .observe.activeFramework
+                .skip(1)
+                .distinctUntilChanged()
+                .subscribe(() => {
+                    editor.omnisharp.get<Rx.Observer<boolean>>("highlightRequest").onNext(true);
+                }));
+
+            cd.add(editor.omnisharp
+                .get<Observable<{ editor: OmnisharpTextEditor; highlights: Models.HighlightSpan[]; projects: string[] }>>("highight")
+                .subscribe(() => {
+                    editor.displayBuffer.tokenizedBuffer["silentRetokenizeLines"]();
+                }));
+        }));
     }
 
     public dispose() {
@@ -64,36 +66,52 @@ class Highlight implements IFeature {
         }
     }
 
-    private setupEditor(editor: Atom.TextEditor, disposable: CompositeDisposable) {
+    private setupEditor(editor: OmnisharpTextEditor, disposable: CompositeDisposable) {
         if (editor["_oldGrammar"] || !editor.getGrammar) return;
 
         const path = editor.getPath();
-        disposable.add(Omni.getSolutionForEditor(editor)
-            .flatMap(solution =>
-                isObserveRetokenizing(
-                    solution.observe.highlight.where(z => z.request.FileName === path)
-                        .combineLatest(
-                        solution.model.observe.unusedCodeRows,
-                        (highlight, quickfixes) => ({
+        const issueRequest = new Subject<boolean>();
+
+        editor.omnisharp.set("highlightRequest", (context) => issueRequest);
+        editor.omnisharp.set("highlight", (context) => {
+            return issueRequest
+                .startWith(true)
+                .flatMap(() => editor.omnisharp.get<Rx.Observable<boolean>>("isObserveRetokenizing")
+                    .where(x => x))
+                .flatMap(() => Observable.defer(() => {
+                    const projects = context.project.activeFramework.Name && [context.project.activeFramework.Name] || [];
+
+                    let linesToFetch = unique<number>((editor.getGrammar() as any).linesToFetch) || [];
+                    if (!linesToFetch || !linesToFetch.length)
+                        linesToFetch = [];
+
+                    return Observable.combineLatest(
+                        context.solution
+                            .highlight({
+                                ProjectNames: projects,
+                                Lines: unique<number>((editor.getGrammar() as any).linesToFetch) || [],
+                                ExcludeClassifications
+                            }),
+                        context.solution
+                            .model.observe.unusedCodeRows,
+                        (response, quickfixes) => ({
                             editor,
-                            highlights: (highlight.response ? highlight.response.Highlights : []).concat(getHighlightsFromQuickFixes(path, quickfixes, highlight.request.ProjectNames)),
-                            projectNames: highlight.request.ProjectNames
-                        }))))
-            .tapOnNext(({highlights, projectNames}) => {
-                if (editor.getGrammar) {
-                    (<any>editor.getGrammar()).setResponses(highlights, projectNames.length > 0);
-                }
-            })
-            .flatMap(z => Omni.activeEditor.take(1).where(x => x === editor).map(x => z))
-            .subscribe(() => {
-                editor.displayBuffer.tokenizedBuffer["silentRetokenizeLines"]();
-            }));
+                            highlights: (response ? response.Highlights : []).concat(getHighlightsFromQuickFixes(path, quickfixes, projects)),
+                            projects
+                        }))
+                        .do(({highlights}) => {
+                            if (editor.getGrammar) {
+                                (<any>editor.getGrammar()).setResponses(highlights, projects.length > 0);
+                            }
+                        })
+                        .shareReplay(1);
+                }));
+        });
 
         this.editors.push(editor);
         this.disposable.add(disposable);
 
-        augmentEditor(editor);
-        editor.setGrammar(editor.getGrammar());
+        augmentEditor(editor, true);
 
         disposable.add(Disposable.create(() => {
             (editor.getGrammar() as any).linesToFetch = [];
@@ -106,29 +124,9 @@ class Highlight implements IFeature {
             pull(this.editors, editor);
         }));
 
-        const issueRequest = new Subject<boolean>();
-
-        disposable.add(issueRequest
-            .debounce(DEBOUNCE_TIME)
-            .flatMap(z => Omni.getProject(editor).map(x => x.activeFramework.Name === "all" ? "" : (x.name + "+" + x.activeFramework.ShortName)).timeout(200, Observable.just("")))
-            .flatMapLatest((framework) => {
-                let projects: any[] = [];
-                if (framework)
-                    projects = [framework];
-
-                let linesToFetch = unique<number>((editor.getGrammar() as any).linesToFetch) || [];
-                if (!linesToFetch || !linesToFetch.length)
-                    linesToFetch = [];
-
-                return Omni.request(editor, solution => solution.highlight({
-                    ProjectNames: projects,
-                    Lines: <any>linesToFetch,
-                    ExcludeClassifications
-                })).map(z => ({ projects, response: z }));
-            }).subscribe());
-
-        disposable.add(Omni.getProject(editor)
-            .flatMap(z => z.observe.activeFramework).subscribe(() => {
+        disposable.add(editor.omnisharp.project
+            .observe.activeFramework
+            .subscribe(() => {
                 (editor.getGrammar() as any).linesToFetch = [];
                 if ((editor.getGrammar() as any).responses) (editor.getGrammar() as any).responses.clear();
                 issueRequest.onNext(true);
@@ -141,9 +139,12 @@ class Highlight implements IFeature {
             issueRequest.onNext(true);
         }));
 
-        disposable.add(Omni.whenEditorConnected(editor).delay(1000).subscribeOnCompleted(() => {
-            issueRequest.onNext(true);
-        }));
+        disposable.add(editor.omnisharp.solution
+            .whenConnected()
+            .delay(1000)
+            .subscribeOnCompleted(() => {
+                issueRequest.onNext(true);
+            }));
     }
 
     public required = false;
@@ -152,7 +153,7 @@ class Highlight implements IFeature {
     public default = false;
 }
 
-export function augmentEditor(editor: Atom.TextEditor) {
+export function augmentEditor(editor: Atom.TextEditor, doSetGrammar = false) {
     if (!editor["_oldGrammar"])
         editor["_oldGrammar"] = editor.getGrammar();
     if (!editor["_setGrammar"])
@@ -169,6 +170,7 @@ export function augmentEditor(editor: Atom.TextEditor) {
         editor.displayBuffer.tokenizedBuffer["chunkSize"] = 20;
 
     editor.setGrammar = setGrammar;
+    if (doSetGrammar) editor.setGrammar(editor.getGrammar());
 
     (<any>editor.displayBuffer.tokenizedBuffer).buildTokenizedLineForRowWithText = function(row: number) {
         (editor.getGrammar() as any)["__row__"] = row;
@@ -250,25 +252,6 @@ export function augmentEditor(editor: Atom.TextEditor) {
     };
 }
 
-function isObserveRetokenizing<T extends { editor: Atom.TextEditor; }>(observable: Rx.Observable<T>) {
-    return observable
-        .where(z => !!z && !!z.editor && !!z.editor.getGrammar)
-        .where(z => !!(<Observable<boolean>>(<any>z.editor.getGrammar()).isObserveRetokenizing))
-        .flatMap(z => (<Observable<boolean>>(<any>z.editor.getGrammar()).isObserveRetokenizing)
-            .where(x => !!x)
-            .take(1)
-            .map(x => z));
-}
-
-function isEditorObserveRetokenizing(observable: Rx.Observable<Atom.TextEditor>) {
-    return observable.where(z => !!z && !!z.getGrammar)
-        .where(z => !!(<Observable<boolean>>(<any>z.getGrammar()).isObserveRetokenizing))
-        .flatMap(z => (<Observable<boolean>>(<any>z.getGrammar()).isObserveRetokenizing)
-            .where(x => !!x)
-            .take(1)
-            .map(x => z));
-}
-
 interface IHighlightingGrammar extends FirstMate.Grammar {
     isObserveRetokenizing: Rx.Subject<boolean>;
     linesToFetch: number[];
@@ -289,6 +272,11 @@ class Grammar {
 
     constructor(editor: Atom.TextEditor, base: FirstMate.Grammar, options: { readonly: boolean }) {
         this.isObserveRetokenizing = new ReplaySubject<boolean>(1);
+        this.isObserveRetokenizing.onNext(true);
+
+        if ((editor as any).omnisharp) {
+            (editor as any).omnisharp.set("isObserveRetokenizing", () => new ReplaySubject<boolean>(1));
+        }
 
         this.editor = editor;
         this.responses = new Map<number, Models.HighlightSpan[]>();

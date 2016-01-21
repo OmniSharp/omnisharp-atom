@@ -307,39 +307,14 @@ class OmniSharpAtom {
     /* tslint:enable:variable-name */
 
     private configureKeybindings() {
-        const omnisharpFileNew = Omni.packageDir + "/omnisharp-atom/keymaps/omnisharp-file-new.cson";
-        this.disposable.add(atom.config.observe("omnisharp-atom.enableAdvancedFileNew", (enabled) => {
-            if (enabled) {
-                atom.keymaps.loadKeymap(omnisharpFileNew);
-            } else {
-                atom.keymaps.removeBindingsFromSource(omnisharpFileNew);
-            }
-        }));
-
         let disposable: EventKit.Disposable;
-        const omnisharpAdvancedFileNew = Omni.packageDir + "/omnisharp-atom/keymaps/omnisharp-advanced-file-new.cson";
-        this.disposable.add(atom.config.observe("omnisharp-atom.useAdvancedFileNew", (enabled) => {
+        const omnisharpAdvancedFileNew = Omni.packageDir + "/omnisharp-atom/keymaps/omnisharp-file-new.cson";
+        this.disposable.add(atom.config.observe("omnisharp-atom.enableAdvancedFileNew", (enabled: boolean) => {
             if (enabled) {
                 atom.keymaps.loadKeymap(omnisharpAdvancedFileNew);
-
-                const anymenu = <any>atom.menu;
-                _.each(anymenu.template, (template: any) => {
-                    const item = <any>_.find(template.submenu, { command: "application:new-file" });
-                    if (item) {
-                        item.command = "advanced-open-file:toggle";
-                    }
-                });
             } else {
                 if (disposable) disposable.dispose();
                 atom.keymaps.removeBindingsFromSource(omnisharpAdvancedFileNew);
-
-                const anymenu = <any>atom.menu;
-                _.each(anymenu.template, (template: any) => {
-                    const item = <any>_.find(template.submenu, { command: "advanced-open-file:toggle" });
-                    if (item) {
-                        item.command = "application:new-file";
-                    }
-                });
             }
         }));
     }
@@ -368,12 +343,6 @@ class OmniSharpAtom {
             description: "Enable `Advanced File New` when doing ctrl-n/cmd-n within a C# editor.",
             type: "boolean",
             default: true
-        },
-        useAdvancedFileNew: {
-            title: "Use `Advanced File New` as default",
-            description: "Use `Advanced File New` as your default new command everywhere.",
-            type: "boolean",
-            default: false
         },
         useLeftLabelColumnForSuggestions: {
             title: "Use Left-Label column in Suggestions",
