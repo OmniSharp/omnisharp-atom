@@ -10,21 +10,22 @@ describe("Code Lens", () => {
 
     (<any>Lens.prototype)._isVisible = () => true;
 
-    it("should add code lens", (done) => {
-        Observable.zip(
+    it("should add code lens", () => {
+        return Observable.zip(
             openEditor("simple/code-lens/CodeLens.cs"),
             Omni.listener.currentfilemembersasflat,
             (x, z) => <[typeof x, typeof z]>[x, z]
         )
             .take(1)
             .delay(300)
-            .subscribe((ctx) => {
+            .do((ctx) => {
                 expect(ctx[1].response.length).to.be.eql(15);
-            }, done, done);
+            })
+            .toPromise();
     });
 
-    xit("should handle editor switching", (done) => {
-        openEditor("simple/code-lens/CodeLens.cs")
+    xit("should handle editor switching", () => {
+        return openEditor("simple/code-lens/CodeLens.cs")
             .flatMap(({solution}) => solution.observe.currentfilemembersasflat.take(1))
             .delay(300)
             .flatMap(() => openEditor("simple/code-lens/CodeLens2.cs"))
@@ -33,8 +34,9 @@ describe("Code Lens", () => {
             .flatMap(() => openEditor("simple/code-lens/CodeLens.cs"))
             .flatMap(({editor, solution}) => solution.observe.currentfilemembersasflat.take(1).map(() => editor))
             .delay(1000)
-            .subscribe((editor) => {
+            .do((editor) => {
                 expect(editor.getDecorations().length).to.be.greaterThan(9);
-            }, done, done);
+            })
+            .toPromise();
     });
 });

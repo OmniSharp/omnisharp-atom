@@ -145,6 +145,10 @@ export abstract class ProjectViewModel<T> implements IProjectViewModel {
     }
 }
 
+export class EmptyProjectViewModel extends ProjectViewModel<ProjectViewModel<any>> {
+    public init(project: ProjectViewModel<any>) { /* */ }
+}
+
 class ProxyProjectViewModel extends ProjectViewModel<ProjectViewModel<any>> {
     public init(project: ProjectViewModel<any>) {
         this.update(project);
