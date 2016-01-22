@@ -9,6 +9,10 @@ const AtomGrammar = require((<any>atom).config.resourcePath + "/node_modules/fir
 const DEBOUNCE_TIME = 240/*240*/;
 let fastdom: typeof Fastdom = require("fastdom");
 
+const HIGHLIGHT = "HIGHLIGHT",
+    HIGHLIGHT_REQUEST = "HIGHLIGHT_REQUEST",
+    IS_OBSERVE_RETOKENIZING = "IS_OBSERVE_RETOKENIZING";
+
 function getHighlightsFromQuickFixes(path: string, quickFixes: Models.DiagnosticLocation[], projectNames: string[]) {
     return chain(quickFixes)
         .filter(x => x.FileName === path)
@@ -49,11 +53,11 @@ class Highlight implements IFeature {
                 .skip(1)
                 .distinctUntilChanged()
                 .subscribe(() => {
-                    editor.omnisharp.get<Rx.Observer<boolean>>("highlightRequest").onNext(true);
+                    editor.omnisharp.get<Rx.Observer<boolean>>(HIGHLIGHT_REQUEST).onNext(true);
                 }));
 
             cd.add(editor.omnisharp
-                .get<Observable<{ editor: OmnisharpTextEditor; highlights: Models.HighlightSpan[]; projects: string[] }>>("highight")
+                .get<Observable<{ editor: OmnisharpTextEditor; highlights: Models.HighlightSpan[]; projects: string[] }>>(HIGHLIGHT)
                 .subscribe(() => {
                     editor.displayBuffer.tokenizedBuffer["silentRetokenizeLines"]();
                 }));
@@ -68,36 +72,32 @@ class Highlight implements IFeature {
 
     private setupEditor(editor: OmnisharpTextEditor, disposable: CompositeDisposable) {
         if (editor["_oldGrammar"] || !editor.getGrammar) return;
-
-        const path = editor.getPath();
         const issueRequest = new Subject<boolean>();
 
-        editor.omnisharp.set("highlightRequest", (context) => issueRequest);
-        editor.omnisharp.set("highlight", (context) => {
-            return issueRequest
-                .startWith(true)
-                .flatMap(() => editor.omnisharp.get<Rx.Observable<boolean>>("isObserveRetokenizing")
-                    .where(x => x))
-                .flatMap(() => Observable.defer(() => {
-                    const projects = context.project.activeFramework.Name && [context.project.activeFramework.Name] || [];
+        augmentEditor(editor, true);
 
-                    let linesToFetch = unique<number>((editor.getGrammar() as any).linesToFetch) || [];
+        editor.omnisharp.set(HIGHLIGHT_REQUEST, (context) => issueRequest);
+        editor.omnisharp.set(HIGHLIGHT, (context) =>
+            issueRequest
+                .startWith(true)
+                .flatMap(() => Observable.defer(() => {
+                    const projects = context.project.activeFramework.Name === "all" ? [] : [context.project.activeFramework.Name];
+
+                    let linesToFetch = unique<number>((editor.getGrammar() as any).linesToFetch);
                     if (!linesToFetch || !linesToFetch.length)
                         linesToFetch = [];
 
                     return Observable.combineLatest(
-                        context.solution
-                            .highlight({
-                                ProjectNames: projects,
-                                Lines: unique<number>((editor.getGrammar() as any).linesToFetch) || [],
-                                ExcludeClassifications
-                            }),
-                        context.solution
-                            .model.observe.unusedCodeRows,
+                        Omni.request(editor, solution => solution.highlight({
+                            ProjectNames: projects,
+                            Lines: linesToFetch,
+                            ExcludeClassifications
+                        })),
+                        context.solution.model.observe.unusedCodeRows,
                         (response, quickfixes) => ({
                             editor,
-                            highlights: (response ? response.Highlights : []).concat(getHighlightsFromQuickFixes(path, quickfixes, projects)),
-                            projects
+                            projects,
+                            highlights: (response ? response.Highlights : []).concat(getHighlightsFromQuickFixes(editor.getPath(), quickfixes, projects))
                         }))
                         .do(({highlights}) => {
                             if (editor.getGrammar) {
@@ -105,13 +105,10 @@ class Highlight implements IFeature {
                             }
                         })
                         .shareReplay(1);
-                }));
-        });
+                })));
 
         this.editors.push(editor);
         this.disposable.add(disposable);
-
-        augmentEditor(editor, true);
 
         disposable.add(Disposable.create(() => {
             (editor.getGrammar() as any).linesToFetch = [];
@@ -191,7 +188,7 @@ export function augmentEditor(editor: Atom.TextEditor, doSetGrammar = false) {
                 this.invalidateRow(0);
             }
             this.fullyTokenized = false;
-        }, DEBOUNCE_TIME);
+        }, DEBOUNCE_TIME, { leading: true, trailing: true });
     }
 
     (<any>editor.displayBuffer.tokenizedBuffer).markTokenizationComplete = function() {
@@ -275,7 +272,7 @@ class Grammar {
         this.isObserveRetokenizing.onNext(true);
 
         if ((editor as any).omnisharp) {
-            (editor as any).omnisharp.set("isObserveRetokenizing", () => new ReplaySubject<boolean>(1));
+            (editor as any).omnisharp.set(IS_OBSERVE_RETOKENIZING, () => new ReplaySubject<boolean>(1));
         }
 
         this.editor = editor;
@@ -668,10 +665,9 @@ function getAtomStyleForToken(grammar: string, tags: number[], token: Models.Hig
 
 function setGrammar(grammar: FirstMate.Grammar): FirstMate.Grammar {
     const g2 = getEnhancedGrammar(this, grammar);
-    if (g2 !== grammar) {
-        return this._setGrammar(grammar);
-    }
-    return grammar;
+    if (g2 !== grammar)
+        this._setGrammar(g2);
+    return g2;
 }
 
 export function getEnhancedGrammar(editor: Atom.TextEditor, grammar?: FirstMate.Grammar, options?: { readonly: boolean }) {

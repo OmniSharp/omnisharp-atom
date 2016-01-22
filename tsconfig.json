@@ -71,7 +71,6 @@
     "./lib/omnisharp.ts",
     "./lib/server/atom-projects.ts",
     "./lib/server/composite-solution.ts",
-    "./lib/server/editor-context.ts",
     "./lib/server/omni.ts",
     "./lib/server/omnisharp-configuration.ts",
     "./lib/server/project-view-model.ts",

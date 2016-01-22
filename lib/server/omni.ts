@@ -60,6 +60,17 @@ class OmniManager implements Rx.IDisposable {
     public get isOff() { return this._isOff; }
     public get isOn() { return !this.isOff; }
 
+    private _nextEditor(observer: Rx.Observer<OmnisharpTextEditor>, altObserver: Rx.Observer<OmnisharpTextEditor>, pane: OmnisharpTextEditor) {
+        altObserver.onNext(null);
+
+        if (pane.omnisharp) {
+            observer.onNext(pane);
+        } else {
+            pane.observeOmnisharp
+                .subscribe(() => observer.onNext(pane));
+        }
+    }
+
     public activate() {
         const openerDisposable = makeOpener();
         this.disposable = new CompositeDisposable;
@@ -75,23 +86,13 @@ class OmniManager implements Rx.IDisposable {
         this.disposable.add(atom.workspace.observeActivePaneItem((pane: any) => {
             if (pane && pane.getGrammar) {
                 if (isOmnisharpTextEditor(pane)) {
-                    this._activeConfigEditorSubject.onNext(null);
-                    if (pane.omnisharp) {
-                        this._activeEditorSubject.onNext(pane);
-                    } else {
-                        pane.observeOmnisharp.subscribe(() => this._activeEditorSubject.onNext(pane));
-                    }
+                    this._nextEditor(this._activeEditorSubject, this._activeConfigEditorSubject, pane);
                     return;
                 }
 
                 const filename = basename(pane.getPath());
                 if (filename === "project.json") {
-                    this._activeEditorSubject.onNext(null);
-                    if (pane.omnisharp) {
-                        this._activeConfigEditorSubject.onNext(pane);
-                    } else {
-                        pane.observeOmnisharp.subscribe(() => this._activeConfigEditorSubject.onNext(pane));
-                    }
+                    this._nextEditor(this._activeConfigEditorSubject, this._activeEditorSubject, pane);
                     return;
                 }
             }
@@ -232,18 +233,14 @@ class OmniManager implements Rx.IDisposable {
             const cb = () => {
                 if (_.any(extensions, ext => _.endsWith(editor.getPath(), ext))) {
                     /*  tslint:disable:no-use-before-declare */
-                    Object.defineProperty(editor, "observeOmnisharp", {
-                        value: Omni.getSolutionForEditor(editor)
-                            .map((solution) => new OmnisharpEditorContext(editor, solution))
-                            .take(1)
-                            .shareReplay(1)
-                    });
+                    editor.observeOmnisharp = Omni.getSolutionForEditor(editor)
+                        .map((solution) => new OmnisharpEditorContext(editor, solution))
+                        .take(1)
+                        .shareReplay(1);
                     /*  tslint:enable:no-use-before-declare */
 
                     const disposer = editor.observeOmnisharp.subscribe((context) => {
-                        Object.defineProperty(editor, "omnisharp", {
-                            value: context
-                        });
+                        editor.omnisharp = context;
 
                         disposable.add(Disposable.create(() => {
                             context.dispose();
@@ -276,7 +273,7 @@ class OmniManager implements Rx.IDisposable {
             }
         }));
 
-        return Observable.merge(subject, Observable.defer(() => Observable.from(editors))).delay(50);
+        return Observable.merge(subject, Observable.defer(() => Observable.from(editors)));
     }
     /* tslint:enable:member-ordering */
 
@@ -337,7 +334,7 @@ class OmniManager implements Rx.IDisposable {
 
         if (editor) {
             if (isOmnisharpTextEditor(editor)) {
-                return solutionCallback(editor.omnisharp.solution).share();
+                result = solutionCallback(editor.omnisharp.solution).share();
             } else {
                 result = SolutionManager.getSolutionForEditor(<Atom.TextEditor>editor)
                     .where(z => !!z)
