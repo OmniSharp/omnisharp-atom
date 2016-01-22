@@ -333,7 +333,7 @@ class OmniManager implements Rx.IDisposable {
         let result: Observable<T>;
 
         if (editor) {
-            if (isOmnisharpTextEditor(editor)) {
+            if (isActiveOmnisharpTextEditor(editor)) {
                 result = solutionCallback(editor.omnisharp.solution).share();
             } else {
                 result = SolutionManager.getSolutionForEditor(<Atom.TextEditor>editor)
@@ -353,7 +353,7 @@ class OmniManager implements Rx.IDisposable {
     }
 
     public getProject(editor: Atom.TextEditor) {
-        if (isOmnisharpTextEditor(editor) && editor.omnisharp.project) {
+        if (isActiveOmnisharpTextEditor(editor) && editor.omnisharp.project) {
             return Observable.just(editor.omnisharp.project);
         }
 
@@ -371,7 +371,7 @@ class OmniManager implements Rx.IDisposable {
     }
 
     public getSolutionForEditor(editor: Atom.TextEditor) {
-        if (isOmnisharpTextEditor(editor)) {
+        if (isActiveOmnisharpTextEditor(editor)) {
             return Observable.just(editor.omnisharp.solution);
         }
 
@@ -448,7 +448,7 @@ class OmniManager implements Rx.IDisposable {
     }
 
     public whenEditorConnected(editor: Atom.TextEditor) {
-        if (isOmnisharpTextEditor(editor)) {
+        if (isActiveOmnisharpTextEditor(editor)) {
             return editor.omnisharp.solution
                 .whenConnected()
                 .map(z => editor);
@@ -639,6 +639,7 @@ export interface OmnisharpTextEditor extends Atom.TextEditor {
 }
 
 export function isOmnisharpTextEditor(editor: any): editor is OmnisharpTextEditor { return editor && (<any>editor).observeOmnisharp; }
+export function isActiveOmnisharpTextEditor(editor: any): editor is OmnisharpTextEditor { return editor && (<any>editor).omnisharp; }
 
 import {TextEditor} from "atom";
 const metadataUri = "omnisharp://metadata/";
