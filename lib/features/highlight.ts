@@ -1,6 +1,6 @@
 /* tslint:disable:no-string-literal */
 import {Models} from "omnisharp-client";
-import {Omni, OmnisharpTextEditor} from "../server/omni";
+import {Omni, OmnisharpTextEditor, isOmnisharpTextEditor} from "../server/omni";
 import {each, extend, has, any, range, remove, pull, find, chain, unique, findIndex, all, isEqual, min, debounce, sortBy, uniqueId} from "lodash";
 import {Observable, Subject, ReplaySubject, CompositeDisposable, Disposable} from "rx";
 /* tslint:disable:variable-name */
@@ -83,7 +83,7 @@ class Highlight implements IFeature {
                 .flatMap(() => Observable.defer(() => {
                     const projects = context.project.activeFramework.Name === "all" ? [] : [context.project.activeFramework.Name];
 
-                    let linesToFetch = unique<number>((editor.getGrammar() as any).linesToFetch);
+                    let linesToFetch = unique<number>((<any>editor.getGrammar()).linesToFetch);
                     if (!linesToFetch || !linesToFetch.length)
                         linesToFetch = [];
 
@@ -111,8 +111,8 @@ class Highlight implements IFeature {
         this.disposable.add(disposable);
 
         disposable.add(Disposable.create(() => {
-            (editor.getGrammar() as any).linesToFetch = [];
-            if ((editor.getGrammar() as any).responses) (editor.getGrammar() as any).responses.clear();
+            (<any>editor.getGrammar()).linesToFetch = [];
+            if ((<any>editor.getGrammar()).responses) (<any>editor.getGrammar()).responses.clear();
             editor.displayBuffer.tokenizedBuffer.retokenizeLines();
             delete editor["_oldGrammar"];
         }));
@@ -124,15 +124,15 @@ class Highlight implements IFeature {
         disposable.add(editor.omnisharp.project
             .observe.activeFramework
             .subscribe(() => {
-                (editor.getGrammar() as any).linesToFetch = [];
-                if ((editor.getGrammar() as any).responses) (editor.getGrammar() as any).responses.clear();
+                (<any>editor.getGrammar()).linesToFetch = [];
+                if ((<any>editor.getGrammar()).responses) (<any>editor.getGrammar()).responses.clear();
                 issueRequest.onNext(true);
             }));
 
         disposable.add(editor.onDidStopChanging(() => issueRequest.onNext(true)));
 
         disposable.add(editor.onDidSave(() => {
-            (editor.getGrammar() as any).linesToFetch = [];
+            (<any>editor.getGrammar()).linesToFetch = [];
             issueRequest.onNext(true);
         }));
 
@@ -170,14 +170,14 @@ export function augmentEditor(editor: Atom.TextEditor, doSetGrammar = false) {
     if (doSetGrammar) editor.setGrammar(editor.getGrammar());
 
     (<any>editor.displayBuffer.tokenizedBuffer).buildTokenizedLineForRowWithText = function(row: number) {
-        (editor.getGrammar() as any)["__row__"] = row;
+        (<any>editor.getGrammar())["__row__"] = row;
         return editor.displayBuffer.tokenizedBuffer["_buildTokenizedLineForRowWithText"].apply(this, arguments);
     };
 
     if (!(<any>editor.displayBuffer.tokenizedBuffer).silentRetokenizeLines) {
         (<any>editor.displayBuffer.tokenizedBuffer).silentRetokenizeLines = debounce(function() {
-            if ((editor.getGrammar() as any).isObserveRetokenizing)
-                (editor.getGrammar() as any).isObserveRetokenizing.onNext(false);
+            if ((<any>editor.getGrammar()).isObserveRetokenizing)
+                (<any>editor.getGrammar()).isObserveRetokenizing.onNext(false);
             let lastRow: number;
             lastRow = this.buffer.getLastRow();
             this.tokenizedLines = this.buildPlaceholderTokenizedLinesForRows(0, lastRow);
@@ -192,14 +192,14 @@ export function augmentEditor(editor: Atom.TextEditor, doSetGrammar = false) {
     }
 
     (<any>editor.displayBuffer.tokenizedBuffer).markTokenizationComplete = function() {
-        if ((editor.getGrammar() as any).isObserveRetokenizing)
-            (editor.getGrammar() as any).isObserveRetokenizing.onNext(true);
+        if ((<any>editor.getGrammar()).isObserveRetokenizing)
+            (<any>editor.getGrammar()).isObserveRetokenizing.onNext(true);
         return editor.displayBuffer.tokenizedBuffer["_markTokenizationComplete"].apply(this, arguments);
     };
 
     (<any>editor.displayBuffer.tokenizedBuffer).retokenizeLines = function() {
-        if ((editor.getGrammar() as any).isObserveRetokenizing)
-            (editor.getGrammar() as any).isObserveRetokenizing.onNext(false);
+        if ((<any>editor.getGrammar()).isObserveRetokenizing)
+            (<any>editor.getGrammar()).isObserveRetokenizing.onNext(false);
         return editor.displayBuffer.tokenizedBuffer["_retokenizeLines"].apply(this, arguments);
     };
 
@@ -218,7 +218,7 @@ export function augmentEditor(editor: Atom.TextEditor, doSetGrammar = false) {
 
     (<any>editor.displayBuffer.tokenizedBuffer).scopesFromTags = function(startingScopes: number[], tags: number[]) {
         const scopes = startingScopes.slice();
-        const grammar = (editor.getGrammar() as any);
+        const grammar = (<any>editor.getGrammar());
         for (let i = 0, len = tags.length; i < len; i++) {
             const tag = tags[i];
             if (tag < 0) {
@@ -239,6 +239,14 @@ export function augmentEditor(editor: Atom.TextEditor, doSetGrammar = false) {
                                 tag,
                                 unmatchedEndTag: grammar.scopeForId(tag)
                             });
+                            (<any>editor.getGrammar()).setResponses([]);
+                            if (isOmnisharpTextEditor(editor)) {
+                                editor.omnisharp.solution
+                                    .model.observe.unusedCodeRows
+                                    .take(1)
+                                    .subscribe(rows => (<any>editor.getGrammar())
+                                        .setResponses(getHighlightsFromQuickFixes(editor.getPath(), rows, [])));
+                            }
                             break;
                         }
                     }
