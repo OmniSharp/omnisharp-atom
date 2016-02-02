@@ -138,6 +138,6 @@
     "babel-plugin-transform-es2015-modules-commonjs": "^6.4.5",
     "babel-preset-es2015": "^6.3.13",
     "babel-preset-stage-3": "^6.3.13",
-    "ntypescript": "^1.201601202238.1"
+    "ntypescript": "^1.201602022213.1"
   }
 }
