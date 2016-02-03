@@ -137,10 +137,12 @@ export class ViewModel implements VMViewState, Rx.IDisposable {
             .subscribe(() => {
                 _solution.projects({ ExcludeSourceFiles: false });
 
-                _solution.packagesource({ ProjectPath: _solution.path })
-                    .subscribe(response => {
-                        this.packageSources = response.Sources;
-                    });
+                if (_solution.runtime) {
+                    _solution.packagesource({ ProjectPath: _solution.path })
+                        .subscribe(response => {
+                            this.packageSources = response.Sources;
+                        });
+                }
             }));
 
         this._disposable.add(_solution.state.where(z => z === DriverState.Disconnected).subscribe(() => {
