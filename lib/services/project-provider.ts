@@ -4,7 +4,6 @@ import {Omni} from "../server/omni";
 import {SolutionManager} from "../server/solution-manager";
 import {ajax} from "jquery";
 const filter = require("fuzzaldrin").filter;
-import {Runtime} from "omnisharp-client";
 
 const cache = new Map<string, { prefix?: string; results: string[] }>();
 const versionCache = new Map<string, any>();
@@ -132,8 +131,6 @@ class NugetNameProvider implements IAutocompleteProvider {
         }
 
         return SolutionManager.getSolutionForEditor(options.editor)
-            // Only supported on Desktop Clr at the moment
-            .where(x => x.runtime === Runtime.ClrOrMono)
             // Get all sources
             .flatMap(z => Observable.from(z.model.packageSources))
             .flatMap(source => {
