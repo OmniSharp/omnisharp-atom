@@ -1,7 +1,7 @@
 /* tslint:disable:no-string-literal */
 import {Models} from "omnisharp-client";
 import {Omni, OmnisharpTextEditor, isOmnisharpTextEditor} from "../server/omni";
-import {each, extend, has, any, range, remove, pull, find, chain, unique, findIndex, all, isEqual, min, debounce, sortBy, uniqueId} from "lodash";
+import {each, extend, has, any, range, remove, pull, find, chain, unique, findIndex, all, isEqual, min, debounce, sortBy, uniqueId, defer} from "lodash";
 import {Observable, Subject, ReplaySubject, CompositeDisposable, Disposable} from "rx";
 /* tslint:disable:variable-name */
 const AtomGrammar = require((<any>atom).config.resourcePath + "/node_modules/first-mate/lib/grammar.js");
@@ -47,7 +47,11 @@ class Highlight implements IFeature {
 
         this.disposable.add(Omni.eachEditor((editor, cd) => this.setupEditor(editor, cd)));
 
-        this.disposable.add(Omni.switchActiveEditor((editor, cd) => {
+        const cb = (editor: OmnisharpTextEditor, cd: CompositeDisposable) => {
+            if (this.editors.indexOf(editor) === -1) {
+                defer(cb);
+                return;
+            }
             cd.add(editor.omnisharp.project
                 .observe.activeFramework
                 .skip(1)
@@ -61,7 +65,8 @@ class Highlight implements IFeature {
                 .subscribe(() => {
                     editor.displayBuffer.tokenizedBuffer["silentRetokenizeLines"]();
                 }));
-        }));
+        };
+        this.disposable.add(Omni.switchActiveEditor(cb));
     }
 
     public dispose() {

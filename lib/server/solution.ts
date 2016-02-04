@@ -42,17 +42,9 @@ export class Solution extends ClientV2 {
         this.registerFixup((action: string, request: any, opts?: RequestOptions) => this._fixupRequest(action, request));
     }
 
-    public toggle() {
-        if (this.currentState === DriverState.Disconnected) {
-            this.connect();
-        } else {
-            this.disconnect();
-        }
-    }
-
     public connect() {
         if (this.isDisposed) return;
-        if (this.currentState === DriverState.Connected || this.currentState === DriverState.Connecting) return;
+        if (this.currentState >= DriverState.Downloading && this.currentState <= DriverState.Connected) return;
         super.connect();
 
         this.log("Starting OmniSharp server (pid:" + this.id + ")");
