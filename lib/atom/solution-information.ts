@@ -1,5 +1,5 @@
 import {CompositeDisposable, Disposable} from "rx";
-const _ : _.LoDashStatic = require("lodash");
+const _: _.LoDashStatic = require("lodash");
 import {SolutionStatusCard} from "../views/solution-status-view";
 import {SolutionManager} from "../server/solution-manager";
 import {DriverState} from "omnisharp-client";
@@ -92,7 +92,8 @@ class SolutionInformation implements IFeature {
             }));
 
             disposable.add(Disposable.create(() => {
-                this.card.remove();
+                if (this.card)
+                    this.card.remove();
                 this.card = null;
                 this.cardDisposable = null;
             }));
@@ -102,7 +103,8 @@ class SolutionInformation implements IFeature {
             }
 
             disposable.add(Disposable.create(() => {
-                this.card.remove();
+                if (this.card)
+                    this.card.remove();
                 this.card = null;
                 this.cardDisposable = null;
             }));
