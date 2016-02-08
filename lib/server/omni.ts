@@ -90,10 +90,12 @@ class OmniManager implements Rx.IDisposable {
                     return;
                 }
 
-                const filename = basename(pane.getPath());
-                if (filename === "project.json") {
-                    this._nextEditor(this._activeConfigEditorSubject, this._activeEditorSubject, pane);
-                    return;
+                if (pane.getPath) {
+                    const filename = basename(pane.getPath());
+                    if (filename === "project.json") {
+                        this._nextEditor(this._activeConfigEditorSubject, this._activeEditorSubject, pane);
+                        return;
+                    }
                 }
             }
             // This will tell us when the editor is no longer an appropriate editor
