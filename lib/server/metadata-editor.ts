@@ -2,6 +2,7 @@ import {Solution} from "./solution";
 import {TextEditor} from "atom";
 import {SolutionManager} from "./solution-manager";
 import {startsWith} from "lodash";
+import {OmnisharpTextEditor, OmnisharpEditorContext} from "./omnisharp-text-editor";
 
 const metadataUri = "omnisharp://metadata/";
 export function metadataOpener(): Rx.IDisposable {
@@ -17,19 +18,20 @@ export function metadataOpener(): Rx.IDisposable {
             editor.onWillInsertText((e) => e.cancel());
             editor.getBuffer().setPath(path);
 
-            (<any>editor).omniProject = (<any>solution).path;
-            (<any>editor).__omniClient__ = solution;
+            const context = new OmnisharpEditorContext(editor, solution);
+            context.metadata = true;
+            const result: OmnisharpTextEditor = <any>editor;
+            result.omnisharp = context;
+
             editor.save = function() { /* */ };
             editor.saveAs = function() { /* */ };
-            (<any>editor)._metadataEditor = true;
 
             return editor;
         }
 
         return SolutionManager.activeSolution
             .take(1)
-            .flatMap(issueRequest)
-            .map(setupEditor)
+            .flatMap(issueRequest, (_z, z) => setupEditor(z))
             .toPromise();
     }
 

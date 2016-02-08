@@ -346,12 +346,12 @@ class SolutionInstanceManager {
             return Observable.empty<Solution>();
         }
 
-        if ((<any>editor)._metadataEditor) {
-            // client / server doesn"t work currently for metadata documents.
-            return Observable.empty<Solution>();
-        }
-
         if (isOmnisharpTextEditor(editor)) {
+            if (editor.omnisharp.metadata) {
+                // client / server doesn"t work currently for metadata documents.
+                return Observable.empty<Solution>();
+            }
+
             const solution = editor.omnisharp.solution;
 
             // If the solution has disconnected, reconnect it
