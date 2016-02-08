@@ -88,7 +88,7 @@ class OmniManager implements Rx.IDisposable {
         this.disposable.add(
             Observable.create<Atom.TextEditor>(observer =>
                 atom.workspace.observeActivePaneItem((pane: any) => {
-                    if (pane && pane.getGrammar) {
+                    if (pane && pane.getGrammar && pane.getPath) {
                         observer.onNext(<Atom.TextEditor>pane);
                         return;
                     }
