@@ -32,7 +32,7 @@ describe("Code Lens", () => {
             .flatMap(({solution}) => solution.observe.currentfilemembersasflat.take(1))
             .delay(300)
             .flatMap(() => openEditor("simple/code-lens/CodeLens.cs"))
-            .flatMap(({editor, solution}) => solution.observe.currentfilemembersasflat.take(1).map(() => editor))
+            .flatMap(({solution}) => solution.observe.currentfilemembersasflat.take(1), ({editor}) => editor)
             .delay(1000)
             .do((editor) => {
                 expect(editor.getDecorations().length).to.be.greaterThan(9);

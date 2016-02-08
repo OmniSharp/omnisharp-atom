@@ -1,6 +1,7 @@
 /* tslint:disable:no-string-literal */
 import {Models} from "omnisharp-client";
-import {Omni, OmnisharpTextEditor, isOmnisharpTextEditor} from "../server/omni";
+import {Omni} from "../server/omni";
+import {OmnisharpTextEditor, isOmnisharpTextEditor} from "../server/omnisharp-text-editor";
 import {each, extend, has, any, range, remove, pull, find, chain, unique, findIndex, all, isEqual, min, debounce, sortBy, uniqueId, defer} from "lodash";
 import {Observable, Subject, ReplaySubject, CompositeDisposable, Disposable} from "rx";
 /* tslint:disable:variable-name */

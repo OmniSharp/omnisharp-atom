@@ -102,7 +102,7 @@ class OmniSharpAtom {
         return Observable.fromNodeCallback<string[], string>(fs.readdir)(featureDir)
             .flatMap(files => files)
             .where(file => /\.js$/.test(file))
-            .flatMap(file => Observable.fromNodeCallback<fs.Stats, string>(fs.stat)(`${featureDir}/${file}`).map(stat => ({ file, stat })))
+            .flatMap(file => Observable.fromNodeCallback<fs.Stats, string>(fs.stat)(`${featureDir}/${file}`), (file, stat) => ({ file, stat }))
             .where(z => !z.stat.isDirectory())
             .map(z => ({
                 file: `${folder}/${path.basename(z.file)}`.replace(/\.js$/, ""),

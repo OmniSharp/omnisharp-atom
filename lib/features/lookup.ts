@@ -17,19 +17,17 @@ class TypeLookup implements IFeature {
         this.disposable.add(Omni.switchActiveEditor((editor, cd) => {
             // subscribe for tooltips
             // inspiration : https://github.com/chaika2013/ide-haskell
-            const editorView = $(atom.views.getView(editor));
-            const tooltip = editor["__omniTooltip"] = new Tooltip(editorView, editor);
-            cd.add(tooltip);
-
-            cd.add(editor.onDidDestroy(() => {
-                editor["__omniTooltip"] = null;
-                cd.dispose();
-            }));
+            editor.omnisharp.set("__omniTooltip", () => {
+                const editorView = $(atom.views.getView(editor));
+                const tooltip = new Tooltip(editorView, editor);
+                cd.add(tooltip);
+                return tooltip;
+            });
         }));
 
         this.disposable.add(Omni.addTextEditorCommand("omnisharp-atom:type-lookup", () => {
             Omni.activeEditor.first().subscribe(editor => {
-                const tooltip = <Tooltip>editor["__omniTooltip"];
+                const tooltip = editor.omnisharp.get<Tooltip>("__omniTooltip");
                 tooltip.showExpressionTypeOnCommand();
             });
         }));
@@ -201,6 +199,8 @@ class Tooltip implements Rx.Disposable {
 
     private getFromShadowDom(element: JQuery, selector: string): JQuery {
         const el = element[0];
+        if (!(<any>el).rootElement) return $(el);
+
         const found = (<any>el).rootElement.querySelectorAll(selector);
         return $(found[0]);
     }

@@ -68,7 +68,7 @@ class SignatureHelp implements IFeature {
                         Line: position.row,
                         Column: position.column,
                     }))
-                        .flatMapLatest(x => shouldContinue.where(z => z).map(z => x))
+                        .flatMapLatest(x => shouldContinue.where(z => z), x => x)
                         .flatMap(response => {
                             if (response && response.Signatures && response.Signatures.length > 0) {
                                 if (!this._bubble) {

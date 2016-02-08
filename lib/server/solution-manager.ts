@@ -6,6 +6,7 @@ import {AtomProjectTracker} from "./atom-projects";
 import {SolutionObserver, SolutionAggregateObserver} from "./composite-solution";
 import {DriverState, findCandidates} from "omnisharp-client";
 import {GenericSelectListView} from "../views/generic-list-view";
+import {OmnisharpTextEditor, isOmnisharpTextEditor, OmnisharpEditorContext} from "./omnisharp-text-editor";
 
 let openSelectList: GenericSelectListView;
 class SolutionInstanceManager {
@@ -33,7 +34,7 @@ class SolutionInstanceManager {
     private _solutionProjects = new Map<string, Solution>();
     private _temporarySolutions = new WeakMap<Solution, RefCountDisposable>();
     private _disposableSolutionMap = new WeakMap<Solution, Disposable>();
-    private _findSolutionCache = new Map<string, Observable<[string, Solution, boolean]>>();
+    private _findSolutionCache = new Map<string, Observable<Solution>>();
     private _candidateFinderCache = new Set<string>();
 
     private _activated = false;
@@ -72,7 +73,7 @@ class SolutionInstanceManager {
         return this._activatedSubject;
     }
 
-    public activate(activeEditor: Observable<Atom.TextEditor>) {
+    public activate(activeEditor: Observable<OmnisharpTextEditor>) {
         if (this._activated) return;
 
         this._disposable = new CompositeDisposable();
@@ -288,51 +289,55 @@ class SolutionInstanceManager {
             return Observable.empty<Solution>();
         }
 
-        const [, solutionValue] = this._getSolutionForUnderlyingPath(location, isFolderPerFile);
+        const solutionValue = this._getSolutionForUnderlyingPath(location, isFolderPerFile);
 
         if (solutionValue)
             return Observable.just(solutionValue);
 
-        return this._findSolutionForUnderlyingPath(location, isFolderPerFile)
-            .map(z => {
-                const [, sln] = z;
-                return sln;
-            });
+        return this._findSolutionForUnderlyingPath(location, isFolderPerFile);
     }
 
     public getSolutionForEditor(editor: Atom.TextEditor) {
         return this._getSolutionForEditor(editor).where(() => !editor.isDestroyed());
     }
 
+    private _setupEditorWithContext(editor: Atom.TextEditor, solution: Solution) {
+        const context = new OmnisharpEditorContext(editor, solution);
+        const result: OmnisharpTextEditor = <any>editor;
+        result.omnisharp = context;
+
+        const view: HTMLElement = <any>atom.views.getView(editor);
+        view.classList.add("omnisharp-editor");
+
+        context.solution.disposable.add(Disposable.create(() => {
+            context.dispose();
+            result.omnisharp = null;
+            view.classList.remove("omnisharp-editor");
+        }));
+
+        if (solution && !result.omnisharp.temp && this._temporarySolutions.has(solution)) {
+            const refCountDisposable = this._temporarySolutions.get(solution);
+            const disposable = refCountDisposable.getDisposable();
+            result.omnisharp.temp = true;
+            context.solution.disposable.add(editor.onDidDestroy(() => {
+                disposable.dispose();
+                this._removeSolution(solution.path);
+            }));
+        }
+
+        if (this.setupContextCallback) {
+            this.setupContextCallback(result);
+        }
+
+        return result;
+    }
+
+    public setupContextCallback: (editor: OmnisharpTextEditor) => void;
+
     private _getSolutionForEditor(editor: Atom.TextEditor) {
-        let solutionResult: Observable<Solution>;
-        if (!editor)
+        if (!editor) {
             // No text editor found
             return Observable.empty<Solution>();
-
-        const isFolderPerFile = _.any(this.__specialCaseExtensions, ext => _.endsWith(editor.getPath(), ext));
-
-        let p = (<any>editor).omniProject;
-        // Not sure if we should just add properties onto editors...
-        // but it works...
-        if (p && this._solutions.has(p)) {
-            const solution = this._solutions.get(p);
-            // If the solution has disconnected, reconnect it
-            if (solution.currentState === DriverState.Disconnected && atom.config.get("omnisharp-atom.autoStartOnCompatibleFile"))
-                solution.connect();
-
-            // Client is in an invalid state
-            if (solution.currentState === DriverState.Error) {
-                return Observable.empty<Solution>();
-            }
-
-            solutionResult = Observable.just(solution);
-
-            if (solution && this._temporarySolutions.has(solution)) {
-                this._setupDisposableForTemporarySolution(solution, editor);
-            }
-
-            return solutionResult;
         }
 
         const location = editor.getPath();
@@ -346,46 +351,30 @@ class SolutionInstanceManager {
             return Observable.empty<Solution>();
         }
 
-        const [intersect, solution] = this._getSolutionForUnderlyingPath(location, isFolderPerFile);
-        p = (<any>editor).omniProject = intersect;
-        (<any>editor).__omniClient__ = solution;
-        const view: HTMLElement = <any>atom.views.getView(editor);
-        view.classList.add("omnisharp-editor");
+        if (isOmnisharpTextEditor(editor)) {
+            const solution = editor.omnisharp.solution;
 
-        if (solution) {
-            solution.disposable.add(Disposable.create(() => {
-                delete (<any>editor).omniProject;
-                delete (<any>editor).__omniClient__;
-                view.classList.remove("omnisharp-editor");
-            }));
-        }
+            // If the solution has disconnected, reconnect it
+            if (solution.currentState === DriverState.Disconnected && atom.config.get("omnisharp-atom.autoStartOnCompatibleFile"))
+                solution.connect();
 
-        if (solution && this._temporarySolutions.has(solution)) {
-            this._setupDisposableForTemporarySolution(solution, editor);
-        }
+            // Client is in an invalid state
+            if (solution.currentState === DriverState.Error) {
+                return Observable.empty<Solution>();
+            }
 
-        if (solution)
             return Observable.just(solution);
+        }
+
+        const isFolderPerFile = _.any(this.__specialCaseExtensions, ext => _.endsWith(editor.getPath(), ext));
+        const solution = this._getSolutionForUnderlyingPath(location, isFolderPerFile);
+        if (solution) {
+            this._setupEditorWithContext(editor, solution);
+            return Observable.just(solution);
+        }
 
         return this._findSolutionForUnderlyingPath(location, isFolderPerFile)
-            .map(z => {
-                const [pa, sln, temporary] = z;
-                (<any>editor).omniProject = pa;
-                (<any>editor).__omniClient__ = sln;
-                const vw: HTMLElement = <any>atom.views.getView(editor);
-                vw.classList.add("omnisharp-editor");
-
-                sln.disposable.add(Disposable.create(() => {
-                    delete (<any>editor).omniProject;
-                    delete (<any>editor).__omniClient__;
-                    vw.classList.remove("omnisharp-editor");
-                }));
-
-                if (temporary) {
-                    this._setupDisposableForTemporarySolution(sln, editor);
-                }
-                return sln;
-            });
+            .do((sln) => this._setupEditorWithContext(editor, sln));
     }
 
     private _isPartOfAnyActiveSolution<T>(location: string, cb: (intersect: string, solution: Solution) => T) {
@@ -401,39 +390,36 @@ class SolutionInstanceManager {
         }
     }
 
-    private _getSolutionForUnderlyingPath(location: string, isFolderPerFile: boolean): [string, Solution] {
+    private _getSolutionForUnderlyingPath(location: string, isFolderPerFile: boolean): Solution {
         if (location === undefined) {
-            return;
+            return null;
         }
 
         if (isFolderPerFile) {
             // CSX are special, and need a solution per directory.
             const directory = path.dirname(location);
             if (this._solutions.has(directory))
-                return [directory, this._solutions.get(directory)];
+                return this._solutions.get(directory);
 
-            return [null, null];
+            return null;
         } else {
             const intersect = this._intersectPath(location);
             if (intersect) {
-                return [intersect, this._solutions.get(intersect)];
+                return this._solutions.get(intersect);
             }
         }
 
         if (!isFolderPerFile) {
             // Attempt to see if this file is part a solution
-            const r = this._isPartOfAnyActiveSolution(location, (intersect, solution) => <[string, Solution]>[solution.path, solution]);
-            if (r) {
-                return r;
-            }
+            return this._isPartOfAnyActiveSolution(location, (intersect, solution) => solution);
         }
 
-        return [null, null];
+        return null;
     }
 
-    private _findSolutionForUnderlyingPath(location: string, isFolderPerFile: boolean): Observable<[string, Solution, boolean]> {
+    private _findSolutionForUnderlyingPath(location: string, isFolderPerFile: boolean): Observable<Solution> {
         const directory = path.dirname(location);
-        const subject = new AsyncSubject<[string, Solution, boolean]>();
+        const subject = new AsyncSubject<Solution>();
 
         if (!this._activated) {
             return this.activatedSubject.take(1)
@@ -459,7 +445,7 @@ class SolutionInstanceManager {
             if (!isFolderPerFile) {
                 // Attempt to see if this file is part a solution
                 const r = this._isPartOfAnyActiveSolution(location, (intersect, solution) => {
-                    subject.onNext([solution.path, solution, false]); // The boolean means this solution is temporary.
+                    subject.onNext(solution);
                     subject.onCompleted();
                     return true;
                 });
@@ -472,7 +458,7 @@ class SolutionInstanceManager {
                     if (!isFolderPerFile) {
                         // Attempt to see if this file is part a solution
                         const r = this._isPartOfAnyActiveSolution(location, (intersect, solution) => {
-                            subject.onNext([solution.path, solution, false]); // The boolean means this solution is temporary.
+                            subject.onNext(solution);
                             subject.onCompleted();
                             return;
                         });
@@ -482,7 +468,7 @@ class SolutionInstanceManager {
                     const intersect = this._intersectPath(location) || this._intersectAtomProjectPath(location);
                     if (intersect) {
                         if (this._solutions.has(intersect)) {
-                            subject.onNext([intersect, this._solutions.get(intersect), !project]); // The boolean means this solution is temporary.
+                            subject.onNext(this._solutions.get(intersect)); // The boolean means this solution is temporary.
                         }
                     } else {
                         atom.notifications.addInfo(`Could not find a solution for "${location}"`);
@@ -544,20 +530,6 @@ class SolutionInstanceManager {
                     return Observable.just(candidates);
                 }
             });
-    }
-
-    private _setupDisposableForTemporarySolution(solution: Solution, editor: Atom.TextEditor) {
-        /* tslint:disable:no-string-literal */
-        if (solution && !editor["__setup_temp__"] && this._temporarySolutions.has(solution)) {
-            const refCountDisposable = this._temporarySolutions.get(solution);
-            const disposable = refCountDisposable.getDisposable();
-            editor["__setup_temp__"] = true;
-            editor.onDidDestroy(() => {
-                disposable.dispose();
-                this._removeSolution(solution.path);
-            });
-        }
-        /* tslint:enable:no-string-literal */
     }
 
     public registerConfiguration(callback: (solution: Solution) => void) {
