@@ -20,7 +20,7 @@ function wrapEditorObservable(observable: Observable<OmnisharpTextEditor>) {
         .subscribeOn(Scheduler.async)
         .observeOn(Scheduler.async)
         .debounce(DEBOUNCE_TIMEOUT)
-        .where(editor => !editor || !editor.isDestroyed());
+        .where(editor => editor && !editor.isDestroyed());
 }
 
 class OmniManager implements Rx.IDisposable {
@@ -39,16 +39,16 @@ class OmniManager implements Rx.IDisposable {
     private _activeConfigEditor = wrapEditorObservable(this._activeConfigEditorSubject)
         .shareReplay(1);
 
-    private _activeEditorOrConfigEditor = wrapEditorObservable(Observable.combineLatest(this._activeEditorSubject, this._activeConfigEditorSubject, (editor, config) => editor || config || null));
+    private _activeEditorOrConfigEditor = wrapEditorObservable(Observable.zip(this._activeEditorSubject, this._activeConfigEditorSubject, (editor, config) => editor || config || null))
+        .shareReplay(1);
 
     private _activeProject = this._activeEditorOrConfigEditor
-        .flatMapLatest(editor => SolutionManager.getSolutionForEditor(editor)
-            .flatMap(z => z.model.getProjectForEditor(editor)))
+        .flatMapLatest(editor => editor.omnisharp.solution.model.getProjectForEditor(editor))
+        .distinctUntilChanged()
         .shareReplay(1);
 
     private _activeFramework = this._activeEditorOrConfigEditor
-        .flatMapLatest(editor => SolutionManager.getSolutionForEditor(editor)
-            .flatMap(z => z.model.getProjectForEditor(editor)))
+        .flatMapLatest(editor => editor.omnisharp.solution.model.getProjectForEditor(editor))
         .flatMapLatest(project => project.observe.activeFramework.map(framework => ({ project, framework })))
         .shareReplay(1);
 
@@ -61,13 +61,15 @@ class OmniManager implements Rx.IDisposable {
     public get isOn() { return !this.isOff; }
 
     private _nextEditor(observer: Rx.Observer<OmnisharpTextEditor>, altObserver: Rx.Observer<OmnisharpTextEditor>, pane: OmnisharpTextEditor) {
-        altObserver.onNext(null);
-
         if (pane.omnisharp) {
+            altObserver.onNext(null);
             observer.onNext(pane);
         } else {
             pane.observeOmnisharp
-                .subscribe(() => observer.onNext(pane));
+                .subscribe(() => {
+                    altObserver.onNext(null);
+                    observer.onNext(pane);
+                });
         }
     }
 
@@ -80,26 +82,46 @@ class OmniManager implements Rx.IDisposable {
         // we are only off if all our solutions are disconncted or erroed.
         this.disposable.add(SolutionManager.solutionAggregateObserver.state.subscribe(z => this._isOff = _.all(z, x => x.value === DriverState.Disconnected || x.value === DriverState.Error)));
 
-        this._editors = OmniManager.createTextEditorObservable(this._supportedExtensions, this.disposable);
-        this._configEditors = OmniManager.createTextEditorObservable([".json"], this.disposable);
+        const editors = this._editors = OmniManager.createTextEditorObservable(this._supportedExtensions, this.disposable);
+        const configEditors = this._configEditors = OmniManager.createTextEditorObservable(["project.json"], this.disposable);
 
-        this.disposable.add(atom.workspace.observeActivePaneItem((pane: any) => {
-            if (pane && pane.getGrammar) {
-                if (isOmnisharpTextEditor(pane)) {
-                    this._nextEditor(this._activeEditorSubject, this._activeConfigEditorSubject, pane);
-                    return;
-                }
-
-                const filename = basename(pane.getPath());
-                if (filename === "project.json") {
-                    this._nextEditor(this._activeConfigEditorSubject, this._activeEditorSubject, pane);
-                    return;
-                }
-            }
-            // This will tell us when the editor is no longer an appropriate editor
-            this._activeEditorSubject.onNext(null);
-            this._activeConfigEditorSubject.onNext(null);
-        }));
+        this.disposable.add(
+            Observable.create<Atom.TextEditor>(observer =>
+                atom.workspace.observeActivePaneItem((pane: any) => {
+                    if (pane && pane.getGrammar) {
+                        observer.onNext(<Atom.TextEditor>pane);
+                        return;
+                    }
+                    observer.onNext(null);
+                }))
+                .flatMap((pane) => {
+                    if (_.find(editors.__editors, pane)) {
+                        return Observable.just({ editor: <OmnisharpTextEditor>pane, configEditor: <OmnisharpTextEditor>null });
+                    }
+                    if (_.find(configEditors.__editors, pane)) {
+                        return Observable.just({ editor: <OmnisharpTextEditor>null, configEditor: <OmnisharpTextEditor>pane });
+                    }
+                    return Observable.merge(
+                        this._editors
+                            .where(editor => editor === pane)
+                            .map(editor => ({ editor, configEditor: <OmnisharpTextEditor>null })),
+                        this._configEditors
+                            .where(editor => editor === pane)
+                            .map(configEditor => ({ editor: <OmnisharpTextEditor>null, configEditor }))
+                    ).take(1);
+                })
+                .subscribe(({editor, configEditor}) => {
+                    if (editor && !configEditor) {
+                        this._nextEditor(this._activeEditorSubject, this._activeConfigEditorSubject, editor);
+                        return;
+                    } else if (configEditor && !editor) {
+                        this._nextEditor(this._activeConfigEditorSubject, this._activeEditorSubject, configEditor);
+                        return;
+                    }
+                    // This will tell us when the editor is no longer an appropriate editor
+                    this._activeEditorSubject.onNext(null);
+                    this._activeConfigEditorSubject.onNext(null);
+                }));
 
         this.disposable.add(this._editors.subscribe(editor => {
             const cd = new CompositeDisposable();
@@ -215,7 +237,7 @@ class OmniManager implements Rx.IDisposable {
         const editorSubject = new Subject<OmnisharpTextEditor>();
 
         disposable.add(atom.workspace.observeActivePaneItem((pane: any) => !editorSubject.isDisposed && editorSubject.onNext(pane)));
-        const editorObservable = editorSubject.where(z => z && !!z.getGrammar);
+        const editorObservable = editorSubject.where(z => z && !!z.getGrammar).startWith(null);
 
         disposable.add(Observable.zip(editorObservable, editorObservable.skip(1), (editor, nextEditor) => ({ editor, nextEditor }))
             .debounce(50)
@@ -234,9 +256,8 @@ class OmniManager implements Rx.IDisposable {
                 if (_.any(extensions, ext => _.endsWith(editor.getPath(), ext))) {
                     /*  tslint:disable:no-use-before-declare */
                     editor.observeOmnisharp = Omni.getSolutionForEditor(editor)
-                        .map((solution) => new OmnisharpEditorContext(editor, solution))
-                        .take(1)
-                        .shareReplay(1);
+                        .map((solution) => editor.omnisharp || new OmnisharpEditorContext(editor, solution))
+                        .take(1);
                     /*  tslint:enable:no-use-before-declare */
 
                     const disposer = editor.observeOmnisharp.subscribe((context) => {
@@ -273,7 +294,10 @@ class OmniManager implements Rx.IDisposable {
             }
         }));
 
-        return Observable.merge(subject, Observable.defer(() => Observable.from(editors)));
+        const observeable = Observable.merge<OmnisharpTextEditor>(subject, Observable.defer(() => Observable.from(editors)));
+        (<any>observeable).__editors = editors;
+
+        return <typeof observeable & { __editors: OmnisharpTextEditor[] }><any>observeable;
     }
     /* tslint:enable:member-ordering */
 
