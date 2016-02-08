@@ -317,23 +317,29 @@ class OmniManager implements Rx.IDisposable {
 
         let result: Observable<T>;
 
-        if (editor) {
-            if (isOmnisharpTextEditor(editor)) {
-                result = solutionCallback(editor.omnisharp.solution).share();
-            } else {
-                result = SolutionManager.getSolutionForEditor(<Atom.TextEditor>editor)
-                    .where(z => !!z)
-                    .flatMap(solutionCallback).share();
-            }
-        } else {
-            result = SolutionManager.activeSolution.take(1)
-                .where(z => !!z)
-                .flatMap(solutionCallback).share();
+        if (editor && isOmnisharpTextEditor(editor)) {
+            result = solutionCallback(editor.omnisharp.solution)
+                .share();
+            result.subscribe();
+            return result;
         }
+
+        let solutionResult: Observable<Solution>;
+        if (editor) {
+            solutionResult = SolutionManager.getSolutionForEditor(<Atom.TextEditor>editor);
+        } else {
+            solutionResult = SolutionManager.activeSolution.take(1);
+        }
+
+        result = solutionResult
+            .where(z => !!z)
+            .flatMap(solutionCallback)
+            .share();
 
         // Ensure that the underying promise is connected
         //   (if we don"t subscribe to the reuslt of the request, which is not a requirement).
         result.subscribe();
+
         return result;
     }
 
