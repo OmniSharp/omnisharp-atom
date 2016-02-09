@@ -1,6 +1,6 @@
 const _: _.LoDashStatic = require("lodash");
 import {Solution} from "./solution";
-import {Models, DriverState, OmnisharpClientStatus} from "omnisharp-client";
+import {Models, DriverState, OmnisharpClientStatus, Runtime} from "omnisharp-client";
 import {Observable, Subject, ReplaySubject, CompositeDisposable, Disposable} from "rx";
 import {basename, normalize, join} from "path";
 import {ProjectViewModel, projectViewModelFactory, workspaceViewModelFactory} from "./project-view-model";
@@ -135,7 +135,7 @@ export class ViewModel implements VMViewState, Rx.IDisposable {
             .subscribe(() => {
                 _solution.projects({ ExcludeSourceFiles: false });
 
-                if (_solution.runtime) {
+                if (_solution.runtime === Runtime.ClrOrMono) {
                     _solution.packagesource({ ProjectPath: _solution.path })
                         .subscribe(response => {
                             this.packageSources = response.Sources;

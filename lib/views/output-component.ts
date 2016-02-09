@@ -1,6 +1,6 @@
 let fastdom: typeof Fastdom = require("fastdom");
 const _: _.LoDashStatic = require("lodash");
-const $: JQueryStatic = require("jquery");
+import {VirtualList} from "./virtual-list";
 
 export interface MessageElement<TItem> extends HTMLLIElement {
     key: string;
@@ -12,61 +12,23 @@ export interface MessageElement<TItem> extends HTMLLIElement {
     detached(): void;
 }
 
-export class OutputElement<TItem, TElement extends MessageElement<TItem>> extends HTMLOListElement implements WebComponent {
-    private output: TItem[];
+export class OutputElement<TItem, TElement extends MessageElement<TItem>> extends VirtualList<TElement> {
     private _selectedKey: string;
     private _selectedIndex: number;
     private _selectedElement: TElement;
-    private _update: () => void;
+    private _update: (cb: Function) => void;
     private _scroll: any;
 
     public createdCallback() {
-        this.output = [];
-        this.classList.add("messages-container", "ol");
-        const parent = this;
-        const onclickHandler = function(e: UIEvent) {
-            parent.selected = this.key;
-            parent.handleClick(this.item);
-        };
+        super.createdCallback();
+        this.classList.add("messages-container");
 
-        this._update = _.throttle(() => {
-            fastdom.measure(() => {
-                for (let i = 0, len = this.children.length > this.output.length ? this.children.length : this.output.length; i < len; i++) {
-                    const item = this.output[i];
-                    let child: TElement = <any>this.children[i];
-                    if (!item && child) {
-                        this.removeChild(child);
-                        continue;
-                    }
-                    fastdom.mutate(() => {
-                        if (item && !child) {
-                            child = this.elementFactory();
-                            child.onclick = onclickHandler;
-                            this.appendChild(child);
-                        }
-
-                        if (item && child) {
-                            const key = this.getKey(item);
-                            if (child.key !== key) {
-                                child.setMessage(key, item);
-                                child.item = item;
-                            }
-                        }
-
-                        if (child) {
-                            if (child.key === this._selectedKey && !child.selected) {
-                                child.selected = true;
-                            } else if (child.selected) {
-                                child.selected = false;
-                            }
-                        }
-                    });
-                }
-
-                fastdom.mutate(() => {
-                    this.scrollToItemView();
-                    this._calculateInview();
-                });
+        this._update = _.throttle((cb: Function) => {
+            this._renderChunk(this, 0);
+            fastdom.mutate(() => {
+                this.scrollToItemView();
+                this._calculateInview();
+                cb();
             });
         }, 100, { leading: true, trailing: true });
 
@@ -75,15 +37,14 @@ export class OutputElement<TItem, TElement extends MessageElement<TItem>> extend
     }
 
     public attachedCallback() {
+        super.attachedCallback();
         this.parentElement.addEventListener("scroll", this._scroll);
         this._calculateInview();
     }
 
     public attached() {
         fastdom.mutate(() => {
-            this._update();
-            _.each(this.children, (x: TElement) => x.attached());
-            this._calculateInview();
+            this._update(() => { /* */ });
         });
     }
 
@@ -94,17 +55,16 @@ export class OutputElement<TItem, TElement extends MessageElement<TItem>> extend
     }
 
     private _calculateInview() {
-        const self = $(this);
+        const self = this;
         fastdom.measure(() => {
-            const top = self.scrollTop();
+            const top = self.scrollTop;
             const bottom = top + this.parentElement.clientHeight * 2;
             for (let i = 0, len = this.children.length; i < len; i++) {
                 const child: TElement = <any>this.children[i];
-                const $child = $(child);
-                const position = $child.position();
+                const childTop = child.scrollTop;
                 const height = child.clientHeight;
 
-                const inview = position.top + height > top && position.top < bottom;
+                const inview = childTop + height > top && childTop < bottom;
 
                 if (child.inview !== inview) {
                     fastdom.mutate(() => {
@@ -143,7 +103,7 @@ export class OutputElement<TItem, TElement extends MessageElement<TItem>> extend
         }
     }
 
-    public get current() { return this.output[this._selectedIndex]; }
+    public get current() { return this.items[this._selectedIndex].item; }
 
     public next() {
         this.selectedIndex = this._selectedIndex + 1;
@@ -153,9 +113,26 @@ export class OutputElement<TItem, TElement extends MessageElement<TItem>> extend
         this.selectedIndex = this._selectedIndex - 1;
     }
 
+    private _onclickHandler: (e: UIEvent) => void;
+
     public updateOutput(output: TItem[]) {
-        this.output = output.slice();
-        this._update();
+        if (!this._onclickHandler) {
+            const parent = this;
+            this._onclickHandler = function(e: UIEvent) {
+                parent.selected = this.key;
+                parent.handleClick(this.item);
+            };
+        }
+
+        this.items = output.map(item => {
+            const child = this.elementFactory();
+            const key = this.getKey(item);
+            child.onclick = this._onclickHandler;
+            child.setMessage(key, item);
+            child.item = item;
+            return child;
+        }).slice();
+        this._update(() => { /* */ });
     }
 
     private keydownPane(e: any) {
@@ -169,19 +146,19 @@ export class OutputElement<TItem, TElement extends MessageElement<TItem>> extend
     }
 
     private scrollToItemView() {
-        const self = $(this);
-        const item = self.find(`.selected`);
-        if (!item || !item.position()) return;
+        const self = this;
+        const item = self.querySelector(`.selected`);
+        if (!item) return;
 
         const pane = self;
-        const scrollTop = pane.scrollTop();
-        const desiredTop = item.position().top + scrollTop;
-        const desiredBottom = desiredTop + item.outerHeight();
+        const scrollTop = pane.scrollTop;
+        const desiredTop = item.scrollTop + scrollTop;
+        const desiredBottom = desiredTop + item.clientHeight;
 
         if (desiredTop < scrollTop) {
-            pane.scrollTop(desiredTop);
-        } else if (desiredBottom > pane.scrollTop() + item.outerHeight()) {
-            pane.scrollTop(desiredBottom + item.outerHeight());
+            pane.scrollTop = desiredTop;
+        } else if (desiredBottom > pane.scrollTop + item.clientHeight) {
+            pane.scrollTop = desiredBottom + item.clientHeight;
         }
     }
 }

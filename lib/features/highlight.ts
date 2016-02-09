@@ -3,7 +3,7 @@ import {Models} from "omnisharp-client";
 import {Omni} from "../server/omni";
 import {OmnisharpTextEditor, isOmnisharpTextEditor} from "../server/omnisharp-text-editor";
 import {each, extend, has, any, range, remove, pull, find, chain, unique, findIndex, all, isEqual, min, debounce, sortBy, uniqueId} from "lodash";
-import {Observable, Subject, ReplaySubject, CompositeDisposable, Disposable} from "rx";
+import {Observable, Subject, ReplaySubject, BehaviorSubject, CompositeDisposable, Disposable} from "rx";
 /* tslint:disable:variable-name */
 const AtomGrammar = require((<any>atom).config.resourcePath + "/node_modules/first-mate/lib/grammar.js");
 /* tslint:enable:variable-name */
@@ -66,7 +66,7 @@ class Highlight implements IFeature {
         }));
 
         this.disposable.add(Omni.listener.codecheck
-            .flatMap(x => <Models.DiagnosticLocation[]>x.response.QuickFixes || [])
+            .flatMap(x => <Models.DiagnosticLocation[]>(x.response && x.response.QuickFixes) || [])
             .groupBy(x => x.FileName, x => x)
             .flatMap(x => x.toArray(), ({key}, result) => ({ key, result }))
             .subscribe(({key, result}) => {
@@ -721,17 +721,17 @@ export function getEnhancedGrammar(editor: Atom.TextEditor, grammar?: FirstMate.
 class UnusedMap {
     private _map = new Map<string, Rx.Observable<Models.DiagnosticLocation[]>>();
     public get(key: string) {
-        if (!this._map.has(key)) this._map.set(key, new ReplaySubject<Models.DiagnosticLocation[]>(1));
+        if (!this._map.has(key)) this._map.set(key, new BehaviorSubject<Models.DiagnosticLocation[]>([]));
         return this._map.get(key);
     }
 
-    private _getObserver(key: string) {
-        return <Rx.Observer<Models.DiagnosticLocation[]> & { getValue(): Models.DiagnosticLocation[] }><any>this.get(key);
+    private _getObserver(key: string) : Rx.Observer<Models.DiagnosticLocation[]> & { getValue(): Models.DiagnosticLocation[] } {
+        return <BehaviorSubject<Models.DiagnosticLocation[]>><any>this.get(key);
     }
 
     public set(key: string, value?: Models.DiagnosticLocation[]) {
         const o = this._getObserver(key);
-        if (!_.isEqual(o.getValue(), value)) {
+        if (!isEqual(o.getValue(), value)) {
             o.onNext(value || []);
         }
         return this;

@@ -315,10 +315,10 @@ class SolutionInstanceManager {
             view.classList.remove("omnisharp-editor");
         }));
 
-        if (solution && !result.omnisharp.temp && this._temporarySolutions.has(solution)) {
+        if (solution && !context.temp && this._temporarySolutions.has(solution)) {
             const refCountDisposable = this._temporarySolutions.get(solution);
             const disposable = refCountDisposable.getDisposable();
-            result.omnisharp.temp = true;
+            context.temp = true;
             context.solution.disposable.add(editor.onDidDestroy(() => {
                 disposable.dispose();
                 this._removeSolution(solution.path);

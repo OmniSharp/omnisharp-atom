@@ -105,6 +105,7 @@
     "./lib/views/test-results-window.ts",
     "./lib/views/text-editor-pool.ts",
     "./lib/views/tooltip-view.ts",
+    "./lib/views/virtual-list.ts",
     "./spec/atom/dock-spec.ts",
     "./spec/atom/framework-selector-spec.ts",
     "./spec/atom/solution-information-spec.ts",
