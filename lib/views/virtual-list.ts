@@ -42,12 +42,12 @@ export class VirtualList<T extends HTMLElement> extends HTMLOListElement impleme
 
     private _itemHeight: number;
     private get itemHeight() {
-        if (this._itemHeight === -1 && this.children.length > 0) {
-            if ((<HTMLElement>this.children[0]).style.display === "none") {
-                (<HTMLElement>this.children[0]).style.display = "";
+        if (this._itemHeight === -1 && this.children.length > 1) {
+            if ((<HTMLElement>this.children[1]).style.display === "none") {
+                (<HTMLElement>this.children[1]).style.display = "";
             }
-            if (this.children[0].clientHeight > 0) {
-                this._itemHeight = this.children[0].clientHeight;
+            if (this.children[1].clientHeight > 0) {
+                this._itemHeight = this.children[1].clientHeight;
             }
         }
         return this._itemHeight;
