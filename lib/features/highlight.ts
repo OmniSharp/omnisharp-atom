@@ -48,11 +48,7 @@ class Highlight implements IFeature {
 
         this.disposable.add(Omni.eachEditor((editor, cd) => this.setupEditor(editor, cd)));
 
-        const cb = (editor: OmnisharpTextEditor, cd: CompositeDisposable) => {
-            if (this.editors.indexOf(editor) === -1) {
-                defer(cb);
-                return;
-            }
+        this.disposable.add(Omni.switchActiveEditor((editor: OmnisharpTextEditor, cd: CompositeDisposable) => {
             cd.add(editor.omnisharp.project
                 .observe.activeFramework
                 .skip(1)
@@ -66,8 +62,7 @@ class Highlight implements IFeature {
                 .subscribe(() => {
                     editor.displayBuffer.tokenizedBuffer["silentRetokenizeLines"]();
                 }));
-        };
-        this.disposable.add(Omni.switchActiveEditor(cb));
+        }));
     }
 
     public dispose() {
@@ -86,21 +81,24 @@ class Highlight implements IFeature {
         editor.omnisharp.set(HIGHLIGHT, (context) =>
             issueRequest
                 .startWith(true)
-                .flatMap(() => Observable.defer(() => {
+                .flatMapLatest(() => Observable.defer(() => {
                     const projects = context.project.activeFramework.Name === "all" ? [] : [context.project.activeFramework.Name];
 
                     let linesToFetch = unique<number>((<any>editor.getGrammar()).linesToFetch);
                     if (!linesToFetch || !linesToFetch.length)
                         linesToFetch = [];
 
+                    // Reset code rows
+                    context.solution.model.unusedCodeRows.set(editor.getPath(), []);
+
                     return Observable.combineLatest(
+                        context.solution.model.unusedCodeRows.get(editor.getPath()),
                         Omni.request(editor, solution => solution.highlight({
                             ProjectNames: projects,
                             Lines: linesToFetch,
                             ExcludeClassifications
                         })),
-                        context.solution.model.observe.unusedCodeRows,
-                        (response, quickfixes) => ({
+                        (quickfixes, response) => ({
                             editor,
                             projects,
                             highlights: (response ? response.Highlights : []).concat(getHighlightsFromQuickFixes(editor.getPath(), quickfixes, projects))
@@ -110,6 +108,15 @@ class Highlight implements IFeature {
                                 (<any>editor.getGrammar()).setResponses(highlights, projects.length > 0);
                             }
                         })
+                        .flatMap(() => Observable.amb(
+                            // Wait for a new codecheck, otherwise look at what exists
+                            context.solution.model.observe.codecheck.delay(4000),
+                            context.solution.observe.codecheck
+                                .where(x => x.request.FileName === editor.getPath())
+                                .map(x => <Models.DiagnosticLocation[]>x.response.QuickFixes || []))
+                            .take(1)
+                            .do((value) => context.solution.model.unusedCodeRows.set(editor.getPath(), value))
+                        )
                         .shareReplay(1);
                 })));
 
@@ -248,7 +255,7 @@ export function augmentEditor(editor: Atom.TextEditor, doSetGrammar = false) {
                             (<any>editor.getGrammar()).setResponses([]);
                             if (isOmnisharpTextEditor(editor)) {
                                 editor.omnisharp.solution
-                                    .model.observe.unusedCodeRows
+                                    .model.unusedCodeRows.get(editor.getPath())
                                     .take(1)
                                     .subscribe(rows => (<any>editor.getGrammar())
                                         .setResponses(getHighlightsFromQuickFixes(editor.getPath(), rows, [])));

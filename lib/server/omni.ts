@@ -69,8 +69,8 @@ class OmniManager implements Rx.IDisposable {
         this.disposable.add(metadataOpener());
 
         const editors = this.createTextEditorObservable(this._supportedExtensions, this.disposable);
-        this._editors = editors.where(x => !x.omnisharp.config);
-        this._configEditors = editors.where(x => x.omnisharp.config);
+        this._editors = wrapEditorObservable(editors.where(x => !x.omnisharp.config));
+        this._configEditors = wrapEditorObservable(editors.where(x => x.omnisharp.config));
 
         SolutionManager.setupContextCallback = editor => {
             this._underlyingEditors.push(editor);
@@ -91,7 +91,7 @@ class OmniManager implements Rx.IDisposable {
         this.disposable.add(SolutionManager.solutionAggregateObserver.state.subscribe(z => this._isOff = _.all(z, x => x.value === DriverState.Disconnected || x.value === DriverState.Error)));
 
         this.disposable.add(
-            Observable.create<Atom.TextEditor>(observer =>
+            wrapEditorObservable(Observable.create<Atom.TextEditor>(observer =>
                 atom.workspace.observeActivePaneItem((pane: any) => {
                     if (pane && pane.getGrammar && pane.getPath) {
                         observer.onNext(<Atom.TextEditor>pane);
@@ -107,7 +107,7 @@ class OmniManager implements Rx.IDisposable {
                         return Observable.just(pane);
                     }
                     return SolutionManager.getSolutionForEditor(pane).map(x => <OmnisharpTextEditor>pane);
-                })
+                }))
                 .subscribe(this._activeEditorOrConfigEditorSubject));
 
         this.disposable.add(this._editors.subscribe(editor => {

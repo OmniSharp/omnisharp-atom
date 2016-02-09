@@ -1,12 +1,24 @@
 const _: _.LoDashStatic = require("lodash");
 import {Solution} from "./solution";
 import {Models, DriverState, OmnisharpClientStatus} from "omnisharp-client";
-import {Observable, Subject, ReplaySubject, CompositeDisposable, Disposable} from "rx";
+import {Observable, Subject, ReplaySubject, BehaviorSubject, CompositeDisposable, Disposable} from "rx";
 import {basename, normalize, join} from "path";
 import {ProjectViewModel, projectViewModelFactory, workspaceViewModelFactory} from "./project-view-model";
 import {OutputMessageElement} from "../views/output-message-element";
 const win32 = process.platform === "win32";
 let fastdom: typeof Fastdom = require("fastdom");
+
+const safeCommands = [
+    "highlight", "autocomplete", "findimplementations",
+    "findsymbols", "findusages", "gotodefinition",
+    "gotofile", "gotoregion", "metadata",
+    "navigateup", "navigatedown", "packagesearch",
+    "packagesource", "packageversion", "signatureHelp",
+    "checkalivestatus", "checkreadystatus", "currentfilemembersastree",
+    "currentfilemembersasflat", "typelookup", "filesChanged",
+    "projects", "project", "getcodeactions",
+    "gettestcontext"
+];
 
 export interface VMViewState {
     isOff: boolean;
@@ -32,7 +44,9 @@ export class ViewModel implements VMViewState, Rx.IDisposable {
     public output: OutputMessage[] = [];
     public outputElement = document.createElement("div");
     public diagnostics: Models.DiagnosticLocation[] = [];
-    public unusedCodeRows: Models.DiagnosticLocation[] = [];
+
+    public unusedCodeRows = new UnusedMap();
+
     public get state() { return this._solution.currentState; };
     public packageSources: string[] = [];
     public runtime = "";
@@ -45,7 +59,6 @@ export class ViewModel implements VMViewState, Rx.IDisposable {
 
     public observe: {
         codecheck: Rx.Observable<Models.DiagnosticLocation[]>;
-        unusedCodeRows: Rx.Observable<Models.DiagnosticLocation[]>;
         output: Rx.Observable<OutputMessage[]>;
         status: Rx.Observable<OmnisharpClientStatus>;
         state: Rx.Observable<ViewModel>;
@@ -95,7 +108,7 @@ export class ViewModel implements VMViewState, Rx.IDisposable {
             this.diagnostics = [];
         }));
 
-        const {codecheck, unusedCodeRows} = this._setupCodecheck(_solution);
+        const {codecheck} = this._setupCodecheck(_solution);
         const status = this._setupStatus(_solution);
         const output = this.output;
 
@@ -117,7 +130,6 @@ export class ViewModel implements VMViewState, Rx.IDisposable {
 
         this.observe = {
             get codecheck() { return codecheck; },
-            get unusedCodeRows() { return unusedCodeRows; },
             get output() { return outputObservable; },
             get status() { return status; },
             get state() { return state; },
@@ -275,7 +287,7 @@ export class ViewModel implements VMViewState, Rx.IDisposable {
     }
 
     private _setupCodecheck(_solution: Solution) {
-        let codecheck = Observable.merge(
+        const codecheck = Observable.merge(
             // Catch global code checks
             _solution.observe.codecheck
                 .where(z => !z.request.FileName)
@@ -293,17 +305,19 @@ export class ViewModel implements VMViewState, Rx.IDisposable {
                     return results;
                 }))
             .map(data => _.sortBy(data, quickFix => quickFix.LogLevel))
-            .startWith([]);
-
-        const unusedCodeRows = codecheck
-            .map(results => _.filter(results, x => x.LogLevel === "Hidden"))
-            .distinctUntilChanged()
+            .startWith([])
             .shareReplay(1);
 
-        codecheck = codecheck.shareReplay(1);
+        this._disposable.add(_solution.observe.codecheck
+            .flatMap(x => <Models.DiagnosticLocation[]>x.response.QuickFixes || [])
+            .groupBy(x => x.FileName, x => x)
+            .flatMap(x => x.toArray(), ({key}, result) => ({ key, result }))
+            .subscribe(({key, result}) => {
+                this.unusedCodeRows.set(key, result);
+            }));
 
         this._disposable.add(codecheck.subscribe((data) => this.diagnostics = data));
-        return { codecheck, unusedCodeRows };
+        return { codecheck };
     }
 
     private _setupStatus(_solution: Solution) {
@@ -312,5 +326,31 @@ export class ViewModel implements VMViewState, Rx.IDisposable {
             .share();
 
         return status;
+    }
+}
+
+export class UnusedMap {
+    private _map = new Map<string, Rx.Observable<Models.DiagnosticLocation[]>>();
+
+    public clear(): void { this._map.clear(); }
+    public forEach(callbackfn: (value: Rx.Observable<Models.DiagnosticLocation[]>, index: string, map: Map<string, Rx.Observable<Models.DiagnosticLocation[]>>) => void, thisArg?: any): void {
+        this._map.forEach(callbackfn);
+    }
+
+    public get(key: string) {
+        if (!this._map.has(key)) this._map.set(key, new BehaviorSubject<Models.DiagnosticLocation[]>([]));
+        return this._map.get(key);
+    }
+
+    private getObserver(key: string) {
+        return <Rx.Observer<Models.DiagnosticLocation[]> & { getValue(): Models.DiagnosticLocation[] }><any>this.get(key);
+    }
+
+    public set(key: string, value?: Models.DiagnosticLocation[]) {
+        const o = this.getObserver(key);
+        if (!_.isEqual(o.getValue(), value)) {
+            o.onNext(value || []);
+        }
+        return this;
     }
 }
