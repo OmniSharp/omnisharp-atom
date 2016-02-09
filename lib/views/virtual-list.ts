@@ -72,13 +72,13 @@ export class VirtualList<TItem, T extends HTMLElement> extends HTMLOListElement 
         this.style.flex = "1";
         this.appendChild(scroller);
 
-        this._items = new LazyArray<TItem, T>([], () => this.cachedItemsLen);
+        this._items = new LazyArray<TItem, T>(null, 0, () => this.cachedItemsLen);
         this._itemHeight = -1;
 
         this.cleanup = debounce(() => {
             fastdom.mutate(() => {
                 const badNodes = document.querySelectorAll("[data-rm=\"1\"]");
-                for (var i = 0, l = badNodes.length; i < l; i++) {
+                for (let i = 0, l = badNodes.length; i < l; i++) {
                     this.removeChild(badNodes[i]);
                 }
             });
@@ -178,17 +178,32 @@ export class VirtualList<TItem, T extends HTMLElement> extends HTMLOListElement 
     }
 }
 
-export class LazyArray<TIn, TElement extends HTMLElement> {
+export class LazyArray<TItem, TElement extends HTMLElement> {
     private elements = new Map<number, TElement[]>();
-    constructor(private items: TIn[], private pageSize: () => number, private factory?: (item: TIn) => TElement) { }
+    private _innerArray: TItem[] = [];
+    constructor(private items: IterableIterator<TItem>, public length: number, private pageSize: () => number, private factory?: (item: TItem) => TElement) { }
 
     public get(index: number) {
         const page = Math.floor(index / this.pageSize());
         if (!this.elements.has(page)) {
+            const startIndex = this.pageSize() * page;
+            let endOfPage = startIndex + this.pageSize();
+
+            if (this._innerArray.length < startIndex) {
+                let result = this.items.next();
+                while (!result.done && this._innerArray.length < endOfPage) {
+                    this._innerArray.push(result.value);
+                    result = this.items.next();
+                }
+            }
+
+            if (endOfPage > this._innerArray.length)
+                endOfPage = this._innerArray.length;
+
             const elements: TElement[] = [];
-            for (let i = page, len = page + this.pageSize(); i < len; i++) {
+            for (let i = startIndex, len = endOfPage; i < len; i++) {
                 if (this.factory) {
-                    elements.push(this.factory(this.items[i]));
+                    elements.push(this.factory(this._innerArray[i]));
                 }
             }
             this.elements.set(page, elements);
@@ -197,6 +212,4 @@ export class LazyArray<TIn, TElement extends HTMLElement> {
         const pageIndex = index - page * this.pageSize();
         return this.elements.get(page)[pageIndex];
     }
-
-    public get length() { return this.items.length; }
 }

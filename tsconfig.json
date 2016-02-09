@@ -71,6 +71,7 @@
     "./lib/omnisharp.ts",
     "./lib/server/atom-projects.ts",
     "./lib/server/composite-solution.ts",
+    "./lib/server/diagnostic-map.ts",
     "./lib/server/metadata-editor.ts",
     "./lib/server/omni.ts",
     "./lib/server/omnisharp-configuration.ts",

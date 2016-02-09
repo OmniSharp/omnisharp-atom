@@ -5,6 +5,7 @@ import {Observable, Subject, ReplaySubject, CompositeDisposable, Disposable} fro
 import {basename, normalize, join} from "path";
 import {ProjectViewModel, projectViewModelFactory, workspaceViewModelFactory} from "./project-view-model";
 import {OutputMessageElement} from "../views/output-message-element";
+import {DiagnosticMap, DiagnosticMapValue} from "./diagnostic-map";
 const win32 = process.platform === "win32";
 let fastdom: typeof Fastdom = require("fastdom");
 
@@ -31,7 +32,7 @@ export class ViewModel implements VMViewState, Rx.IDisposable {
     public get path() { return this._solution.path; }
     public output: OutputMessage[] = [];
     public outputElement = document.createElement("div");
-    public diagnostics: Models.DiagnosticLocation[] = [];
+    public diagnostics: DiagnosticMap;
 
     public get state() { return this._solution.currentState; };
     public packageSources: string[] = [];
@@ -44,7 +45,7 @@ export class ViewModel implements VMViewState, Rx.IDisposable {
     private _stateStream = new ReplaySubject<ViewModel>(1);
 
     public observe: {
-        codecheck: Rx.Observable<Models.DiagnosticLocation[]>;
+        codecheck: Rx.Observable<DiagnosticMapValue>;
         output: Rx.Observable<OutputMessage[]>;
         status: Rx.Observable<OmnisharpClientStatus>;
         state: Rx.Observable<ViewModel>;
@@ -57,6 +58,8 @@ export class ViewModel implements VMViewState, Rx.IDisposable {
     constructor(private _solution: Solution) {
         this._uniqueId = _solution.uniqueId;
         this._updateState(_solution.currentState);
+        this.diagnostics = this._setupCodecheck(_solution);
+        this._disposable.add(this.diagnostics);
 
         this.outputElement.classList.add("messages-container");
 
@@ -91,12 +94,12 @@ export class ViewModel implements VMViewState, Rx.IDisposable {
         this._disposable.add(_solution.state.where(z => z === DriverState.Disconnected).subscribe(() => {
             _.each(this.projects.slice(), project => this._projectRemovedStream.onNext(project));
             this.projects = [];
-            this.diagnostics = [];
+            this.diagnostics.clear();
         }));
 
-        const {codecheck} = this._setupCodecheck(_solution);
         const status = this._setupStatus(_solution);
         const output = this.output;
+        const diagnostics = this.diagnostics;
 
         const _projectAddedStream = this._projectAddedStream.share();
         const _projectRemovedStream = this._projectRemovedStream.share();
@@ -115,7 +118,7 @@ export class ViewModel implements VMViewState, Rx.IDisposable {
         const state = this._stateStream;
 
         this.observe = {
-            get codecheck() { return codecheck; },
+            get codecheck() { return diagnostics.observe; },
             get output() { return outputObservable; },
             get status() { return status; },
             get state() { return state; },
@@ -273,29 +276,8 @@ export class ViewModel implements VMViewState, Rx.IDisposable {
     }
 
     private _setupCodecheck(_solution: Solution) {
-        const codecheck = Observable.merge(
-            // Catch global code checks
-            _solution.observe.codecheck
-                .where(z => !z.request.FileName)
-                .map(z => z.response || <any>{})
-                .map(z => <Models.DiagnosticLocation[]>z.QuickFixes || []),
-            // Evict diagnostics from a code check for the given file
-            // Then insert the new diagnostics
-            _solution.observe.codecheck
-                .where(z => !!z.request.FileName)
-                .map((ctx) => {
-                    let {request, response} = ctx;
-                    if (!response) response = <any>{};
-                    const results = _.filter(this.diagnostics, (fix: Models.DiagnosticLocation) => request.FileName !== fix.FileName);
-                    results.unshift(...<Models.DiagnosticLocation[]>response.QuickFixes || []);
-                    return results;
-                }))
-            .map(data => _.sortBy(data, quickFix => quickFix.LogLevel))
-            .startWith([])
-            .shareReplay(1);
-
-        this._disposable.add(codecheck.subscribe((data) => this.diagnostics = data));
-        return { codecheck };
+        return DiagnosticMap.create(_solution.observe.codecheck
+            .map(x => <Models.DiagnosticLocation[]>(x.response && x.response.QuickFixes) || []));
     }
 
     private _setupStatus(_solution: Solution) {

@@ -121,7 +121,7 @@ export class OutputElement<TItem, TElement extends MessageElement<TItem>> extend
 
     private _onclickHandler: (e: UIEvent) => void;
 
-    public updateOutput(output: TItem[]) {
+    public updateOutput(output: IterableIterator<TItem>, length: number) {
         if (!this._onclickHandler) {
             const parent = this;
             this._onclickHandler = function(e: UIEvent) {
@@ -130,7 +130,7 @@ export class OutputElement<TItem, TElement extends MessageElement<TItem>> extend
             };
         }
 
-        this.items = new LazyArray<TItem, TElement>(output, () => this.cachedItemsLen,
+        this.items = new LazyArray<TItem, TElement>(output, length, () => this.cachedItemsLen,
             (item: TItem) => {
                 const child = this.elementFactory();
                 const key = this.getKey(item);

@@ -2,6 +2,7 @@ import {Models} from "omnisharp-client";
 import * as path from "path";
 import {Omni} from "../server/omni";
 import {OutputElement, MessageElement} from "./output-component";
+import {DiagnosticMap} from "../server/diagnostic-map";
 
 export interface CodeCheckMessageElement extends MessageElement<Models.DiagnosticLocation> { }
 
@@ -105,8 +106,8 @@ export class CodeCheckOutputElement extends HTMLDivElement implements WebCompone
         this._list.detached();
     }
 
-    public update(output: Models.DiagnosticLocation[]) {
-        this._list.updateOutput(output);
+    public update(output: DiagnosticMap) {
+        this._list.updateOutput(output.values(), output.count);
     }
 
     public next() {

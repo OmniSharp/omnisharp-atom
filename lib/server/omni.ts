@@ -5,10 +5,10 @@ const _: _.LoDashStatic = require("lodash");
 import {DriverState} from "omnisharp-client";
 import {ProjectViewModel} from "./project-view-model";
 import {ViewModel} from "./view-model";
+import {DiagnosticMap} from "./diagnostic-map";
 import * as fs from "fs";
 import * as path from "path";
 import {ExtendApi} from "../omnisharp";
-import {Models} from "omnisharp-client";
 import {OmnisharpTextEditor, isOmnisharpTextEditor} from "./omnisharp-text-editor";
 import {metadataOpener} from "./metadata-editor";
 
@@ -56,7 +56,7 @@ class OmniManager implements Rx.IDisposable {
         .distinctUntilChanged()
         .shareReplay(1);
 
-    private _diagnostics: Observable<Models.DiagnosticLocation[]>;
+    private _diagnostics = new DiagnosticMap();
     public get diagnostics() { return this._diagnostics; }
 
     private _isOff = true;
@@ -91,7 +91,7 @@ class OmniManager implements Rx.IDisposable {
         this.disposable.add(SolutionManager.solutionAggregateObserver.state.subscribe(z => this._isOff = _.all(z, x => x.value === DriverState.Disconnected || x.value === DriverState.Error)));
 
         this.disposable.add(
-            wrapEditorObservable(Observable.create<Atom.TextEditor>(observer =>
+            Observable.create<Atom.TextEditor>(observer =>
                 atom.workspace.observeActivePaneItem((pane: any) => {
                     if (pane && pane.getGrammar && pane.getPath) {
                         observer.onNext(<Atom.TextEditor>pane);
@@ -106,10 +106,11 @@ class OmniManager implements Rx.IDisposable {
                     if (isOmnisharpTextEditor(pane)) {
                         return Observable.just(pane);
                     }
-                    return SolutionManager.getSolutionForEditor(pane)
-                        .map(x => <OmnisharpTextEditor>pane)
-                        .delay(DEBOUNCE_TIMEOUT);
-                }))
+                    return wrapEditorObservable(
+                        SolutionManager.getSolutionForEditor(pane)
+                            .map(x => <OmnisharpTextEditor>pane)
+                            .delay(DEBOUNCE_TIMEOUT));
+                })
                 .subscribe(this._activeEditorOrConfigEditorSubject));
 
         this.disposable.add(this._editors.subscribe(editor => {
@@ -140,11 +141,6 @@ class OmniManager implements Rx.IDisposable {
             this._activeEditorOrConfigEditorSubject.onNext(null);
         }));
 
-        // Cache this result, because the underlying implementation of observe will
-        //    create a cache of the last recieved value.  This allows us to pick pick
-        //    up from where we left off.
-        const combinationObservable = this.aggregateListener.observe(z => z.model.observe.codecheck);
-
         let showDiagnosticsForAllSolutions = new ReplaySubject<boolean>(1);
         this.disposable.add(atom.config.observe("omnisharp-atom.showDiagnosticsForAllSolutions", function(enabled) {
             showDiagnosticsForAllSolutions.onNext(enabled);
@@ -152,26 +148,23 @@ class OmniManager implements Rx.IDisposable {
 
         this.disposable.add(showDiagnosticsForAllSolutions);
 
-        this._diagnostics = Observable.combineLatest( // Combine both the active model and the configuration changes together
+        let combinedDiagnosticsDisposable = Disposable.empty;
+        this.disposable.add(Observable.combineLatest( // Combine both the active model and the configuration changes together
             this.activeModel.startWith(null), showDiagnosticsForAllSolutions, showDiagnosticsForAllSolutions.skip(1).startWith(atom.config.get<boolean>("omnisharp-atom.showDiagnosticsForAllSolutions")),
             (model, enabled, wasEnabled) => ({ model, enabled, wasEnabled }))
             // If the setting is enabled (and hasn"t changed) then we don"t need to redo the subscription
             .where(ctx => (!(ctx.enabled && ctx.wasEnabled === ctx.enabled)))
-            .flatMapLatest(ctx => {
+            .subscribe(ctx => {
                 const {enabled, model} = ctx;
+                this.diagnostics.clear();
+                combinedDiagnosticsDisposable.dispose();
 
                 if (enabled) {
-                    return combinationObservable
-                        .debounce(200)
-                        .map(data => _.flatten<Models.DiagnosticLocation>(data));
+                    combinedDiagnosticsDisposable = DiagnosticMap.observeDiagnostics(this.diagnostics, this.listener.observe(z => z.model.observe.codecheck).map(x => x.diagnostics));
                 } else if (model) {
-                    return model.observe.codecheck;
+                    combinedDiagnosticsDisposable = DiagnosticMap.observeDiagnostics(this.diagnostics, model.observe.codecheck.map(x => x.diagnostics));
                 }
-
-                return Observable.just(<Models.DiagnosticLocation[]>[]);
-            })
-            .startWith([])
-            .shareReplay(1);
+            }));
     }
 
     public dispose() {

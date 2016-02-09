@@ -293,14 +293,13 @@ export class StatusBarElement extends HTMLElement implements WebComponent, Rx.ID
     }
 
     public attachedCallback() {
-        this._disposable.add(Omni.diagnostics.subscribe(diagnostics => {
-            const counts = _.countBy(diagnostics, quickFix => quickFix.LogLevel);
-
-            this._diagnostics.updateState({
-                errorCount: counts["Error"] || 0,
-                warningCount: counts["Warning"] || 0
-            });
-        }));
+        this._disposable.add(Omni.diagnostics.updated
+            .subscribe(diagnostics => {
+                this._diagnostics.updateState({
+                    errorCount: Omni.diagnostics.errors,
+                    warningCount: Omni.diagnostics.warnings
+                });
+            }));
 
         this._disposable.add(Observable.merge(Omni.activeModel, Omni.activeModel.flatMap(x => x.observe.state))
             .subscribe(model => {

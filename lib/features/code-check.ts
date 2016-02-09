@@ -9,9 +9,6 @@ import {reloadWorkspace} from "./reload-workspace";
 class CodeCheck implements IFeature {
     private disposable: Rx.CompositeDisposable;
 
-    public displayDiagnostics: Models.DiagnosticLocation[] = [];
-    public selectedIndex: number = 0;
-    private scrollTop: number = 0;
     private _editorSubjects = new WeakMap<Atom.TextEditor, () => Rx.Observable<Models.DiagnosticLocation[]>>();
     private _fullCodeCheck: Subject<any>;
     private _window = new CodeCheckOutputElement;
@@ -73,19 +70,8 @@ class CodeCheck implements IFeature {
             cd.add(Omni.whenEditorConnected(editor).subscribe(() => this.doCodeCheck(editor)));
         }));*/
 
-        this.disposable.add(Omni.diagnostics
-            .subscribe(diagnostics => {
-                this.displayDiagnostics = this.filterOnlyWarningsAndErrors(diagnostics);
-            }));
-
-        this.disposable.add(Omni.diagnostics.subscribe(s => {
-            this.scrollTop = 0;
-            this.selectedIndex = 0;
-        }));
-
-        this.disposable.add(Omni.diagnostics
-            .delay(100)
-            .subscribe(diagnostics => this._window.update(diagnostics)));
+        this.disposable.add(Omni.diagnostics.updated
+            .subscribe(diagnostics => this._window.update(Omni.diagnostics)));
 
         this.disposable.add(dock.addWindow("errors", "Errors & Warnings", this._window));
 

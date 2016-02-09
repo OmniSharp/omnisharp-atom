@@ -3,7 +3,8 @@ import {Models} from "omnisharp-client";
 import {Omni} from "../server/omni";
 import {OmnisharpTextEditor, isOmnisharpTextEditor} from "../server/omnisharp-text-editor";
 import {each, extend, has, any, range, remove, pull, find, chain, unique, findIndex, all, isEqual, min, debounce, sortBy, uniqueId} from "lodash";
-import {Observable, Subject, ReplaySubject, BehaviorSubject, CompositeDisposable, Disposable} from "rx";
+import {Observable, Subject, ReplaySubject, CompositeDisposable, Disposable} from "rx";
+import {DiagnosticMap} from "../server/diagnostic-map";
 /* tslint:disable:variable-name */
 const AtomGrammar = require((<any>atom).config.resourcePath + "/node_modules/first-mate/lib/grammar.js");
 /* tslint:enable:variable-name */
@@ -41,7 +42,7 @@ export const ExcludeClassifications = [
 class Highlight implements IFeature {
     private disposable: Rx.CompositeDisposable;
     private editors: Array<OmnisharpTextEditor>;
-    private unusedCodeRows = new UnusedMap();
+    private unusedCodeRows = new DiagnosticMap();
 
     public activate() {
         this.disposable = new CompositeDisposable();
@@ -114,7 +115,7 @@ class Highlight implements IFeature {
                         (quickfixes, response) => ({
                             editor,
                             projects,
-                            highlights: (response ? response.Highlights : []).concat(getHighlightsFromQuickFixes(editor.getPath(), quickfixes, projects))
+                            highlights: (response ? response.Highlights : []).concat(getHighlightsFromQuickFixes(editor.getPath(), quickfixes.diagnostics, projects))
                         }))
                         .do(({highlights}) => {
                             if (editor.getGrammar) {
@@ -123,7 +124,7 @@ class Highlight implements IFeature {
                         })
                         .flatMap(() => Observable.amb(
                             // Wait for a new codecheck, otherwise look at what exists
-                            context.solution.model.observe.codecheck.delay(4000),
+                            context.solution.model.diagnostics.get(editor.getPath()).delay(4000).map(x => x.diagnostics),
                             context.solution.observe.codecheck
                                 .where(x => x.request.FileName === editor.getPath())
                                 .map(x => <Models.DiagnosticLocation[]>x.response.QuickFixes || []))
@@ -180,7 +181,7 @@ class Highlight implements IFeature {
     public default = false;
 }
 
-export function augmentEditor(editor: Atom.TextEditor, unusedCodeRows: UnusedMap = null, doSetGrammar = false) {
+export function augmentEditor(editor: Atom.TextEditor, unusedCodeRows: DiagnosticMap = null, doSetGrammar = false) {
     if (!editor["_oldGrammar"])
         editor["_oldGrammar"] = editor.getGrammar();
     if (!editor["_setGrammar"])
@@ -274,7 +275,7 @@ export function augmentEditor(editor: Atom.TextEditor, unusedCodeRows: UnusedMap
                                 unusedCodeRows.get(editor.getPath())
                                     .take(1)
                                     .subscribe(rows => (<any>editor.getGrammar())
-                                        .setResponses(getHighlightsFromQuickFixes(editor.getPath(), rows, [])));
+                                        .setResponses(getHighlightsFromQuickFixes(editor.getPath(), rows.diagnostics, [])));
                             }
                             break;
                         }
@@ -715,36 +716,6 @@ export function getEnhancedGrammar(editor: Atom.TextEditor, grammar?: FirstMate.
         grammar = <any>newGrammar;
     }
     return grammar;
-}
-
-// Used to cache values for specific editors
-class UnusedMap {
-    private _map = new Map<string, Rx.Observable<Models.DiagnosticLocation[]>>();
-    public get(key: string) {
-        if (!this._map.has(key)) this._map.set(key, new BehaviorSubject<Models.DiagnosticLocation[]>([]));
-        return this._map.get(key);
-    }
-
-    private _getObserver(key: string) : Rx.Observer<Models.DiagnosticLocation[]> & { getValue(): Models.DiagnosticLocation[] } {
-        return <BehaviorSubject<Models.DiagnosticLocation[]>><any>this.get(key);
-    }
-
-    public set(key: string, value?: Models.DiagnosticLocation[]) {
-        const o = this._getObserver(key);
-        if (!isEqual(o.getValue(), value)) {
-            o.onNext(value || []);
-        }
-        return this;
-    }
-
-    public delete(key: string) {
-        if (this._map.has(key))
-            this._map.delete(key);
-    }
-
-    public clear() {
-        this._map.clear();
-    }
 }
 
 export const enhancedHighlighting = new Highlight;
