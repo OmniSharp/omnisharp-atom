@@ -1,6 +1,6 @@
 let fastdom: typeof Fastdom = require("fastdom");
 const _: _.LoDashStatic = require("lodash");
-import {VirtualList} from "./virtual-list";
+import {VirtualList, LazyArray} from "./virtual-list";
 
 export interface MessageElement<TItem> extends HTMLLIElement {
     key: string;
@@ -12,12 +12,11 @@ export interface MessageElement<TItem> extends HTMLLIElement {
     detached(): void;
 }
 
-export class OutputElement<TItem, TElement extends MessageElement<TItem>> extends VirtualList<TElement> {
+export class OutputElement<TItem, TElement extends MessageElement<TItem>> extends VirtualList<TItem, TElement> {
     private _selectedKey: string;
     private _selectedIndex: number;
     private _selectedElement: TElement;
     private _update: (cb: Function) => void;
-    private _scroll: any;
 
     public createdCallback() {
         super.createdCallback();
@@ -33,12 +32,19 @@ export class OutputElement<TItem, TElement extends MessageElement<TItem>> extend
         }, 100, { leading: true, trailing: true });
 
         this.onkeydown = (e: any) => this.keydownPane(e);
-        this._scroll = _.throttle((e: UIEvent) => this._calculateInview(), 100, { leading: true, trailing: true });
+
+        const baseScroll = this._scroll;
+        const throttleScroll = _.throttle((e: UIEvent) => this._calculateInview(), 100, { leading: true, trailing: true });
+
+        this._scroll = (e) => {
+            throttleScroll(e);
+            return baseScroll(e);
+        };
     }
 
     public attachedCallback() {
         super.attachedCallback();
-        this.parentElement.addEventListener("scroll", this._scroll);
+        //this.parentElement.addEventListener("scroll", this._scroll);
         this._calculateInview();
     }
 
@@ -59,11 +65,11 @@ export class OutputElement<TItem, TElement extends MessageElement<TItem>> extend
         fastdom.measure(() => {
             const top = self.scrollTop;
             const bottom = top + this.parentElement.clientHeight * 2;
+
             for (let i = 0, len = this.children.length; i < len; i++) {
                 const child: TElement = <any>this.children[i];
                 const childTop = child.scrollTop;
                 const height = child.clientHeight;
-
                 const inview = childTop + height > top && childTop < bottom;
 
                 if (child.inview !== inview) {
@@ -103,7 +109,7 @@ export class OutputElement<TItem, TElement extends MessageElement<TItem>> extend
         }
     }
 
-    public get current() { return this.items[this._selectedIndex].item; }
+    public get current() { return this.items.get(this._selectedIndex).item; }
 
     public next() {
         this.selectedIndex = this._selectedIndex + 1;
@@ -124,14 +130,15 @@ export class OutputElement<TItem, TElement extends MessageElement<TItem>> extend
             };
         }
 
-        this.items = output.map(item => {
-            const child = this.elementFactory();
-            const key = this.getKey(item);
-            child.onclick = this._onclickHandler;
-            child.setMessage(key, item);
-            child.item = item;
-            return child;
-        }).slice();
+        this.items = new LazyArray<TItem, TElement>(output, () => this.cachedItemsLen,
+            (item: TItem) => {
+                const child = this.elementFactory();
+                const key = this.getKey(item);
+                child.onclick = this._onclickHandler;
+                child.setMessage(key, item);
+                child.item = item;
+                return child;
+            });
         this._update(() => { /* */ });
     }
 

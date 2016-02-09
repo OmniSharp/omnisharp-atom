@@ -106,9 +106,10 @@ class OmniManager implements Rx.IDisposable {
                     if (isOmnisharpTextEditor(pane)) {
                         return Observable.just(pane);
                     }
-                    return SolutionManager.getSolutionForEditor(pane).map(x => <OmnisharpTextEditor>pane);
+                    return SolutionManager.getSolutionForEditor(pane)
+                        .map(x => <OmnisharpTextEditor>pane)
+                        .delay(DEBOUNCE_TIMEOUT);
                 }))
-                .delay(DEBOUNCE_TIMEOUT)
                 .subscribe(this._activeEditorOrConfigEditorSubject));
 
         this.disposable.add(this._editors.subscribe(editor => {

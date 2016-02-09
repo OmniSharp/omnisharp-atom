@@ -26,7 +26,7 @@
 import {debounce} from "lodash";
 let fastdom: typeof Fastdom = require("fastdom");
 
-export class VirtualList<T extends HTMLElement> extends HTMLOListElement implements WebComponent {
+export class VirtualList<TItem, T extends HTMLElement> extends HTMLOListElement implements WebComponent {
     public static createScroller() {
         const scroller = document.createElement("div");
         scroller.style.opacity = "0";
@@ -37,8 +37,12 @@ export class VirtualList<T extends HTMLElement> extends HTMLOListElement impleme
         return scroller;
     }
 
-    protected items: T[];
-    private get totalRows() { return this.items.length; }
+    private _items: LazyArray<TItem, T>;
+    protected get items() { return this._items; };
+    protected set items(value) {
+        this._items = value;
+        this.scroller.style.height = `${this.itemHeight * this.items.length}px`;
+    };
 
     private _itemHeight: number;
     private get itemHeight() {
@@ -46,26 +50,30 @@ export class VirtualList<T extends HTMLElement> extends HTMLOListElement impleme
             if ((<HTMLElement>this.children[1]).style.display === "none") {
                 (<HTMLElement>this.children[1]).style.display = "";
             }
-            if (this.children[1].clientHeight > 0) {
-                this._itemHeight = this.children[1].clientHeight;
+            if ((<HTMLElement>this.children[1]).offsetHeight > 0) {
+                this._itemHeight = (<HTMLElement>this.children[1]).offsetHeight;
+                this.scroller.style.height = `${this._itemHeight * this.items.length}px`;
             }
         }
         return this._itemHeight;
     }
 
-    private cachedItemsLen: number;
     protected cleanup: () => void;
     protected scroller: HTMLDivElement;
     private disposable: Rx.IDisposable;
 
+    public get screenItemsLen() { return Math.ceil(this.itemHeight > 0 ? this.offsetHeight / this.itemHeight : 10); }
+    public get cachedItemsLen() { return this.screenItemsLen * 3; }
+
     public createdCallback() {
-        this.items = [];
-        this._itemHeight = -1;
         const scroller = this.scroller = VirtualList.createScroller();
         this.style.padding = 0 + "px";
         this.style.border = "1px solid black";
         this.style.flex = "1";
         this.appendChild(scroller);
+
+        this._items = new LazyArray<TItem, T>([], () => this.cachedItemsLen);
+        this._itemHeight = -1;
 
         this.cleanup = debounce(() => {
             fastdom.mutate(() => {
@@ -76,44 +84,44 @@ export class VirtualList<T extends HTMLElement> extends HTMLOListElement impleme
             });
         }, 100);
 
-        const screenItemsLen = 100;
-        // Cache 4 times the number of items that fit in the container viewport
-        this.cachedItemsLen = screenItemsLen * 3;
+        this.disposable = atom.config.observe("editor.fontSize", (size: number) => {
+            this._itemHeight = -1;
+        });
 
-        let lastRepaintY: number;
-
-        this.addEventListener("scroll", (e) => {
+        this._scroll = (e: UIEvent) => {
             fastdom.measure(() => {
-                const maxBuffer = screenItemsLen * this.itemHeight;
+                const maxBuffer = this.screenItemsLen * this.itemHeight;
                 const scrollTop = (<HTMLElement>e.target).scrollTop; // Triggers reflow
-                if (!lastRepaintY || Math.abs(scrollTop - lastRepaintY) > maxBuffer) {
-                    const first = scrollTop / this.itemHeight - screenItemsLen;
+                if (!this._lastRepaintY || Math.abs(scrollTop - this._lastRepaintY) > maxBuffer) {
+                    const first = scrollTop / this.itemHeight - this.screenItemsLen;
                     this._renderChunk(this, first < 0 ? 0 : first);
-                    lastRepaintY = scrollTop;
+                    this._lastRepaintY = scrollTop;
                 }
             });
 
             e.preventDefault();
 
             this.cleanup();
-        });
-
-        this.disposable = atom.config.observe("editor.fontSize", (size: number) => {
-            this._itemHeight = -1;
-        });
+        };
     }
+
+    private _lastRepaintY: number;
+    protected _scroll: (e: UIEvent) => void;
 
     public attachedCallback() {
         this.parentElement.style.display = "flex";
         this._renderChunk(this, 0);
+
+        this.parentElement.addEventListener("scroll", this._scroll);
     }
 
     public detachedCallback() {
         this.disposable.dispose();
+        this.parentElement.removeEventListener("scroll", this._scroll);
     }
 
     public createRow(index: number) {
-        const item = this.items[index];
+        const item = this.items.get(index);
         if (!item) return;
         item.classList.add("vrow");
         item.style.position = "absolute";
@@ -140,10 +148,11 @@ export class VirtualList<T extends HTMLElement> extends HTMLOListElement impleme
      */
     protected _renderChunk(node: HTMLElement, from: number) {
         let finalItem = from + this.cachedItemsLen;
-        if (finalItem > this.totalRows)
-            finalItem = this.totalRows;
+        if (finalItem > this.items.length)
+            finalItem = this.items.length;
 
         fastdom.mutate(() => {
+            this.scroller.style.height = `${(this.itemHeight > 0 ? this.itemHeight : 10) * this.items.length}px`;
             // Append all the new rows in a document fragment that we will later append to
             // the parent node
             let fragment = document.createDocumentFragment();
@@ -158,15 +167,36 @@ export class VirtualList<T extends HTMLElement> extends HTMLOListElement impleme
             for (let j = 1, l = node.childNodes.length; j < l; j++) {
                 (<HTMLElement>node.childNodes[j]).style.display = "none";
                 (<HTMLElement>node.childNodes[j]).setAttribute("data-rm", "1");
-                if ((<any>node.childNodes[j]).detached) {
+                if (typeof (<any>node.childNodes[j]).detached === "function") {
                     (<any>node.childNodes[j]).detached();
                 }
             }
             node.appendChild(fragment);
-            const height = this.itemHeight;
-            this.scroller.style.height = (height > 0 ? height : 10 * this.totalRows) + "px";
-        });
 
-        this.cleanup();
+            this.cleanup();
+        });
     }
+}
+
+export class LazyArray<TIn, TElement extends HTMLElement> {
+    private elements = new Map<number, TElement[]>();
+    constructor(private items: TIn[], private pageSize: () => number, private factory?: (item: TIn) => TElement) { }
+
+    public get(index: number) {
+        const page = Math.floor(index / this.pageSize());
+        if (!this.elements.has(page)) {
+            const elements: TElement[] = [];
+            for (let i = page, len = page + this.pageSize(); i < len; i++) {
+                if (this.factory) {
+                    elements.push(this.factory(this.items[i]));
+                }
+            }
+            this.elements.set(page, elements);
+        }
+
+        const pageIndex = index - page * this.pageSize();
+        return this.elements.get(page)[pageIndex];
+    }
+
+    public get length() { return this.items.length; }
 }
