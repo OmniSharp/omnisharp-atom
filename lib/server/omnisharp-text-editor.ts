@@ -2,7 +2,14 @@ import {CompositeDisposable, Disposable} from "rx";
 import {Solution} from "./solution";
 import {ProjectViewModel, EmptyProjectViewModel} from "./project-view-model";
 
+const contextItems = new Map<string, (context: OmnisharpEditorContext, editor: OmnisharpTextEditor) => any>();
+export function registerContextItem<T>(name: string, callback: (context: OmnisharpEditorContext, editor: OmnisharpTextEditor) => T) {
+    contextItems.set(name, callback);
+    return Disposable.create(() => contextItems.delete(name));
+}
+
 export class OmnisharpEditorContext implements Rx.IDisposable {
+    private _editor: OmnisharpTextEditor;
     private _solution: Solution;
     private _metadata: boolean;
     private _config: boolean;
@@ -11,6 +18,7 @@ export class OmnisharpEditorContext implements Rx.IDisposable {
     private _disposable = new CompositeDisposable();
 
     constructor(editor: Atom.TextEditor, solution: Solution) {
+        this._editor = <any>editor;
         this._solution = solution;
         this._project = new EmptyProjectViewModel(null, solution.path);
 
@@ -44,16 +52,19 @@ export class OmnisharpEditorContext implements Rx.IDisposable {
     public get config() { return this._config; }
     public set config(value) { this._config = value; }
 
-    public set<T>(name: string, callback: (context: OmnisharpEditorContext) => T) {
+    public set<T>(name: string, callback: (context: OmnisharpEditorContext, editor: OmnisharpTextEditor) => T) {
         if (this._items.has(name))
             return this._items.get(name);
 
-        const result = callback(this);
+        const result = callback(this, this._editor);
         this._items.set(name, result);
         return result;
     }
 
     public get<T>(name: string): T {
+        if (!this._items.has(name) && contextItems.has(name)) {
+            this.set(name, contextItems.get(name));
+        }
         return <any>this._items.get(name);
     }
 }

@@ -3,7 +3,8 @@ import {Models} from "omnisharp-client";
 import {Omni} from "../server/omni";
 import {OmnisharpTextEditor, isOmnisharpTextEditor} from "../server/omnisharp-text-editor";
 import {each, extend, has, any, range, remove, pull, find, chain, unique, findIndex, all, isEqual, min, debounce, sortBy, uniqueId} from "lodash";
-import {Observable, Subject, ReplaySubject, CompositeDisposable, Disposable} from "rx";
+import {Observable, Subject, ReplaySubject, BehaviorSubject, CompositeDisposable, Disposable} from "rx";
+import {registerContextItem} from "../server/omnisharp-text-editor";
 /* tslint:disable:variable-name */
 const AtomGrammar = require((<any>atom).config.resourcePath + "/node_modules/first-mate/lib/grammar.js");
 /* tslint:enable:variable-name */
@@ -11,8 +12,7 @@ const DEBOUNCE_TIME = 240/*240*/;
 let fastdom: typeof Fastdom = require("fastdom");
 
 const HIGHLIGHT = "HIGHLIGHT",
-    HIGHLIGHT_REQUEST = "HIGHLIGHT_REQUEST",
-    IS_OBSERVE_RETOKENIZING = "IS_OBSERVE_RETOKENIZING";
+      HIGHLIGHT_REQUEST = "HIGHLIGHT_REQUEST";
 
 function getHighlightsFromQuickFixes(path: string, quickFixes: Models.DiagnosticLocation[], projectNames: string[]) {
     return chain(quickFixes)
@@ -46,6 +46,49 @@ class Highlight implements IFeature {
     public activate() {
         this.disposable = new CompositeDisposable();
         this.editors = [];
+
+        this.disposable.add(registerContextItem(HIGHLIGHT_REQUEST, (context) => new Subject<boolean>()));
+        this.disposable.add(registerContextItem(HIGHLIGHT, (context, editor) =>
+            context.get<Subject<boolean>>(HIGHLIGHT_REQUEST)
+                .startWith(true)
+                .flatMapLatest(() => Observable.defer(() => {
+                    const projects = context.project.activeFramework.Name === "all" ? [] : [context.project.activeFramework.Name];
+
+                    let linesToFetch = unique<number>((<any>editor.getGrammar()).linesToFetch);
+                    if (!linesToFetch || !linesToFetch.length)
+                        linesToFetch = [];
+
+                    // Reset code rows
+                    this.unusedCodeRows.set(editor.getPath(), []);
+
+                    return Observable.combineLatest(
+                        this.unusedCodeRows.get(editor.getPath()),
+                        Omni.request(editor, solution => solution.highlight({
+                            ProjectNames: projects,
+                            Lines: linesToFetch,
+                            ExcludeClassifications
+                        })),
+                        (quickfixes, response) => ({
+                            editor,
+                            projects,
+                            highlights: (response ? response.Highlights : []).concat(getHighlightsFromQuickFixes(editor.getPath(), quickfixes, projects))
+                        }))
+                        .do(({highlights}) => {
+                            if (editor.getGrammar) {
+                                (<any>editor.getGrammar()).setResponses(highlights, projects.length > 0);
+                            }
+                        })
+                        .flatMap(() => Observable.amb(
+                            // Wait for a new codecheck, otherwise look at what exists
+                            context.solution.model.observe.codecheck.delay(4000),
+                            context.solution.observe.codecheck
+                                .where(x => x.request.FileName === editor.getPath())
+                                .map(x => <Models.DiagnosticLocation[]>x.response.QuickFixes || []))
+                            .take(1)
+                            .do((value) => this.unusedCodeRows.set(editor.getPath(), value))
+                        )
+                        .shareReplay(1);
+                }))));
 
         this.disposable.add(Omni.eachEditor((editor, cd) => this.setupEditor(editor, cd)));
 
@@ -86,52 +129,10 @@ class Highlight implements IFeature {
 
     private setupEditor(editor: OmnisharpTextEditor, disposable: CompositeDisposable) {
         if (editor["_oldGrammar"] || !editor.getGrammar) return;
-        const issueRequest = new Subject<boolean>();
+
+        const issueRequest = editor.omnisharp.get<Subject<boolean>>(HIGHLIGHT_REQUEST);
 
         augmentEditor(editor, this.unusedCodeRows, true);
-
-        editor.omnisharp.set(HIGHLIGHT_REQUEST, (context) => issueRequest);
-        editor.omnisharp.set(HIGHLIGHT, (context) =>
-            issueRequest
-                .startWith(true)
-                .flatMapLatest(() => Observable.defer(() => {
-                    const projects = context.project.activeFramework.Name === "all" ? [] : [context.project.activeFramework.Name];
-
-                    let linesToFetch = unique<number>((<any>editor.getGrammar()).linesToFetch);
-                    if (!linesToFetch || !linesToFetch.length)
-                        linesToFetch = [];
-
-                    // Reset code rows
-                    this.unusedCodeRows.set(editor.getPath(), []);
-
-                    return Observable.combineLatest(
-                        this.unusedCodeRows.get(editor.getPath()),
-                        Omni.request(editor, solution => solution.highlight({
-                            ProjectNames: projects,
-                            Lines: linesToFetch,
-                            ExcludeClassifications
-                        })),
-                        (quickfixes, response) => ({
-                            editor,
-                            projects,
-                            highlights: (response ? response.Highlights : []).concat(getHighlightsFromQuickFixes(editor.getPath(), quickfixes, projects))
-                        }))
-                        .do(({highlights}) => {
-                            if (editor.getGrammar) {
-                                (<any>editor.getGrammar()).setResponses(highlights, projects.length > 0);
-                            }
-                        })
-                        .flatMap(() => Observable.amb(
-                            // Wait for a new codecheck, otherwise look at what exists
-                            context.solution.model.observe.codecheck.delay(4000),
-                            context.solution.observe.codecheck
-                                .where(x => x.request.FileName === editor.getPath())
-                                .map(x => <Models.DiagnosticLocation[]>x.response.QuickFixes || []))
-                            .take(1)
-                            .do((value) => this.unusedCodeRows.set(editor.getPath(), value))
-                        )
-                        .shareReplay(1);
-                })));
 
         disposable.add(Disposable.create(() => {
             this.unusedCodeRows.delete(editor.getPath());
@@ -307,10 +308,6 @@ class Grammar {
     constructor(editor: Atom.TextEditor, base: FirstMate.Grammar, options: { readonly: boolean }) {
         this.isObserveRetokenizing = new ReplaySubject<boolean>(1);
         this.isObserveRetokenizing.onNext(true);
-
-        if ((editor as any).omnisharp) {
-            (editor as any).omnisharp.set(IS_OBSERVE_RETOKENIZING, () => new ReplaySubject<boolean>(1));
-        }
 
         this.editor = editor;
         this.responses = new Map<number, Models.HighlightSpan[]>();
@@ -721,7 +718,7 @@ export function getEnhancedGrammar(editor: Atom.TextEditor, grammar?: FirstMate.
 class UnusedMap {
     private _map = new Map<string, Rx.Observable<Models.DiagnosticLocation[]>>();
     public get(key: string) {
-        if (!this._map.has(key)) this._map.set(key, new ReplaySubject<Models.DiagnosticLocation[]>(1));
+        if (!this._map.has(key)) this._map.set(key, new BehaviorSubject<Models.DiagnosticLocation[]>([]));
         return this._map.get(key);
     }
 
@@ -731,7 +728,7 @@ class UnusedMap {
 
     public set(key: string, value?: Models.DiagnosticLocation[]) {
         const o = this._getObserver(key);
-        if (!_.isEqual(o.getValue(), value)) {
+        if (!isEqual(o.getValue(), value)) {
             o.onNext(value || []);
         }
         return this;
