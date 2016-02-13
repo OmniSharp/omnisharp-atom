@@ -2,7 +2,7 @@
 import {Models} from "omnisharp-client";
 import {Omni} from "../server/omni";
 import {OmnisharpTextEditor, isOmnisharpTextEditor} from "../server/omnisharp-text-editor";
-import {each, extend, has, any, range, remove, pull, find, chain, unique, findIndex, all, isEqual, min, debounce, sortBy, uniqueId} from "lodash";
+import {each, extend, has, any, range, remove, pull, find, chain, unique, findIndex, all, isEqual, min, debounce, sortBy, uniqueId, filter} from "lodash";
 import {Observable, Subject, ReplaySubject, BehaviorSubject, CompositeDisposable, Disposable} from "rx";
 import {registerContextItem} from "../server/omnisharp-text-editor";
 /* tslint:disable:variable-name */
@@ -12,7 +12,7 @@ const DEBOUNCE_TIME = 240/*240*/;
 let fastdom: typeof Fastdom = require("fastdom");
 
 const HIGHLIGHT = "HIGHLIGHT",
-      HIGHLIGHT_REQUEST = "HIGHLIGHT_REQUEST";
+    HIGHLIGHT_REQUEST = "HIGHLIGHT_REQUEST";
 
 function getHighlightsFromQuickFixes(path: string, quickFixes: Models.DiagnosticLocation[], projectNames: string[]) {
     return chain(quickFixes)
@@ -83,16 +83,16 @@ class Highlight implements IFeature {
                             context.solution.model.observe.codecheck.delay(4000),
                             context.solution.observe.codecheck
                                 .where(x => x.request.FileName === editor.getPath())
-                                .map(x => <Models.DiagnosticLocation[]>x.response.QuickFixes || []))
+                                .map(x => x.response && <Models.DiagnosticLocation[]>x.response.QuickFixes || []))
                             .take(1)
-                            .do((value) => this.unusedCodeRows.set(editor.getPath(), value))
+                            .do((value) => this.unusedCodeRows.set(editor.getPath(), filter(value, x => x.LogLevel === "Hidden")))
                         )
                         .shareReplay(1);
                 }))));
 
-        this.disposable.add(Omni.eachEditor((editor, cd) => this.setupEditor(editor, cd)));
+        this.disposable.add(Omni.eachEditor((editor, cd) => {
+            this.setupEditor(editor, cd);
 
-        this.disposable.add(Omni.switchActiveEditor((editor: OmnisharpTextEditor, cd: CompositeDisposable) => {
             cd.add(editor.omnisharp.project
                 .observe.activeFramework
                 .skip(1)
@@ -108,8 +108,15 @@ class Highlight implements IFeature {
                 }));
         }));
 
+        this.disposable.add(Omni.switchActiveEditor((editor, cd) => {
+            if (editor.displayBuffer.tokenizedBuffer["silentRetokenizeLines"]) {
+                editor.displayBuffer.tokenizedBuffer["silentRetokenizeLines"]();
+            }
+        }));
+
         this.disposable.add(Omni.listener.codecheck
-            .flatMap(x => <Models.DiagnosticLocation[]>x.response.QuickFixes || [])
+            .flatMap(x => x.response && <Models.DiagnosticLocation[]>x.response.QuickFixes || [])
+            .where(x => x.LogLevel === "Hidden")
             .groupBy(x => x.FileName, x => x)
             .flatMap(x => x.toArray(), ({key}, result) => ({ key, result }))
             .subscribe(({key, result}) => {
