@@ -59,7 +59,7 @@
   },
   "dependencies": {
     "ansi-to-html": "^0.3.0",
-    "atom-package-deps": "^3.0.7",
+    "atom-package-deps": "^4.0.0",
     "atom-space-pen-views": "^2.1.1",
     "babel-plugin-transform-es2015-modules-commonjs": "^6.3.13",
     "babel-preset-es2015": "^6.3.13",
