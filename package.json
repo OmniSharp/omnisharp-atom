@@ -83,7 +83,7 @@
     "merge-stream": "^1.0.0",
     "mocha": "^2.4.5",
     "mocha-unfunk-reporter": "^0.4.0",
-    "ntypescript": "^1.201512040604.1",
+    "ntypescript": "^1.201602202304.1",
     "omnisharp-client": "^3.3.6",
     "rimraf": "^2.5.1",
     "rx": "^4.0.7",
