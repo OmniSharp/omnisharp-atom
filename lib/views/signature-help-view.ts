@@ -2,7 +2,7 @@
 /* tslint:disable:no-string-literal */
 import {Models} from "omnisharp-client";
 let fastdom: typeof Fastdom = require("fastdom");
-const _ : _.LoDashStatic = require("lodash");
+import _ from "lodash";
 
 const parseString = (function() {
     const parser = new DOMParser();

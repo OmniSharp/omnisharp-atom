@@ -1,5 +1,5 @@
 import {Models} from "omnisharp-client";
-const _: _.LoDashStatic = require("lodash");
+import _ from "lodash";
 import {CompositeDisposable, Observable} from "rx";
 import {Omni} from "../server/omni";
 const $: JQueryStatic = require("jquery");

@@ -11,18 +11,12 @@
 /// <reference path="typingsTemp/space-pen/space-pen.d.ts" />
 /// <reference path="typingsTemp/status-bar/status-bar.d.ts" />
 /// <reference path="typingsTemp/text-buffer/text-buffer.d.ts" />
-/// <reference path="typings/jquery/jquery.d.ts" />
-/// <reference path="typings/lodash/lodash.d.ts" />
-/// <reference path="typings/node/node.d.ts" />
-/// <reference path="typings/semver/semver.d.ts" />
-/// <reference path="typings/assertion-error/assertion-error.d.ts" />
-/// <reference path="typings/q/Q.d.ts" />
-/// <reference path="typings/chai/chai.d.ts" />
-/// <reference path="typings/mixto/mixto.d.ts" />
+/// <reference path="typings\main\ambient\Q\Q.d.ts" />
+/// <reference path="typings\main\ambient\assertion-error\assertion-error.d.ts" />
+/// <reference path="typings\main\ambient\jasmine\jasmine.d.ts" />
+/// <reference path="typings\main\ambient\jquery\jquery.d.ts" />
+/// <reference path="typings\main\ambient\mixto\mixto.d.ts" />
+/// <reference path="typings\main\ambient\node\node.d.ts" />
+/// <reference path="typings\main\ambient\semver\semver.d.ts" />
+/// <reference path="typings\main\definitions\lodash\lodash.d.ts" />
 /// <reference path="node_modules/rx/ts/rx.all.es6.d.ts" />
-
-declare module _ {
-    interface LoDashStatic {
-        set: any;
-    }
-}

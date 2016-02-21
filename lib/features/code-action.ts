@@ -1,5 +1,5 @@
 import {Models} from "omnisharp-client";
-const _ : _.LoDashStatic = require("lodash");
+import _ from "lodash";
 import {CompositeDisposable, Subject, Observable, Scheduler} from "rx";
 import {Omni} from "../server/omni";
 import * as SpacePen from "atom-space-pen-views";

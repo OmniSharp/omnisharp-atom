@@ -1,5 +1,5 @@
 let fastdom: typeof Fastdom = require("fastdom");
-const _: _.LoDashStatic = require("lodash");
+import _ from "lodash";
 const $: JQueryStatic = require("jquery");
 
 export interface MessageElement<TItem> extends HTMLLIElement {

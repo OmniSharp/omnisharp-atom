@@ -1,4 +1,4 @@
-const _: _.LoDashStatic = require("lodash");
+import _ from "lodash";
 import {Solution} from "./solution";
 import {Models, DriverState, OmnisharpClientStatus} from "omnisharp-client";
 import {Observable, Subject, ReplaySubject, CompositeDisposable, Disposable} from "rx";
@@ -32,7 +32,7 @@ export class ViewModel implements VMViewState, Rx.IDisposable {
     public output: OutputMessage[] = [];
     public outputElement = document.createElement("div");
     public diagnostics: Models.DiagnosticLocation[] = [];
-    public unusedCodeRows: Models.DiagnosticLocation[] = [];
+
     public get state() { return this._solution.currentState; };
     public packageSources: string[] = [];
     public runtime = "";
@@ -45,7 +45,6 @@ export class ViewModel implements VMViewState, Rx.IDisposable {
 
     public observe: {
         codecheck: Rx.Observable<Models.DiagnosticLocation[]>;
-        unusedCodeRows: Rx.Observable<Models.DiagnosticLocation[]>;
         output: Rx.Observable<OutputMessage[]>;
         status: Rx.Observable<OmnisharpClientStatus>;
         state: Rx.Observable<ViewModel>;
@@ -95,7 +94,7 @@ export class ViewModel implements VMViewState, Rx.IDisposable {
             this.diagnostics = [];
         }));
 
-        const {codecheck, unusedCodeRows} = this._setupCodecheck(_solution);
+        const {codecheck} = this._setupCodecheck(_solution);
         const status = this._setupStatus(_solution);
         const output = this.output;
 
@@ -117,7 +116,6 @@ export class ViewModel implements VMViewState, Rx.IDisposable {
 
         this.observe = {
             get codecheck() { return codecheck; },
-            get unusedCodeRows() { return unusedCodeRows; },
             get output() { return outputObservable; },
             get status() { return status; },
             get state() { return state; },
@@ -151,7 +149,7 @@ export class ViewModel implements VMViewState, Rx.IDisposable {
 
         this._disposable.add(_solution.observe.projectAdded.subscribe(projectInformation => {
             _.each(projectViewModelFactory(projectInformation, _solution.projectPath), project => {
-                if (!_.any(this.projects, { path: project.path })) {
+                if (!_.some(this.projects, { path: project.path })) {
                     this.projects.push(project);
                     this._projectAddedStream.onNext(project);
                 }
@@ -251,14 +249,14 @@ export class ViewModel implements VMViewState, Rx.IDisposable {
 
     public getProjectContainingFile(path: string) {
         if (this.isOn && this.projects.length) {
-            const project = _.find(this.projects, x => _.contains(x.sourceFiles, normalize(path)));
+            const project = _.find(this.projects, x => _.includes(x.sourceFiles, normalize(path)));
             if (project) {
                 return Observable.just(project);
             }
             return Observable.just(null);
         } else {
             return this.observe.projectAdded
-                .where(x => _.contains(x.sourceFiles, normalize(path)))
+                .where(x => _.includes(x.sourceFiles, normalize(path)))
                 .take(1)
                 .defaultIfEmpty(null);
         }
@@ -275,7 +273,7 @@ export class ViewModel implements VMViewState, Rx.IDisposable {
     }
 
     private _setupCodecheck(_solution: Solution) {
-        let codecheck = Observable.merge(
+        const codecheck = Observable.merge(
             // Catch global code checks
             _solution.observe.codecheck
                 .where(z => !z.request.FileName)
@@ -293,17 +291,11 @@ export class ViewModel implements VMViewState, Rx.IDisposable {
                     return results;
                 }))
             .map(data => _.sortBy(data, quickFix => quickFix.LogLevel))
-            .startWith([]);
-
-        const unusedCodeRows = codecheck
-            .map(results => _.filter(results, x => x.LogLevel === "Hidden"))
-            .distinctUntilChanged()
+            .startWith([])
             .shareReplay(1);
 
-        codecheck = codecheck.shareReplay(1);
-
         this._disposable.add(codecheck.subscribe((data) => this.diagnostics = data));
-        return { codecheck, unusedCodeRows };
+        return { codecheck };
     }
 
     private _setupStatus(_solution: Solution) {

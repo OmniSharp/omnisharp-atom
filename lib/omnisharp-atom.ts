@@ -1,4 +1,4 @@
-const _: _.LoDashStatic = require("lodash");
+import _ from "lodash";
 import {Observable, AsyncSubject, CompositeDisposable, Disposable} from "rx";
 import * as path from "path";
 import * as fs from "fs";
@@ -102,7 +102,7 @@ class OmniSharpAtom {
         return Observable.fromNodeCallback<string[], string>(fs.readdir)(featureDir)
             .flatMap(files => files)
             .where(file => /\.js$/.test(file))
-            .flatMap(file => Observable.fromNodeCallback<fs.Stats, string>(fs.stat)(`${featureDir}/${file}`).map(stat => ({ file, stat })))
+            .flatMap(file => Observable.fromNodeCallback<fs.Stats, string>(fs.stat)(`${featureDir}/${file}`), (file, stat) => ({ file, stat }))
             .where(z => !z.stat.isDirectory())
             .map(z => ({
                 file: `${folder}/${path.basename(z.file)}`.replace(/\.js$/, ""),
@@ -138,9 +138,9 @@ class OmniSharpAtom {
                 }
 
                 if (whiteList) {
-                    return _.contains(featureList, l.file);
+                    return _.includes(featureList, l.file);
                 } else {
-                    return !_.contains(featureList, l.file);
+                    return !_.includes(featureList, l.file);
                 }
             });
     }

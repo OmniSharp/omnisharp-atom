@@ -1,4 +1,4 @@
-const _ : _.LoDashStatic = require("lodash");
+import _ from "lodash";
 import {Observable} from "rx";
 import {ajax} from "jquery";
 const filter = require("fuzzaldrin").filter;

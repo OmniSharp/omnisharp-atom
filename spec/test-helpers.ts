@@ -19,7 +19,9 @@ export function setupFeature(features: string[], unitTestMode = true) {
             .then((pack: Atom.Package) => pack.mainModule._activated.delay(200).toPromise());
     });
 
-    afterEach(() => {
+    afterEach(function() {
+        atom.packages.deactivatePackage("omnisharp-atom");
+        atom.packages.deactivatePackage("language-csharp");
         atom.config.set("omnisharp-atom:feature-white-list", undefined);
         atom.config.set("omnisharp-atom:feature-list", undefined);
         SolutionManager._unitTestMode_ = false;

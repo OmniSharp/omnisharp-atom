@@ -1,5 +1,5 @@
 import {Models, Stdio} from "omnisharp-client";
-const _ : _.LoDashStatic = require("lodash");
+import _ from "lodash";
 import {Omni} from "../server/omni";
 import {CompositeDisposable} from "rx";
 import * as path from "path";
@@ -69,7 +69,7 @@ class PackageRestoreNotification {
         const projectName = this.findProjectNameFromFileName(event.FileName);
         // Client gets more than one of each UnresolvedDependencies events for each project
         // Don"t show multiple instances of a project in the notification
-        if (!_.any(this.knownProjects, (knownProject) => { return knownProject === projectName; })) {
+        if (!_.some(this.knownProjects, (knownProject) => { return knownProject === projectName; })) {
             this.knownProjects.push(projectName);
             this.notification.addDetail(`Unresolved dependencies for ${projectName}:`, true);
             if (event.UnresolvedDependencies) {

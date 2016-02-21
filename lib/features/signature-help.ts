@@ -1,7 +1,7 @@
 import {Models} from "omnisharp-client";
 import {CompositeDisposable, Observable, Disposable, Subject} from "rx";
 import {Omni} from "../server/omni";
-const _ : _.LoDashStatic = require("lodash");
+import _ from "lodash";
 import {SignatureView} from "../views/signature-help-view";
 
 interface IDecoration {
@@ -68,7 +68,7 @@ class SignatureHelp implements IFeature {
                         Line: position.row,
                         Column: position.column,
                     }))
-                        .flatMapLatest(x => shouldContinue.where(z => z).map(z => x))
+                        .flatMapLatest(x => shouldContinue.where(z => z), x => x)
                         .flatMap(response => {
                             if (response && response.Signatures && response.Signatures.length > 0) {
                                 if (!this._bubble) {

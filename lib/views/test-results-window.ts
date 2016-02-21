@@ -3,7 +3,7 @@
 const Convert = require("ansi-to-html");
 const convert = new Convert();
 /* tslint:enable:variable-name */
-const _: _.LoDashStatic = require("lodash");
+import _ from "lodash";
 
 // ctrl-r. ctrl-t run test
 // ctrl-r, ctrl-f run fixture

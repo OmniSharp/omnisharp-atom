@@ -1,5 +1,5 @@
 import {CompositeDisposable, Disposable} from "rx";
-const _: _.LoDashStatic = require("lodash");
+import _ from "lodash";
 import {SolutionStatusCard} from "../views/solution-status-view";
 import {SolutionManager} from "../server/solution-manager";
 import {DriverState} from "omnisharp-client";
