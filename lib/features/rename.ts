@@ -1,4 +1,4 @@
-const _ : _.LoDashStatic = require("lodash");
+import _ from "lodash";
 import {CompositeDisposable} from "rx";
 import {RenameView} from "../views/rename-view";
 import {Omni} from "../server/omni";
@@ -33,7 +33,7 @@ class Rename implements IFeature {
         if (editor) {
             wordToRename = <any>editor.getWordUnderCursor();
             // Word under cursor can sometimes return the open bracket if the word is selected.
-            wordToRename = _.trimRight(wordToRename, "(");
+            wordToRename = _.trimEnd(wordToRename, "(");
             atom.workspace.addTopPanel({
                 item: this.renameView
             });

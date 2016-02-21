@@ -1,4 +1,4 @@
-const _: _.LoDashStatic = require("lodash");
+import _ from "lodash";
 import * as path from "path";
 import {Observable, AsyncSubject, RefCountDisposable, Disposable, CompositeDisposable, BehaviorSubject, Scheduler, Subject} from "rx";
 import {Solution} from "./solution";
@@ -281,7 +281,7 @@ class SolutionInstanceManager {
             // No text editor found
             return Observable.empty<Solution>();
 
-        const isFolderPerFile = _.any(this.__specialCaseExtensions, ext => _.endsWith(path, ext));
+        const isFolderPerFile = _.some(this.__specialCaseExtensions, ext => _.endsWith(path, ext));
 
         const location = path;
         if (!location) {
@@ -366,7 +366,7 @@ class SolutionInstanceManager {
             return Observable.just(solution);
         }
 
-        const isFolderPerFile = _.any(this.__specialCaseExtensions, ext => _.endsWith(editor.getPath(), ext));
+        const isFolderPerFile = _.some(this.__specialCaseExtensions, ext => _.endsWith(editor.getPath(), ext));
         const solution = this._getSolutionForUnderlyingPath(location, isFolderPerFile);
         if (solution) {
             this._setupEditorWithContext(editor, solution);
@@ -512,7 +512,7 @@ class SolutionInstanceManager {
                     // Show the view
                     if (openSelectList) {
                         openSelectList.onClosed.subscribe(() => {
-                            if (!_.any(slns, x => this._candidateFinderCache.has(x.path))) {
+                            if (!_.some(slns, x => this._candidateFinderCache.has(x.path))) {
                                 _.defer(() => listView.toggle());
                             } else {
                                 asyncResult.onCompleted();

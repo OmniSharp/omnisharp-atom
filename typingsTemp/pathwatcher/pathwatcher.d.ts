@@ -147,7 +147,7 @@ declare module Pathwatcher {
          * @param pathToCheck? - The {String} path to check.
          * Returns a {Boolean} whether the given path is inside this directory.
          */
-        contains(pathToCheck? : string) : boolean;
+        includes(pathToCheck? : string) : boolean;
     
         /**
          * Private

@@ -2,7 +2,7 @@ import {Solution} from "../server/solution";
 import {CompositeDisposable, Disposable, Observable, Subject} from "rx";
 import {Omni} from "../server/omni";
 import {ProjectViewModel} from "../server/project-view-model";
-import {any, each, contains, pull} from "lodash";
+import {some, each, includes, pull} from "lodash";
 import {spawn} from "child_process";
 import {CommandOutputWindow} from "../views/command-output-window";
 import * as readline from "readline";
@@ -92,7 +92,7 @@ class CommandRunner implements IFeature {
     }
 
     private addCommands(project: ProjectViewModel<any>) {
-        if (any(project.commands)) {
+        if (some(project.commands)) {
             const cd = new CompositeDisposable();
             this._projectMap.set(project, cd);
             this.disposable.add(cd);
@@ -106,7 +106,7 @@ class CommandRunner implements IFeature {
     private addCommand(project: ProjectViewModel<any>, command: string, content: string) {
         //--server Kestrel
         //--server Microsoft.AspNet.Server.WebListener
-        const daemon = any(daemonFlags, cnt => contains(content, cnt));
+        const daemon = some(daemonFlags, cnt => includes(content, cnt));
         if (daemon) {
             return atom.commands.add("atom-workspace", `omnisharp-dnx:${project.name}-[${command}]-(watch)`, () => this.daemonProcess(project, command));
         } else {
@@ -180,7 +180,7 @@ export class RunProcess {
     private bootRuntime(runtime: string) {
         const args = [this.command];
         // Support old way of doing things (remove at RC?)
-        if (any(["beta3", "beta4", "beta5", "beta6"], x => runtime.indexOf(x) > -1)) {
+        if (some(["beta3", "beta4", "beta5", "beta6"], x => runtime.indexOf(x) > -1)) {
             args.unshift(".");
         }
 

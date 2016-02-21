@@ -1,4 +1,4 @@
-const _ : _.LoDashStatic = require("lodash");
+import _ from "lodash";
 import {Observable} from "rx";
 import {Omni} from "../server/omni";
 import {SolutionManager} from "../server/solution-manager";
@@ -30,7 +30,7 @@ function fetchFromGithub(source: string, prefix: string, searchPrefix: string): 
             return Observable.just(c);
         }
 
-        if (!_.any(c.results, x => x.toLowerCase() === prefix.toLowerCase() + ".")) {
+        if (!_.some(c.results, x => x.toLowerCase() === prefix.toLowerCase() + ".")) {
             return Observable.just({ results: [] });
         }
     }
@@ -161,7 +161,7 @@ class NugetNameProvider implements IAutocompleteProvider {
                 return _(z.map(x => x.results))
                     .flatten<string>()
                     .sortBy()
-                    .unique()
+                    .uniq()
                     .map(x =>
                         makeSuggestion(x, p, options.replacementPrefix))
                     .value();
@@ -194,7 +194,7 @@ class NugetVersionProvider implements IAutocompleteProvider {
                 .filter(z => {
                     if (cache.has(z)) {
                         // Short out early if the source doesn"t even have the given prefix
-                        return _.any(cache.get(z).results, x => _.startsWith(name, x));
+                        return _.some(cache.get(z).results, x => _.startsWith(name, x));
                     }
                     return true;
                 })

@@ -1,5 +1,5 @@
 /* tslint:disable:no-string-literal */
-const _ : _.LoDashStatic = require("lodash");
+import _ from "lodash";
 
 export class CommandOutputWindow extends HTMLDivElement implements WebComponent {
     public displayName = "CommandOutputWindow";

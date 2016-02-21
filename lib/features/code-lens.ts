@@ -1,6 +1,6 @@
 /// <reference path="../typings.d.ts" />
 import {Models} from "omnisharp-client";
-const _: _.LoDashStatic = require("lodash");
+import _ from "lodash";
 import {CompositeDisposable, Observable, Disposable, Subject, Scheduler} from "rx";
 import {Omni} from "../server/omni";
 let fastdom: typeof Fastdom = require("fastdom");
@@ -78,7 +78,7 @@ class CodeLens implements IFeature {
             cd.add(editor.onDidChangeScrollTop(() => this.updateDecoratorVisiblility(editor)));
 
             cd.add(atom.commands.onWillDispatch((event: Event) => {
-                if (_.contains(["omnisharp-atom:toggle-dock", "omnisharp-atom:show-dock", "omnisharp-atom:hide-dock"], event.type)) {
+                if (_.includes(["omnisharp-atom:toggle-dock", "omnisharp-atom:show-dock", "omnisharp-atom:hide-dock"], event.type)) {
                     this.updateDecoratorVisiblility(editor);
                 }
             }));

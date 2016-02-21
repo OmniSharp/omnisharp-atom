@@ -1,4 +1,4 @@
-const _ : _.LoDashStatic = require("lodash");
+import _ from "lodash";
 import {Observable, Subject, CompositeDisposable} from "rx";
 import {Models, RequestOptions, ClientV2, DriverState, OmnisharpClientOptions} from "omnisharp-client";
 
@@ -98,7 +98,7 @@ export class Solution extends ClientV2 {
             const omniChanges: { oldRange: { start: TextBuffer.Point, end: TextBuffer.Point }; newRange: { start: TextBuffer.Point, end: TextBuffer.Point }; oldText: string; newText: string; }[] = (<any>editor).__omniChanges__ || [];
             const computedChanges: Models.LinePositionSpanTextChange[];
 
-            if (_.any(["goto", "navigate", "find", "package"], x => _.startsWith(action, x))) {
+            if (_.some(["goto", "navigate", "find", "package"], x => _.startsWith(action, x))) {
                 computedChanges = null;
             } else {
                 computedChanges = omniChanges.map(change => <Models.LinePositionSpanTextChange>{

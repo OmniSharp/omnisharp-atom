@@ -2,7 +2,7 @@
 import {Models} from "omnisharp-client";
 import {Omni} from "../server/omni";
 import {OmnisharpTextEditor, isOmnisharpTextEditor} from "../server/omnisharp-text-editor";
-import {each, extend, has, any, range, remove, pull, find, chain, unique, findIndex, all, isEqual, min, debounce, sortBy, uniqueId, filter} from "lodash";
+import {each, extend, has, some, range, remove, pull, find, chain, uniq, findIndex, every, isEqual, min, debounce, sortBy, uniqueId, filter} from "lodash";
 import {Observable, Subject, ReplaySubject, BehaviorSubject, CompositeDisposable, Disposable} from "rx";
 import {registerContextItem} from "../server/omnisharp-text-editor";
 /* tslint:disable:variable-name */
@@ -54,7 +54,7 @@ class Highlight implements IFeature {
                 .flatMapLatest(() => Observable.defer(() => {
                     const projects = context.project.activeFramework.Name === "all" ? [] : [context.project.activeFramework.Name];
 
-                    let linesToFetch = unique<number>((<any>editor.getGrammar()).linesToFetch);
+                    let linesToFetch = uniq<number>((<any>editor.getGrammar()).linesToFetch);
                     if (!linesToFetch || !linesToFetch.length)
                         linesToFetch = [];
 
@@ -397,7 +397,7 @@ class Grammar {
         each(groupedItems, (item: { highlight: Models.HighlightSpan }[], key: number) => {
             let k = +key, mappedItem = item.map(x => x.highlight);
 
-            if (!enableExcludeCode || any(mappedItem, i => i.Kind === "preprocessor keyword") && all(mappedItem, i => i.Kind === "excluded code" || i.Kind === "preprocessor keyword")) {
+            if (!enableExcludeCode || some(mappedItem, i => i.Kind === "preprocessor keyword") && every(mappedItem, i => i.Kind === "excluded code" || i.Kind === "preprocessor keyword")) {
                 mappedItem = mappedItem.filter(z => z.Kind !== "excluded code");
             }
 
@@ -406,7 +406,7 @@ class Grammar {
                 this.linesToTokenize.push(k);
             } else {
                 const responseLine = this.responses.get(k);
-                if (responseLine.length !== mappedItem.length || any(responseLine, (l, i) => !isEqual(l, mappedItem[i]))) {
+                if (responseLine.length !== mappedItem.length || some(responseLine, (l, i) => !isEqual(l, mappedItem[i]))) {
                     this.responses.set(k, mappedItem);
                     this.linesToTokenize.push(k);
                 }
@@ -648,7 +648,7 @@ function getAtomStyleForToken(grammar: string, tags: number[], token: Models.Hig
         const id = getIdForScope(grammar, scope);
         if (id === -1) return;
 
-        if (!any(previousScopes, z => z === id)) {
+        if (!some(previousScopes, z => z === id)) {
             previousScopes.push(id);
         }
         each(replacements, ctx => {

@@ -12,7 +12,8 @@
     "removeComments": true,
     "noLib": false,
     "preserveConstEnums": true,
-    "experimentalDecorators": true
+    "experimentalDecorators": true,
+    "allowSyntheticDefaultImports": true
   },
   "compileOnSave": true,
   "formatCodeOptions": {

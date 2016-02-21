@@ -1,6 +1,6 @@
 import {Models} from "omnisharp-client";
 import {Observable, Disposable, CompositeDisposable} from "rx";
-const _: _.LoDashStatic = require("lodash");
+import _ from "lodash";
 import {getEnhancedGrammar, augmentEditor, ExcludeClassifications} from "../features/highlight";
 import {Omni} from "../server/omni";
 let fastdom: typeof Fastdom = require("fastdom");
@@ -122,7 +122,7 @@ export class EditorElement extends HTMLSpanElement implements WebComponent {
         }
 
         if (this._pre) {
-            this._pre.innerText = _.trimLeft(value.Text);
+            this._pre.innerText = _.trimStart(value.Text);
         }
 
         if (this._editor) {
@@ -137,7 +137,7 @@ export class EditorElement extends HTMLSpanElement implements WebComponent {
         this._editorText = value;
 
         if (this._pre) {
-            this._pre.innerText = _.trimLeft(value);
+            this._pre.innerText = _.trimStart(value);
         }
 
         if (this._editor) {
@@ -150,7 +150,7 @@ export class EditorElement extends HTMLSpanElement implements WebComponent {
             const text = this._usage.Text;
 
             (this._editor as any)._setGrammar(<any>grammar);
-            this._editor.setText(_.trimLeft(text));
+            this._editor.setText(_.trimStart(text));
 
             const marker = this._editor.markBufferRange([[0, +this._usage.Column - this._whitespace], [+this._usage.EndLine - +this._usage.Line, +this._usage.EndColumn - this._whitespace]]);
             this._editor.decorateMarker(marker, { type: "highlight", class: "findusages-underline" });
@@ -183,7 +183,7 @@ export class EditorElement extends HTMLSpanElement implements WebComponent {
             if (this._usage && atom.config.get<boolean>("omnisharp-atom.enhancedHighlighting")) {
                 let s = request({ filePath: this._usage.FileName, startLine: this._usage.Line, endLine: this._usage.EndLine, whitespace: this._whitespace })
                     .subscribe(response => {
-                        const grammar = this._grammar = getEnhancedGrammar(next.result.editor, _.find(Omni.grammars, g => _.any((<any>g).fileTypes, ft => _.endsWith(this._usage.FileName, `.${ft}`))), { readonly: true });
+                        const grammar = this._grammar = getEnhancedGrammar(next.result.editor, _.find(Omni.grammars, g => _.some((<any>g).fileTypes, ft => _.endsWith(this._usage.FileName, `.${ft}`))), { readonly: true });
                         (<any>grammar).setResponses(response);
                         fastdom.mutate(() => this._attachEditor(next.result, grammar));
                     });
@@ -196,7 +196,7 @@ export class EditorElement extends HTMLSpanElement implements WebComponent {
                 if (this._usage && atom.config.get<boolean>("omnisharp-atom.enhancedHighlighting")) {
                     let s = request({ filePath: this._usage.FileName, startLine: this._usage.Line, endLine: this._usage.EndLine, whitespace: this._whitespace })
                         .subscribe(response => {
-                            const grammar = this._grammar = getEnhancedGrammar(result.editor, _.find(Omni.grammars, g => _.any((<any>g).fileTypes, ft => _.endsWith(this._usage.FileName, `.${ft}`))), { readonly: true });
+                            const grammar = this._grammar = getEnhancedGrammar(result.editor, _.find(Omni.grammars, g => _.some((<any>g).fileTypes, ft => _.endsWith(this._usage.FileName, `.${ft}`))), { readonly: true });
                             (<any>grammar).setResponses(response);
                             fastdom.mutate(() => this._attachEditor(result, grammar));
                         });

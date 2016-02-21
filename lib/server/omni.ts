@@ -1,7 +1,7 @@
 import {helpers, Observable, ReplaySubject, Subject, CompositeDisposable, BehaviorSubject, Disposable, Scheduler} from "rx";
 import {SolutionManager} from "./solution-manager";
 import {Solution} from "./solution";
-const _: _.LoDashStatic = require("lodash");
+import _ from "lodash";
 import {DriverState} from "omnisharp-client";
 import {ProjectViewModel} from "./project-view-model";
 import {ViewModel} from "./view-model";
@@ -90,7 +90,7 @@ class OmniManager implements Rx.IDisposable {
         SolutionManager.activate(this._activeEditorOrConfigEditor);
 
         // we are only off if all our solutions are disconncted or erroed.
-        this.disposable.add(SolutionManager.solutionAggregateObserver.state.subscribe(z => this._isOff = _.all(z, x => x.value === DriverState.Disconnected || x.value === DriverState.Error)));
+        this.disposable.add(SolutionManager.solutionAggregateObserver.state.subscribe(z => this._isOff = _.every(z, x => x.value === DriverState.Disconnected || x.value === DriverState.Error)));
 
         this.disposable.add(
             Observable.create<Atom.TextEditor>(observer =>
@@ -213,7 +213,7 @@ class OmniManager implements Rx.IDisposable {
                 return;
             };
 
-            if (_.any(this._supportedExtensions, ext => _.endsWith(editor.getPath(), ext))) {
+            if (_.some(this._supportedExtensions, ext => _.endsWith(editor.getPath(), ext))) {
                 event.stopPropagation();
                 event.stopImmediatePropagation();
                 callback(event);
@@ -229,7 +229,7 @@ class OmniManager implements Rx.IDisposable {
             Observable.create<OmnisharpTextEditor>(observer => {
                 return atom.workspace.observeTextEditors((editor: Atom.TextEditor) => {
                     const cb = () => {
-                        if (_.any(extensions, ext => _.endsWith(editor.getPath(), ext))) {
+                        if (_.some(extensions, ext => _.endsWith(editor.getPath(), ext))) {
                             SolutionManager.getSolutionForEditor(editor)
                                 .subscribe(() => observer.onNext(<any>editor));
                         }
@@ -260,7 +260,7 @@ class OmniManager implements Rx.IDisposable {
                 const path = nextEditor.getPath();
                 if (!path) {
                     // editor isn"t saved yet.
-                    if (editor && _.any(extensions, ext => _.endsWith(editor.getPath(), ext))) {
+                    if (editor && _.some(extensions, ext => _.endsWith(editor.getPath(), ext))) {
                         atom.notifications.addInfo("OmniSharp", { detail: "Functionality will limited until the file has been saved." });
                     }
                 }
@@ -361,7 +361,7 @@ class OmniManager implements Rx.IDisposable {
     public getSolutionForProject(project: ProjectViewModel<any>) {
         return Observable.just(
             _(SolutionManager.activeSolutions)
-                .filter(solution => _.any(solution.model.projects, p => p.name === project.name))
+                .filter(solution => _.some(solution.model.projects, p => p.name === project.name))
                 .first()
         );
     }
@@ -560,13 +560,13 @@ class OmniManager implements Rx.IDisposable {
 
     public get grammars() {
         return _.filter(atom.grammars.getGrammars(),
-            grammar => _.any(this._supportedExtensions,
-                ext => _.any((<any>grammar).fileTypes,
-                    ft => _.trimLeft(ext, ".") === ft)));
+            grammar => _.some(this._supportedExtensions,
+                ext => _.some((<any>grammar).fileTypes,
+                    ft => _.trimStart(ext, ".") === ft)));
     }
 
     public isValidGrammar(grammar: FirstMate.Grammar) {
-        return _.any(this._supportedExtensions, ext => _.any((<any>grammar).fileTypes, ft => _.trimLeft(ext, ".") === ft));
+        return _.some(this._supportedExtensions, ext => _.some((<any>grammar).fileTypes, ft => _.trimStart(ext, ".") === ft));
     }
 
     private _packageDir: string;

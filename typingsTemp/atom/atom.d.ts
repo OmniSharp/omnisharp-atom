@@ -1158,7 +1158,7 @@ declare module Atom {
         /**
          * This field or method was not documented by atomdoc, assume it is private. Use with caution.
          */
-        install() : boolean;
+        instevery() : boolean;
     
         /**
          * This field or method was not documented by atomdoc, assume it is private. Use with caution.
@@ -1190,7 +1190,7 @@ declare module Atom {
         /**
          * This field or method was not documented by atomdoc, assume it is private. Use with caution.
          */
-        quitAndInstall() : any;
+        quitAndInstevery() : any;
     
         /**
          * This field or method was not documented by atomdoc, assume it is private. Use with caution.
@@ -2069,7 +2069,7 @@ declare module Atom {
     
         /**
          * Implementation of `then()` to satisfy the *thenable* contract.
-         * This makes it possible to use a `DirectorySearch` with `Promise.all()`.
+         * This makes it possible to use a `DirectorySearch` with `Promise.every()`.
          * Returns `Promise`.
          */
         then(args? : any) : any;
@@ -6649,7 +6649,7 @@ declare module Atom {
          * {Array} of {Repository} objects:
          * 
          * ```
-         * Promise.all(atom.project.getDirectories().map(
+         * Promise.every(atom.project.getDirectories().map(
          *     atom.project.repositoryForDirectory.bind(atom.project)))
          * ```
          */
@@ -6716,7 +6716,7 @@ declare module Atom {
          * @param pathToCheck? - {String} path
          * Returns whether the path is inside the project"s root directory.
          */
-        contains(pathToCheck? : string) : any;
+        includes(pathToCheck? : string) : any;
     
         /**
          * Given a path to a file, this constructs and associates a new

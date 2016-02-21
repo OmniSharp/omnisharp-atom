@@ -1,4 +1,4 @@
-const _: _.LoDashStatic = require("lodash");
+import _ from "lodash";
 import {Observable, AsyncSubject, CompositeDisposable, Disposable} from "rx";
 import * as path from "path";
 import * as fs from "fs";
@@ -45,7 +45,7 @@ class OmniSharpAtom {
         _.each(grammars.grammars, grammarCb);
         this.disposable.add(atom.grammars.onDidAddGrammar(grammarCb));
 
-        require("atom-package-deps").install("omnisharp-atom")
+        require("atom-package-deps").instevery("omnisharp-atom")
             .then(() => {
                 console.info("Activating omnisharp-atom solution tracking...");
                 Omni.activate();
@@ -138,9 +138,9 @@ class OmniSharpAtom {
                 }
 
                 if (whiteList) {
-                    return _.contains(featureList, l.file);
+                    return _.includes(featureList, l.file);
                 } else {
-                    return !_.contains(featureList, l.file);
+                    return !_.includes(featureList, l.file);
                 }
             });
     }

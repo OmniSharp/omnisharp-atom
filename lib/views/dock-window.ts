@@ -333,7 +333,7 @@ export class Resizer extends HTMLDivElement implements WebComponent {
         const mouseup = Observable.fromEvent<MouseEvent>(document.body, "mouseup").share();
         const mousedown = Observable.fromEvent<MouseEvent>(this, "mousedown").share();
 
-        const mousedrag = mousedown.selectMany((md) => {
+        const mousedrag = mousedown.flatMap((md) => {
             const startX = md.clientX + window.scrollX,
                 startY = md.clientY + window.scrollY;
 

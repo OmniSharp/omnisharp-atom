@@ -1,7 +1,7 @@
 import * as path from "path";
 import * as fs from "fs";
 import {Omni} from "../server/omni";
-const _ : _.LoDashStatic = require("lodash");
+import _ from "lodash";
 import {Observable, CompositeDisposable, Subject} from "rx";
 import {File} from "atom";
 import {ProjectViewModel} from "../server/project-view-model";
@@ -78,7 +78,7 @@ class FileMonitor implements IFeature {
             .subscribe(changs => {
                 _.each(_.groupBy(changs, x => x.solution.uniqueId), chang => {
                     const solution = chang[0].solution;
-                    const paths = _.unique(chang.map(x => x.filePath));
+                    const paths = _.uniq(chang.map(x => x.filePath));
                     solution.filesChanged(paths.map(z => ({ FileName: z })));
                 });
             }));

@@ -193,7 +193,7 @@ declare module SpacePen {
         static script(...args : any[]) : Builder;
         static section(...args : any[]) : Builder;
         static select(...args : any[]) : Builder;
-        static small(...args : any[]) : Builder;
+        static smevery(...args : any[]) : Builder;
         static source(...args : any[]) : Builder;
         static span(...args : any[]) : Builder;
         static strong(...args : any[]) : Builder;

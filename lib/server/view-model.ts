@@ -1,4 +1,4 @@
-const _: _.LoDashStatic = require("lodash");
+import _ from "lodash";
 import {Solution} from "./solution";
 import {Models, DriverState, OmnisharpClientStatus} from "omnisharp-client";
 import {Observable, Subject, ReplaySubject, CompositeDisposable, Disposable} from "rx";
@@ -149,7 +149,7 @@ export class ViewModel implements VMViewState, Rx.IDisposable {
 
         this._disposable.add(_solution.observe.projectAdded.subscribe(projectInformation => {
             _.each(projectViewModelFactory(projectInformation, _solution.projectPath), project => {
-                if (!_.any(this.projects, { path: project.path })) {
+                if (!_.some(this.projects, { path: project.path })) {
                     this.projects.push(project);
                     this._projectAddedStream.onNext(project);
                 }
@@ -249,14 +249,14 @@ export class ViewModel implements VMViewState, Rx.IDisposable {
 
     public getProjectContainingFile(path: string) {
         if (this.isOn && this.projects.length) {
-            const project = _.find(this.projects, x => _.contains(x.sourceFiles, normalize(path)));
+            const project = _.find(this.projects, x => _.includes(x.sourceFiles, normalize(path)));
             if (project) {
                 return Observable.just(project);
             }
             return Observable.just(null);
         } else {
             return this.observe.projectAdded
-                .where(x => _.contains(x.sourceFiles, normalize(path)))
+                .where(x => _.includes(x.sourceFiles, normalize(path)))
                 .take(1)
                 .defaultIfEmpty(null);
         }

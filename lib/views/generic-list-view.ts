@@ -1,5 +1,5 @@
 import * as spacePen from "atom-space-pen-views";
-const _ : _.LoDashStatic = require("lodash");
+import _ from "lodash";
 import {AsyncSubject} from "rx";
 
 export class GenericSelectListView extends spacePen.SelectListView {

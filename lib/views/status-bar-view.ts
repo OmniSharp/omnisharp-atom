@@ -1,6 +1,6 @@
 /* tslint:disable:no-string-literal */
 import {CompositeDisposable, Observable} from "rx";
-const _: _.LoDashStatic = require("lodash");
+import _ from "lodash";
 import {Omni} from "../server/omni";
 import {OmnisharpClientStatus} from "omnisharp-client";
 import {server} from "../atom/server-information";
@@ -8,7 +8,7 @@ import {SolutionManager} from "../server/solution-manager";
 import {commandRunner} from "../atom/command-runner";
 let fastdom: typeof Fastdom = require("fastdom");
 
-function addClassIfNotContains(icon: HTMLElement, ...cls: string[]) {
+function addClassIfNotincludes(icon: HTMLElement, ...cls: string[]) {
     if (icon) {
         fastdom.measure(() => {
             _.each(cls, c => {
@@ -18,7 +18,7 @@ function addClassIfNotContains(icon: HTMLElement, ...cls: string[]) {
         });
     }
 }
-function removeClassIfContains(icon: HTMLElement, ...cls: string[]) {
+function removeClassIfincludes(icon: HTMLElement, ...cls: string[]) {
     if (icon) {
         fastdom.measure(() => {
             _.each(cls, c => {
@@ -77,41 +77,41 @@ export class FlameElement extends HTMLAnchorElement implements WebComponent {
         const icon = this._icon;
 
         if (this._state.isOff) {
-            removeClassIfContains(icon, "text-subtle");
+            removeClassIfincludes(icon, "text-subtle");
         } else {
-            addClassIfNotContains(icon, "text-subtle");
+            addClassIfNotincludes(icon, "text-subtle");
         }
 
         if (this._state.isReady) {
-            addClassIfNotContains(icon, "text-success");
+            addClassIfNotincludes(icon, "text-success");
         } else {
-            removeClassIfContains(icon, "text-success");
+            removeClassIfincludes(icon, "text-success");
         }
 
         if (this._state.isError) {
-            addClassIfNotContains(icon, "text-error");
+            addClassIfNotincludes(icon, "text-error");
         } else {
-            removeClassIfContains(icon, "text-error");
+            removeClassIfincludes(icon, "text-error");
         }
 
         if (this._state.isConnecting) {
-            addClassIfNotContains(icon, "icon-flame-loading");
-            removeClassIfContains(icon, "icon-flame-processing");
-            removeClassIfContains(icon, "icon-flame-loading");
+            addClassIfNotincludes(icon, "icon-flame-loading");
+            removeClassIfincludes(icon, "icon-flame-processing");
+            removeClassIfincludes(icon, "icon-flame-loading");
         } else if (this._state.status.hasOutgoingRequests) {
-            addClassIfNotContains(icon, "icon-flame-processing");
-            removeClassIfContains(icon, "icon-flame-loading");
+            addClassIfNotincludes(icon, "icon-flame-processing");
+            removeClassIfincludes(icon, "icon-flame-loading");
         } else {
-            removeClassIfContains(icon, "icon-flame-processing");
-            removeClassIfContains(icon, "icon-flame-loading");
+            removeClassIfincludes(icon, "icon-flame-processing");
+            removeClassIfincludes(icon, "icon-flame-loading");
         }
     }
 
     public updateOutgoing(status: typeof FlameElement.prototype._state.status) {
         if (status.hasOutgoingRequests && status.outgoingRequests > 0) {
-            removeClassIfContains(this._outgoing, "fade");
+            removeClassIfincludes(this._outgoing, "fade");
         } else {
-            addClassIfNotContains(this._outgoing, "fade");
+            addClassIfNotincludes(this._outgoing, "fade");
         }
 
         if (status.outgoingRequests !== this._state.status.outgoingRequests) {
@@ -142,11 +142,11 @@ export class CommandRunnerElement extends HTMLAnchorElement implements WebCompon
         if (this._state !== state) {
             this._state = state;
             if (state === CommandRunnerState.Running) {
-                addClassIfNotContains(this, "text-info");
-                removeClassIfContains(this, "text-subtle", "icon-flame-loading");
+                addClassIfNotincludes(this, "text-info");
+                removeClassIfincludes(this, "text-subtle", "icon-flame-loading");
             } else {
-                removeClassIfContains(this, "text-info");
-                addClassIfNotContains(this, "text-subtle", "icon-flame-loading");
+                removeClassIfincludes(this, "text-info");
+                addClassIfNotincludes(this, "text-subtle", "icon-flame-loading");
             }
 
             if (state === CommandRunnerState.Off) {
@@ -329,7 +329,7 @@ export class StatusBarElement extends HTMLElement implements WebComponent, Rx.ID
 
         this._disposable.add(commandRunner.observe.processes
             .subscribe(processes => {
-                if (_.all(processes, process => process.started)) {
+                if (_.every(processes, process => process.started)) {
                     this._commandRunner.updateState(CommandRunnerState.Started);
                 } else if (processes.length > 0) {
                     this._commandRunner.updateState(CommandRunnerState.Running);

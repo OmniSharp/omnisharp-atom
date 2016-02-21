@@ -1,4 +1,4 @@
-const _: _.LoDashStatic = require("lodash");
+import _ from "lodash";
 import {ViewModel} from "../server/view-model";
 import {ProjectViewModel} from "../server/project-view-model";
 import {DriverState} from "omnisharp-client";
@@ -9,7 +9,7 @@ import {basename} from "path";
 
 function truncateStringReverse(str: string, maxLength = 55) {
     const reversedString = _.toArray(str).reverse().join("");
-    return _.toArray(_.trunc(reversedString, maxLength)).reverse().join("");
+    return _.toArray(_.truncate(reversedString, maxLength)).reverse().join("");
 }
 
 

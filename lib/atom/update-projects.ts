@@ -1,5 +1,5 @@
 import {CompositeDisposable, Observable} from "rx";
-const _ : _.LoDashStatic = require("lodash");
+import _ from "lodash";
 import {Omni} from "../server/omni";
 import {ProjectViewModel} from "../server/project-view-model";
 import * as fs from "fs";
@@ -31,7 +31,7 @@ class UpdateProject implements IAtomFeature {
         this.disposable.add(Omni.listener.model.projectAdded
             .where(z => this._autoAddExternalProjects || this._nagAddExternalProjects)
             .where(z => !_.startsWith(z.path, z.solutionPath))
-            .where(z => !_.any(this._paths, x => _.startsWith(z.path, x)))
+            .where(z => !_.some(this._paths, x => _.startsWith(z.path, x)))
             .buffer(Omni.listener.model.projectAdded.throttle(1000), () => Observable.timer(1000))
             .where(z => z.length > 0)
             .subscribe(project => this.handleProjectAdded(project)));
@@ -39,7 +39,7 @@ class UpdateProject implements IAtomFeature {
         this.disposable.add(Omni.listener.model.projectRemoved
             .where(z => this._autoAddExternalProjects || this._nagAddExternalProjects)
             .where(z => !_.startsWith(z.path, z.solutionPath))
-            .where(z => _.any(this._paths, x => _.startsWith(z.path, x)))
+            .where(z => _.some(this._paths, x => _.startsWith(z.path, x)))
             .buffer(Omni.listener.model.projectRemoved.throttle(1000), () => Observable.timer(1000))
             .where(z => z.length > 0)
             .subscribe(project => this.handleProjectRemoved(project)));
@@ -85,7 +85,7 @@ class UpdateProject implements IAtomFeature {
     }
 
     private getProjectDirectories(projects: ProjectViewModel<any>[]) {
-        return Observable.from(_.unique(projects.map(z => z.path)))
+        return Observable.from(_.uniq(projects.map(z => z.path)))
             .flatMap(project => stat(project), (project, st) => {
                 if (st.isDirectory()) {
                     return project;
