@@ -1158,7 +1158,7 @@ declare module Atom {
         /**
          * This field or method was not documented by atomdoc, assume it is private. Use with caution.
          */
-        instevery() : boolean;
+        install() : boolean;
     
         /**
          * This field or method was not documented by atomdoc, assume it is private. Use with caution.

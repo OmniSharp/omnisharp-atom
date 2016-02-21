@@ -45,7 +45,7 @@ class OmniSharpAtom {
         _.each(grammars.grammars, grammarCb);
         this.disposable.add(atom.grammars.onDidAddGrammar(grammarCb));
 
-        require("atom-package-deps").instevery("omnisharp-atom")
+        require("atom-package-deps").install("omnisharp-atom")
             .then(() => {
                 console.info("Activating omnisharp-atom solution tracking...");
                 Omni.activate();
