@@ -2,7 +2,7 @@ import _ from "lodash";
 import {ViewModel} from "../server/view-model";
 import {ProjectViewModel} from "../server/project-view-model";
 import {DriverState} from "omnisharp-client";
-import {CompositeDisposable}  from "rx";
+import {CompositeDisposable}  from "omnisharp-client";
 const $: JQueryStatic = require("jquery");
 let fastdom: typeof Fastdom = require("fastdom");
 import {basename} from "path";

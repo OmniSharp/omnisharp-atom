@@ -1,5 +1,6 @@
 import {Solution} from "../server/solution";
-import {CompositeDisposable, Disposable, Observable, Subject} from "rx";
+import {Observable, Subject} from "rxjs-beta3";
+import {CompositeDisposable, Disposable} from "omnisharp-client";
 import {Omni} from "../server/omni";
 import {ProjectViewModel} from "../server/project-view-model";
 import {some, each, includes, pull} from "lodash";
@@ -24,8 +25,8 @@ if (win32) {
 }
 
 class CommandRunner implements IFeature {
-    private disposable: Rx.CompositeDisposable;
-    private _projectMap = new WeakMap<ProjectViewModel<any>, Rx.CompositeDisposable>();
+    private disposable: CompositeDisposable;
+    private _projectMap = new WeakMap<ProjectViewModel<any>, CompositeDisposable>();
 
     private _watchProcesses: RunProcess[] = [];
     public get processes() { return this._watchProcesses; }
@@ -67,21 +68,21 @@ class CommandRunner implements IFeature {
         const restart = new Subject<Atom.TextEditor>();
 
         this.disposable.add(Omni.eachEditor((editor, cd) => {
-            cd.add(editor.onDidSave(() => restart.onNext(editor)));
-            cd.add(editor.getBuffer().onDidReload(() => restart.onNext(editor)));
+            cd.add(editor.onDidSave(() => restart.next(editor)));
+            cd.add(editor.getBuffer().onDidReload(() => restart.next(editor)));
         }));
 
         const processes = this._processesChanged = new Subject<RunProcess[]>();
-        this.observe = { processes };
+        this.observe = { processes: <Observable<RunProcess[]>><any>processes };
 
         this.disposable.add(restart
-            .where(z => !!this._watchProcesses.length)
+            .filter(z => !!this._watchProcesses.length)
             .flatMap(editor =>
                 Omni.activeModel
                     .concatMap(model => model.getProjectContainingEditor(editor))
                     .take(1)
-                    .where(project => !!project))
-            .throttle(1000)
+                    .filter(project => !!project))
+            .throttleTime(1000)
             .subscribe(project => {
                 each(this._watchProcesses, process => {
                     if (project.solutionPath === process.project.solutionPath)
@@ -117,14 +118,14 @@ class CommandRunner implements IFeature {
     private daemonProcess(project: ProjectViewModel<any>, command: string) {
         const process = new RunProcess(project, command, true);
         this._watchProcesses.push(process);
-        this._processesChanged.onNext(this.processes);
+        this._processesChanged.next(this.processes);
         process.disposable.add(Disposable.create(() => {
             pull(this._watchProcesses, process);
-            this._processesChanged.onNext(this.processes);
+            this._processesChanged.next(this.processes);
         }));
 
-        process.disposable.add(process.observeStarted.where(z => z).delay(1000).subscribe(() => this._processesChanged.onNext(this.processes)));
-        process.disposable.add(process.observeStarted.where(z => !z).subscribe(() => this._processesChanged.onNext(this.processes)));
+        process.disposable.add(process.observeStarted.filter(z => z).delay(1000).subscribe(() => this._processesChanged.next(this.processes)));
+        process.disposable.add(process.observeStarted.filter(z => !z).subscribe(() => this._processesChanged.next(this.processes)));
 
         process.start();
     }
@@ -167,7 +168,7 @@ export class RunProcess {
     public start() {
         const solution = Omni.getSolutionForProject(this.project)
             .map(x => normalize(getDnxExe(x)))
-            .tapOnNext(() => dock.selectWindow(this.id))
+            .do(() => dock.selectWindow(this.id))
             .subscribe((runtime) => this.bootRuntime(runtime));
 
         this.disposable.add(solution);
@@ -191,7 +192,7 @@ export class RunProcess {
         this._outputWindow.addMessage({ message: `Starting ${runtime} ${args.join(" ")}` });
 
         this.started = true;
-        this.observeStarted.onNext(this.started);
+        this.observeStarted.next(this.started);
 
         const process = this.process = spawn(runtime, args, {
             cwd: dirname(this.project.path),
@@ -219,7 +220,7 @@ export class RunProcess {
 
         const disposable = Disposable.create(() => {
             this.started = false;
-            this.observeStarted.onNext(this.started);
+            this.observeStarted.next(this.started);
             this.process.removeAllListeners();
             this.stop();
             this.disposable.remove(disposable);
@@ -228,7 +229,7 @@ export class RunProcess {
 
         const cb = () => {
             this.started = false;
-            this.observeStarted.onNext(this.started);
+            this.observeStarted.next(this.started);
             disposable.dispose();
             if (this.watch)
                 this.bootRuntime(runtime);

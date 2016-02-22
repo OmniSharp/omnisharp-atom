@@ -1,4 +1,5 @@
-import {CompositeDisposable, Observable} from "rx";
+import {Observable} from "rxjs-beta3";
+import {CompositeDisposable} from "omnisharp-client";
 import {each, endsWith, filter} from "lodash";
 import * as path from "path";
 
@@ -52,7 +53,7 @@ module Yeoman {
 }
 
 class GeneratorAspnet implements IFeature {
-    private disposable: Rx.CompositeDisposable;
+    private disposable: CompositeDisposable;
     private generator: {
         run(generator: string, path?: string, options?: any): Promise<any>; start(prefix: string, path?: string, options?: any): Promise<any>;
         list(prefix?: string, path?: string, options?: any): Promise<{ displayName: string; name: string; resolved: string; }[]>

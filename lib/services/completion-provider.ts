@@ -1,7 +1,7 @@
 import {Omni} from "../server/omni";
 import {Models} from "omnisharp-client";
 import _ from "lodash";
-import {CompositeDisposable} from "rx";
+import {CompositeDisposable, IDisposable} from "omnisharp-client";
 const filter = require("fuzzaldrin").filter;
 
 interface RequestOptions {
@@ -59,7 +59,7 @@ function renderIcon(item: Models.AutoCompleteResponse) {
     return `<img height="16px" width="16px" src="atom://omnisharp-atom/styles/icons/autocomplete_${item.Kind.toLowerCase()}@3x.png" />`;
 }
 
-class CompletionProvider implements Rx.IDisposable {
+class CompletionProvider implements IDisposable {
     private _disposable: CompositeDisposable;
 
     private _initialized = false;
@@ -68,7 +68,7 @@ class CompletionProvider implements Rx.IDisposable {
     private _useLeftLabelColumnForSuggestions: boolean;
 
     private previous: RequestOptions;
-    private results: Rx.Promise<Models.AutoCompleteResponse[]>;
+    private results: Promise<Models.AutoCompleteResponse[]>;
 
     public selector = ".source.omnisharp";
     public disableForSelector = ".source.omnisharp .comment";
@@ -76,7 +76,7 @@ class CompletionProvider implements Rx.IDisposable {
     public suggestionPriority = 10;
     public excludeLowerPriority = false;
 
-    public getSuggestions(options: RequestOptions): Rx.IPromise<Suggestion[]> {
+    public getSuggestions(options: RequestOptions): Promise<Suggestion[]> {
         if (!this._initialized) this._setupSubscriptions();
 
         if (this.results && this.previous && calcuateMovement(this.previous, options).reset) {

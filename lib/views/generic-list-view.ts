@@ -1,6 +1,6 @@
 import * as spacePen from "atom-space-pen-views";
 import _ from "lodash";
-import {AsyncSubject} from "rx";
+import {AsyncSubject} from "rxjs-beta3";
 
 export class GenericSelectListView extends spacePen.SelectListView {
     public static content() {
@@ -17,7 +17,7 @@ export class GenericSelectListView extends spacePen.SelectListView {
     private previouslyFocusedElement: Node;
     private eventElement: any;
     private _onClosed = new AsyncSubject<boolean>();
-    public get onClosed(): Rx.Observable<boolean> { return this._onClosed; };
+    public get onClosed() { return this._onClosed; }
 
     public message: JQuery;
 
@@ -76,8 +76,8 @@ export class GenericSelectListView extends spacePen.SelectListView {
     }
 
     public hide() {
-        this._onClosed.onNext(true);
-        this._onClosed.onCompleted();
+        this._onClosed.next(true);
+        this._onClosed.complete();
 
         if (this.panel) {
             this.panel.hide();

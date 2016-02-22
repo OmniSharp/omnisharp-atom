@@ -2,7 +2,7 @@
 import {expect} from "chai";
 import {SolutionManager} from "../lib/server/solution-manager";
 import {DriverState} from "omnisharp-client";
-import {Observable} from "rx";
+import {Observable} from "rxjs-beta3";
 import {setupFeature} from "./test-helpers";
 
 describe("OmniSharp Atom", () => {

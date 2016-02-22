@@ -1,5 +1,5 @@
 import _ from "lodash";
-import {Observable} from "rx";
+import {Observable} from "rxjs-beta3";
 import {ajax} from "jquery";
 const filter = require("fuzzaldrin").filter;
 
@@ -7,13 +7,13 @@ const frameworkCache = new Map<string, { [key: string]: string }>();
 
 function fetchFrameworkFromGithub(framework: string) {
     if (frameworkCache.has(framework)) {
-        return Observable.just<{ [key: string]: string }>(frameworkCache.get(framework));
+        return Observable.of<{ [key: string]: string }>(frameworkCache.get(framework));
     }
 
     // Get the file from github
     const result = ajax(`https://raw.githubusercontent.com/OmniSharp/omnisharp-nuget/resources/frameworks/${framework.toLowerCase()}.json`).then(res => JSON.parse(res));
 
-    return Observable.fromPromise<{ [key: string]: string }>(result);
+    return Observable.fromPromise<{ [key: string]: string }>(<any>result);
 }
 
 interface IAutocompleteProviderOptions {
@@ -29,7 +29,7 @@ interface IAutocompleteProviderOptions {
 interface IAutocompleteProvider {
     fileMatchs: string[];
     pathMatch: (path: string) => boolean;
-    getSuggestions: (options: IAutocompleteProviderOptions) => Rx.IPromise<any[]>;
+    getSuggestions: (options: IAutocompleteProviderOptions) => Promise<any[]>;
     dispose(): void;
 }
 

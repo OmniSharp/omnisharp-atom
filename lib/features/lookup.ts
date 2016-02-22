@@ -2,14 +2,15 @@
 // and https://atom.io/packages/ide-flow
 // https://atom.io/packages/atom-typescript
 import {Models} from "omnisharp-client";
-import {CompositeDisposable, Observable, Disposable, Scheduler} from "rx";
+import {Observable, Scheduler, Subscription} from "rxjs-beta3";
+import {CompositeDisposable, Disposable, IDisposable} from "omnisharp-client";
 import {Omni} from "../server/omni";
 import {TooltipView} from "../views/tooltip-view";
 const $: JQueryStatic = require("jquery");
 const escape = require("escape-html");
 
 class TypeLookup implements IFeature {
-    private disposable: Rx.CompositeDisposable;
+    private disposable: CompositeDisposable;
 
     public activate() {
         /* tslint:disable:no-string-literal */
@@ -43,12 +44,12 @@ class TypeLookup implements IFeature {
     public description = "Adds hover tooltips to the editor, also has a keybind";
 }
 
-class Tooltip implements Rx.Disposable {
+class Tooltip implements IDisposable {
     private exprTypeTooltip: TooltipView = null;
-    private keydown: Rx.Observable<KeyboardEvent>;
-    private keydownSubscription: Rx.IDisposable;
+    private keydown: Observable<KeyboardEvent>;
+    private keydownSubscription: Subscription;
     private rawView: any;
-    private disposable: Rx.CompositeDisposable;
+    private disposable: CompositeDisposable;
 
     constructor(private editorView: JQuery, private editor: Atom.TextEditor) {
         this.rawView = editorView[0];
@@ -66,8 +67,8 @@ class Tooltip implements Rx.Disposable {
         this.keydown = Observable.fromEvent<KeyboardEvent>(scroll[0], "keydown");
 
         cd.add(mousemove
-            .observeOn(Scheduler.async)
-            .buffer(mousemove.throttle(400), () => Observable.timer(400))
+            .observeOn(Scheduler.queue)
+            .bufferTime(400)
             .map(events => {
                 for (const event of events.reverse()) {
                     const pixelPt = this.pixelPositionFromMouseEvent(editorView, event);
@@ -80,10 +81,10 @@ class Tooltip implements Rx.Disposable {
                     return { bufferPt, event };
                 }
             })
-            .where(z => !!z)
-            .tapOnNext(() => this.hideExpressionType())
-            .where(x => this.checkPosition(x.bufferPt))
-            .tapOnNext(() => this.subcribeKeyDown())
+            .filter(z => !!z)
+            .do(() => this.hideExpressionType())
+            .filter(x => this.checkPosition(x.bufferPt))
+            .do(() => this.subcribeKeyDown())
             .subscribe(({bufferPt, event}) => {
                 this.showExpressionTypeOnMouseOver(event, bufferPt);
             }));
@@ -192,7 +193,7 @@ class Tooltip implements Rx.Disposable {
 
         if (this.keydownSubscription) {
             this.disposable.remove(this.keydownSubscription);
-            this.keydownSubscription.dispose();
+            this.keydownSubscription.unsubscribe();
             this.keydownSubscription = null;
         }
     }

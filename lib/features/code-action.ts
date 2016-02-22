@@ -1,13 +1,14 @@
 import {Models} from "omnisharp-client";
 import _ from "lodash";
-import {CompositeDisposable, Subject, Observable, Scheduler} from "rx";
+import {Subject, Observable, Scheduler} from "rxjs-beta3";
+import {CompositeDisposable, IDisposable} from "omnisharp-client";
 import {Omni} from "../server/omni";
 import * as SpacePen from "atom-space-pen-views";
 import {applyAllChanges} from "../services/apply-changes";
 import codeActionsView from "../views/code-actions-view";
 
 class CodeAction implements IFeature {
-    private disposable: Rx.CompositeDisposable;
+    private disposable: CompositeDisposable;
 
     private view: SpacePen.SelectListView;
 
@@ -33,11 +34,11 @@ class CodeAction implements IFeature {
         }));
 
         this.disposable.add(Omni.switchActiveEditor((editor, cd) => {
-            let word: string, marker: Atom.Marker, subscription: Rx.Disposable;
+            let word: string, marker: Atom.Marker, subscription: IDisposable;
 
             cd.add(Omni.listener.getcodeactions
-                .where(z => z.request.FileName === editor.getPath())
-                .where(ctx => ctx.response.CodeActions.length > 0)
+                .filter(z => z.request.FileName === editor.getPath())
+                .filter(ctx => ctx.response.CodeActions.length > 0)
                 .subscribe(({request}) => {
                     if (marker) {
                         marker.destroy();
@@ -79,12 +80,15 @@ class CodeAction implements IFeature {
             const onDidStopChanging = new Subject<any>();
             cd.add(onDidStopChanging);
 
-            cd.add(Observable.combineLatest(onDidChangeCursorPosition, onDidStopChanging, (cursor, changing) => cursor)
-                .observeOn(Scheduler.async)
-                .debounce(1000)
+            cd.add(Observable.combineLatest(
+                <Observable<{ oldBufferPosition: TextBuffer.Point; oldScreenPosition: TextBuffer.Point; newBufferPosition: TextBuffer.Point; newScreenPosition: TextBuffer.Point; textChanged: boolean; cursor: Atom.Cursor; }>><any>onDidChangeCursorPosition,
+                <Observable<any>><any>onDidStopChanging,
+                (cursor, changing) => cursor)
+                .observeOn(Scheduler.queue)
+                .debounceTime(1000)
                 .subscribe(cursor => update(cursor.newBufferPosition)));
 
-            cd.add(editor.onDidStopChanging(_.debounce(() => !onDidStopChanging.isDisposed && onDidStopChanging.onNext(true), 1000)));
+            cd.add(editor.onDidStopChanging(_.debounce(() => onDidStopChanging.next(true), 1000)));
             cd.add(editor.onDidChangeCursorPosition(_.debounce((e: any) => {
                 const oldPos = e.oldBufferPosition;
                 const newPos = e.newBufferPosition;
@@ -98,8 +102,8 @@ class CodeAction implements IFeature {
                     }
                 }
 
-                if (!onDidChangeCursorPosition.isDisposed) {
-                    onDidChangeCursorPosition.onNext(e);
+                if (!onDidChangeCursorPosition.isUnsubscribed) {
+                    onDidChangeCursorPosition.next(e);
                 }
             }, 1000)));
         }));

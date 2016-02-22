@@ -1,12 +1,12 @@
-import {CompositeDisposable} from "rx";
+import {CompositeDisposable, IDisposable} from "omnisharp-client";
 import {dock} from "../atom/dock";
 
 class SettingsButton implements IFeature {
-    private disposable: Rx.CompositeDisposable;
+    private disposable: CompositeDisposable;
 
     public activate() {
         this.disposable = new CompositeDisposable();
-        let tooltip :Rx.IDisposable;
+        let tooltip :IDisposable;
 
         const htmlButton = document.createElement("a");
         htmlButton.classList.add("btn","icon-gear");

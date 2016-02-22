@@ -1,4 +1,4 @@
-import {Observable} from "rx";
+import {Observable} from "rxjs-beta3";
 /// <reference path="../tsd.d.ts" />
 import {expect} from "chai";
 import {Omni} from "../../lib/server/omni";

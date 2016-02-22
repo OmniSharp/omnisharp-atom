@@ -1,10 +1,11 @@
-import {CompositeDisposable, Observable, Scheduler} from "rx";
+import {Observable, Scheduler} from "rxjs-beta3";
+import {CompositeDisposable} from "omnisharp-client";
 import {Omni} from "../server/omni";
 import {exists} from "fs";
-const oexists = Observable.fromCallback(exists);
+const oexists = Observable.bindCallback(exists);
 
 class ReloadWorkspace implements IFeature {
-    private disposable: Rx.CompositeDisposable;
+    private disposable: CompositeDisposable;
 
     public activate() {
         this.disposable = new CompositeDisposable();
@@ -17,8 +18,8 @@ class ReloadWorkspace implements IFeature {
             .flatMap(solution => {
                 return Observable.from(solution.model.projects)
                     .flatMap(x => x.sourceFiles)
-                    .observeOn(Scheduler.async)
-                    .concatMap(file => oexists(file).where(x => !x)
+                    .observeOn(Scheduler.queue)
+                    .concatMap(file => oexists(file).filter(x => !x)
                         .flatMap(() => solution.updatebuffer({ FileName: file, Buffer: "" })));
             });
     }

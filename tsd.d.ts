@@ -19,4 +19,3 @@
 /// <reference path="typings\main\ambient\node\node.d.ts" />
 /// <reference path="typings\main\ambient\semver\semver.d.ts" />
 /// <reference path="typings\main\definitions\lodash\lodash.d.ts" />
-/// <reference path="node_modules/rx/ts/rx.all.es6.d.ts" />

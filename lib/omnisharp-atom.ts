@@ -1,5 +1,6 @@
 import _ from "lodash";
-import {Observable, AsyncSubject, CompositeDisposable, Disposable} from "rx";
+import {Observable, AsyncSubject} from "rxjs-beta3";
+import {CompositeDisposable, Disposable, IDisposable} from "omnisharp-client";
 import * as path from "path";
 import * as fs from "fs";
 
@@ -8,7 +9,7 @@ import {Omni} from "./server/omni";
 const win32 = process.platform === "win32";
 
 class OmniSharpAtom {
-    private disposable: Rx.CompositeDisposable;
+    private disposable: CompositeDisposable;
     // Internal: Used by unit testing to make sure the plugin is completely activated.
     private _started: AsyncSubject<boolean>;
     private _activated: AsyncSubject<boolean>;
@@ -51,34 +52,34 @@ class OmniSharpAtom {
                 Omni.activate();
                 this.disposable.add(Omni);
 
-                this._started.onNext(true);
-                this._started.onCompleted();
+                this._started.next(true);
+                this._started.complete();
             })
             /* tslint:disable:no-string-literal */
             .then(() => this.loadFeatures(this.getFeatures("atom").delay(Omni["_kick_in_the_pants_"] ? 0 : 2000)).toPromise())
             /* tslint:enable:no-string-literal */
             .then(() => {
                 let startingObservable = Omni.activeSolution
-                    .where(z => !!z)
+                    .filter(z => !!z)
                     .take(1);
 
                 /* tslint:disable:no-string-literal */
                 if (Omni["_kick_in_the_pants_"]) {
-                    startingObservable = Observable.just(null);
+                    startingObservable = Observable.of(null);
                 }
                 /* tslint:disable:no-string-literal */
 
                 // Only activate features once we have a solution!
                 this.disposable.add(startingObservable
                     .flatMap(() => this.loadFeatures(this.getFeatures("features")))
-                    .subscribeOnCompleted(() => {
+                    .subscribe({ complete: () => {
                         this.disposable.add(atom.workspace.observeTextEditors((editor: Atom.TextEditor) => {
                             this.detectAutoToggleGrammar(editor);
                         }));
 
-                        this._activated.onNext(true);
-                        this._activated.onCompleted();
-                    }));
+                        this._activated.next(true);
+                        this._activated.complete();
+                    } }));
 
             });
     }
@@ -99,11 +100,11 @@ class OmniSharpAtom {
             return result;//_.values(result).filter(feature => !_.isFunction(feature));
         }
 
-        return Observable.fromNodeCallback<string[], string>(fs.readdir)(featureDir)
+        return Observable.bindNodeCallback(fs.readdir)(featureDir)
             .flatMap(files => files)
-            .where(file => /\.js$/.test(file))
-            .flatMap(file => Observable.fromNodeCallback<fs.Stats, string>(fs.stat)(`${featureDir}/${file}`), (file, stat) => ({ file, stat }))
-            .where(z => !z.stat.isDirectory())
+            .filter(file => /\.js$/.test(file))
+            .flatMap(file => Observable.bindNodeCallback(fs.stat)(`${featureDir}/${file}`), (file, stat) => ({ file, stat }))
+            .filter(z => !z.stat.isDirectory())
             .map(z => ({
                 file: `${folder}/${path.basename(z.file)}`.replace(/\.js$/, ""),
                 load: () => {
@@ -151,16 +152,16 @@ class OmniSharpAtom {
             .toArray()
             .concatMap(x => x)
             .map(f => f.activate())
-            .where(x => !!x)
+            .filter(x => !!x)
             .toArray()
-            .tapOnCompleted(() => {
+            .do({ complete: () => {
                 (<any>atom.config).setSchema("omnisharp-atom", {
                     type: "object",
                     properties: this.config
                 });
-            })
+            }})
             .concatMap(x => x)
-            .tapOnNext(x => x());
+            .do(x => x());
     }
 
     public activateFeature(whiteListUndefined: boolean, key: string, value: IFeature) {
@@ -170,7 +171,7 @@ class OmniSharpAtom {
         // Whitelist is used for unit testing, we don"t want the config to make changes here
         if (whiteListUndefined && _.has(this.config, key)) {
             const configKey = `omnisharp-atom.${key}`;
-            let enableDisposable: Rx.IDisposable, disableDisposable: Rx.IDisposable;
+            let enableDisposable: IDisposable, disableDisposable: IDisposable;
             this.disposable.add(atom.config.observe(configKey, enabled => {
                 if (!enabled) {
                     if (disableDisposable) {

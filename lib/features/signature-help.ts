@@ -1,5 +1,6 @@
 import {Models} from "omnisharp-client";
-import {CompositeDisposable, Observable, Disposable, Subject} from "rx";
+import {Observable, Subject} from "rxjs-beta3";
+import {CompositeDisposable, Disposable, IDisposable} from "omnisharp-client";
 import {Omni} from "../server/omni";
 import _ from "lodash";
 import {SignatureView} from "../views/signature-help-view";
@@ -12,7 +13,7 @@ interface IDecoration {
 }
 
 class SignatureHelp implements IFeature {
-    private disposable: Rx.CompositeDisposable;
+    private disposable: CompositeDisposable;
     private _bubble: SignatureBubble;
 
     public activate() {
@@ -21,19 +22,19 @@ class SignatureHelp implements IFeature {
         const delayIssueRequest = new Subject<any>();
 
         this.disposable.add(delayIssueRequest
-            .debounce(1000)
+            .debounceTime(1000)
             .subscribe(() => {
                 const editor = atom.workspace.getActiveTextEditor();
                 const position = editor.getCursorBufferPosition();
-                issueRequest.onNext(position);
+                issueRequest.next(position);
             }));
 
         this.disposable.add(Omni.addTextEditorCommand("omnisharp-atom:signature-help",
-            (e) => delayIssueRequest.onNext(null)));
+            (e) => delayIssueRequest.next(null)));
 
         this.disposable.add(atom.commands.onWillDispatch(function(event: Event) {
             if (event.type === "autocomplete-plus:activate" || event.type === "autocomplete-plus:confirm") {
-                delayIssueRequest.onNext(null);
+                delayIssueRequest.next(null);
             }
         }));
 
@@ -55,10 +56,10 @@ class SignatureHelp implements IFeature {
 
                 return true;
             })
-            .shareReplay(1);
+            .publishReplay(1).refCount();
 
         this.disposable.add(shouldContinue
-            .where(z => !z)
+            .filter(z => !z)
             .subscribe(() => this._bubble && this._bubble.dispose()));
 
         this.disposable.add(Omni.switchActiveEditor((editor, cd) => {
@@ -68,12 +69,12 @@ class SignatureHelp implements IFeature {
                         Line: position.row,
                         Column: position.column,
                     }))
-                        .flatMapLatest(x => shouldContinue.where(z => z), x => x)
+                        .switchMap(x => shouldContinue.filter(z => z), x => x)
                         .flatMap(response => {
                             if (response && response.Signatures && response.Signatures.length > 0) {
                                 if (!this._bubble) {
                                     const disposable = editor.onDidChangeCursorPosition(event => {
-                                        issueRequest.onNext(event.newBufferPosition);
+                                        issueRequest.next(event.newBufferPosition);
                                     });
                                     cd.add(disposable);
 
@@ -112,7 +113,7 @@ class SignatureHelp implements IFeature {
 }
 export const signatureHelp = new SignatureHelp;
 
-class SignatureBubble implements Rx.IDisposable {
+class SignatureBubble implements IDisposable {
     private _decoration: IDecoration;
     private _disposable = new CompositeDisposable();
     private _element: SignatureView;
@@ -121,7 +122,7 @@ class SignatureBubble implements Rx.IDisposable {
     private _member: Models.SignatureHelp;
     private _lineHeight: number;
 
-    constructor(private _editor: Atom.TextEditor, disposer: Rx.IDisposable) {
+    constructor(private _editor: Atom.TextEditor, disposer: IDisposable) {
         this._disposable.add(disposer);
 
         const editorView: HTMLElement = <any>atom.views.getView(_editor);

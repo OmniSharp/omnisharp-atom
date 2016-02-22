@@ -1,4 +1,4 @@
-import {CompositeDisposable, Disposable} from "rx";
+import {CompositeDisposable, Disposable, IDisposable} from "omnisharp-client";
 import {each} from "lodash";
 import {Omni} from "../server/omni";
 import {dock} from "../atom/dock";
@@ -24,7 +24,7 @@ const buttons = [
     }];
 
 class FeatureEditorButtons implements IAtomFeature {
-    private disposable: Rx.CompositeDisposable;
+    private disposable: CompositeDisposable;
     private statusBar: any;
     private _active = false;
 
@@ -60,7 +60,7 @@ class FeatureEditorButtons implements IAtomFeature {
         view.style.display = "none";
         view.onclick = () => atom.config.set(config, !atom.config.get(config));
 
-        let tooltipDisposable: Rx.IDisposable;
+        let tooltipDisposable: IDisposable;
         view.onmouseenter = () => {
             tooltipDisposable = atom.tooltips.add(view, { title: tooltip });
             this.disposable.add(tooltipDisposable);
@@ -109,7 +109,7 @@ class FeatureEditorButtons implements IAtomFeature {
 }
 
 class FeatureButtons implements IFeature {
-    private disposable: Rx.CompositeDisposable;
+    private disposable: CompositeDisposable;
 
     public activate() {
         this.disposable = new CompositeDisposable();
@@ -123,7 +123,7 @@ class FeatureButtons implements IFeature {
     private _button(button: IButton, index: number) {
         const {config} = button;
 
-        let buttonDisposable: Rx.IDisposable;
+        let buttonDisposable: IDisposable;
         this.disposable.add(atom.config.observe(config, (value: boolean) => {
             if (buttonDisposable) {
                 this.disposable.remove(buttonDisposable);
@@ -142,7 +142,7 @@ class FeatureButtons implements IFeature {
     private _makeButton(button: IButton, index: number, enabled: boolean) {
         const {name, config, icon, tooltip} = button;
 
-        let tooltipDisposable: Rx.IDisposable;
+        let tooltipDisposable: IDisposable;
         const htmlButton = document.createElement("a");
         htmlButton.id = `${icon}-name`;
         htmlButton.classList.add("btn",icon);

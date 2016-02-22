@@ -1,6 +1,7 @@
 import _ from "lodash";
 import * as path from "path";
-import {Observable, AsyncSubject, RefCountDisposable, Disposable, CompositeDisposable, BehaviorSubject, Scheduler, Subject} from "rx";
+import {Observable, AsyncSubject, BehaviorSubject, Scheduler, Subject} from "rxjs-beta3";
+import {RefCountDisposable, IDisposable, Disposable, CompositeDisposable} from "omnisharp-client";
 import {Solution} from "./solution";
 import {AtomProjectTracker} from "./atom-projects";
 import {SolutionObserver, SolutionAggregateObserver} from "./composite-solution";
@@ -33,13 +34,13 @@ class SolutionInstanceManager {
     private _solutions = new Map<string, Solution>();
     private _solutionProjects = new Map<string, Solution>();
     private _temporarySolutions = new WeakMap<Solution, RefCountDisposable>();
-    private _disposableSolutionMap = new WeakMap<Solution, Disposable>();
+    private _disposableSolutionMap = new WeakMap<Solution, IDisposable>();
     private _findSolutionCache = new Map<string, Observable<Solution>>();
     private _candidateFinderCache = new Set<string>();
 
     private _activated = false;
     private _nextIndex = 0;
-    private _activeSearch: Rx.IPromise<any>;
+    private _activeSearch: Promise<any>;
 
     // These extensions only support server per folder, unlike normal cs files.
     private _specialCaseExtensions = [".csx", /*".cake"*/];
@@ -63,7 +64,7 @@ class SolutionInstanceManager {
     }
 
     private _activeSolution = new BehaviorSubject<Solution>(null);
-    private _activeSolutionObserable = this._activeSolution.distinctUntilChanged().where(z => !!z).shareReplay(1);
+    private _activeSolutionObserable = this._activeSolution.distinctUntilChanged().filter(z => !!z).publishReplay(1).refCount();
     public get activeSolution() {
         return this._activeSolutionObserable;
     }
@@ -89,13 +90,13 @@ class SolutionInstanceManager {
         // We use the active editor on omnisharpAtom to
         // create another observable that chnages when we get a new solution.
         this._disposable.add(activeEditor
-            .where(z => !!z)
+            .filter(z => !!z)
             .flatMap(z => this.getSolutionForEditor(z))
-            .subscribe(x => this._activeSolution.onNext(x)));
+            .subscribe(x => this._activeSolution.next(x)));
 
         this._atomProjects.activate();
         this._activated = true;
-        this.activatedSubject.onNext(true);
+        this.activatedSubject.next(true);
         this._disposable.add(this._solutionDisposable);
     }
 
@@ -128,17 +129,18 @@ class SolutionInstanceManager {
 
     private _subscribeToAtomProjectTracker() {
         this._disposable.add(this._atomProjects.removed
-            .where(z => this._solutions.has(z))
+            .filter(z => this._solutions.has(z))
             .subscribe(project => this._removeSolution(project)));
 
         this._disposable.add(this._atomProjects.added
-            .where(project => !this._solutionProjects.has(project))
+            .filter(project => !this._solutionProjects.has(project))
             .map(project => {
                 return this._candidateFinder(project)
-                    .flatMap(candidates => addCandidatesInOrder(candidates, (candidate, isProject) => this._addSolution(candidate, isProject, { project })));
+                    .toPromise()
+                    .then(candidates => addCandidatesInOrder(candidates, (candidate, isProject) => this._addSolution(candidate, isProject, { project })));
             })
             .subscribe(candidateObservable => {
-                this._activeSearch = this._activeSearch.then(() => candidateObservable.toPromise());
+                this._activeSearch = this._activeSearch.then(() => candidateObservable);
             }));
     }
 
@@ -146,7 +148,7 @@ class SolutionInstanceManager {
         if (atom.project) return _.find(atom.project.getRepositories(), (repo: any) => repo && path.normalize(repo.getWorkingDirectory()) === path.normalize(workingPath));
     }
 
-    private _addSolution(candidate: string, isProject: boolean, {temporary = false, project}: { delay?: number; temporary?: boolean; project?: string; }) {
+    private _addSolution(candidate: string, isProject: boolean, {temporary = false, project}: { delay?: number; temporary?: boolean; project?: string; }): Observable<Solution> {
         const projectPath = candidate;
         if (_.endsWith(candidate, ".sln")) {
             candidate = path.dirname(candidate);
@@ -160,7 +162,7 @@ class SolutionInstanceManager {
         }
 
         if (solution && !solution.isDisposed) {
-            return Observable.just(solution);
+            return Observable.of(solution);
         } else if (solution && solution.isDisposed) {
             const disposer = this._disposableSolutionMap.get(solution);
             disposer.dispose();
@@ -195,8 +197,8 @@ class SolutionInstanceManager {
                 this._temporarySolutions.delete(solution);
             }
 
-            if (!this._activeSolution.isDisposed && this._activeSolution.getValue() === solution) {
-                this._activeSolution.onNext(this._activeSolutions.length ? this._activeSolutions[0] : null);
+            if (this._activeSolution.getValue() === solution) {
+                this._activeSolution.next(this._activeSolutions.length ? this._activeSolutions[0] : null);
             }
         }));
         cd.add(solution);
@@ -216,38 +218,38 @@ class SolutionInstanceManager {
 
         this._activeSolutions.push(solution);
         if (this._activeSolutions.length === 1)
-            this._activeSolution.onNext(solution);
+            this._activeSolution.next(solution);
 
         const result = this._addSolutionSubscriptions(solution, cd);
         solution.connect();
-        return result;
+        return <Observable<Solution>><any>result;
     }
 
     private _addSolutionSubscriptions(solution: Solution, cd: CompositeDisposable) {
         const result = new AsyncSubject<Solution>();
         const errorResult = solution.state
-            .where(z => z === DriverState.Error)
+            .filter(z => z === DriverState.Error)
             .delay(100)
             .take(1);
 
-        cd.add(errorResult.subscribe(() => result.onCompleted())); // If this solution errors move on to the next
+        cd.add(errorResult.subscribe(() => result.complete())); // If this solution errors move on to the next
 
         cd.add(solution.model.observe.projectAdded.subscribe(project => this._solutionProjects.set(project.path, solution)));
         cd.add(solution.model.observe.projectRemoved.subscribe(project => this._solutionProjects.delete(project.path)));
 
         // Wait for the projects to return from the solution
         cd.add(solution.model.observe.projects
-            .debounce(100)
+            .debounceTime(100)
             .take(1)
             .map(() => solution)
-            .timeout(15000, Scheduler.async) // Wait 30 seconds for the project to load.
+            .timeout(15000, Scheduler.queue) // Wait 30 seconds for the project to load.
             .subscribe(() => {
                 // We loaded successfully return the solution
-                result.onNext(solution);
-                result.onCompleted();
+                result.next(solution);
+                result.complete();
             }, () => {
                 // Move along.
-                result.onCompleted();
+                result.complete();
             }));
 
         return result;
@@ -292,13 +294,13 @@ class SolutionInstanceManager {
         const solutionValue = this._getSolutionForUnderlyingPath(location, isFolderPerFile);
 
         if (solutionValue)
-            return Observable.just(solutionValue);
+            return Observable.of(solutionValue);
 
         return this._findSolutionForUnderlyingPath(location, isFolderPerFile);
     }
 
     public getSolutionForEditor(editor: Atom.TextEditor) {
-        return this._getSolutionForEditor(editor).where(() => !editor.isDestroyed());
+        return this._getSolutionForEditor(editor).filter(() => !editor.isDestroyed());
     }
 
     private _setupEditorWithContext(editor: Atom.TextEditor, solution: Solution) {
@@ -363,14 +365,14 @@ class SolutionInstanceManager {
                 return Observable.empty<Solution>();
             }
 
-            return Observable.just(solution);
+            return Observable.of(solution);
         }
 
         const isFolderPerFile = _.some(this.__specialCaseExtensions, ext => _.endsWith(editor.getPath(), ext));
         const solution = this._getSolutionForUnderlyingPath(location, isFolderPerFile);
         if (solution) {
             this._setupEditorWithContext(editor, solution);
-            return Observable.just(solution);
+            return Observable.of(solution);
         }
 
         return this._findSolutionForUnderlyingPath(location, isFolderPerFile)
@@ -430,8 +432,8 @@ class SolutionInstanceManager {
             return this._findSolutionCache.get(location);
         }
 
-        this._findSolutionCache.set(location, subject);
-        subject.tapOnCompleted(() => this._findSolutionCache.delete(location));
+        this._findSolutionCache.set(location, <Observable<Solution>><any>subject);
+        subject.do({ complete: () => this._findSolutionCache.delete(location) });
 
         const project = this._intersectAtomProjectPath(directory);
         const cb = (candidates: { path: string; isProject: boolean }[]) => {
@@ -445,8 +447,8 @@ class SolutionInstanceManager {
             if (!isFolderPerFile) {
                 // Attempt to see if this file is part a solution
                 const r = this._isPartOfAnyActiveSolution(location, (intersect, solution) => {
-                    subject.onNext(solution);
-                    subject.onCompleted();
+                    subject.next(solution);
+                    subject.complete();
                     return true;
                 });
                 if (r) return;
@@ -454,12 +456,12 @@ class SolutionInstanceManager {
 
             const newCandidates = _.difference(candidates.map(z => z.path), fromIterator(this._solutions.keys())).map(z => _.find(candidates, { path: z }));
             this._activeSearch.then(() => addCandidatesInOrder(newCandidates, (candidate, isProject) => this._addSolution(candidate, isProject, { temporary: !project }))
-                .subscribeOnCompleted(() => {
+                .then(() => {
                     if (!isFolderPerFile) {
                         // Attempt to see if this file is part a solution
                         const r = this._isPartOfAnyActiveSolution(location, (intersect, solution) => {
-                            subject.onNext(solution);
-                            subject.onCompleted();
+                            subject.next(solution);
+                            subject.complete();
                             return;
                         });
                         if (r) return;
@@ -468,18 +470,18 @@ class SolutionInstanceManager {
                     const intersect = this._intersectPath(location) || this._intersectAtomProjectPath(location);
                     if (intersect) {
                         if (this._solutions.has(intersect)) {
-                            subject.onNext(this._solutions.get(intersect)); // The boolean means this solution is temporary.
+                            subject.next(this._solutions.get(intersect)); // The boolean means this solution is temporary.
                         }
                     } else {
                         atom.notifications.addInfo(`Could not find a solution for "${location}"`);
                     }
-                    subject.onCompleted();
+                    subject.complete();
                 }));
         };
 
         this._candidateFinder(directory).subscribe(cb);
 
-        return subject;
+        return <Observable<Solution>><any>subject;
     }
 
     private _candidateFinder(directory: string) {
@@ -491,7 +493,7 @@ class SolutionInstanceManager {
                 if (slns.length > 1) {
                     const items = _.difference(candidates, slns);
                     const asyncResult = new AsyncSubject<typeof candidates>();
-                    asyncResult.onNext(items);
+                    asyncResult.next(items);
 
                     // handle multiple solutions.
                     const listView = new GenericSelectListView("",
@@ -500,10 +502,10 @@ class SolutionInstanceManager {
                             items.unshift(...slns.filter(x => x.path === result));
                             _.each(candidates, x => this._candidateFinderCache.add(x.path));
 
-                            asyncResult.onCompleted();
+                            asyncResult.complete();
                         },
                         () => {
-                            asyncResult.onCompleted();
+                            asyncResult.complete();
                         }
                     );
 
@@ -515,19 +517,19 @@ class SolutionInstanceManager {
                             if (!_.some(slns, x => this._candidateFinderCache.has(x.path))) {
                                 _.defer(() => listView.toggle());
                             } else {
-                                asyncResult.onCompleted();
+                                asyncResult.complete();
                             }
                         });
                     } else {
                         _.defer(() => listView.toggle());
                     }
 
-                    asyncResult.doOnCompleted(() => openSelectList = null);
+                    asyncResult.do({ complete: () => openSelectList = null });
                     openSelectList = listView;
 
-                    return asyncResult;
+                    return <Observable<typeof candidates>><any>asyncResult;
                 } else {
-                    return Observable.just(candidates);
+                    return Observable.of(candidates);
                 }
             });
     }
@@ -564,31 +566,31 @@ class SolutionInstanceManager {
     }
 }
 
-function addCandidatesInOrder(candidates: { path: string; isProject: boolean; }[], cb: (candidate: string, isProject: boolean) => Rx.Observable<Solution>) {
-    const asyncSubject = new AsyncSubject();
+function addCandidatesInOrder(candidates: { path: string; isProject: boolean; }[], cb: (candidate: string, isProject: boolean) => Observable<Solution>) {
+    const asyncSubject = new AsyncSubject<any>();
 
     if (!candidates.length) {
-        asyncSubject.onNext(candidates);
-        asyncSubject.onCompleted();
-        return asyncSubject;
+        asyncSubject.next(candidates);
+        asyncSubject.complete();
+        return asyncSubject.toPromise();
     }
 
     const cds = candidates.slice();
     const candidate = cds.shift();
     const handleCandidate = (cand: { path: string; isProject: boolean; }) => {
         cb(cand.path, cand.isProject)
-            .subscribeOnCompleted(() => {
+            .subscribe({ complete: () => {
                 if (cds.length) {
                     cand = cds.shift();
                     handleCandidate(cand);
                 } else {
-                    asyncSubject.onNext(candidates);
-                    asyncSubject.onCompleted();
+                    asyncSubject.next(candidates);
+                    asyncSubject.complete();
                 }
-            });
+            } });
     };
     handleCandidate(candidate);
-    return asyncSubject.asObservable();
+    return asyncSubject.toPromise();
 }
 
 function fromIterator<T>(iterator: IterableIterator<T>) {

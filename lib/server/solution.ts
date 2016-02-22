@@ -1,5 +1,6 @@
 import _ from "lodash";
-import {Observable, Subject, CompositeDisposable} from "rx";
+import {Observable, Subject} from "rxjs-beta3";
+import {CompositeDisposable} from "omnisharp-client";
 import {Models, RequestOptions, ClientV2, DriverState, OmnisharpClientOptions} from "omnisharp-client";
 
 interface SolutionOptions extends OmnisharpClientOptions {
@@ -122,7 +123,7 @@ export class Solution extends ClientV2 {
         /* tslint:enable:no-string-literal */
     }
 
-    public request<TRequest, TResponse>(action: string, request?: TRequest, options?: RequestOptions): Rx.Observable<TResponse> {
+    public request<TRequest, TResponse>(action: string, request?: TRequest, options?: RequestOptions): Observable<TResponse> {
         if (this._currentEditor) {
             const editor = this._currentEditor;
             this._currentEditor = null;
@@ -150,14 +151,14 @@ export class Solution extends ClientV2 {
                 .subscribe(() => atom.commands.dispatch(atom.views.getView(atom.workspace), "omnisharp-atom:restart-server")));
 
             this._solutionDisposable.add(this.repository.onDidChangeStatuses(() => {
-                branchSubject.onNext((<any>this.repository).branch);
+                branchSubject.next((<any>this.repository).branch);
             }));
         }
     }
 
     public whenConnected() {
         return this.state.startWith(this.currentState)
-            .where(x => x === DriverState.Connected)
+            .filter(x => x === DriverState.Connected)
             .take(1);
     }
 }

@@ -1,18 +1,19 @@
 import {Models} from "omnisharp-client";
 import _ from "lodash";
-import {CompositeDisposable, Observable, Subject, Disposable} from "rx";
+import {Observable, Subject} from "rxjs-beta3";
+import {CompositeDisposable, Disposable} from "omnisharp-client";
 import {Omni} from "../server/omni";
 import {dock} from "../atom/dock";
 import {CodeCheckOutputElement} from "../views/codecheck-output-pane-view";
 import {reloadWorkspace} from "./reload-workspace";
 
 class CodeCheck implements IFeature {
-    private disposable: Rx.CompositeDisposable;
+    private disposable: CompositeDisposable;
 
     public displayDiagnostics: Models.DiagnosticLocation[] = [];
     public selectedIndex: number = 0;
     private scrollTop: number = 0;
-    private _editorSubjects = new WeakMap<Atom.TextEditor, () => Rx.Observable<Models.DiagnosticLocation[]>>();
+    private _editorSubjects = new WeakMap<Atom.TextEditor, () => Observable<Models.DiagnosticLocation[]>>();
     private _fullCodeCheck: Subject<any>;
     private _window = new CodeCheckOutputElement;
 
@@ -48,23 +49,23 @@ class CodeCheck implements IFeature {
             const subject = new Subject<any>();
 
             const o = subject
-                .debounce(100)
-                .where(() => !editor.isDestroyed())
+                .debounceTime(100)
+                .filter(() => !editor.isDestroyed())
                 .flatMap(() => this._doCodeCheck(editor))
                 .map(response => response.QuickFixes || [])
                 .share();
 
             this._editorSubjects.set(editor, () => {
                 const result = o.take(1);
-                subject.onNext(null);
+                subject.next(null);
                 return result as Observable<Models.DiagnosticLocation[]>;
             });
 
             cd.add(o.subscribe());
 
-            cd.add(editor.getBuffer().onDidSave(() => !subject.isDisposed && subject.onNext(null)));
-            cd.add(editor.getBuffer().onDidReload(() => !subject.isDisposed && subject.onNext(null)));
-            cd.add(editor.getBuffer().onDidStopChanging(() => !subject.isDisposed && subject.onNext(null)));
+            cd.add(editor.getBuffer().onDidSave(() => subject.next(null)));
+            cd.add(editor.getBuffer().onDidReload(() => subject.next(null)));
+            cd.add(editor.getBuffer().onDidStopChanging(() => subject.next(null)));
             cd.add(Disposable.create(() => this._editorSubjects.delete(editor)));
         }));
 
@@ -94,15 +95,15 @@ class CodeCheck implements IFeature {
             Omni.listener.packageRestoreStarted.map(x => started++),
             Omni.listener.packageRestoreFinished.map(x => finished++),
             (s, f) => s === f)
-            .where(r => r)
-            .debounce(2000)
+            .filter(r => r)
+            .debounceTime(2000)
             .subscribe(() => {
                 started = 0;
                 finished = 0;
                 this.doFullCodeCheck();
             }));
 
-        this.disposable.add(Omni.listener.packageRestoreFinished.debounce(3000).subscribe(() => this.doFullCodeCheck()));
+        this.disposable.add(Omni.listener.packageRestoreFinished.debounceTime(3000).subscribe(() => this.doFullCodeCheck()));
         this.disposable.add(atom.commands.add("atom-workspace", "omnisharp-atom:code-check", () => this.doFullCodeCheck()));
 
         this.disposable.add(this._fullCodeCheck
@@ -110,18 +111,18 @@ class CodeCheck implements IFeature {
                 .toArray()
                 .concatMap(x => Omni.solutions)
                 .concatMap(solution => solution.whenConnected()
-                    .tapOnNext(() => solution.codecheck({ FileName: null })))
+                    .do(() => solution.codecheck({ FileName: null })))
             )
             .subscribe());
 
         Omni.registerConfiguration(solution => solution
             .whenConnected()
             .delay(1000)
-            .subscribe(() => this._fullCodeCheck.onNext(true)));
+            .subscribe(() => this._fullCodeCheck.next(true)));
     }
 
     public doFullCodeCheck() {
-        this._fullCodeCheck.onNext(true);
+        this._fullCodeCheck.next(true);
     }
 
     public filterOnlyWarningsAndErrors(quickFixes: Models.DiagnosticLocation[]): Models.DiagnosticLocation[] {
@@ -138,7 +139,7 @@ class CodeCheck implements IFeature {
         return Omni.request(editor, solution => solution.codecheck({}));
     };
 
-    public doCodeCheck(editor: Atom.TextEditor): Rx.Observable<Models.DiagnosticLocation[]> {
+    public doCodeCheck(editor: Atom.TextEditor): Observable<Models.DiagnosticLocation[]> {
         const callback = this._editorSubjects.get(editor);
         if (callback) {
             return callback();

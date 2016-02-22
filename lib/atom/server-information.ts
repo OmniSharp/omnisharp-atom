@@ -1,4 +1,5 @@
-import {Observable, CompositeDisposable} from "rx";
+import {Observable} from "rxjs-beta3";
+import {CompositeDisposable} from "omnisharp-client";
 import {Omni} from "../server/omni";
 import {OmnisharpClientStatus} from "omnisharp-client";
 import {dock} from "../atom/dock";
@@ -36,7 +37,7 @@ class ServerInformation implements IFeature {
     private setupStatus() {
         // Stream the status from the active model
         return Omni.activeModel
-            .flatMapLatest(model => model.observe.status)
+            .switchMap(model => model.observe.status)
             .share();
     }
 
@@ -44,7 +45,7 @@ class ServerInformation implements IFeature {
         // As the active model changes (when we go from an editor for ClientA to an editor for ClientB)
         // We want to make sure that the output field is
         return Omni.activeModel
-            .flatMapLatest(z => z.observe.output)
+            .switchMap(z => z.observe.output)
             .startWith([])
             .share();
     }
@@ -58,7 +59,7 @@ class ServerInformation implements IFeature {
 
     private setupProjects() {
         return Omni.activeModel
-            .flatMapLatest(model => model.observe.projects)
+            .switchMap(model => model.observe.projects)
             .share();
     }
 

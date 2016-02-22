@@ -1,7 +1,7 @@
 /// <reference path="../tsd.d.ts" />
 import {expect} from "chai";
 import {Omni} from "../../lib/server/omni";
-import {CompositeDisposable} from "rx";
+import {CompositeDisposable} from "omnisharp-client";
 import {setupFeature, restoreBuffers} from "../test-helpers";
 import {codeFormat} from "../../lib/features/code-format";
 

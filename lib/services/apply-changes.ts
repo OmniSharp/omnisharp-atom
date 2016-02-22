@@ -2,7 +2,7 @@ import {Models} from "omnisharp-client";
 /* tslint:disable:variable-name */
 const Range = require("atom").Range;
 /* tslint:enable:variable-name */
-import {Observable} from "rx";
+import {Observable} from "rxjs-beta3";
 
 export function applyChanges(editor: Atom.TextEditor, response: { Changes?: Models.LinePositionSpanTextChange[]; Buffer?: string; }) {
     if (!response) return;
@@ -43,7 +43,7 @@ function resetPreviewTab() {
 export function applyAllChanges(changes: Models.ModifiedFileResponse[]) {
     resetPreviewTab();
     return Observable.from(changes)
-        .concatMap(change => atom.workspace.open(change.FileName, undefined)
+        .concatMap(change => <Promise<Atom.TextEditor>><any>atom.workspace.open(change.FileName, undefined)
             .then(editor => {
                 resetPreviewTab();
                 applyChanges(editor, change);

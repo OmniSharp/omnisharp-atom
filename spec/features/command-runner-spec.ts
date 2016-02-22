@@ -1,6 +1,6 @@
 /// <reference path="../tsd.d.ts" />
 import {expect} from "chai";
-import {CompositeDisposable} from "rx";
+import {CompositeDisposable} from "omnisharp-client";
 import {setupFeature, openEditor} from "../test-helpers";
 const win32 = process.platform === "win32";
 import {getDnxExe} from "../../lib/atom/command-runner";
@@ -12,7 +12,7 @@ describe("Command Runner", () => {
         const disposable = new CompositeDisposable();
         return openEditor("commands/project.json")
             .flatMap(x => x.solution.observe.projects)
-            .debounce(1000)
+            .debounceTime(1000)
             .do(() => {
                 const commands: any = atom.commands;
 

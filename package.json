@@ -86,7 +86,6 @@
     "ntypescript": "^1.201512040604.1",
     "omnisharp-client": "^3.3.6",
     "rimraf": "^2.5.2",
-    "rx": "^4.0.8",
     "semver": "^5.0.3",
     "through2": "^2.0.1",
     "tslint": "^3.4.0",

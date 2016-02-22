@@ -1,5 +1,6 @@
 import {Models} from "omnisharp-client";
-import {CompositeDisposable, Observable, Disposable, Subject} from "rx";
+import {Observable, Subject} from "rxjs-beta3";
+import {CompositeDisposable, Disposable} from "omnisharp-client";
 import {Omni} from "../server/omni";
 import {dock} from "../atom/dock";
 import {TestResultsWindow} from "../views/test-results-window";
@@ -13,8 +14,8 @@ enum TestCommandType {
 }
 
 class RunTests implements IFeature {
-    private disposable: Rx.CompositeDisposable;
-    private window: Rx.CompositeDisposable;
+    private disposable: CompositeDisposable;
+    private window: CompositeDisposable;
     public testResults: OutputMessage[] = [];
     private lastRun: Models.GetTestCommandResponse;
     private _testWindow: TestResultsWindow;
@@ -29,7 +30,7 @@ class RunTests implements IFeature {
 
         const output = new Subject<OutputMessage[]>();
         this.observe = {
-            output: output.asObservable()
+            output: <Observable<OutputMessage[]>><any>output
         };
 
         this.disposable.add(Omni.listener.gettestcontext.subscribe((data) => {

@@ -1,12 +1,12 @@
 import {Models, Stdio} from "omnisharp-client";
 import _ from "lodash";
 import {Omni} from "../server/omni";
-import {CompositeDisposable} from "rx";
+import {CompositeDisposable} from "omnisharp-client";
 import * as path from "path";
 const $ : JQueryStatic = require("jquery");
 
 class NotificationHandler implements IFeature {
-    private disposable: Rx.CompositeDisposable;
+    private disposable: CompositeDisposable;
     private packageRestoreNotification: PackageRestoreNotification;
 
     public activate() {
@@ -24,9 +24,9 @@ class NotificationHandler implements IFeature {
             this.packageRestoreNotification.handleUnresolvedDependencies(e)));
 
         this.disposable.add(Omni.listener.events
-            .where(z => z.Event === "log")
-            .where(z => z.Body.Name === "Dnx.PackagesRestoreTool")
-            .where(z => z.Body.Message.startsWith("Installing"))
+            .filter(z => z.Event === "log")
+            .filter(z => z.Body.Name === "Dnx.PackagesRestoreTool")
+            .filter(z => z.Body.Message.startsWith("Installing"))
             .subscribe(e => this.packageRestoreNotification.handleEvents(e)));
     }
 

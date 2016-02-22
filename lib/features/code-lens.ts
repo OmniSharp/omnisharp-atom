@@ -1,7 +1,8 @@
 /// <reference path="../typings.d.ts" />
 import {Models} from "omnisharp-client";
 import _ from "lodash";
-import {CompositeDisposable, Observable, Disposable, Subject, Scheduler} from "rx";
+import {Observable, Subject, Scheduler, Subscription} from "rxjs-beta3";
+import {CompositeDisposable, Disposable, IDisposable} from "omnisharp-client";
 import {Omni} from "../server/omni";
 let fastdom: typeof Fastdom = require("fastdom");
 
@@ -13,7 +14,7 @@ interface IDecoration {
 }
 
 class CodeLens implements IFeature {
-    private disposable: Rx.CompositeDisposable;
+    private disposable: CompositeDisposable;
     private decorations = new WeakMap<Atom.TextEditor, Set<Lens>>();
 
     public activate() {
@@ -46,10 +47,10 @@ class CodeLens implements IFeature {
             const subject = new Subject<boolean>();
 
             cd.add(subject
-                .where(x => !!x && !editor.isDestroyed())
+                .filter(x => !!x && !editor.isDestroyed())
                 .distinctUntilChanged(x => !!x)
-                .debounce(500)
-                .flatMapLatest(() => this.updateCodeLens(editor))
+                .debounceTime(500)
+                .switchMap(() => this.updateCodeLens(editor))
                 .subscribe()
             );
 
@@ -58,22 +59,20 @@ class CodeLens implements IFeature {
                     didChange.dispose();
                     cd.remove(didChange);
 
-                    subject.onNext(false);
+                    subject.next(false);
                 });
 
                 cd.add(didChange);
             };
 
             cd.add(editor.getBuffer().onDidStopChanging(_.debounce(() => {
-                if (!subject.isDisposed) {
-                    subject.onNext(true);
-                }
+                if (!subject.isUnsubscribed) subject.next(true);
                 bindDidChange();
             }, 5000)));
 
-            cd.add(editor.getBuffer().onDidSave(() => !subject.isDisposed && subject.onNext(true)));
-            cd.add(editor.getBuffer().onDidReload(() => !subject.isDisposed && subject.onNext(true)));
-            cd.add(Observable.timer(1000).subscribe(() => subject.onNext(true)));
+            cd.add(editor.getBuffer().onDidSave(() => subject.next(true)));
+            cd.add(editor.getBuffer().onDidReload(() => subject.next(true)));
+            cd.add(Observable.timer(1000).subscribe(() => subject.next(true)));
 
             cd.add(editor.onDidChangeScrollTop(() => this.updateDecoratorVisiblility(editor)));
 
@@ -109,8 +108,8 @@ class CodeLens implements IFeature {
         }
 
         return Omni.request(editor, solution => solution.currentfilemembersasflat({ Buffer: null, Changes: null }))
-            .observeOn(Scheduler.async)
-            .where(fileMembers => !!fileMembers)
+            .observeOn(Scheduler.queue)
+            .filter(fileMembers => !!fileMembers)
             .flatMap(fileMembers => Observable.from(fileMembers))
             .concatMap(fileMember => {
                 const range: TextBuffer.Range = <any>editor.getBuffer().rangeForRow(fileMember.Line, false);
@@ -140,14 +139,14 @@ class CodeLens implements IFeature {
 
                 return lens.updateVisible();
             })
-            .tapOnCompleted(() => {
+            .do({ complete: () => {
                 // Remove all old/missing decorations
                 decorations.forEach(lens => {
                     if (lens && !updated.has(lens)) {
                         lens.dispose();
                     }
                 });
-            });
+            } });
     }
 
     public required = false;
@@ -165,36 +164,36 @@ function isLineVisible(editor: Atom.TextEditor, line: number) {
     return true;
 }
 
-export class Lens implements Rx.IDisposable {
-    private _update: Rx.Subject<boolean>;
+export class Lens implements IDisposable {
+    private _update: Subject<boolean>;
     private _row: number;
     private _decoration: IDecoration;
     private _disposable = new CompositeDisposable();
     private _element: HTMLDivElement;
-    private _updateObservable: Rx.Observable<number>;
+    private _updateObservable: Observable<number>;
     private _path: string;
 
     public loaded: boolean = false;
 
-    constructor(private _editor: Atom.TextEditor, private _member: Models.QuickFix, private _marker: Atom.Marker, private _range: TextBuffer.Range, disposer: Rx.IDisposable) {
+    constructor(private _editor: Atom.TextEditor, private _member: Models.QuickFix, private _marker: Atom.Marker, private _range: TextBuffer.Range, disposer: IDisposable) {
         this._row = _range.getRows()[0];
         this._update = new Subject<any>();
         this._disposable.add(this._update);
         this._path = _editor.getPath();
 
         this._updateObservable = this._update
-            .observeOn(Scheduler.async)
-            .where(x => !!x)
+            .observeOn(Scheduler.queue)
+            .filter(x => !!x)
             .flatMap(() => Omni.request(this._editor, solution =>
                 solution.findusages({ FileName: this._path, Column: this._member.Column + 1, Line: this._member.Line, Buffer: null, Changes: null }, { silent: true })))
-            .where(x => x && x.QuickFixes && !!x.QuickFixes.length)
+            .filter(x => x && x.QuickFixes && !!x.QuickFixes.length)
             .map(x => x && x.QuickFixes && x.QuickFixes.length - 1)
             .share();
 
         this._disposable.add(this._updateObservable
             .take(1)
-            .where(x => x > 0)
-            .tapOnNext(() => this.loaded = true)
+            .filter(x => x > 0)
+            .do(() => this.loaded = true)
             .subscribe((x) => this._decorate(x)));
 
         this._disposable.add(disposer);
@@ -219,7 +218,7 @@ export class Lens implements Rx.IDisposable {
     }
 
     private _issueUpdate = _.debounce((isVisible: boolean) => {
-        if (!this._update.isDisposed) { this._update.onNext(isVisible); }
+        if (!this._update.isUnsubscribed) { this._update.next(isVisible); }
     }, 250);
 
     public updateTop(lineHeight: number) {
@@ -228,9 +227,9 @@ export class Lens implements Rx.IDisposable {
     }
 
     public invalidate() {
-        const self : Rx.IDisposable = this._updateObservable
+        const self : Subscription = this._updateObservable
             .take(1)
-            .tapOnNext(() => this._disposable.remove(self))
+            .do(() => this._disposable.remove(self))
             .subscribe(x => {
                 if (x <= 0) {
                     this.dispose();

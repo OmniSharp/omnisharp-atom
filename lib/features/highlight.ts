@@ -3,7 +3,8 @@ import {Models} from "omnisharp-client";
 import {Omni} from "../server/omni";
 import {OmnisharpTextEditor, isOmnisharpTextEditor} from "../server/omnisharp-text-editor";
 import {each, extend, has, some, range, remove, pull, find, chain, uniq, findIndex, every, isEqual, min, debounce, sortBy, uniqueId, filter} from "lodash";
-import {Observable, Subject, ReplaySubject, BehaviorSubject, CompositeDisposable, Disposable} from "rx";
+import {Observable, Subject, ReplaySubject, BehaviorSubject, Subscriber} from "rxjs-beta3";
+import {CompositeDisposable, Disposable} from "omnisharp-client";
 import {registerContextItem} from "../server/omnisharp-text-editor";
 /* tslint:disable:variable-name */
 const AtomGrammar = require((<any>atom).config.resourcePath + "/node_modules/first-mate/lib/grammar.js");
@@ -39,7 +40,7 @@ export const ExcludeClassifications = [
 /* tslint:enable:variable-name */
 
 class Highlight implements IFeature {
-    private disposable: Rx.CompositeDisposable;
+    private disposable: CompositeDisposable;
     private editors: Array<OmnisharpTextEditor>;
     private unusedCodeRows = new UnusedMap();
 
@@ -51,7 +52,7 @@ class Highlight implements IFeature {
         this.disposable.add(registerContextItem(HIGHLIGHT, (context, editor) =>
             context.get<Subject<boolean>>(HIGHLIGHT_REQUEST)
                 .startWith(true)
-                .flatMapLatest(() => Observable.defer(() => {
+                .switchMap(() => Observable.defer(() => {
                     const projects = context.project.activeFramework.Name === "all" ? [] : [context.project.activeFramework.Name];
 
                     let linesToFetch = uniq<number>((<any>editor.getGrammar()).linesToFetch);
@@ -78,16 +79,18 @@ class Highlight implements IFeature {
                                 (<any>editor.getGrammar()).setResponses(highlights, projects.length > 0);
                             }
                         })
-                        .flatMap(() => Observable.amb(
+                        .flatMap(() => Observable.race<Models.DiagnosticLocation[]>(
                             // Wait for a new codecheck, otherwise look at what exists
                             context.solution.model.observe.codecheck.delay(4000),
                             context.solution.observe.codecheck
-                                .where(x => x.request.FileName === editor.getPath())
-                                .map(x => x.response && <Models.DiagnosticLocation[]>x.response.QuickFixes || []))
+                                .filter(x => x.request.FileName === editor.getPath())
+                                .map(x => <Models.DiagnosticLocation[]>(x.response && x.response.QuickFixes || []))
+                            )
                             .take(1)
                             .do((value) => this.unusedCodeRows.set(editor.getPath(), filter(value, x => x.LogLevel === "Hidden")))
                         )
-                        .shareReplay(1);
+                        .publishReplay(1)
+                        .refCount();
                 }))));
 
         this.disposable.add(Omni.eachEditor((editor, cd) => {
@@ -98,7 +101,7 @@ class Highlight implements IFeature {
                 .skip(1)
                 .distinctUntilChanged()
                 .subscribe(() => {
-                    editor.omnisharp.get<Rx.Observer<boolean>>(HIGHLIGHT_REQUEST).onNext(true);
+                    editor.omnisharp.get<Subscriber<boolean>>(HIGHLIGHT_REQUEST).next(true);
                 }));
 
             cd.add(editor.omnisharp
@@ -116,7 +119,7 @@ class Highlight implements IFeature {
 
         this.disposable.add(Omni.listener.codecheck
             .flatMap(x => x.response && <Models.DiagnosticLocation[]>x.response.QuickFixes || [])
-            .where(x => x.LogLevel === "Hidden")
+            .filter(x => x.LogLevel === "Hidden")
             .groupBy(x => x.FileName, x => x)
             .flatMap(x => x.toArray(), ({key}, result) => ({ key, result }))
             .subscribe(({key, result}) => {
@@ -164,22 +167,22 @@ class Highlight implements IFeature {
             .subscribe(() => {
                 (<any>editor.getGrammar()).linesToFetch = [];
                 if ((<any>editor.getGrammar()).responses) (<any>editor.getGrammar()).responses.clear();
-                issueRequest.onNext(true);
+                issueRequest.next(true);
             }));
 
-        disposable.add(editor.onDidStopChanging(() => issueRequest.onNext(true)));
+        disposable.add(editor.onDidStopChanging(() => issueRequest.next(true)));
 
         disposable.add(editor.onDidSave(() => {
             (<any>editor.getGrammar()).linesToFetch = [];
-            issueRequest.onNext(true);
+            issueRequest.next(true);
         }));
 
         disposable.add(editor.omnisharp.solution
             .whenConnected()
             .delay(1000)
-            .subscribeOnCompleted(() => {
-                issueRequest.onNext(true);
-            }));
+            .subscribe({ complete: () => {
+                issueRequest.next(true);
+            } }));
     }
 
     public required = false;
@@ -215,7 +218,7 @@ export function augmentEditor(editor: Atom.TextEditor, unusedCodeRows: UnusedMap
     if (!(<any>editor.displayBuffer.tokenizedBuffer).silentRetokenizeLines) {
         (<any>editor.displayBuffer.tokenizedBuffer).silentRetokenizeLines = debounce(function() {
             if ((<any>editor.getGrammar()).isObserveRetokenizing)
-                (<any>editor.getGrammar()).isObserveRetokenizing.onNext(false);
+                (<any>editor.getGrammar()).isObserveRetokenizing.next(false);
             let lastRow: number;
             lastRow = this.buffer.getLastRow();
             this.tokenizedLines = this.buildPlaceholderTokenizedLinesForRows(0, lastRow);
@@ -231,13 +234,13 @@ export function augmentEditor(editor: Atom.TextEditor, unusedCodeRows: UnusedMap
 
     (<any>editor.displayBuffer.tokenizedBuffer).markTokenizationComplete = function() {
         if ((<any>editor.getGrammar()).isObserveRetokenizing)
-            (<any>editor.getGrammar()).isObserveRetokenizing.onNext(true);
+            (<any>editor.getGrammar()).isObserveRetokenizing.next(true);
         return editor.displayBuffer.tokenizedBuffer["_markTokenizationComplete"].apply(this, arguments);
     };
 
     (<any>editor.displayBuffer.tokenizedBuffer).retokenizeLines = function() {
         if ((<any>editor.getGrammar()).isObserveRetokenizing)
-            (<any>editor.getGrammar()).isObserveRetokenizing.onNext(false);
+            (<any>editor.getGrammar()).isObserveRetokenizing.next(false);
         return editor.displayBuffer.tokenizedBuffer["_retokenizeLines"].apply(this, arguments);
     };
 
@@ -295,7 +298,7 @@ export function augmentEditor(editor: Atom.TextEditor, unusedCodeRows: UnusedMap
 }
 
 interface IHighlightingGrammar extends FirstMate.Grammar {
-    isObserveRetokenizing: Rx.Subject<boolean>;
+    isObserveRetokenizing: Subject<boolean>;
     linesToFetch: number[];
     linesToTokenize: number[];
     responses: Map<number, Models.HighlightSpan[]>;
@@ -314,7 +317,7 @@ class Grammar {
 
     constructor(editor: Atom.TextEditor, base: FirstMate.Grammar, options: { readonly: boolean }) {
         this.isObserveRetokenizing = new ReplaySubject<boolean>(1);
-        this.isObserveRetokenizing.onNext(true);
+        this.isObserveRetokenizing.next(true);
 
         this.editor = editor;
         this.responses = new Map<number, Models.HighlightSpan[]>();
@@ -723,20 +726,20 @@ export function getEnhancedGrammar(editor: Atom.TextEditor, grammar?: FirstMate.
 
 // Used to cache values for specific editors
 class UnusedMap {
-    private _map = new Map<string, Rx.Observable<Models.DiagnosticLocation[]>>();
+    private _map = new Map<string, Observable<Models.DiagnosticLocation[]>>();
     public get(key: string) {
-        if (!this._map.has(key)) this._map.set(key, new BehaviorSubject<Models.DiagnosticLocation[]>([]));
+        if (!this._map.has(key)) this._map.set(key, <any>new BehaviorSubject<Models.DiagnosticLocation[]>([]));
         return this._map.get(key);
     }
 
     private _getObserver(key: string) {
-        return <Rx.Observer<Models.DiagnosticLocation[]> & { getValue(): Models.DiagnosticLocation[] }><any>this.get(key);
+        return <Subscriber<Models.DiagnosticLocation[]> & { getValue(): Models.DiagnosticLocation[] }><any>this.get(key);
     }
 
     public set(key: string, value?: Models.DiagnosticLocation[]) {
         const o = this._getObserver(key);
         if (!isEqual(o.getValue(), value)) {
-            o.onNext(value || []);
+            o.next(value || []);
         }
         return this;
     }
