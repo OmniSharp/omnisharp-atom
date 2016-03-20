@@ -195,6 +195,7 @@ export class SignatureView extends HTMLDivElement { /* implements WebComponent *
 
         const currentParameter = signature.Parameters[member.ActiveParameter];
         fastdom.measure(() => {
+            if (!currentParameter) return;
             let summary: string;
             if (currentParameter.Documentation) {
                 const paramDocs = parseString(currentParameter.Documentation);
@@ -219,7 +220,7 @@ export class SignatureView extends HTMLDivElement { /* implements WebComponent *
                 }
             }
 
-            if (currentParameter && this._parameterDocumentation.innerText !== summary) {
+            if (this._parameterDocumentation.innerText !== summary) {
                 if (summary) {
                     this._parameterDocumentation.innerText = summary;
                 } else {
