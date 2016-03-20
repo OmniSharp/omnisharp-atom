@@ -172,7 +172,7 @@ declare module Atom {
         /**
          * This field or method was not documented by atomdoc, assume it is private. Use with caution.
          */
-        confirm({ message, detailedMessage, buttons } : { message? : string; detailedMessage? : string; buttons? : any }) : any;
+        confirm(options : { message? : string; detailedMessage? : string; buttons? : any }) : any;
     
         /**
          * This field or method was not documented by atomdoc, assume it is private. Use with caution.
@@ -618,13 +618,13 @@ declare module Atom {
          * centered. If height or width are omitted only the position will be changed.
          * This field or method was marked private by atomdoc. Use with caution.
          */
-        setWindowDimensions({ x, y, width, height } : { x? : any; y? : any; width? : number; height? : number }) : void;
+        setWindowDimensions(options : { x? : any; y? : any; width? : number; height? : number }) : void;
     
         /**
          * 
          * This field or method was marked private by atomdoc. Use with caution.
          */
-        isValidDimensions({ x, y, width, height } : { x? : boolean; y? : boolean; width? : number; height? : number }) : boolean;
+        isValidDimensions(options : { x? : boolean; y? : boolean; width? : number; height? : number }) : boolean;
     
         /**
          * This field or method was not documented by atomdoc, assume it is private. Use with caution.
@@ -1067,7 +1067,7 @@ declare module Atom {
         /**
          * This field or method was not documented by atomdoc, assume it is private. Use with caution.
          */
-        openWithOptions({ initialPaths, pathsToOpen, executedFrom, urlsToOpen, test, pidToKillWhenClosed, devMode, safeMode, newWindow, logFile, profileStartup, timeout, clearWindowState, addToLastWindow, env } : { initialPaths? : string; pathsToOpen? : string; executedFrom? : any; urlsToOpen? : string; test? : any; pidToKillWhenClosed? : number; devMode? : boolean; safeMode? : boolean; newWindow? : boolean; logFile? : boolean; profileStartup? : any; timeout? : any; clearWindowState? : any; addToLastWindow? : any; env? : any }) : void;
+        openWithOptions(options : { initialPaths? : string; pathsToOpen? : string; executedFrom? : any; urlsToOpen? : string; test? : any; pidToKillWhenClosed? : number; devMode? : boolean; safeMode? : boolean; newWindow? : boolean; logFile? : boolean; profileStartup? : any; timeout? : any; clearWindowState? : any; addToLastWindow? : any; env? : any }) : void;
     
         /**
          * Removes the {AtomWindow} from the global window list. 
@@ -1159,7 +1159,7 @@ declare module Atom {
          * This field or method was marked private by atomdoc. Use with caution.
          * Returns the {AtomWindow} for the given ipcMain event.
          */
-        windowForEvent({ sender } : { sender? : any }) : AtomWindow;
+        windowForEvent(options : { sender? : any }) : AtomWindow;
     
         focusedWindow() : void;
     
@@ -1189,7 +1189,7 @@ declare module Atom {
          *   :window - {AtomWindow} to open file paths in.
          *   :addToLastWindow - Boolean of whether this should be opened in last focused window. 
          */
-        openPath({ initialPaths, pathToOpen, pidToKillWhenClosed, newWindow, devMode, safeMode, profileStartup, window, clearWindowState, addToLastWindow, env}  } : { initialPaths? : string; pathToOpen? : string; pidToKillWhenClosed? : number; newWindow? : boolean; devMode? : boolean; safeMode? : boolean; profileStartup? : any; window? : AtomWindow; clearWindowState? : any; addToLastWindow? : any; env} ? : any }) : string;
+        openPath(options : { initialPaths? : string; pathToOpen? : string; pidToKillWhenClosed? : number; newWindow? : boolean; devMode? : boolean; safeMode? : boolean; profileStartup? : any; window? : AtomWindow; clearWindowState? : any; addToLastWindow? : any; env ? : any }) : string;
     
         /**
          * Opens multiple paths, in existing windows if possible.
@@ -1204,7 +1204,7 @@ declare module Atom {
          *   :window - {AtomWindow} to open file paths in.
          *   :addToLastWindow - Boolean of whether this should be opened in last focused window. 
          */
-        openPaths({ initialPaths, pathsToOpen, executedFrom, pidToKillWhenClosed, newWindow, devMode, safeMode, windowDimensions, profileStartup, window, clearWindowState, addToLastWindow, env } : { initialPaths? : string; pathsToOpen? : string; executedFrom? : any; pidToKillWhenClosed? : number; newWindow? : boolean; devMode? : boolean; safeMode? : boolean; windowDimensions? : AtomWindow; profileStartup? : any; window? : AtomWindow; clearWindowState? : any; addToLastWindow? : any; env? : any }) : string;
+        openPaths(options : { initialPaths? : string; pathsToOpen? : string; executedFrom? : any; pidToKillWhenClosed? : number; newWindow? : boolean; devMode? : boolean; safeMode? : boolean; windowDimensions? : AtomWindow; profileStartup? : any; window? : AtomWindow; clearWindowState? : any; addToLastWindow? : any; env? : any }) : string;
     
         /**
          * Kill all processes associated with opened windows. 
@@ -1247,7 +1247,7 @@ declare module Atom {
          *   :safeMode - Boolean to control the opened window's safe mode. 
          * This field or method was marked private by atomdoc. Use with caution.
          */
-        openUrl({ urlToOpen, devMode, safeMode, env } : { urlToOpen? : string; devMode? : boolean; safeMode? : boolean; env? : any }) : string;
+        openUrl(options : { urlToOpen? : string; devMode? : boolean; safeMode? : boolean; env? : any }) : string;
     
         /**
          * Opens up a new {AtomWindow} to run specs within.
@@ -1261,7 +1261,7 @@ declare module Atom {
          *               and ~/.atom/dev/packages, defaults to false. 
          * This field or method was marked private by atomdoc. Use with caution.
          */
-        runTests({ headless, resourcePath, executedFrom, pathsToOpen, logFile, safeMode, timeout, env } : { headless? : any; resourcePath? : string; executedFrom? : any; pathsToOpen? : string; logFile? : boolean; safeMode? : boolean; timeout? : any; env? : any }) : void;
+        runTests(options : { headless? : any; resourcePath? : string; executedFrom? : any; pathsToOpen? : string; logFile? : boolean; safeMode? : boolean; timeout? : any; env? : any }) : void;
     
         /**
          * This field or method was not documented by atomdoc, assume it is private. Use with caution.
@@ -1571,7 +1571,7 @@ declare module Atom {
         /**
          * This field or method was not documented by atomdoc, assume it is private. Use with caution.
          */
-        check({ hidePopups } : { hidePopups? : any }) : any;
+        check(options : { hidePopups? : any }) : any;
     
         /**
          * This field or method was not documented by atomdoc, assume it is private. Use with caution.
@@ -1666,7 +1666,7 @@ declare module Atom {
          * Runs the given Node script by spawning a new child process.
          * @param options? - An {Object} with the following keys:
          */
-        constructor({ command, args, options, stdout, stderr, exit } : { command? : string; args? : any; options? : Object; stdout? : NodeJS.WritableStream; stderr? : NodeJS.WritableStream; exit? : any });
+        constructor(options : { command? : string; args? : any; options? : Object; stdout? : NodeJS.WritableStream; stderr? : NodeJS.WritableStream; exit? : any });
     
     }
 
@@ -1679,7 +1679,7 @@ declare module Atom {
          * Runs the given command by spawning a new child process.
          * @param options? - An {Object} with the following keys:
          */
-        constructor({ command, args, options, stdout, stderr, exit } : { command? : string; args? : any; options? : Object; stdout? : NodeJS.WritableStream; stderr? : NodeJS.WritableStream; exit? : any });
+        constructor(options : { command? : string; args? : any; options? : Object; stdout? : NodeJS.WritableStream; stderr? : NodeJS.WritableStream; exit? : any });
     
         /**
          * Will call your callback when an error will be raised by the process.
@@ -1915,7 +1915,7 @@ declare module Atom {
         /**
          * Find all registered commands matching a query.
          */
-        findCommands({ target } : { target : string | JQuery | Node | SpacePen.View }) : string;
+        findCommands(options : { target : string | JQuery | Node | SpacePen.View }) : string;
     
         /**
          * Simulate the dispatch of a command on a DOM node.
@@ -2112,7 +2112,7 @@ declare module Atom {
          * Instantiated by a {TextEditor} 
          * This field or method was marked private by atomdoc. Use with caution.
          */
-        constructor({ editor, marker, config, id } : { editor? : any; marker? : Marker; config? : Config; id? : any });
+        constructor(options : { editor? : any; marker? : Marker; config? : Config; id? : any });
     
         /**
          * This field or method was not documented by atomdoc, assume it is private. Use with caution.
@@ -2423,7 +2423,7 @@ declare module Atom {
         /**
          * This field or method was not documented by atomdoc, assume it is private. Use with caution.
          */
-        constructor({ gutter, views } : { gutter? : Gutter; views? : SpacePen.View[] });
+        constructor(options : { gutter? : Gutter; views? : SpacePen.View[] });
     
         /**
          * This field or method was not documented by atomdoc, assume it is private. Use with caution.
@@ -3563,7 +3563,7 @@ declare module Atom {
          * includeNewline - A {Boolean} which, if `true`, includes the trailing newline
          * This field or method was marked private by atomdoc. Use with caution.
          */
-        getBufferRange({ includeNewline } : { includeNewline? : number }) : Range;
+        getBufferRange(options : { includeNewline? : number }) : Range;
     
         /**
          * This field or method was not documented by atomdoc, assume it is private. Use with caution.
@@ -3903,7 +3903,7 @@ declare module Atom {
         /**
          * This field or method was not documented by atomdoc, assume it is private. Use with caution.
          */
-        constructor({ config } : { config? : Config });
+        constructor(options : { config? : Config });
     
         /**
          * This field or method was not documented by atomdoc, assume it is private. Use with caution.
@@ -3986,7 +3986,7 @@ declare module Atom {
         /**
          * This field or method was not documented by atomdoc, assume it is private. Use with caution.
          */
-        constructor({ onLineNumberGutterMouseDown, editor, domElementPool, views } : { onLineNumberGutterMouseDown? : any; editor? : any; domElementPool? : DOMElementPool; views? : SpacePen.View[] });
+        constructor(options : { onLineNumberGutterMouseDown? : any; editor? : any; domElementPool? : DOMElementPool; views? : SpacePen.View[] });
     
         /**
          * This field or method was not documented by atomdoc, assume it is private. Use with caution.
@@ -4498,7 +4498,7 @@ declare module Atom {
         /**
          * This field or method was not documented by atomdoc, assume it is private. Use with caution.
          */
-        constructor({ resourcePath, importPaths } : { resourcePath? : string; importPaths? : string });
+        constructor(options : { resourcePath? : string; importPaths? : string });
     
         /**
          * This field or method was not documented by atomdoc, assume it is private. Use with caution.
@@ -4550,7 +4550,7 @@ declare module Atom {
         /**
          * This field or method was not documented by atomdoc, assume it is private. Use with caution.
          */
-        constructor({ onMouseDown, editor, gutter, domElementPool, views } : { onMouseDown? : any; editor? : any; gutter? : Gutter; domElementPool? : DOMElementPool; views? : SpacePen.View[] });
+        constructor(options : { onMouseDown? : any; editor? : any; gutter? : Gutter; domElementPool? : DOMElementPool; views? : SpacePen.View[] });
     
         /**
          * This field or method was not documented by atomdoc, assume it is private. Use with caution.
@@ -4649,7 +4649,7 @@ declare module Atom {
         /**
          * This field or method was not documented by atomdoc, assume it is private. Use with caution.
          */
-        constructor({ id, domElementPool } : { id? : any; domElementPool? : DOMElementPool });
+        constructor(options : { id? : any; domElementPool? : DOMElementPool });
     
         /**
          * This field or method was not documented by atomdoc, assume it is private. Use with caution.
@@ -4699,7 +4699,7 @@ declare module Atom {
         /**
          * This field or method was not documented by atomdoc, assume it is private. Use with caution.
          */
-        buildLineNumberClassName({ bufferRow, foldable, decorationClasses, softWrapped } : { bufferRow? : number; foldable? : any; decorationClasses? : any; softWrapped? : any }) : string;
+        buildLineNumberClassName(options : { bufferRow? : number; foldable? : any; decorationClasses? : any; softWrapped? : any }) : string;
     
         /**
          * This field or method was not documented by atomdoc, assume it is private. Use with caution.
@@ -4746,7 +4746,7 @@ declare module Atom {
         /**
          * This field or method was not documented by atomdoc, assume it is private. Use with caution.
          */
-        constructor({ presenter, useShadowDOM, domElementPool, assert, grammars } : { presenter? : any; useShadowDOM? : any; domElementPool? : DOMElementPool; assert? : any; grammars? : FirstMate.Grammar[] });
+        constructor(options : { presenter? : any; useShadowDOM? : any; domElementPool? : DOMElementPool; assert? : any; grammars? : FirstMate.Grammar[] });
     
         /**
          * This field or method was not documented by atomdoc, assume it is private. Use with caution.
@@ -4833,7 +4833,7 @@ declare module Atom {
         /**
          * This field or method was not documented by atomdoc, assume it is private. Use with caution.
          */
-        constructor({ presenter, id, domElementPool, assert, grammars } : { presenter? : any; id? : any; domElementPool? : DOMElementPool; assert? : any; grammars? : FirstMate.Grammar[] });
+        constructor(options : { presenter? : any; id? : any; domElementPool? : DOMElementPool; assert? : any; grammars? : FirstMate.Grammar[] });
     
         /**
          * This field or method was not documented by atomdoc, assume it is private. Use with caution.
@@ -6071,7 +6071,7 @@ declare module Atom {
         /**
          * This field or method was not documented by atomdoc, assume it is private. Use with caution.
          */
-        constructor({ orientation, children, flexScale } : { orientation? : any; children? : any; flexScale? : any });
+        constructor(options : { orientation? : any; children? : any; flexScale? : any });
     
         /**
          * This field or method was not documented by atomdoc, assume it is private. Use with caution.
@@ -7037,7 +7037,7 @@ declare module Atom {
         /**
          * This field or method was not documented by atomdoc, assume it is private. Use with caution.
          */
-        constructor({ location } : { location? : any });
+        constructor(options : { location? : any });
     
         /**
          * This field or method was not documented by atomdoc, assume it is private. Use with caution.
@@ -7128,7 +7128,7 @@ declare module Atom {
          * Construction and Destruction
          * This field or method was marked private by atomdoc. Use with caution.
          */
-        constructor({ item, visible, priority, className } : { item? : any; visible? : boolean; priority? : any; className? : string });
+        constructor(options : { item? : any; visible? : boolean; priority? : any; className? : string });
     
         /**
          * Destroy and remove this panel from the UI. 
@@ -7183,7 +7183,7 @@ declare module Atom {
          * Construction and Destruction
          * This field or method was marked private by atomdoc. Use with caution.
          */
-        constructor({ notificationManager, packageManager, config } : { notificationManager? : NotificationManager; packageManager? : PackageManager; config? : Config });
+        constructor(options : { notificationManager? : NotificationManager; packageManager? : PackageManager; config? : Config });
     
         /**
          * This field or method was not documented by atomdoc, assume it is private. Use with caution.
@@ -7304,7 +7304,7 @@ declare module Atom {
          * Private
          * This field or method was marked private by atomdoc. Use with caution.
          */
-        consumeServices({ serviceHub } : { serviceHub? : any }) : any;
+        consumeServices(options : { serviceHub? : any }) : any;
     
         /**
          * Retrieves all the {TextBuffer}s in the project; that is, the
@@ -7467,7 +7467,7 @@ declare module Atom {
         /**
          * Create a {ScopeDescriptor} object.
          */
-        constructor({ scopes } : { scopes? : any });
+        constructor(options : { scopes? : any });
     
         getScopesArray() : string[];
     
@@ -7543,7 +7543,7 @@ declare module Atom {
         /**
          * This field or method was not documented by atomdoc, assume it is private. Use with caution.
          */
-        constructor({ orientation, onScroll } : { orientation? : any; onScroll? : any });
+        constructor(options : { orientation? : any; onScroll? : any });
     
         /**
          * This field or method was not documented by atomdoc, assume it is private. Use with caution.
@@ -7636,7 +7636,7 @@ declare module Atom {
         /**
          * This field or method was not documented by atomdoc, assume it is private. Use with caution.
          */
-        constructor({ cursor, marker, editor, id, clipboard } : { cursor? : Cursor; marker? : Marker; editor? : any; id? : any; clipboard? : Clipboard });
+        constructor(options : { cursor? : Cursor; marker? : Marker; editor? : any; id? : any; clipboard? : Clipboard });
     
         /**
          * This field or method was not documented by atomdoc, assume it is private. Use with caution.
@@ -8054,7 +8054,7 @@ declare module Atom {
          * non empty, calls {::indentSelectedRows}.
          * This field or method was marked private by atomdoc. Use with caution.
          */
-        indent({ autoIndent } : { autoIndent? : boolean }) : boolean;
+        indent(options : { autoIndent? : boolean }) : boolean;
     
         /**
          * If the selection spans multiple rows, indent all of them. 
@@ -8183,7 +8183,7 @@ declare module Atom {
         /**
          * This field or method was not documented by atomdoc, assume it is private. Use with caution.
          */
-        constructor({ configDirPath } : { configDirPath? : string });
+        constructor(options : { configDirPath? : string });
     
         /**
          * Invoke `callback` for all current and future style elements.
@@ -8479,7 +8479,7 @@ declare module Atom {
         /**
          * This field or method was not documented by atomdoc, assume it is private. Use with caution.
          */
-        constructor({ editor, hostElement, rootElement, stylesElement, useShadowDOM, tileSize, views, themes, config, workspace, assert, grammars, scrollPastEnd } : { editor? : any; hostElement? : any; rootElement? : any; stylesElement? : any; useShadowDOM? : any; tileSize? : any; views? : SpacePen.View[]; themes? : any; config? : Config; workspace? : Workspace; assert? : any; grammars? : FirstMate.Grammar[]; scrollPastEnd? : any });
+        constructor(options : { editor? : any; hostElement? : any; rootElement? : any; stylesElement? : any; useShadowDOM? : any; tileSize? : any; views? : SpacePen.View[]; themes? : any; config? : Config; workspace? : Workspace; assert? : any; grammars? : FirstMate.Grammar[]; scrollPastEnd? : any });
     
         /**
          * This field or method was not documented by atomdoc, assume it is private. Use with caution.
@@ -9323,7 +9323,7 @@ declare module Atom {
         /**
          * This field or method was not documented by atomdoc, assume it is private. Use with caution.
          */
-        notifyObservers({ textChanged } : { textChanged? : string }) : any;
+        notifyObservers(options : { textChanged? : string }) : any;
     
     }
 
@@ -10639,7 +10639,7 @@ declare module Atom {
          * this editor. 
          * This field or method was marked private by atomdoc. Use with caution.
          */
-        shouldPromptToSave({ windowCloseRequested } : { windowCloseRequested? : boolean }) : boolean;
+        shouldPromptToSave(options : { windowCloseRequested? : boolean }) : boolean;
     
         /**
          * 
@@ -11966,7 +11966,7 @@ declare module Atom {
          * the `editor.tabType` setting.
          * This field or method was marked private by atomdoc. Use with caution.
          */
-        shouldUseSoftTabs({ defaultValue } : { defaultValue? : boolean }) : boolean;
+        shouldUseSoftTabs(options : { defaultValue? : boolean }) : boolean;
     
         /**
          * Determine whether lines in this editor are soft-wrapped.
@@ -12704,7 +12704,7 @@ declare module Atom {
         /**
          * This field or method was not documented by atomdoc, assume it is private. Use with caution.
          */
-        constructor({ packageManager, resourcePath, configDirPath, safeMode, config, styleManager, notificationManager, viewRegistry } : { packageManager? : PackageManager; resourcePath? : string; configDirPath? : string; safeMode? : boolean; config? : Config; styleManager? : StyleManager; notificationManager? : NotificationManager; viewRegistry? : ViewRegistry });
+        constructor(options : { packageManager? : PackageManager; resourcePath? : string; configDirPath? : string; safeMode? : boolean; config? : Config; styleManager? : StyleManager; notificationManager? : NotificationManager; viewRegistry? : ViewRegistry });
     
         /**
          * Invoke `callback` when style sheet changes associated with
@@ -13597,7 +13597,7 @@ declare module Atom {
         /**
          * This field or method was not documented by atomdoc, assume it is private. Use with caution.
          */
-        constructor({ keymapManager } : { keymapManager? : AtomKeymap.KeymapManager });
+        constructor(options : { keymapManager? : AtomKeymap.KeymapManager });
     
         /**
          * Add a tooltip to the given element.
@@ -13788,7 +13788,7 @@ declare module Atom {
         /**
          * This field or method was not documented by atomdoc, assume it is private. Use with caution.
          */
-        constructor({ atomEnvironment, applicationDelegate, window, document } : { atomEnvironment? : AtomEnvironment; applicationDelegate? : ApplicationDelegate; window? : any; document? : any });
+        constructor(options : { atomEnvironment? : AtomEnvironment; applicationDelegate? : ApplicationDelegate; window? : any; document? : any });
     
         /**
          * Wire commands that should be handled by Chromium for elements with the
@@ -13927,7 +13927,7 @@ declare module Atom {
         /**
          * This field or method was not documented by atomdoc, assume it is private. Use with caution.
          */
-        consumeServices({ serviceHub } : { serviceHub? : any }) : any;
+        consumeServices(options : { serviceHub? : any }) : any;
     
         /**
          * Called by the Serializable mixin during serialization. 
@@ -14290,7 +14290,7 @@ declare module Atom {
          * Adds the destroyed item's uri to the list of items to reopen. 
          * This field or method was marked private by atomdoc. Use with caution.
          */
-        didDestroyPaneItem({ item } : { item? : any }) : any;
+        didDestroyPaneItem(options : { item? : any }) : any;
     
         /**
          * Called by Model superclass when destroyed 
@@ -14517,4 +14517,4 @@ declare module "fs-plus" {
     export = fs;
 }
 
-declare var atom: Atom.Atom;
+declare var atom: Atom.AtomEnvironment;

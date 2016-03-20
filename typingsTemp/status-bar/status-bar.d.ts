@@ -220,7 +220,7 @@ declare module StatusBar {
         /**
          * This field or method was not documented by atomdoc, assume it is private. Use with caution.
          */
-        initialize({ safeMode, devMode } : { safeMode? : boolean; devMode? : boolean }) : boolean;
+        initialize(options : { safeMode? : boolean; devMode? : boolean }) : boolean;
     
         /**
          * This field or method was not documented by atomdoc, assume it is private. Use with caution.
