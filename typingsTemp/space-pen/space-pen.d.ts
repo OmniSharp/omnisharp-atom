@@ -1,4 +1,4 @@
-// Type definitions for space-pen (v5.1.1)
+// Type definitions for space-pen (v5.1.2)
 // Project: https://github.com/atom/space-pen
 // Definitions by: vvakame <https://github.com/vvakame>
 // Definitions: https://github.com/borisyankov/DefinitelyTyped
@@ -31,7 +31,7 @@ declare module SpacePen {
     
         /**
          * Add a new tag with the given name
-         * @param tagName? - {String} name of the tag like "li", etc
+         * @param tagName? - {String} name of the tag like 'li', etc
          * @param args? - other arguments 
          */
         static tag(tagName? : string, args? : any) : any;
@@ -101,7 +101,7 @@ declare module SpacePen {
         end() : any;
     
         /**
-         * Preempt events registered with jQuery"s `::on`.
+         * Preempt events registered with jQuery's `::on`.
          * @param eventName? - A event name {String}.
          * @param handler? - A {Function} to execute when the eventName is triggered. 
          */
@@ -193,7 +193,7 @@ declare module SpacePen {
         static script(...args : any[]) : Builder;
         static section(...args : any[]) : Builder;
         static select(...args : any[]) : Builder;
-        static smevery(...args : any[]) : Builder;
+        static small(...args : any[]) : Builder;
         static source(...args : any[]) : Builder;
         static span(...args : any[]) : Builder;
         static strong(...args : any[]) : Builder;
@@ -214,7 +214,7 @@ declare module SpacePen {
         static track(...args : any[]) : Builder;
         static u(...args : any[]) : Builder;
         static ul(...args : any[]) : Builder;
-        static const(...args : any[]) : Builder;
+        static var(...args : any[]) : Builder;
         static video(...args : any[]) : Builder;
         static wbr(...args : any[]) : Builder;
         
@@ -347,20 +347,20 @@ declare module SpacePen {
         removeProp(propertyName: string): JQuery;
         
         /**
-        * Add or remove one or more classes from each element in the set of matched elements, depending on either the class"s presence or the value of the switch argument.
+        * Add or remove one or more classes from each element in the set of matched elements, depending on either the class's presence or the value of the switch argument.
         *
         * @param className One or more class names (separated by spaces) to be toggled for each element in the matched set.
         * @param swtch A Boolean (not just truthy/falsy) value to determine whether the class should be added or removed.
         */
         toggleClass(className: string, swtch?: boolean): JQuery;
         /**
-        * Add or remove one or more classes from each element in the set of matched elements, depending on either the class"s presence or the value of the switch argument.
+        * Add or remove one or more classes from each element in the set of matched elements, depending on either the class's presence or the value of the switch argument.
         *
         * @param swtch A boolean value to determine whether the class should be added or removed.
         */
         toggleClass(swtch?: boolean): JQuery;
         /**
-        * Add or remove one or more classes from each element in the set of matched elements, depending on either the class"s presence or the value of the switch argument.
+        * Add or remove one or more classes from each element in the set of matched elements, depending on either the class's presence or the value of the switch argument.
         *
         * @param func A function that returns class names to be toggled in the class attribute of each element in the matched set. Receives the index position of the element in the set, the old class value, and the switch as arguments.
         * @param swtch A boolean value to determine whether the class should be added or removed.
@@ -473,7 +473,7 @@ declare module SpacePen {
         /**
         * Get the current computed height for the first element in the set of matched elements, including padding, border, and optionally margin. Returns an integer (without "px") representation of the value or null if called on an empty set of elements.
         *
-        * @param includeMargin A Boolean indicating whether to include the element"s margin in the calculation.
+        * @param includeMargin A Boolean indicating whether to include the element's margin in the calculation.
         */
         outerHeight(includeMargin?: boolean): number;
         
@@ -487,7 +487,7 @@ declare module SpacePen {
         /**
         * Get the current computed width for the first element in the set of matched elements, including padding and border.
         *
-        * @param includeMargin A Boolean indicating whether to include the element"s margin in the calculation.
+        * @param includeMargin A Boolean indicating whether to include the element's margin in the calculation.
         */
         outerWidth(includeMargin?: boolean): number;
         
@@ -862,7 +862,7 @@ declare module SpacePen {
         * Create a deep copy of the set of matched elements.
         *
         * param withDataAndEvents A Boolean indicating whether event handlers and data should be copied along with the elements. The default value is false.
-        * param deepWithDataAndEvents A Boolean indicating whether event handlers and data for all children of the cloned element should be copied. By default its value matches the first argument"s value (which defaults to false).
+        * param deepWithDataAndEvents A Boolean indicating whether event handlers and data for all children of the cloned element should be copied. By default its value matches the first argument's value (which defaults to false).
         */
         clone(withDataAndEvents?: boolean, deepWithDataAndEvents?: boolean): JQuery;
         
@@ -1128,25 +1128,25 @@ declare module SpacePen {
         eq(index: number): JQuery;
         
         /**
-        * Reduce the set of matched elements to those that match the selector or pass the function"s test.
+        * Reduce the set of matched elements to those that match the selector or pass the function's test.
         *
         * @param selector A string containing a selector expression to match the current set of elements against.
         */
         filter(selector: string): JQuery;
         /**
-        * Reduce the set of matched elements to those that match the selector or pass the function"s test.
+        * Reduce the set of matched elements to those that match the selector or pass the function's test.
         *
         * @param func A function used as a test for each element in the set. this is the current DOM element.
         */
         filter(func: (index: number, element: Element) => any): JQuery;
         /**
-        * Reduce the set of matched elements to those that match the selector or pass the function"s test.
+        * Reduce the set of matched elements to those that match the selector or pass the function's test.
         *
         * @param element An element to match the current set of elements against.
         */
         filter(element: Element): JQuery;
         /**
-        * Reduce the set of matched elements to those that match the selector or pass the function"s test.
+        * Reduce the set of matched elements to those that match the selector or pass the function's test.
         *
         * @param obj An existing jQuery object to match the current set of elements against.
         */
@@ -1198,7 +1198,7 @@ declare module SpacePen {
         /**
         * Check the current matched set of elements against a selector, element, or jQuery object and return true if at least one of these elements matches the given arguments.
         *
-        * @param func A function used as a test for the set of elements. It accepts one argument, index, which is the element"s index in the jQuery collection.Within the function, this refers to the current DOM element.
+        * @param func A function used as a test for the set of elements. It accepts one argument, index, which is the element's index in the jQuery collection.Within the function, this refers to the current DOM element.
         */
         is(func: (index: number, element: Element) => boolean): boolean;
         /**
@@ -1468,8 +1468,8 @@ declare module SpacePen {
 }
 declare module "space-pen" {
     export = SpacePen.View;
-    const jQuery : JQueryStatic;
-    const $ : JQueryStatic;
+    var jQuery : JQueryStatic;
+    var $ : JQueryStatic;
     function $$(fn: Function): JQuery;
     function $$$(fn: Function): Node;
 }
