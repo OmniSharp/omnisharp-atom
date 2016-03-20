@@ -1,4 +1,4 @@
-// Type definitions for first-mate (v5.0.2)
+// Type definitions for first-mate (v5.2.0)
 // Project: https://github.com/atom/first-mate
 // Definitions by: david-driscoll <https://github.com/david-driscoll/>
 // Definitions: https://github.com/borisyankov/DefinitelyTyped
@@ -15,6 +15,11 @@ declare module FirstMate {
          * This field or method was not documented by atomdoc, assume it is private. Use with caution.
          */
         constructor(options? : any);
+    
+        /**
+         * This field or method was not documented by atomdoc, assume it is private. Use with caution.
+         */
+        clear() : void;
     
         /**
          * Invoke the given callback when a grammar is added to the registry.
@@ -43,7 +48,7 @@ declare module FirstMate {
         /**
          * Add a grammar to this registry.
          * 
-         * A "grammar-added" event is emitted after the grammar is added.
+         * A 'grammar-added' event is emitted after the grammar is added.
          * @param grammar? - The {Grammar} to add. This should be a value previously returned from {::readGrammar} or {::readGrammarSync}.
          */
         addGrammar(grammar? : Grammar) : Grammar;
@@ -60,14 +65,14 @@ declare module FirstMate {
         removeGrammarForScopeName(scopeName? : string) : string;
     
         /**
-         * Read a grammar synchronously but don"t add it to the registry.
+         * Read a grammar synchronously but don't add it to the registry.
          * @param grammarPath? - A {String} absolute file path to a grammar file.
          * Returns a {Grammar}.
          */
         readGrammarSync(grammarPath? : string) : Grammar;
     
         /**
-         * Read a grammar asynchronously but don"t add it to the registry.
+         * Read a grammar asynchronously but don't add it to the registry.
          * @param grammarPath? - A {String} absolute file path to a grammar file.
          * @param callback? - A {Function} to call when read with the following arguments:
          */
@@ -525,7 +530,7 @@ declare module FirstMate {
          * stack - An array of {Rule} objects.
          * line - The string being scanned.
          * rule - The rule that matched.
-         * endPatternMatch - true if the rule"s end pattern matched.
+         * endPatternMatch - true if the rule's end pattern matched.
          */
         handleMatch(match? : any, stack? : any, line? : number, rule? : Rule, endPatternMatch? : any) : void;
     
