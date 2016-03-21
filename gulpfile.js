@@ -11,7 +11,7 @@ var spawn = require('child_process').spawn;
 var babel = require("gulp-babel");
 var tslint = require("gulp-tslint");
 var gulpPath = path.join(__dirname, 'node_modules/.bin/gulp' + (win32 && '.cmd' || ''));
-var ts = require('ntypescript');
+var ts = require('typescript');
 
 var metadata = {
     lib: ['lib/**/*.ts', '!lib/**/*.d.ts'],
