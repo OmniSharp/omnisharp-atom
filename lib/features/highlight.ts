@@ -3,7 +3,7 @@ import {Models} from "omnisharp-client";
 import {Omni} from "../server/omni";
 import {OmnisharpTextEditor, isOmnisharpTextEditor} from "../server/omnisharp-text-editor";
 import {each, extend, has, some, range, remove, pull, find, chain, uniq, findIndex, every, isEqual, min, debounce, sortBy, uniqueId, filter} from "lodash";
-import {Observable, Subject, ReplaySubject, BehaviorSubject, Subscriber} from "rxjs-beta3";
+import {Observable, Subject, ReplaySubject, BehaviorSubject, Subscriber} from "rxjs";
 import {CompositeDisposable, Disposable} from "omnisharp-client";
 import {registerContextItem} from "../server/omnisharp-text-editor";
 /* tslint:disable:variable-name */

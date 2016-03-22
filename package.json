@@ -58,7 +58,7 @@
     "prepublish": "typings install && gulp npm-prepublish"
   },
   "dependencies": {
-    "ansi-to-html": "^0.3.0",
+    "ansi-to-html": "^0.4.1",
     "atom-package-deps": "^4.0.1",
     "atom-space-pen-views": "^2.1.1",
     "babel-plugin-transform-es2015-modules-commonjs": "^6.3.13",
@@ -84,13 +84,13 @@
     "mocha": "^2.4.5",
     "mocha-unfunk-reporter": "^0.4.0",
     "ntypescript": "^1.201512040604.1",
-    "omnisharp-client": "^3.3.6",
+    "omnisharp-client": "^4.0.0",
     "rimraf": "^2.5.2",
     "semver": "^5.0.3",
     "through2": "^2.0.1",
     "tslint": "^3.4.0",
     "typescript": "^1.7.5",
-    "typings": "^0.6.8"
+    "typings": "^0.7.9"
   },
   "consumedServices": {
     "status-bar": {

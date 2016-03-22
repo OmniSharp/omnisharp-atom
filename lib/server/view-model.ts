@@ -1,7 +1,7 @@
 import _ from "lodash";
 import {Solution} from "./solution";
 import {Models, DriverState, OmnisharpClientStatus} from "omnisharp-client";
-import {Observable, Subject, ReplaySubject} from "rxjs-beta3";
+import {Observable, Subject, ReplaySubject} from "rxjs";
 import {CompositeDisposable, Disposable, IDisposable} from "omnisharp-client";
 import {basename, normalize, join} from "path";
 import {ProjectViewModel, projectViewModelFactory, workspaceViewModelFactory} from "./project-view-model";

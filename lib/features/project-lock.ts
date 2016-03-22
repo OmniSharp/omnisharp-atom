@@ -2,7 +2,7 @@ import * as path from "path";
 import * as fs from "fs";
 import {Omni} from "../server/omni";
 import _ from "lodash";
-import {Observable, Subject} from "rxjs-beta3";
+import {Observable, Subject} from "rxjs";
 import {CompositeDisposable, IDisposable} from "omnisharp-client";
 import {File} from "atom";
 import {ProjectViewModel} from "../server/project-view-model";

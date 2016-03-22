@@ -1,7 +1,7 @@
 import {IProjectViewModel} from "../omnisharp";
 import {Models, ScriptCs} from "omnisharp-client";
 import _ from "lodash";
-import {Observable, ReplaySubject} from "rxjs-beta3";
+import {Observable, ReplaySubject} from "rxjs";
 
 const projectFactories: { [key: string]: { new (project: any, solutionPath: string): any; }; } = {
     MsBuildProject: <any>MsBuildProjectViewModel,

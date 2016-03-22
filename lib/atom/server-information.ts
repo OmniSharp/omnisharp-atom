@@ -1,4 +1,4 @@
-import {Observable} from "rxjs-beta3";
+import {Observable} from "rxjs";
 import {CompositeDisposable} from "omnisharp-client";
 import {Omni} from "../server/omni";
 import {OmnisharpClientStatus} from "omnisharp-client";

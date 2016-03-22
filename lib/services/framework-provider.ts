@@ -1,5 +1,5 @@
 import _ from "lodash";
-import {Observable} from "rxjs-beta3";
+import {Observable} from "rxjs";
 import {ajax} from "jquery";
 const filter = require("fuzzaldrin").filter;
 

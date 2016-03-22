@@ -1,4 +1,4 @@
-import {Subject} from "rxjs-beta3";
+import {Subject} from "rxjs";
 import {CompositeDisposable, IDisposable} from "omnisharp-client";
 import {difference} from "lodash";
 

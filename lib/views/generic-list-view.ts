@@ -1,6 +1,6 @@
 import * as spacePen from "atom-space-pen-views";
 import _ from "lodash";
-import {AsyncSubject} from "rxjs-beta3";
+import {AsyncSubject} from "rxjs";
 
 export class GenericSelectListView extends spacePen.SelectListView {
     public static content() {

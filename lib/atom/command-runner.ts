@@ -1,5 +1,5 @@
 import {Solution} from "../server/solution";
-import {Observable, Subject} from "rxjs-beta3";
+import {Observable, Subject} from "rxjs";
 import {CompositeDisposable, Disposable} from "omnisharp-client";
 import {Omni} from "../server/omni";
 import {ProjectViewModel} from "../server/project-view-model";

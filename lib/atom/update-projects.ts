@@ -1,4 +1,4 @@
-import {Observable} from "rxjs-beta3";
+import {Observable} from "rxjs";
 import {CompositeDisposable} from "omnisharp-client";
 import _ from "lodash";
 import {Omni} from "../server/omni";

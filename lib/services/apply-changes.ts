@@ -2,7 +2,7 @@ import {Models} from "omnisharp-client";
 /* tslint:disable:variable-name */
 const Range = require("atom").Range;
 /* tslint:enable:variable-name */
-import {Observable} from "rxjs-beta3";
+import {Observable} from "rxjs";
 
 export function applyChanges(editor: Atom.TextEditor, response: { Changes?: Models.LinePositionSpanTextChange[]; Buffer?: string; }) {
     if (!response) return;

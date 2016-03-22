@@ -1,6 +1,6 @@
 import {Models} from "omnisharp-client";
 import _ from "lodash";
-import {Observable, Subscription} from "rxjs-beta3";
+import {Observable, Subscription} from "rxjs";
 import {CompositeDisposable} from "omnisharp-client";
 import {Omni} from "../server/omni";
 const $: JQueryStatic = require("jquery");

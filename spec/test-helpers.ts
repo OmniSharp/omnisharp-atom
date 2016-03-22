@@ -1,6 +1,6 @@
 /// <reference path="tsd.d.ts" />
 import {SolutionManager} from "../lib/server/solution-manager";
-import {Observable} from "rxjs-beta3";
+import {Observable} from "rxjs";
 import {CompositeDisposable, Disposable} from "omnisharp-client";
 import {DriverState} from "omnisharp-client";
 

@@ -1,5 +1,5 @@
 import _ from "lodash";
-import {Observable, Subject} from "rxjs-beta3";
+import {Observable, Subject} from "rxjs";
 import {CompositeDisposable} from "omnisharp-client";
 import {Models, RequestOptions, ClientV2, DriverState, OmnisharpClientOptions} from "omnisharp-client";
 

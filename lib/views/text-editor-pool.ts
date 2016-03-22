@@ -1,5 +1,5 @@
 import {Models} from "omnisharp-client";
-import {Observable} from "rxjs-beta3";
+import {Observable} from "rxjs";
 import {Disposable, CompositeDisposable, IDisposable} from "omnisharp-client";
 import _ from "lodash";
 import {getEnhancedGrammar, augmentEditor, ExcludeClassifications} from "../features/highlight";

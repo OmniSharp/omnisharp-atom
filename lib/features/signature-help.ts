@@ -1,5 +1,5 @@
 import {Models} from "omnisharp-client";
-import {Observable, Subject} from "rxjs-beta3";
+import {Observable, Subject} from "rxjs";
 import {CompositeDisposable, Disposable, IDisposable} from "omnisharp-client";
 import {Omni} from "../server/omni";
 import _ from "lodash";

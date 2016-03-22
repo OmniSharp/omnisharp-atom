@@ -3,7 +3,7 @@ import {expect} from "chai";
 import {CompositeDisposable} from "omnisharp-client";
 import {setupFeature, openEditor} from "../test-helpers";
 import {RenameView} from "../../lib/views/rename-view";
-import {Observable} from "rxjs-beta3";
+import {Observable} from "rxjs";
 const a = require("atom");
 /* tslint:disable:variable-name */
 const Range: typeof TextBuffer.Range = a.Range;

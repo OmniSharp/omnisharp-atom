@@ -1,4 +1,4 @@
-import {Observable} from "rxjs-beta3";
+import {Observable} from "rxjs";
 import {CompositeDisposable} from "omnisharp-client";
 import {each, endsWith, filter} from "lodash";
 import * as path from "path";

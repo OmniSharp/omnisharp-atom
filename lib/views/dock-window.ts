@@ -1,4 +1,4 @@
-import {Observable} from "rxjs-beta3";
+import {Observable} from "rxjs";
 import {Disposable, CompositeDisposable, SingleAssignmentDisposable, IDisposable} from "omnisharp-client";
 
 export interface ToggleButton {

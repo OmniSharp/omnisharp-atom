@@ -1,5 +1,5 @@
 import _ from "lodash";
-import {Observable} from "rxjs-beta3";
+import {Observable} from "rxjs";
 import {Omni} from "../server/omni";
 import {SolutionManager} from "../server/solution-manager";
 import {ajax} from "jquery";

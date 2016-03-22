@@ -4,7 +4,7 @@ import {Omni} from "../server/omni";
 const Range = require("atom").Range;
 /* tslint:enable:variable-name */
 import _ from "lodash";
-import {Observable} from "rxjs-beta3";
+import {Observable} from "rxjs";
 import {CompositeDisposable} from "omnisharp-client";
 import {codeCheck} from "../features/code-check";
 

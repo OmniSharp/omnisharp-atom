@@ -4,7 +4,7 @@ import {SolutionManager} from "../../lib/server/solution-manager";
 import {setupFeature, openEditor} from "../test-helpers";
 import {DriverState} from "omnisharp-client";
 import {GenericSelectListView} from "../../lib/views/generic-list-view";
-import {Observable} from "rxjs-beta3";
+import {Observable} from "rxjs";
 
 describe("Solution Manager", () => {
     setupFeature([], false);

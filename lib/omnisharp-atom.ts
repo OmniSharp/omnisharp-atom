@@ -1,5 +1,5 @@
 import _ from "lodash";
-import {Observable, AsyncSubject} from "rxjs-beta3";
+import {Observable, AsyncSubject} from "rxjs";
 import {CompositeDisposable, Disposable, IDisposable} from "omnisharp-client";
 import * as path from "path";
 import * as fs from "fs";

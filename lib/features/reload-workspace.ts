@@ -1,4 +1,4 @@
-import {Observable, Scheduler} from "rxjs-beta3";
+import {Observable, Scheduler} from "rxjs";
 import {CompositeDisposable} from "omnisharp-client";
 import {Omni} from "../server/omni";
 import {exists} from "fs";
