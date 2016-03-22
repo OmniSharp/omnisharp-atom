@@ -3,7 +3,6 @@
   "ambientDependencies": {
     "Q": "github:DefinitelyTyped/DefinitelyTyped/q/Q.d.ts#fc341765ebbb04b7109981a25dced01f488f4d94",
     "assertion-error": "github:DefinitelyTyped/DefinitelyTyped/assertion-error/assertion-error.d.ts#fc341765ebbb04b7109981a25dced01f488f4d94",
-    "jasmine": "github:DefinitelyTyped/DefinitelyTyped/jasmine/jasmine.d.ts#ac3a1f059f655059484d6aa5ba1f0f85908ae06c",
     "jquery": "github:DefinitelyTyped/DefinitelyTyped/jquery/jquery.d.ts#ac3a1f059f655059484d6aa5ba1f0f85908ae06c",
     "mixto": "github:DefinitelyTyped/DefinitelyTyped/mixto/mixto.d.ts#ac3a1f059f655059484d6aa5ba1f0f85908ae06c",
     "node": "github:DefinitelyTyped/DefinitelyTyped/node/node.d.ts#ac3a1f059f655059484d6aa5ba1f0f85908ae06c",

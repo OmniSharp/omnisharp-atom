@@ -110,7 +110,7 @@ class CodeLens implements IFeature {
         return Omni.request(editor, solution => solution.currentfilemembersasflat({ Buffer: null, Changes: null }))
             .observeOn(Scheduler.queue)
             .filter(fileMembers => !!fileMembers)
-            .flatMap(fileMembers => Observable.from(fileMembers))
+            .flatMap(fileMembers => fileMembers)
             .concatMap(fileMember => {
                 const range: TextBuffer.Range = <any>editor.getBuffer().rangeForRow(fileMember.Line, false);
                 const marker: Atom.Marker = (<any>editor).markBufferRange(range, { invalidate: "inside" });

@@ -40,7 +40,7 @@ class CommandRunner implements IFeature {
         this.disposable.add(
             Observable.merge(
                 // Get all currently defined projects
-                Omni.solutions.flatMap(z => Observable.from(z.model.projects)),
+                Omni.solutions.flatMap(z => z.model.projects),
                 Omni.listener.model.projectAdded
             ).subscribe(project => this.addCommands(project)));
 

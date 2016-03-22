@@ -120,7 +120,7 @@ export const provider = [
         lintOnFly: false,
         lint: (editor: Atom.TextEditor) => {
             return Omni.activeModel
-                .flatMap(x => Observable.from(x.diagnostics))
+                .flatMap(x => x.diagnostics)
                 .filter(z => showHiddenDiagnostics || z.LogLevel !== "Hidden")
                 .map(error => mapValues(editor, error))
                 .toArray()

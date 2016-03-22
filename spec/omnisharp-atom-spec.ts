@@ -28,7 +28,7 @@ describe("OmniSharp Atom", () => {
                     atom.workspace.open("simple2/project.json")
                 ])
             )
-                .flatMap(x => Observable.from(x))
+                .flatMap(x => x)
                 .flatMap(editor => SolutionManager.getSolutionForEditor(editor))
                 .flatMap(x => x.state.startWith(x.currentState))
                 .filter(z => z === DriverState.Connected)

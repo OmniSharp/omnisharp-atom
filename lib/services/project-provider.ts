@@ -135,7 +135,7 @@ class NugetNameProvider implements IAutocompleteProvider {
             // Only supported on Desktop Clr at the moment
             .filter(x => x.runtime === Runtime.ClrOrMono)
             // Get all sources
-            .flatMap(z => Observable.from(z.model.packageSources))
+            .flatMap(z => z.model.packageSources)
             .flatMap(source => {
                 // Attempt to get the source from github
                 return fetchFromGithub(source, packagePrefix || "_keys", options.replacementPrefix)
@@ -190,7 +190,7 @@ class NugetVersionProvider implements IAutocompleteProvider {
         } else {
             o = SolutionManager.getSolutionForEditor(options.editor)
                 // Get all sources
-                .flatMap(z => Observable.from(z.model.packageSources))
+                .flatMap(z => z.model.packageSources)
                 .filter(z => {
                     if (cache.has(z)) {
                         // Short out early if the source doesn"t even have the given prefix
@@ -205,7 +205,7 @@ class NugetVersionProvider implements IAutocompleteProvider {
                     ProjectPath: solution.path,
                     Sources: sources,
                 }))
-                    .flatMap(z => Observable.from(z.Versions))
+                    .flatMap(z => z.Versions)
                     .toArray())
                 .publishReplay(1).refCount();
 

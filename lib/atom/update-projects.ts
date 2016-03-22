@@ -4,7 +4,7 @@ import _ from "lodash";
 import {Omni} from "../server/omni";
 import {ProjectViewModel} from "../server/project-view-model";
 import * as fs from "fs";
-const stat = Observable.bindNodeCallback<fs.Stats>(fs.stat);
+const stat = Observable.bindNodeCallback(fs.stat);
 import {dirname} from "path";
 
 class UpdateProject implements IAtomFeature {
@@ -86,7 +86,7 @@ class UpdateProject implements IAtomFeature {
     }
 
     private getProjectDirectories(projects: ProjectViewModel<any>[]) {
-        return Observable.from(_.uniq(projects.map(z => z.path)))
+        return Observable.fromArray(_.uniq(projects.map(z => z.path)))
             .flatMap(project => stat(project), (project, st) => {
                 if (st.isDirectory()) {
                     return project;

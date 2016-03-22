@@ -295,7 +295,7 @@ class OmniManager implements IDisposable {
      * NOTE: This property will not emit additions or removals of solutions.
      */
     public get solutions() {
-        return Observable.defer(() => Observable.from(SolutionManager.activeSolutions));
+        return Observable.defer(() => Observable.fromArray(SolutionManager.activeSolutions));
     }
 
     /**

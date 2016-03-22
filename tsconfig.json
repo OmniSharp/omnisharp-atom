@@ -13,6 +13,7 @@
     "noLib": false,
     "preserveConstEnums": true,
     "experimentalDecorators": true,
+    "suppressImplicitAnyIndexErrors": true,
     "allowSyntheticDefaultImports": true
   },
   "compileOnSave": true,
