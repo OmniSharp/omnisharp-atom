@@ -106,7 +106,7 @@ export const provider = [
             const path = editor.getPath();
             const o = Observable.defer(() => codeCheck.doCodeCheck(editor));
             return o
-                .timeout(30000, Observable.from([]))
+                .timeoutWith(30000, Observable.of(<Models.DiagnosticLocation[]>[]))
                 .flatMap(x => x)
                 .filter(z => z.FileName === path && (showHiddenDiagnostics || z.LogLevel !== "Hidden"))
                 .map(error => mapValues(editor, error))
