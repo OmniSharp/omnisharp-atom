@@ -12,7 +12,7 @@
 /// <reference path="../atom-keymap/atom-keymap.d.ts" />
 /// <reference path="../scandal/scandal.d.ts" />
 /// <reference path="../pathwatcher/pathwatcher.d.ts" />
-/// <reference path="../../typings/semver/semver.d.ts" />
+/// <reference path="../../typings/main/ambient/semver/index.d.ts" />
 declare module Atom {
     /**
      * Atom global for dealing with packages, themes, menus, and the window.
@@ -1624,7 +1624,7 @@ declare module Atom {
         onDidChange(keyPath: string, callback: (item: { keyPath: string; oldValue: any; newValue: any;}) => void): EventKit.Disposable
         onDidChange(keyPath: string, options: { scopeDescriptor: ScopeDescriptor }, callback: (item: { keyPath: string; oldValue: any; newValue: any; }) => void): EventKit.Disposable
         get<T>(keyPath: string, options?: { sources: string[]; excludeSources: string[]; scope: ScopeDescriptor }): T
-        set(keyPath: string, value: any, options?: { scopeSelector: string; source: string })
+        set(keyPath: string, value: any, options?: { scopeSelector: string; source: string }): void;
     }
 
     /**
@@ -2104,22 +2104,6 @@ declare module Atom {
          * invoked before the `DirectorySearch` is determined, it will resolve the `DirectorySearch`.
          */
         search(directories? : Pathwatcher.Directory[], regex? : RegExp, options? : Object) : any;
-    
-    }
-
-    /**
-     * Extend semver.Range to memoize matched versions for speed 
-     */
-    export class Range /*extends SemVerModule.SemVer*/ {
-        /**
-         * This field or method was not documented by atomdoc, assume it is private. Use with caution.
-         */
-        constructor();
-    
-        /**
-         * This field or method was not documented by atomdoc, assume it is private. Use with caution.
-         */
-        test(version? : number) : any;
     
     }
 
@@ -5177,7 +5161,7 @@ declare module Atom {
         /**
          * This field or method was not documented by atomdoc, assume it is private. Use with caution.
          */
-        onDidTriggerActivationHook(hook? : (any: any) => void, callback : Function /* needs to be defined */) : EventKit.Disposable;
+        onDidTriggerActivationHook(hook? : (any: any) => void, callback? : Function /* needs to be defined */) : EventKit.Disposable;
     
         /**
          * Deactivate all packages 
@@ -13160,7 +13144,6 @@ declare module "atom" {
     class DefaultDirectoryProvider extends Atom.DefaultDirectoryProvider {}
     class DirectorySearch extends Atom.DirectorySearch {}
     class DefaultDirectorySearcher extends Atom.DefaultDirectorySearcher {}
-    class Range extends Atom.Range {}
     class DeserializerManager extends Atom.DeserializerManager {}
     class DisplayBuffer extends Atom.DisplayBuffer {}
     class DOMElementPool extends Atom.DOMElementPool {}
@@ -13184,7 +13167,6 @@ declare module "atom" {
     class Marker extends Atom.Marker {}
     class MenuManager extends Atom.MenuManager {}
     class Model extends Atom.Model {}
-    class Range extends Atom.Range {}
     class NotificationManager extends Atom.NotificationManager {}
     class Notification extends Atom.Notification {}
     class OverlayManager extends Atom.OverlayManager {}

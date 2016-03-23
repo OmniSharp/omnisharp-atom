@@ -80,10 +80,21 @@ module.exports = function(
         (atom as any).reset();
     });
 
-    return Promise.all(testPaths.map(path => globby([join(path, "**/*-spec.js")])))
-        .then((paths) => {
-            paths.forEach(fs => fs.forEach(f => mocha.addFile(f)));
+    const paths = testPaths;
 
-            return new Promise<number>(resolve => mocha.run(resolve));
+    const cb = () => {
+        return new Promise<any>((resolve: Function, reject: Function) => {
+            if (paths.length) {
+                let path = paths.pop();
+                globby([join(path, "**/*-spec.js")])
+                    .then(p => p.forEach(f => mocha.addFile(f)))
+                    .then(<any>cb);
+                return;
+            }
+
+            mocha.run(<any>resolve);
         });
+    };
+
+    return cb();
 };
