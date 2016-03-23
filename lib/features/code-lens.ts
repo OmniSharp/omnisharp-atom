@@ -113,6 +113,8 @@ class CodeLens implements IFeature {
             .flatMap(fileMembers => fileMembers)
             .concatMap(fileMember => {
                 const range: TextBuffer.Range = <any>editor.getBuffer().rangeForRow(fileMember.Line, false);
+                // TODO: Block decorations
+                // const marker: Atom.Marker = (<any>editor).markScreenPosition([fileMember.Line, 0]);
                 const marker: Atom.Marker = (<any>editor).markBufferRange(range, { invalidate: "inside" });
                 let lens: Lens;
 
@@ -270,6 +272,8 @@ export class Lens implements IDisposable {
         element.textContent = count.toString();
         element.onclick = () => Omni.request(this._editor, s => s.findusages({ FileName: this._path, Column: this._member.Column + 1, Line: this._member.Line, Buffer: null, Changes: null }));
 
+        // TODO: Block decorations
+        // this._decoration = <any>this._editor.decorateMarker(this._marker, { type: "block", class: `codelens`, item: this._element, position: "before" });
         this._decoration = <any>this._editor.decorateMarker(this._marker, { type: "overlay", class: `codelens`, item: this._element, position: "head" });
         this._disposable.add(Disposable.create(() => {
             this._element.remove();

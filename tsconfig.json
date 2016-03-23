@@ -14,7 +14,8 @@
     "preserveConstEnums": true,
     "experimentalDecorators": true,
     "suppressImplicitAnyIndexErrors": true,
-    "allowSyntheticDefaultImports": true
+    "allowSyntheticDefaultImports": true,
+    "sourceMap": true
   },
   "compileOnSave": true,
   "formatCodeOptions": {

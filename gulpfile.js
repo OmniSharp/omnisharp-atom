@@ -14,7 +14,7 @@ var sourcemaps = require("gulp-sourcemaps");
 var gulpPath = path.join(__dirname, 'node_modules/.bin/gulp' + (win32 && '.cmd' || ''));
 var typescript = require('typescript');
 var ts = require('gulp-typescript');
-var tsProject = ts.createProject('tsconfig.json', { typescript: typescript });
+var tsProject = ts.createProject('tsconfig.json', { sourceMap: true, typescript: typescript });
 
 var metadata = {
     lib: ['lib/**/*.ts', '!lib/**/*.d.ts'],
