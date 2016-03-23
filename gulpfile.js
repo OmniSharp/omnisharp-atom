@@ -52,7 +52,7 @@ gulp.task('typescript', ['clean'], function() {
         .pipe(sourcemaps.init())
         .pipe(ts(tsProject))
         .pipe(babel())
-        .pipe(sourcemaps.write('.'))
+        .pipe(sourcemaps.write())
         .pipe(gulp.dest('.'));
 });
 
