@@ -22,7 +22,7 @@ function wrapEditorObservable(observable: Observable<OmnisharpTextEditor>) {
         .subscribeOn(Scheduler.queue)
         .observeOn(Scheduler.queue)
         .debounceTime(DEBOUNCE_TIMEOUT)
-        .filter(editor => editor && !editor.isDestroyed());
+        .filter(editor => !editor || editor && !editor.isDestroyed());
 }
 
 class OmniManager implements IDisposable {
@@ -49,11 +49,13 @@ class OmniManager implements IDisposable {
         .publishReplay(1).refCount();
 
     private _activeProject = this._activeEditorOrConfigEditor
+        .filter(editor => editor && !editor.isDestroyed())
         .switchMap(editor => editor.omnisharp.solution.model.getProjectForEditor(editor))
         .distinctUntilChanged()
         .publishReplay(1).refCount();
 
     private _activeFramework = this._activeEditorOrConfigEditor
+        .filter(editor => editor && !editor.isDestroyed())
         .switchMap(editor => editor.omnisharp.solution.model.getProjectForEditor(editor))
         .switchMap(project => project.observe.activeFramework, (project, framework) => ({ project, framework }))
         .distinctUntilChanged()
@@ -96,20 +98,17 @@ class OmniManager implements IDisposable {
         this.disposable.add(
             createObservable<Atom.TextEditor>(observer => {
                 const dis = atom.workspace.observeActivePaneItem((pane: any) => {
-                    if (pane && pane.getGrammar && pane.getPath) {
+                    if (pane && pane.getGrammar && pane.getPath && this.isValidGrammar(pane.getGrammar())) {
                         observer.next(<Atom.TextEditor>pane);
                         return;
                     }
                     observer.next(null);
-                } );
+                });
 
                 return () => dis.dispose();
             })
                 .concatMap((pane) => {
-                    if (!pane) {
-                        return Observable.of(<OmnisharpTextEditor>null);
-                    }
-                    if (isOmnisharpTextEditor(pane)) {
+                    if (!pane || isOmnisharpTextEditor(pane)) {
                         return Observable.of(pane);
                     }
                     return wrapEditorObservable(
@@ -317,7 +316,7 @@ class OmniManager implements IDisposable {
             editor = atom.workspace.getActiveTextEditor();
         }
 
-        const solutionCallback = (solution: Solution) =>  callback(solution.withEditor(<any>editor));
+        const solutionCallback = (solution: Solution) => callback(solution.withEditor(<any>editor));
 
         let result: Observable<T>;
         if (editor && isOmnisharpTextEditor(editor)) {
@@ -564,7 +563,7 @@ class OmniManager implements IDisposable {
     }
 
     public isValidGrammar(grammar: FirstMate.Grammar) {
-        return _.some(this._supportedExtensions, ext => _.some((<any>grammar).fileTypes, ft => _.trimStart(ext, ".") === ft));
+        return _.some(this.grammars, { scopeName: (grammar as any).scopeName });
     }
 
     private _packageDir: string;
