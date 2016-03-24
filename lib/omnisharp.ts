@@ -1,9 +1,10 @@
 import {Api, Models} from "omnisharp-client";
+import {Observable} from "rxjs";
 
 export interface ExtendApi extends Api.V2 {
-    request<TRequest, TResponse>(path: string, request: TRequest): Rx.Observable<TResponse>;
+    request<TRequest, TResponse>(path: string, request: TRequest): Observable<TResponse>;
     path: string;
-    whenConnected(): Rx.Observable<any>;
+    whenConnected(): Observable<any>;
 }
 
 export interface IProjectViewModel {

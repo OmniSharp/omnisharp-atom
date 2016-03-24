@@ -1,4 +1,4 @@
-import {CompositeDisposable, Disposable, IDisposable} from "rx";
+import {CompositeDisposable, Disposable, IDisposable} from "omnisharp-client";
 import {DockWindow, DocButtonOptions, PaneButtonOptions} from "../views/dock-window";
 
 
@@ -12,7 +12,7 @@ function fromDock(key?: string) {
 }
 
 class Dock implements IAtomFeature {
-    private disposable: Rx.CompositeDisposable;
+    private disposable: CompositeDisposable;
     private view: Element;
     private dock: DockWindow = new DockWindow;
 

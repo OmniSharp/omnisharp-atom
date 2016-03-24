@@ -10,8 +10,11 @@ var win32 = process.platform === "win32";
 var spawn = require('child_process').spawn;
 var babel = require("gulp-babel");
 var tslint = require("gulp-tslint");
+var sourcemaps = require("gulp-sourcemaps");
 var gulpPath = path.join(__dirname, 'node_modules/.bin/gulp' + (win32 && '.cmd' || ''));
-var ts = require('ntypescript');
+var typescript = require('typescript');
+var ts = require('gulp-typescript');
+var tsProject = ts.createProject('tsconfig.json', { sourceMap: false, typescript: typescript });
 
 var metadata = {
     lib: ['lib/**/*.ts', '!lib/**/*.d.ts'],
@@ -42,20 +45,15 @@ function tsTranspile() {
     });
 }
 
-function tsTranspiler(source, dest) {
-    return source
-        .pipe(tslint())
-        .pipe(tsTranspile())
-        .pipe(babel())
-        .pipe(tslint.report('prose'))
-        .pipe(gulp.dest(dest));
-}
-
 gulp.task('typescript', ['clean'], function() {
-    var lib = tsTranspiler(gulp.src(metadata.lib), './lib');
-    var spec = tsTranspiler(gulp.src(metadata.spec), './spec');
-
-    return merge(lib, spec);
+    return tsProject.src()
+        .pipe(tslint())
+        .pipe(tslint.report('prose'))
+        .pipe(sourcemaps.init())
+        .pipe(ts(tsProject))
+        .pipe(babel())
+        .pipe(sourcemaps.write())
+        .pipe(gulp.dest('.'));
 });
 
 gulp.task('clean', ['clean:lib', 'clean:spec']);

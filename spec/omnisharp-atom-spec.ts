@@ -2,7 +2,7 @@
 import {expect} from "chai";
 import {SolutionManager} from "../lib/server/solution-manager";
 import {DriverState} from "omnisharp-client";
-import {Observable} from "rx";
+import {Observable} from "rxjs";
 import {setupFeature} from "./test-helpers";
 
 describe("OmniSharp Atom", () => {
@@ -28,7 +28,7 @@ describe("OmniSharp Atom", () => {
                     atom.workspace.open("simple2/project.json")
                 ])
             )
-                .flatMap(x => Observable.from(x))
+                .flatMap(x => x)
                 .flatMap(editor => SolutionManager.getSolutionForEditor(editor))
                 .flatMap(x => x.state.startWith(x.currentState))
                 .filter(z => z === DriverState.Connected)

@@ -1,6 +1,6 @@
 import {join} from "path";
 import {readFileSync} from "fs";
-import {CompositeDisposable} from "rx";
+import {CompositeDisposable} from "omnisharp-client";
 
 module.exports = function(
     {testPaths, buildAtomEnvironment, buildDefaultApplicationDelegate, headless}: {
@@ -80,10 +80,9 @@ module.exports = function(
         (atom as any).reset();
     });
 
-    return Promise.all(testPaths.map(path => globby([join(path, "**/*-spec.js")])))
-        .then((paths) => {
-            paths.forEach(fs => fs.forEach(f => mocha.addFile(f)));
-
+    return Promise.all(testPaths.map(path => globby([join(path, "**/*-spec.js")])
+        .then(fs => fs.forEach(f => mocha.addFile(f)))))
+        .then(() => {
             return new Promise<number>(resolve => mocha.run(resolve));
         });
 };

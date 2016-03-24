@@ -1,9 +1,9 @@
-import {CompositeDisposable} from "rx";
+import {CompositeDisposable} from "omnisharp-client";
 import {Omni} from "../server/omni";
 import {FindSymbolsView} from "../views/find-symbols-view";
 
 class FindSymbols implements IFeature {
-    private disposable: Rx.CompositeDisposable;
+    private disposable: CompositeDisposable;
     private view: FindSymbolsView;
 
     public activate() {

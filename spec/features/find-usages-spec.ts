@@ -1,6 +1,6 @@
 /// <reference path="../tsd.d.ts" />
 import {expect} from "chai";
-import {CompositeDisposable} from "rx";
+import {CompositeDisposable} from "omnisharp-client";
 import {setupFeature} from "../test-helpers";
 
 describe("Find Usages", () => {

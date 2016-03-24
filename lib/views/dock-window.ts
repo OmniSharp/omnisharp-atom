@@ -1,4 +1,5 @@
-import {Observable, Disposable, CompositeDisposable, SingleAssignmentDisposable} from "rx";
+import {Observable} from "rxjs";
+import {Disposable, CompositeDisposable, SingleAssignmentDisposable, IDisposable} from "omnisharp-client";
 
 export interface ToggleButton {
     id: string;
@@ -253,14 +254,14 @@ export class DockWindow extends HTMLDivElement implements WebComponent {
         });
     }
 
-    public addWindow(id: string, title: string, view: HTMLElement, options: PaneButtonOptions = { priority: 1000 }, parentDisposable?: Rx.Disposable) {
+    public addWindow(id: string, title: string, view: HTMLElement, options: PaneButtonOptions = { priority: 1000 }, parentDisposable?: Disposable) {
         const disposable = new SingleAssignmentDisposable();
         const cd = new CompositeDisposable();
         const context = { id, title, view, options, disposable: cd };
 
         this._panes.set(id, context);
         this.disposable.add(disposable);
-        disposable.setDisposable(cd);
+        disposable.disposable = cd;
 
         if (parentDisposable)
             cd.add(parentDisposable);
@@ -293,21 +294,21 @@ export class DockWindow extends HTMLDivElement implements WebComponent {
 
         if (!this.selected) this.selected = id;
 
-        return <Rx.IDisposable>disposable;
+        return <IDisposable>disposable;
     }
 
-    public addButton(id: string, title: string, view: HTMLElement, options: DocButtonOptions = { priority: 1000 }, parentDisposable?: Rx.Disposable) {
+    public addButton(id: string, title: string, view: HTMLElement, options: DocButtonOptions = { priority: 1000 }, parentDisposable?: Disposable) {
         const disposable = new SingleAssignmentDisposable();
         const cd = new CompositeDisposable();
         this.disposable.add(disposable);
-        disposable.setDisposable(cd);
+        disposable.disposable = cd;
 
         if (parentDisposable)
             cd.add(parentDisposable);
 
         this._addToggleButton({ id, title, view, options, disposable: cd });
 
-        return <Rx.IDisposable>disposable;
+        return <IDisposable>disposable;
     }
 }
 

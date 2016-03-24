@@ -1,4 +1,4 @@
-import {CompositeDisposable, Disposable} from "rx";
+import {CompositeDisposable, Disposable, IDisposable} from "omnisharp-client";
 import {Solution} from "./solution";
 import {ProjectViewModel, EmptyProjectViewModel} from "./project-view-model";
 
@@ -8,7 +8,7 @@ export function registerContextItem<T>(name: string, callback: (context: Omnisha
     return Disposable.create(() => contextItems.delete(name));
 }
 
-export class OmnisharpEditorContext implements Rx.IDisposable {
+export class OmnisharpEditorContext implements IDisposable {
     private _editor: OmnisharpTextEditor;
     private _solution: Solution;
     private _metadata: boolean;

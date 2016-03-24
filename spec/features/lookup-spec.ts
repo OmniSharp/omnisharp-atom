@@ -1,7 +1,7 @@
 /// <reference path="../tsd.d.ts" />
 import {expect} from "chai";
 import {setupFeature} from "../test-helpers";
-import {CompositeDisposable} from "rx";
+import {CompositeDisposable} from "omnisharp-client";
 
 describe("Lookup", () => {
     setupFeature(["features/lookup"]);

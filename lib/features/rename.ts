@@ -1,11 +1,11 @@
 import _ from "lodash";
-import {CompositeDisposable} from "rx";
+import {CompositeDisposable} from "omnisharp-client";
 import {RenameView} from "../views/rename-view";
 import {Omni} from "../server/omni";
 import {applyAllChanges} from "../services/apply-changes";
 
 class Rename implements IFeature {
-    private disposable: Rx.CompositeDisposable;
+    private disposable: CompositeDisposable;
     private renameView: RenameView;
 
     public activate() {

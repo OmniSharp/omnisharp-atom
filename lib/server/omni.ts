@@ -1,4 +1,5 @@
-import {helpers, Observable, ReplaySubject, Subject, CompositeDisposable, BehaviorSubject, Disposable, Scheduler} from "rx";
+import {Observable, ReplaySubject, Subject, BehaviorSubject, Scheduler} from "rxjs";
+import {CompositeDisposable, Disposable, IDisposable, createObservable} from "omnisharp-client";
 import {SolutionManager} from "./solution-manager";
 import {Solution} from "./solution";
 import _ from "lodash";
@@ -18,13 +19,13 @@ const statefulProperties = ["isOff", "isConnecting", "isOn", "isReady", "isError
 
 function wrapEditorObservable(observable: Observable<OmnisharpTextEditor>) {
     return observable
-        .subscribeOn(Scheduler.async)
-        .observeOn(Scheduler.async)
-        .debounce(DEBOUNCE_TIMEOUT)
-        .where(editor => editor && !editor.isDestroyed());
+        .subscribeOn(Scheduler.queue)
+        .observeOn(Scheduler.queue)
+        .debounceTime(DEBOUNCE_TIMEOUT)
+        .filter(editor => !editor || editor && !editor.isDestroyed());
 }
 
-class OmniManager implements Rx.IDisposable {
+class OmniManager implements IDisposable {
     private disposable: CompositeDisposable;
 
     private _editors: Observable<OmnisharpTextEditor>;
@@ -34,29 +35,31 @@ class OmniManager implements Rx.IDisposable {
     public get viewModelStatefulProperties() { return statefulProperties; }
 
     private _activeEditorOrConfigEditorSubject = new BehaviorSubject<OmnisharpTextEditor>(null);
-    private _activeEditorOrConfigEditor = wrapEditorObservable(this._activeEditorOrConfigEditorSubject)
-        .shareReplay(1);
+    private _activeEditorOrConfigEditor = wrapEditorObservable(<Observable<OmnisharpTextEditor>><any>this._activeEditorOrConfigEditorSubject)
+        .publishReplay(1).refCount();
 
-    private _activeEditor = wrapEditorObservable(this._activeEditorOrConfigEditorSubject)
+    private _activeEditor = wrapEditorObservable(<Observable<OmnisharpTextEditor>><any>this._activeEditorOrConfigEditorSubject)
         .delay(DEBOUNCE_TIMEOUT)
         .map(x => x && !x.omnisharp.config ? x : null)
-        .shareReplay(1);
+        .publishReplay(1).refCount();
 
-    private _activeConfigEditor = wrapEditorObservable(this._activeEditorOrConfigEditorSubject)
+    private _activeConfigEditor = wrapEditorObservable(<Observable<OmnisharpTextEditor>><any>this._activeEditorOrConfigEditorSubject)
         .delay(DEBOUNCE_TIMEOUT)
         .map(x => x && x.omnisharp.config ? x : null)
-        .shareReplay(1);
+        .publishReplay(1).refCount();
 
     private _activeProject = this._activeEditorOrConfigEditor
-        .flatMapLatest(editor => editor.omnisharp.solution.model.getProjectForEditor(editor))
+        .filter(editor => editor && !editor.isDestroyed())
+        .switchMap(editor => editor.omnisharp.solution.model.getProjectForEditor(editor))
         .distinctUntilChanged()
-        .shareReplay(1);
+        .publishReplay(1).refCount();
 
     private _activeFramework = this._activeEditorOrConfigEditor
-        .flatMapLatest(editor => editor.omnisharp.solution.model.getProjectForEditor(editor))
-        .flatMapLatest(project => project.observe.activeFramework, (project, framework) => ({ project, framework }))
+        .filter(editor => editor && !editor.isDestroyed())
+        .switchMap(editor => editor.omnisharp.solution.model.getProjectForEditor(editor))
+        .switchMap(project => project.observe.activeFramework, (project, framework) => ({ project, framework }))
         .distinctUntilChanged()
-        .shareReplay(1);
+        .publishReplay(1).refCount();
 
     private _diagnostics: Observable<Models.DiagnosticLocation[]>;
     public get diagnostics() { return this._diagnostics; }
@@ -71,8 +74,8 @@ class OmniManager implements Rx.IDisposable {
         this.disposable.add(metadataOpener());
 
         const editors = this.createTextEditorObservable(this._supportedExtensions, this.disposable);
-        this._editors = wrapEditorObservable(editors.where(x => !x.omnisharp.config));
-        this._configEditors = wrapEditorObservable(editors.where(x => x.omnisharp.config));
+        this._editors = wrapEditorObservable(editors.filter(x => !x.omnisharp.config));
+        this._configEditors = wrapEditorObservable(editors.filter(x => x.omnisharp.config));
 
         SolutionManager.setupContextCallback = editor => {
             this._underlyingEditors.push(editor);
@@ -93,20 +96,20 @@ class OmniManager implements Rx.IDisposable {
         this.disposable.add(SolutionManager.solutionAggregateObserver.state.subscribe(z => this._isOff = _.every(z, x => x.value === DriverState.Disconnected || x.value === DriverState.Error)));
 
         this.disposable.add(
-            Observable.create<Atom.TextEditor>(observer =>
-                atom.workspace.observeActivePaneItem((pane: any) => {
-                    if (pane && pane.getGrammar && pane.getPath) {
-                        observer.onNext(<Atom.TextEditor>pane);
+            createObservable<Atom.TextEditor>(observer => {
+                const dis = atom.workspace.observeActivePaneItem((pane: any) => {
+                    if (pane && pane.getGrammar && pane.getPath && this.isValidGrammar(pane.getGrammar())) {
+                        observer.next(<Atom.TextEditor>pane);
                         return;
                     }
-                    observer.onNext(null);
-                }))
+                    observer.next(null);
+                });
+
+                return () => dis.dispose();
+            })
                 .concatMap((pane) => {
-                    if (!pane) {
-                        return Observable.just(<OmnisharpTextEditor>null);
-                    }
-                    if (isOmnisharpTextEditor(pane)) {
-                        return Observable.just(pane);
+                    if (!pane || isOmnisharpTextEditor(pane)) {
+                        return Observable.of(pane);
                     }
                     return wrapEditorObservable(
                         SolutionManager.getSolutionForEditor(pane)
@@ -140,7 +143,7 @@ class OmniManager implements Rx.IDisposable {
         }));
 
         this.disposable.add(Disposable.create(() => {
-            this._activeEditorOrConfigEditorSubject.onNext(null);
+            this._activeEditorOrConfigEditorSubject.next(null);
         }));
 
         // Cache this result, because the underlying implementation of observe will
@@ -150,31 +153,31 @@ class OmniManager implements Rx.IDisposable {
 
         let showDiagnosticsForAllSolutions = new ReplaySubject<boolean>(1);
         this.disposable.add(atom.config.observe("omnisharp-atom.showDiagnosticsForAllSolutions", function(enabled) {
-            showDiagnosticsForAllSolutions.onNext(enabled);
+            showDiagnosticsForAllSolutions.next(enabled);
         }));
 
         this.disposable.add(showDiagnosticsForAllSolutions);
 
         this._diagnostics = Observable.combineLatest( // Combine both the active model and the configuration changes together
-            this.activeModel.startWith(null), showDiagnosticsForAllSolutions, showDiagnosticsForAllSolutions.skip(1).startWith(atom.config.get<boolean>("omnisharp-atom.showDiagnosticsForAllSolutions")),
+            this.activeModel.startWith(null), <Observable<boolean>><any>showDiagnosticsForAllSolutions, showDiagnosticsForAllSolutions.skip(1).startWith(atom.config.get<boolean>("omnisharp-atom.showDiagnosticsForAllSolutions")),
             (model, enabled, wasEnabled) => ({ model, enabled, wasEnabled }))
             // If the setting is enabled (and hasn"t changed) then we don"t need to redo the subscription
-            .where(ctx => (!(ctx.enabled && ctx.wasEnabled === ctx.enabled)))
-            .flatMapLatest(ctx => {
+            .filter(ctx => (!(ctx.enabled && ctx.wasEnabled === ctx.enabled)))
+            .switchMap(ctx => {
                 const {enabled, model} = ctx;
 
                 if (enabled) {
                     return combinationObservable
-                        .debounce(200)
+                        .debounceTime(200)
                         .map(data => _.flatten<Models.DiagnosticLocation>(data));
                 } else if (model) {
                     return model.observe.codecheck;
                 }
 
-                return Observable.just(<Models.DiagnosticLocation[]>[]);
+                return Observable.of(<Models.DiagnosticLocation[]>[]);
             })
             .startWith([])
-            .shareReplay(1);
+            .publishReplay(1).refCount();
     }
 
     public dispose() {
@@ -196,7 +199,7 @@ class OmniManager implements Rx.IDisposable {
     }
 
     public navigateTo(response: { FileName: string; Line: number; Column: number; }) {
-        return Observable.fromPromise(atom.workspace.open(response.FileName, <any>{ initialLine: response.Line, initialColumn: response.Column }));
+        return Observable.fromPromise(<Promise<Atom.TextEditor>><any>atom.workspace.open(response.FileName, <any>{ initialLine: response.Line, initialColumn: response.Column }));
     }
 
     public getFrameworks(projects: string[]): string {
@@ -226,12 +229,12 @@ class OmniManager implements Rx.IDisposable {
 
         return Observable.merge<OmnisharpTextEditor>(
             Observable.defer(() => Observable.from(this._underlyingEditors)),
-            Observable.create<OmnisharpTextEditor>(observer => {
-                return atom.workspace.observeTextEditors((editor: Atom.TextEditor) => {
+            createObservable<OmnisharpTextEditor>(observer => {
+                const dis = atom.workspace.observeTextEditors((editor: Atom.TextEditor) => {
                     const cb = () => {
                         if (_.some(extensions, ext => _.endsWith(editor.getPath(), ext))) {
                             SolutionManager.getSolutionForEditor(editor)
-                                .subscribe(() => observer.onNext(<any>editor));
+                                .subscribe(() => observer.next(<any>editor));
                         }
                     };
 
@@ -245,17 +248,19 @@ class OmniManager implements Rx.IDisposable {
                         cb();
                     }
                 });
+
+                return () => dis.dispose();
             }));
     }
 
     private _createSafeGuard(extensions: string[], disposable: CompositeDisposable) {
         const editorSubject = new Subject<OmnisharpTextEditor>();
 
-        disposable.add(atom.workspace.observeActivePaneItem((pane: any) => !editorSubject.isDisposed && editorSubject.onNext(pane)));
-        const editorObservable = editorSubject.where(z => z && !!z.getGrammar).startWith(null);
+        disposable.add(atom.workspace.observeActivePaneItem((pane: any) => editorSubject.next(pane)));
+        const editorObservable = editorSubject.filter(z => z && !!z.getGrammar).startWith(null);
 
         disposable.add(Observable.zip(editorObservable, editorObservable.skip(1), (editor, nextEditor) => ({ editor, nextEditor }))
-            .debounce(50)
+            .debounceTime(50)
             .subscribe(function({editor, nextEditor}) {
                 const path = nextEditor.getPath();
                 if (!path) {
@@ -289,7 +294,7 @@ class OmniManager implements Rx.IDisposable {
      * NOTE: This property will not emit additions or removals of solutions.
      */
     public get solutions() {
-        return Observable.defer(() => Observable.from(SolutionManager.activeSolutions));
+        return Observable.defer(() => Observable.fromArray(SolutionManager.activeSolutions));
     }
 
     /**
@@ -299,9 +304,9 @@ class OmniManager implements Rx.IDisposable {
      * The callback will then issue the request
      * NOTE: This API only exposes the operation Api and doesn"t expose the event api, as we are requesting something to happen
      */
-    public request<T>(editor: Atom.TextEditor, callback: (solution: ExtendApi) => Rx.Observable<T> | Rx.IPromise<T>): Rx.Observable<T>;
-    public request<T>(callback: (solution: ExtendApi) => Rx.Observable<T> | Rx.IPromise<T>): Rx.Observable<T>;
-    public request<T>(editor: Atom.TextEditor | ((solution: ExtendApi) => Rx.Observable<T> | Rx.IPromise<T>), callback?: (solution: ExtendApi) => Rx.Observable<T> | Rx.IPromise<T>): Rx.Observable<T> {
+    public request<T>(editor: Atom.TextEditor, callback: (solution: ExtendApi) => Observable<T>): Observable<T>;
+    public request<T>(callback: (solution: ExtendApi) => Observable<T>): Observable<T>;
+    public request<T>(editor: Atom.TextEditor | ((solution: ExtendApi) => Observable<T> | Promise<T>), callback?: (solution: ExtendApi) => Observable<T>): Observable<T> {
         if (_.isFunction(editor)) {
             callback = <any>editor;
             editor = null;
@@ -311,17 +316,9 @@ class OmniManager implements Rx.IDisposable {
             editor = atom.workspace.getActiveTextEditor();
         }
 
-        const solutionCallback = (solution: Solution) => {
-            const r = callback(solution.withEditor(<any>editor));
-            if (helpers.isPromise(r)) {
-                return Observable.fromPromise(<Rx.IPromise<T>>r);
-            } else {
-                return <Rx.Observable<T>>r;
-            }
-        };
+        const solutionCallback = (solution: Solution) => callback(solution.withEditor(<any>editor));
 
         let result: Observable<T>;
-
         if (editor && isOmnisharpTextEditor(editor)) {
             result = solutionCallback(editor.omnisharp.solution)
                 .share();
@@ -337,7 +334,7 @@ class OmniManager implements Rx.IDisposable {
         }
 
         result = solutionResult
-            .where(z => !!z)
+            .filter(z => !!z)
             .flatMap(solutionCallback)
             .share();
 
@@ -350,7 +347,7 @@ class OmniManager implements Rx.IDisposable {
 
     public getProject(editor: Atom.TextEditor) {
         if (isOmnisharpTextEditor(editor) && editor.omnisharp.project) {
-            return Observable.just(editor.omnisharp.project);
+            return Observable.of(editor.omnisharp.project);
         }
 
         return SolutionManager.getSolutionForEditor(editor)
@@ -359,7 +356,7 @@ class OmniManager implements Rx.IDisposable {
     }
 
     public getSolutionForProject(project: ProjectViewModel<any>) {
-        return Observable.just(
+        return Observable.of(
             _(SolutionManager.activeSolutions)
                 .filter(solution => _.some(solution.model.projects, p => p.name === project.name))
                 .first()
@@ -368,7 +365,7 @@ class OmniManager implements Rx.IDisposable {
 
     public getSolutionForEditor(editor: Atom.TextEditor) {
         if (isOmnisharpTextEditor(editor)) {
-            return Observable.just(editor.omnisharp.solution);
+            return Observable.of(editor.omnisharp.solution);
         }
 
         return SolutionManager.getSolutionForEditor(editor);
@@ -381,13 +378,13 @@ class OmniManager implements Rx.IDisposable {
         return SolutionManager.activeSolution.map(z => z.model);
     }
 
-    public switchActiveModel(callback: (model: ViewModel, cd: CompositeDisposable) => void): Rx.IDisposable {
+    public switchActiveModel(callback: (model: ViewModel, cd: CompositeDisposable) => void): IDisposable {
         const outerCd = new CompositeDisposable();
-        outerCd.add(this.activeModel.where(z => !!z).subscribe(model => {
+        outerCd.add(this.activeModel.filter(z => !!z).subscribe(model => {
             const cd = new CompositeDisposable();
             outerCd.add(cd);
 
-            cd.add(this.activeModel.where(active => active !== model)
+            cd.add(this.activeModel.filter(active => active !== model)
                 .subscribe(() => {
                     outerCd.remove(cd);
                     cd.dispose();
@@ -403,13 +400,13 @@ class OmniManager implements Rx.IDisposable {
         return SolutionManager.activeSolution;
     }
 
-    public switchActiveSolution(callback: (solution: Solution, cd: CompositeDisposable) => void): Rx.IDisposable {
+    public switchActiveSolution(callback: (solution: Solution, cd: CompositeDisposable) => void): IDisposable {
         const outerCd = new CompositeDisposable();
-        outerCd.add(this.activeSolution.where(z => !!z).subscribe(solution => {
+        outerCd.add(this.activeSolution.filter(z => !!z).subscribe(solution => {
             const cd = new CompositeDisposable();
             outerCd.add(cd);
 
-            cd.add(this.activeSolution.where(active => active !== solution)
+            cd.add(this.activeSolution.filter(active => active !== solution)
                 .subscribe(() => {
                     outerCd.remove(cd);
                     cd.dispose();
@@ -425,13 +422,13 @@ class OmniManager implements Rx.IDisposable {
         return this._activeEditor;
     }
 
-    public switchActiveEditor(callback: (editor: OmnisharpTextEditor, cd: CompositeDisposable) => void): Rx.IDisposable {
+    public switchActiveEditor(callback: (editor: OmnisharpTextEditor, cd: CompositeDisposable) => void): IDisposable {
         const outerCd = new CompositeDisposable();
-        outerCd.add(this.activeEditor.where(z => !!z).subscribe(editor => {
+        outerCd.add(this.activeEditor.filter(z => !!z).subscribe(editor => {
             const cd = new CompositeDisposable();
             outerCd.add(cd);
 
-            cd.add(this.activeEditor.where(active => active !== editor)
+            cd.add(this.activeEditor.filter(active => active !== editor)
                 .subscribe(() => {
                     outerCd.remove(cd);
                     cd.dispose();
@@ -458,13 +455,13 @@ class OmniManager implements Rx.IDisposable {
         return this._activeConfigEditor;
     }
 
-    public switchActiveConfigEditor(callback: (editor: OmnisharpTextEditor, cd: CompositeDisposable) => void): Rx.IDisposable {
+    public switchActiveConfigEditor(callback: (editor: OmnisharpTextEditor, cd: CompositeDisposable) => void): IDisposable {
         const outerCd = new CompositeDisposable();
-        outerCd.add(this.activeConfigEditor.where(z => !!z).subscribe(editor => {
+        outerCd.add(this.activeConfigEditor.filter(z => !!z).subscribe(editor => {
             const cd = new CompositeDisposable();
             outerCd.add(cd);
 
-            cd.add(this.activeConfigEditor.where(active => active !== editor)
+            cd.add(this.activeConfigEditor.filter(active => active !== editor)
                 .subscribe(() => {
                     outerCd.remove(cd);
                     cd.dispose();
@@ -480,13 +477,13 @@ class OmniManager implements Rx.IDisposable {
         return this._activeEditorOrConfigEditor;
     }
 
-    public switchActiveEditorOrConfigEditor(callback: (editor: OmnisharpTextEditor, cd: CompositeDisposable) => void): Rx.IDisposable {
+    public switchActiveEditorOrConfigEditor(callback: (editor: OmnisharpTextEditor, cd: CompositeDisposable) => void): IDisposable {
         const outerCd = new CompositeDisposable();
-        outerCd.add(this.activeEditorOrConfigEditor.where(z => !!z).subscribe(editor => {
+        outerCd.add(this.activeEditorOrConfigEditor.filter(z => !!z).subscribe(editor => {
             const cd = new CompositeDisposable();
             outerCd.add(cd);
 
-            cd.add(this.activeEditorOrConfigEditor.where(active => active !== editor)
+            cd.add(this.activeEditorOrConfigEditor.filter(active => active !== editor)
                 .subscribe(() => {
                     outerCd.remove(cd);
                     cd.dispose();
@@ -514,7 +511,7 @@ class OmniManager implements Rx.IDisposable {
         return this._configEditors;
     }
 
-    public eachEditor(callback: (editor: OmnisharpTextEditor, cd: CompositeDisposable) => void): Rx.IDisposable {
+    public eachEditor(callback: (editor: OmnisharpTextEditor, cd: CompositeDisposable) => void): IDisposable {
         const outerCd = new CompositeDisposable();
         outerCd.add(this._editors.subscribe(editor => {
             const cd = new CompositeDisposable();
@@ -531,7 +528,7 @@ class OmniManager implements Rx.IDisposable {
         return outerCd;
     }
 
-    public eachConfigEditor(callback: (editor: OmnisharpTextEditor, cd: CompositeDisposable) => void): Rx.IDisposable {
+    public eachConfigEditor(callback: (editor: OmnisharpTextEditor, cd: CompositeDisposable) => void): IDisposable {
         const outerCd = new CompositeDisposable();
         outerCd.add(this._configEditors.subscribe(editor => {
             const cd = new CompositeDisposable();
@@ -566,7 +563,7 @@ class OmniManager implements Rx.IDisposable {
     }
 
     public isValidGrammar(grammar: FirstMate.Grammar) {
-        return _.some(this._supportedExtensions, ext => _.some((<any>grammar).fileTypes, ft => _.trimStart(ext, ".") === ft));
+        return _.some(this.grammars, { scopeName: (grammar as any).scopeName });
     }
 
     private _packageDir: string;

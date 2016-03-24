@@ -1,4 +1,4 @@
-import {CompositeDisposable, Disposable} from "rx";
+import {CompositeDisposable, Disposable, IDisposable} from "omnisharp-client";
 import _ from "lodash";
 import {SolutionStatusCard} from "../views/solution-status-view";
 import {SolutionManager} from "../server/solution-manager";
@@ -8,7 +8,7 @@ class SolutionInformation implements IFeature {
     private disposable: CompositeDisposable;
     public selectedIndex: number = 0;
     private card: SolutionStatusCard;
-    private cardDisposable: Disposable;
+    private cardDisposable: IDisposable;
     private container: Element;
 
     public activate() {
@@ -46,7 +46,7 @@ class SolutionInformation implements IFeature {
         this.disposable.add(atom.commands.add("atom-workspace", "omnisharp-atom:restart-server", () => {
             const solution = SolutionManager.activeSolutions[this.selectedIndex];
             solution.state
-                .where(z => z === DriverState.Disconnected)
+                .filter(z => z === DriverState.Disconnected)
                 .take(1)
                 .delay(500)
                 .subscribe(() => {

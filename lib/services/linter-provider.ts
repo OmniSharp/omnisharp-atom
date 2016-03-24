@@ -4,7 +4,8 @@ import {Omni} from "../server/omni";
 const Range = require("atom").Range;
 /* tslint:enable:variable-name */
 import _ from "lodash";
-import {Observable, CompositeDisposable} from "rx";
+import {Observable} from "rxjs";
+import {CompositeDisposable} from "omnisharp-client";
 import {codeCheck} from "../features/code-check";
 
 interface LinterError {
@@ -55,12 +56,12 @@ export function init(linter: { getEditorLinter: (editor: Atom.TextEditor) => { l
 
             // show linter buttons
             cd.add(Omni.activeEditor
-                .where(z => !z)
+                .filter(z => !z)
                 .subscribe(showLinter));
 
             // hide linter buttons
             cd.add(Omni.activeEditor
-                .where(z => !!z)
+                .filter(z => !!z)
                 .subscribe(hideLinter));
         } else {
             if (cd) {
@@ -81,7 +82,7 @@ export function init(linter: { getEditorLinter: (editor: Atom.TextEditor) => { l
         });
     }));
 
-    disposable.add(Omni.activeEditor.where(z => !!z).take(1).delay(1000).subscribe((e) => {
+    disposable.add(Omni.activeEditor.filter(z => !!z).take(1).delay(1000).subscribe((e) => {
         Omni.whenEditorConnected(e).subscribe(() => {
             atom.workspace.getTextEditors().forEach((editor) => {
                 const editorLinter = linter.getEditorLinter(editor);
@@ -105,9 +106,9 @@ export const provider = [
             const path = editor.getPath();
             const o = Observable.defer(() => codeCheck.doCodeCheck(editor));
             return o
-                .timeout(30000, Observable.from([]))
+                .timeoutWith(30000, Observable.of(<Models.DiagnosticLocation[]>[]))
                 .flatMap(x => x)
-                .where(z => z.FileName === path && (showHiddenDiagnostics || z.LogLevel !== "Hidden"))
+                .filter(z => z.FileName === path && (showHiddenDiagnostics || z.LogLevel !== "Hidden"))
                 .map(error => mapValues(editor, error))
                 .toArray()
                 .toPromise();
@@ -119,8 +120,8 @@ export const provider = [
         lintOnFly: false,
         lint: (editor: Atom.TextEditor) => {
             return Omni.activeModel
-                .flatMap(x => Observable.from(x.diagnostics))
-                .where(z => showHiddenDiagnostics || z.LogLevel !== "Hidden")
+                .flatMap(x => x.diagnostics)
+                .filter(z => showHiddenDiagnostics || z.LogLevel !== "Hidden")
                 .map(error => mapValues(editor, error))
                 .toArray()
                 .toPromise();

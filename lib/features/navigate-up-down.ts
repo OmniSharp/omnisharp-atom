@@ -1,9 +1,9 @@
 import {Models} from "omnisharp-client";
-import {CompositeDisposable} from "rx";
+import {CompositeDisposable} from "omnisharp-client";
 import {Omni} from "../server/omni";
 
 class Navigate implements IFeature {
-    private disposable: Rx.CompositeDisposable;
+    private disposable: CompositeDisposable;
 
     public activate() {
         this.disposable = new CompositeDisposable();

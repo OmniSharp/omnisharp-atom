@@ -1,6 +1,7 @@
 import {Models} from "omnisharp-client";
 import _ from "lodash";
-import {CompositeDisposable, Observable} from "rx";
+import {Observable, Subscription} from "rxjs";
+import {CompositeDisposable} from "omnisharp-client";
 import {Omni} from "../server/omni";
 const $: JQueryStatic = require("jquery");
 /* tslint:disable:variable-name */
@@ -9,7 +10,7 @@ const Range: typeof TextBuffer.Range = require("atom").Range;
 const identifierRegex = /^identifier|identifier$|\.identifier\./;
 
 class GoToDefinition implements IFeature {
-    private disposable: Rx.CompositeDisposable;
+    private disposable: CompositeDisposable;
     private enhancedHighlighting: boolean;
     private marker: Atom.Marker;
     private wantMetadata: boolean;
@@ -33,20 +34,20 @@ class GoToDefinition implements IFeature {
             const keyup = Observable.merge(
                 Observable.fromEvent<any>(view[0], "focus"),
                 Observable.fromEvent<any>(view[0], "blur"),
-                Observable.fromEventPattern(x => { (<any>atom.getCurrentWindow()).on("focus", x); }, x => { (<any>atom.getCurrentWindow()).removeListener("focus", x); }),
-                Observable.fromEventPattern(x => { (<any>atom.getCurrentWindow()).on("blur", x); }, x => { (<any>atom.getCurrentWindow()).removeListener("blur", x); }),
+                <any>Observable.fromEventPattern<any>(x => { (<any>atom.getCurrentWindow()).on("focus", x); }, x => { (<any>atom.getCurrentWindow()).removeListener("focus", x); }),
+                <any>Observable.fromEventPattern<any>(x => { (<any>atom.getCurrentWindow()).on("blur", x); }, x => { (<any>atom.getCurrentWindow()).removeListener("blur", x); }),
                 Observable.fromEvent<KeyboardEvent>(view[0], "keyup")
-                    .where(x => altGotoDefinition ? x.which === 18 /*alt*/ : (x.which === 17 /*ctrl*/ || /*meta --> */ x.which === 224 || x.which === 93 || x.which === 92 || x.which === 91))
+                    .filter(x => altGotoDefinition ? x.which === 18 /*alt*/ : (x.which === 17 /*ctrl*/ || /*meta --> */ x.which === 224 || x.which === 93 || x.which === 92 || x.which === 91))
             )
-                .throttle(100);
+                .throttleTime(100);
 
             const keydown = Observable.fromEvent<KeyboardEvent>(view[0], "keydown")
-                .where(z => !z.repeat)
-                .where(e => altGotoDefinition ? e.altKey : (e.ctrlKey || e.metaKey))
-                .throttle(100);
+                .filter(z => !z.repeat)
+                .filter(e => altGotoDefinition ? e.altKey : (e.ctrlKey || e.metaKey))
+                .throttleTime(100);
 
             const specialKeyDown = keydown
-                .flatMapLatest(x => mousemove
+                .switchMap(x => mousemove
                     .takeUntil(keyup)
                     .map(event => {
                         const pixelPt = this.pixelPositionFromMouseEvent(editor, view, event);
@@ -57,22 +58,22 @@ class GoToDefinition implements IFeature {
                     .filter(x => !!x)
                     .startWith(editor.getCursorBufferPosition())
                     .map(bufferPt => ({ bufferPt, range: this.getWordRange(editor, bufferPt) }))
-                    .where(z => !!z.range)
-                    .distinctUntilChanged(z => z, (current, next) => current.range.isEqual(<any>next.range)));
+                    .filter(z => !!z.range)
+                    .distinctUntilChanged((current, next) => current.range.isEqual(<any>next.range)));
 
             editor.onDidDestroy(() => cd.dispose());
 
-            let eventDisposable: Rx.Disposable;
+            let eventDisposable: Subscription;
             cd.add(atom.config.observe("omnisharp-atom.enhancedHighlighting", (enabled: boolean) => {
                 this.enhancedHighlighting = enabled;
                 if (eventDisposable) {
-                    eventDisposable.dispose();
+                    eventDisposable.unsubscribe();
                     cd.remove(eventDisposable);
                 }
 
                 let observable = specialKeyDown;
                 if (!enabled) {
-                    observable = observable.debounce(200);
+                    observable = observable.debounceTime(200);
                 }
 
                 eventDisposable = observable
@@ -175,7 +176,7 @@ class GoToDefinition implements IFeature {
             Omni.request(editor, solution => solution.gotodefinition({
                 Line: bufferPt.row,
                 Column: bufferPt.column
-            })).where(data => !!data.FileName || !!data.MetadataSource)
+            })).filter(data => !!data.FileName || !!data.MetadataSource)
                 .subscribe(data => addMark());
         }
     }

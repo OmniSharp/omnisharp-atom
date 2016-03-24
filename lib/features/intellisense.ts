@@ -1,9 +1,9 @@
-import {CompositeDisposable} from "rx";
+import {CompositeDisposable} from "omnisharp-client";
 import {Omni} from "../server/omni";
 import {defer} from "lodash";
 
 class Intellisense implements IFeature {
-    private disposable: Rx.CompositeDisposable;
+    private disposable: CompositeDisposable;
 
     public activate() {
         this.disposable = new CompositeDisposable();
