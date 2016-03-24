@@ -325,7 +325,7 @@ declare module Pathwatcher {
          */
         read(flushCache? : boolean) : any;
     
-        createReadStream() : any | ReadStream;
+        createReadStream() : any/* | ReadStream*/;
     
         /**
          * Overwrites the file with the given text.
@@ -334,7 +334,7 @@ declare module Pathwatcher {
          */
         write(text? : string) : Q.Promise<any>;
     
-        createWriteStream() : any | WriteStream;
+        createWriteStream() : any/* | WriteStream*/;
     
         /**
          * Overwrites the file with the given text.
