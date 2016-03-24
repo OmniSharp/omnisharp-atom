@@ -1,10 +1,10 @@
 import {Models} from "omnisharp-client";
-import {CompositeDisposable} from "rx";
+import {CompositeDisposable} from "omnisharp-client";
 import {Omni} from "../server/omni";
 import {applyChanges} from "../services/apply-changes";
 
 class CodeFormat implements IFeature {
-    private disposable: Rx.CompositeDisposable;
+    private disposable: CompositeDisposable;
 
     public activate() {
         this.disposable = new CompositeDisposable();
@@ -40,7 +40,7 @@ class CodeFormat implements IFeature {
 
                 return solution
                     .formatRange(request)
-                    .tapOnNext((data) => applyChanges(editor, data));
+                    .do((data) => applyChanges(editor, data));
             });
         }
     }

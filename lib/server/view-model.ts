@@ -1,7 +1,8 @@
 import _ from "lodash";
 import {Solution} from "./solution";
 import {Models, DriverState, OmnisharpClientStatus} from "omnisharp-client";
-import {Observable, Subject, ReplaySubject, CompositeDisposable, Disposable} from "rx";
+import {Observable, Subject, ReplaySubject} from "rxjs";
+import {CompositeDisposable, Disposable, IDisposable} from "omnisharp-client";
 import {basename, normalize, join} from "path";
 import {ProjectViewModel, projectViewModelFactory, workspaceViewModelFactory} from "./project-view-model";
 import {OutputMessageElement} from "../views/output-message-element";
@@ -16,7 +17,7 @@ export interface VMViewState {
     isError: boolean;
 }
 
-export class ViewModel implements VMViewState, Rx.IDisposable {
+export class ViewModel implements VMViewState, IDisposable {
     public isOff: boolean;
     public isConnecting: boolean;
     public isOn: boolean;
@@ -44,14 +45,14 @@ export class ViewModel implements VMViewState, Rx.IDisposable {
     private _stateStream = new ReplaySubject<ViewModel>(1);
 
     public observe: {
-        codecheck: Rx.Observable<Models.DiagnosticLocation[]>;
-        output: Rx.Observable<OutputMessage[]>;
-        status: Rx.Observable<OmnisharpClientStatus>;
-        state: Rx.Observable<ViewModel>;
-        projectAdded: Rx.Observable<ProjectViewModel<any>>;
-        projectRemoved: Rx.Observable<ProjectViewModel<any>>;
-        projectChanged: Rx.Observable<ProjectViewModel<any>>;
-        projects: Rx.Observable<ProjectViewModel<any>[]>;
+        codecheck: Observable<Models.DiagnosticLocation[]>;
+        output: Observable<OutputMessage[]>;
+        status: Observable<OmnisharpClientStatus>;
+        state: Observable<ViewModel>;
+        projectAdded: Observable<ProjectViewModel<any>>;
+        projectRemoved: Observable<ProjectViewModel<any>>;
+        projectChanged: Observable<ProjectViewModel<any>>;
+        projects: Observable<ProjectViewModel<any>[]>;
     };
 
     constructor(private _solution: Solution) {
@@ -70,7 +71,7 @@ export class ViewModel implements VMViewState, Rx.IDisposable {
         }));
 
         this._disposable.add(_solution.logs
-            .buffer(_solution.logs.throttle(100), () => Observable.timer(100))
+            .bufferTime(100)
             .subscribe(items => {
                 let removals: Element[] = [];
                 if (this.outputElement.children.length === 1000) {
@@ -88,8 +89,8 @@ export class ViewModel implements VMViewState, Rx.IDisposable {
                 });
             }));
 
-        this._disposable.add(_solution.state.where(z => z === DriverState.Disconnected).subscribe(() => {
-            _.each(this.projects.slice(), project => this._projectRemovedStream.onNext(project));
+        this._disposable.add(_solution.state.filter(z => z === DriverState.Disconnected).subscribe(() => {
+            _.each(this.projects.slice(), project => this._projectRemovedStream.next(project));
             this.projects = [];
             this.diagnostics = [];
         }));
@@ -103,12 +104,12 @@ export class ViewModel implements VMViewState, Rx.IDisposable {
         const _projectChangedStream = this._projectChangedStream.share();
         const projects = Observable.merge(_projectAddedStream, _projectRemovedStream, _projectChangedStream)
             .startWith(<any>[])
-            .debounce(200)
+            .debounceTime(200)
             .map(z => this.projects)
-            .shareReplay(1);
+            .publishReplay(1).refCount();
 
         const outputObservable = _solution.logs
-            .window(_solution.logs.throttle(100), () => Observable.timer(100))
+            .windowTime(100)
             .flatMap(x => x.startWith(null).last())
             .map(() => output);
 
@@ -118,7 +119,7 @@ export class ViewModel implements VMViewState, Rx.IDisposable {
             get codecheck() { return codecheck; },
             get output() { return outputObservable; },
             get status() { return status; },
-            get state() { return state; },
+            get state() { return <Observable<ViewModel>><any>state; },
             get projects() { return projects; },
             get projectAdded() { return _projectAddedStream; },
             get projectRemoved() { return _projectRemovedStream; },
@@ -131,7 +132,7 @@ export class ViewModel implements VMViewState, Rx.IDisposable {
         (window["clients"] || (window["clients"] = [])).push(this);  //TEMP
         /* tslint:enable */
 
-        this._disposable.add(_solution.state.where(z => z === DriverState.Connected)
+        this._disposable.add(_solution.state.filter(z => z === DriverState.Connected)
             .subscribe(() => {
                 _solution.projects({ ExcludeSourceFiles: false });
 
@@ -143,15 +144,15 @@ export class ViewModel implements VMViewState, Rx.IDisposable {
                 }
             }));
 
-        this._disposable.add(_solution.state.where(z => z === DriverState.Disconnected).subscribe(() => {
-            _.each(this.projects.slice(), project => this._projectRemovedStream.onNext(project));
+        this._disposable.add(_solution.state.filter(z => z === DriverState.Disconnected).subscribe(() => {
+            _.each(this.projects.slice(), project => this._projectRemovedStream.next(project));
         }));
 
         this._disposable.add(_solution.observe.projectAdded.subscribe(projectInformation => {
             _.each(projectViewModelFactory(projectInformation, _solution.projectPath), project => {
                 if (!_.some(this.projects, { path: project.path })) {
                     this.projects.push(project);
-                    this._projectAddedStream.onNext(project);
+                    this._projectAddedStream.next(project);
                 }
             });
         }));
@@ -161,7 +162,7 @@ export class ViewModel implements VMViewState, Rx.IDisposable {
                 const found: ProjectViewModel<any> = _.find(this.projects, { path: project.path });
                 if (found) {
                     _.pull(this.projects, found);
-                    this._projectRemovedStream.onNext(project);
+                    this._projectRemovedStream.next(project);
                 }
             });
         }));
@@ -171,7 +172,7 @@ export class ViewModel implements VMViewState, Rx.IDisposable {
                 const found: ProjectViewModel<any> = _.find(this.projects, { path: project.path });
                 if (found) {
                     found.update(project);
-                    this._projectChangedStream.onNext(project);
+                    this._projectChangedStream.next(project);
                 }
             });
         }));
@@ -181,16 +182,16 @@ export class ViewModel implements VMViewState, Rx.IDisposable {
                 const found: ProjectViewModel<any> = _.find(this.projects, { path: project.path });
                 if (found) {
                     found.update(project);
-                    this._projectChangedStream.onNext(project);
+                    this._projectChangedStream.next(project);
                 } else {
                     this.projects.push(project);
-                    this._projectAddedStream.onNext(project);
+                    this._projectAddedStream.next(project);
                 }
             });
         }));
 
         this._disposable.add(_solution.observe.projects
-            .where(z => z.response && z.response.Dnx && z.response.Dnx.Projects.length > 0)
+            .filter(z => z.response && z.response.Dnx && z.response.Dnx.Projects.length > 0)
             .map(z => z.response.Dnx)
             .subscribe(system => {
                 if (system.RuntimePath) {
@@ -210,7 +211,7 @@ export class ViewModel implements VMViewState, Rx.IDisposable {
                     }
                     this.runtimePath = path;
 
-                    this._stateStream.onNext(this);
+                    this._stateStream.next(this);
                 }
             }));
 
@@ -229,18 +230,18 @@ export class ViewModel implements VMViewState, Rx.IDisposable {
 
     public getProjectForEditor(editor: Atom.TextEditor) {
         return this.getProjectForPath(editor.getPath())
-            .where(() => !editor.isDestroyed());
+            .filter(() => !editor.isDestroyed());
     }
 
     public getProjectForPath(path: string) {
         if (this.isOn && this.projects.length) {
             const project = _.find(this.projects, x => x.filesSet.has(path));
             if (project) {
-                return Observable.just(project);
+                return Observable.of(project);
             }
         }
 
-        return this.observe.projectAdded.where(x => _.startsWith(path, x.path)).take(1);
+        return this.observe.projectAdded.filter(x => _.startsWith(path, x.path)).take(1);
     }
 
     public getProjectContainingEditor(editor: Atom.TextEditor) {
@@ -251,12 +252,12 @@ export class ViewModel implements VMViewState, Rx.IDisposable {
         if (this.isOn && this.projects.length) {
             const project = _.find(this.projects, x => _.includes(x.sourceFiles, normalize(path)));
             if (project) {
-                return Observable.just(project);
+                return Observable.of(project);
             }
-            return Observable.just(null);
+            return Observable.of(null);
         } else {
             return this.observe.projectAdded
-                .where(x => _.includes(x.sourceFiles, normalize(path)))
+                .filter(x => _.includes(x.sourceFiles, normalize(path)))
                 .take(1)
                 .defaultIfEmpty(null);
         }
@@ -269,20 +270,20 @@ export class ViewModel implements VMViewState, Rx.IDisposable {
         this.isReady = state === DriverState.Connected;
         this.isError = state === DriverState.Error;
 
-        this._stateStream.onNext(this);
+        this._stateStream.next(this);
     }
 
     private _setupCodecheck(_solution: Solution) {
         const codecheck = Observable.merge(
             // Catch global code checks
             _solution.observe.codecheck
-                .where(z => !z.request.FileName)
+                .filter(z => !z.request.FileName)
                 .map(z => z.response || <any>{})
                 .map(z => <Models.DiagnosticLocation[]>z.QuickFixes || []),
             // Evict diagnostics from a code check for the given file
             // Then insert the new diagnostics
             _solution.observe.codecheck
-                .where(z => !!z.request.FileName)
+                .filter(z => !!z.request.FileName)
                 .map((ctx) => {
                     let {request, response} = ctx;
                     if (!response) response = <any>{};
@@ -292,7 +293,7 @@ export class ViewModel implements VMViewState, Rx.IDisposable {
                 }))
             .map(data => _.sortBy(data, quickFix => quickFix.LogLevel))
             .startWith([])
-            .shareReplay(1);
+            .publishReplay(1).refCount();
 
         this._disposable.add(codecheck.subscribe((data) => this.diagnostics = data));
         return { codecheck };

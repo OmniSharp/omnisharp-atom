@@ -1,13 +1,14 @@
-import {CompositeDisposable, Observable} from "rx";
+import {Observable} from "rxjs";
+import {CompositeDisposable} from "omnisharp-client";
 import _ from "lodash";
 import {Omni} from "../server/omni";
 import {ProjectViewModel} from "../server/project-view-model";
 import * as fs from "fs";
-const stat = Observable.fromNodeCallback<fs.Stats>(fs.stat);
+const stat = Observable.bindNodeCallback(fs.stat);
 import {dirname} from "path";
 
 class UpdateProject implements IAtomFeature {
-    private disposable: Rx.CompositeDisposable;
+    private disposable: CompositeDisposable;
     private _paths: string[];
 
     private _autoAdjustTreeView: boolean;
@@ -29,19 +30,19 @@ class UpdateProject implements IAtomFeature {
         atom.project.onDidChangePaths((paths: any[]) => this._paths = paths);
 
         this.disposable.add(Omni.listener.model.projectAdded
-            .where(z => this._autoAddExternalProjects || this._nagAddExternalProjects)
-            .where(z => !_.startsWith(z.path, z.solutionPath))
-            .where(z => !_.some(this._paths, x => _.startsWith(z.path, x)))
-            .buffer(Omni.listener.model.projectAdded.throttle(1000), () => Observable.timer(1000))
-            .where(z => z.length > 0)
+            .filter(z => this._autoAddExternalProjects || this._nagAddExternalProjects)
+            .filter(z => !_.startsWith(z.path, z.solutionPath))
+            .filter(z => !_.some(this._paths, x => _.startsWith(z.path, x)))
+            .bufferTime(1000)
+            .filter(z => z.length > 0)
             .subscribe(project => this.handleProjectAdded(project)));
 
         this.disposable.add(Omni.listener.model.projectRemoved
-            .where(z => this._autoAddExternalProjects || this._nagAddExternalProjects)
-            .where(z => !_.startsWith(z.path, z.solutionPath))
-            .where(z => _.some(this._paths, x => _.startsWith(z.path, x)))
-            .buffer(Omni.listener.model.projectRemoved.throttle(1000), () => Observable.timer(1000))
-            .where(z => z.length > 0)
+            .filter(z => this._autoAddExternalProjects || this._nagAddExternalProjects)
+            .filter(z => !_.startsWith(z.path, z.solutionPath))
+            .filter(z => _.some(this._paths, x => _.startsWith(z.path, x)))
+            .bufferTime(1000)
+            .filter(z => z.length > 0)
             .subscribe(project => this.handleProjectRemoved(project)));
 
         Omni.registerConfiguration(solution => {
@@ -85,7 +86,7 @@ class UpdateProject implements IAtomFeature {
     }
 
     private getProjectDirectories(projects: ProjectViewModel<any>[]) {
-        return Observable.from(_.uniq(projects.map(z => z.path)))
+        return Observable.fromArray(_.uniq(projects.map(z => z.path)))
             .flatMap(project => stat(project), (project, st) => {
                 if (st.isDirectory()) {
                     return project;

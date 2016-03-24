@@ -1,12 +1,13 @@
 import {Models} from "omnisharp-client";
-import {CompositeDisposable, Observable, Disposable, Subject} from "rx";
+import {Observable, Subject} from "rxjs";
+import {CompositeDisposable, Disposable} from "omnisharp-client";
 import {Omni} from "../server/omni";
 import {dock} from "../atom/dock";
 import {FindWindow} from "../views/find-pane-view";
 
 class FindUsages implements IFeature {
-    private disposable: Rx.CompositeDisposable;
-    private window: Rx.CompositeDisposable;
+    private disposable: CompositeDisposable;
+    private window: CompositeDisposable;
     private _findWindow = new FindWindow;
     private scrollTop: number = 0;
     public usages: Models.DiagnosticLocation[] = [];
@@ -26,7 +27,7 @@ class FindUsages implements IFeature {
             Omni.listener.findusages,
             // We also want find implementations, where we found more than one
             Omni.listener.findimplementations
-                .where(z => z.response.QuickFixes && z.response.QuickFixes.length > 1)
+                .filter(z => z.response.QuickFixes && z.response.QuickFixes.length > 1)
         )
             // For the UI we only need the qucik fixes.
             .map(z => <Models.DiagnosticLocation[]>z.response.QuickFixes || [])
@@ -38,8 +39,8 @@ class FindUsages implements IFeature {
             find: observable,
             // NOTE: We cannot do the same for find implementations because find implementation
             //      just goes to the item if only one comes back.
-            open: Omni.listener.requests.where(z => !z.silent && z.command === "findusages").map(() => true),
-            reset: Omni.listener.requests.where(z => !z.silent && (z.command === "findimplementations" || z.command === "findusages")).map(() => true),
+            open: Omni.listener.requests.filter(z => !z.silent && z.command === "findusages").map(() => true),
+            reset: Omni.listener.requests.filter(z => !z.silent && (z.command === "findimplementations" || z.command === "findusages")).map(() => true),
             selected: selected.asObservable()
         };
 

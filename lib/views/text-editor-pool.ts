@@ -1,5 +1,6 @@
 import {Models} from "omnisharp-client";
-import {Observable, Disposable, CompositeDisposable} from "rx";
+import {Observable} from "rxjs";
+import {Disposable, CompositeDisposable, IDisposable} from "omnisharp-client";
 import _ from "lodash";
 import {getEnhancedGrammar, augmentEditor, ExcludeClassifications} from "../features/highlight";
 import {Omni} from "../server/omni";
@@ -25,7 +26,7 @@ const pool = (function() {
         }
     }, 10000, { trailing: true });
 
-    class Result implements Rx.IDisposable {
+    class Result implements IDisposable {
         private _disposable = Disposable.create(() => {
             const {editor, element} = this;
             (element as any).remove();
@@ -61,7 +62,7 @@ const pool = (function() {
 
                 return <Atom.TextEditorComponent>editorElement;
             })
-            .tap((element) => POOL.push({ element, editor: (<any>element).getModel() }))
+            .do((element) => POOL.push({ element, editor: (<any>element).getModel() }))
             .toArray();
     }
 
@@ -90,7 +91,7 @@ const pool = (function() {
 export class EditorElement extends HTMLSpanElement implements WebComponent {
     private _pre: HTMLPreElement;
     private _disposable: CompositeDisposable;
-    private _release: Rx.IDisposable;
+    private _release: IDisposable;
     private _editorElement: Atom.TextEditorComponent;
     private _editor: Atom.TextEditor;
     private _whitespace: number;
@@ -273,7 +274,7 @@ function request({filePath, startLine, endLine, whitespace}: { filePath: string;
                 Projects: x.Projects
             }))
             .value())
-        .where(x => x.length > 0);
+        .filter(x => x.length > 0);
 }
 
 (<any>exports).EditorElement = (<any>document).registerElement("omnisharp-editor-element", { prototype: EditorElement.prototype });

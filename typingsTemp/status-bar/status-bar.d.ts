@@ -384,6 +384,6 @@ declare module StatusBar {
 
 // Found @ https://github.com/atom/status-bar/blob/master/lib/main.coffee
 declare module "status-bar" {
-    function activate(state?: any);
-    function activate();
+    function activate(state?: any): any;
+    function activate(): any;
 }

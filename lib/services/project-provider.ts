@@ -1,5 +1,5 @@
 import _ from "lodash";
-import {Observable} from "rx";
+import {Observable} from "rxjs";
 import {Omni} from "../server/omni";
 import {SolutionManager} from "../server/solution-manager";
 import {ajax} from "jquery";
@@ -17,21 +17,21 @@ Omni.listener.packagesource
             });
     });
 
-function fetchFromGithub(source: string, prefix: string, searchPrefix: string): Rx.Observable<{ prefix?: string; results: string[] }> {
+function fetchFromGithub(source: string, prefix: string, searchPrefix: string): Observable<{ prefix?: string; results: string[] }> {
     // We precache the keys to make this speedy
     if (prefix === "_keys" && cache.has(source)) {
-        return Observable.just(cache.get(source));
+        return Observable.of(cache.get(source));
     }
 
     // If we have a value in the cache, see if the key exists or not.
     if (cache.has(source)) {
         const c = cache.get(source);
         if (!c) {
-            return Observable.just(c);
+            return Observable.of(c);
         }
 
         if (!_.some(c.results, x => x.toLowerCase() === prefix.toLowerCase() + ".")) {
-            return Observable.just({ results: [] });
+            return Observable.of({ results: [] });
         }
     }
 
@@ -66,7 +66,7 @@ function fetchFromGithub(source: string, prefix: string, searchPrefix: string): 
     }
 
     // Return the result
-    return Observable.fromPromise<{ prefix: string; results: string[] }>(result).catch(() => Observable.just(failedValue));
+    return Observable.fromPromise<{ prefix: string; results: string[] }>(<any>result).catch(() => Observable.of(failedValue));
 }
 
 interface IAutocompleteProviderOptions {
@@ -82,7 +82,7 @@ interface IAutocompleteProviderOptions {
 interface IAutocompleteProvider {
     fileMatchs: string[];
     pathMatch: (path: string) => boolean;
-    getSuggestions: (options: IAutocompleteProviderOptions) => Rx.IPromise<any[]>;
+    getSuggestions: (options: IAutocompleteProviderOptions) => Promise<any[]>;
     dispose(): void;
 }
 
@@ -133,9 +133,9 @@ class NugetNameProvider implements IAutocompleteProvider {
 
         return SolutionManager.getSolutionForEditor(options.editor)
             // Only supported on Desktop Clr at the moment
-            .where(x => x.runtime === Runtime.ClrOrMono)
+            .filter(x => x.runtime === Runtime.ClrOrMono)
             // Get all sources
-            .flatMap(z => Observable.from(z.model.packageSources))
+            .flatMap(z => z.model.packageSources)
             .flatMap(source => {
                 // Attempt to get the source from github
                 return fetchFromGithub(source, packagePrefix || "_keys", options.replacementPrefix)
@@ -150,7 +150,7 @@ class NugetNameProvider implements IAutocompleteProvider {
                                 Sources: [source],
                             })).map(x => ({ prefix: "", results: x.Packages.map(item => item.Id) }));
                         } else {
-                            return Observable.just(z);
+                            return Observable.of(z);
                         }
                     });
             })
@@ -183,14 +183,14 @@ class NugetVersionProvider implements IAutocompleteProvider {
         if (!match) return Promise.resolve([]);
         const name = match[1];
 
-        let o: Rx.Observable<string[]>;
+        let o: Observable<string[]>;
 
         if (versionCache.has(name)) {
             o = versionCache.get(name);
         } else {
             o = SolutionManager.getSolutionForEditor(options.editor)
                 // Get all sources
-                .flatMap(z => Observable.from(z.model.packageSources))
+                .flatMap(z => z.model.packageSources)
                 .filter(z => {
                     if (cache.has(z)) {
                         // Short out early if the source doesn"t even have the given prefix
@@ -205,9 +205,9 @@ class NugetVersionProvider implements IAutocompleteProvider {
                     ProjectPath: solution.path,
                     Sources: sources,
                 }))
-                    .flatMap(z => Observable.from(z.Versions))
+                    .flatMap(z => z.Versions)
                     .toArray())
-                .shareReplay(1);
+                .publishReplay(1).refCount();
 
             versionCache.set(name, o);
         }

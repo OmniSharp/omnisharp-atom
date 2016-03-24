@@ -4,7 +4,7 @@ const Convert = require("ansi-to-html");
 /* tslint:enable:variable-name */
 import _ from "lodash";
 import {server} from "../atom/server-information";
-import {CompositeDisposable} from "rx";
+import {CompositeDisposable} from "omnisharp-client";
 
 export class BuildOutputWindow extends HTMLDivElement implements WebComponent {
     public displayName = "BuildOutputWindow";

@@ -1,5 +1,6 @@
 /* tslint:disable:no-string-literal */
-import {CompositeDisposable, Observable} from "rx";
+import {Observable} from "rxjs";
+import {CompositeDisposable, IDisposable} from "omnisharp-client";
 import _ from "lodash";
 import {Omni} from "../server/omni";
 import {OmnisharpClientStatus} from "omnisharp-client";
@@ -259,7 +260,7 @@ export class ProjectCountElement extends HTMLAnchorElement implements WebCompone
 (<any>exports).ProjectCountElement = (<any>document).registerElement("omnisharp-project-count", { prototype: ProjectCountElement.prototype });
 
 
-export class StatusBarElement extends HTMLElement implements WebComponent, Rx.IDisposable {
+export class StatusBarElement extends HTMLElement implements WebComponent, IDisposable {
     private _state: StatusBarState;
     private _disposable: CompositeDisposable;
     private _flame: FlameElement;
@@ -311,7 +312,7 @@ export class StatusBarElement extends HTMLElement implements WebComponent, Rx.ID
             }));
 
         this._disposable.add(server.observe.projects
-            .debounce(500)
+            .debounceTime(500)
             .subscribe(projects => this._projectCount.updateState({ projectCount: projects.length })));
 
         this._disposable.add(server.observe.status

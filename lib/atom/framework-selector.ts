@@ -1,11 +1,11 @@
 import {Models} from "omnisharp-client";
-import {CompositeDisposable, Disposable} from "rx";
+import {CompositeDisposable, Disposable} from "omnisharp-client";
 import {ProjectViewModel} from "../server/project-view-model";
 import {Omni} from "../server/omni";
 import {FrameworkSelectorComponent} from "../views/framework-selector-view";
 
 class FrameworkSelector implements IAtomFeature {
-    private disposable: Rx.CompositeDisposable;
+    private disposable: CompositeDisposable;
     private view: HTMLSpanElement;
     private statusBar: any;
     private _active = false;
@@ -58,11 +58,11 @@ class FrameworkSelector implements IAtomFeature {
         }));
 
         this.disposable.add(Omni.activeEditor
-            .where(z => !z)
+            .filter(z => !z)
             .subscribe(() => this.view.style.display = "none"));
 
         this.disposable.add(Omni.activeProject
-            .where(z => z.frameworks.length === 1)
+            .filter(z => z.frameworks.length === 1)
             .subscribe(() => this.view.style.display = "none"));
 
         this.disposable.add(Omni.activeProject

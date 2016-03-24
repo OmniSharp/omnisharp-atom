@@ -1,7 +1,7 @@
 import {IProjectViewModel} from "../omnisharp";
 import {Models, ScriptCs} from "omnisharp-client";
 import _ from "lodash";
-import {Observable, ReplaySubject} from "rx";
+import {Observable, ReplaySubject} from "rxjs";
 
 const projectFactories: { [key: string]: { new (project: any, solutionPath: string): any; }; } = {
     MsBuildProject: <any>MsBuildProjectViewModel,
@@ -55,8 +55,8 @@ export abstract class ProjectViewModel<T> implements IProjectViewModel {
     constructor(project: T, solutionPath: string) {
         this.solutionPath = solutionPath;
         this.init(project);
-        this.observe = { activeFramework: this._subjectActiveFramework };
-        this._subjectActiveFramework.onNext(this._frameworks[0]);
+        this.observe = { activeFramework: <Observable<Models.DnxFramework>><any>this._subjectActiveFramework };
+        this._subjectActiveFramework.next(this._frameworks[0]);
     }
 
     private _name: string;
@@ -97,8 +97,8 @@ export abstract class ProjectViewModel<T> implements IProjectViewModel {
      }
     public set activeFramework(value) {
         this._activeFramework = value;
-        if (!this._subjectActiveFramework.isDisposed) {
-            this._subjectActiveFramework.onNext(this._activeFramework);
+        if (!this._subjectActiveFramework.isUnsubscribed) {
+            this._subjectActiveFramework.next(this._activeFramework);
         }
     }
 
@@ -141,7 +141,7 @@ export abstract class ProjectViewModel<T> implements IProjectViewModel {
     }
 
     public dispose() {
-        this._subjectActiveFramework.dispose();
+        this._subjectActiveFramework.unsubscribe();
     }
 }
 

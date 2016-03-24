@@ -3,9 +3,10 @@ import {TextEditor} from "atom";
 import {SolutionManager} from "./solution-manager";
 import {startsWith} from "lodash";
 import {OmnisharpTextEditor, OmnisharpEditorContext} from "./omnisharp-text-editor";
+import {IDisposable} from "omnisharp-client";
 
 const metadataUri = "omnisharp://metadata/";
-export function metadataOpener(): Rx.IDisposable {
+export function metadataOpener(): IDisposable {
     function createEditorView(assemblyName: string, typeName: string) {
         function issueRequest(solution: Solution) {
             return solution.request<any, { Source: string; SourceName: string }>("metadata", { AssemblyName: assemblyName, TypeName: typeName })

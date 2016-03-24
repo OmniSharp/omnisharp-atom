@@ -1,10 +1,10 @@
-import {CompositeDisposable} from "rx";
+import {CompositeDisposable} from "omnisharp-client";
 import {Omni} from "../server/omni";
 import {readFileSync} from "fs";
 import {join} from "path";
 
 class Menu implements IFeature {
-    private disposable: Rx.CompositeDisposable;
+    private disposable: CompositeDisposable;
     private _json: string;
 
     public activate() {

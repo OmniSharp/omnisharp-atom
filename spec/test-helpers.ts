@@ -1,7 +1,7 @@
 /// <reference path="tsd.d.ts" />
 import {SolutionManager} from "../lib/server/solution-manager";
-import {Observable} from "rx";
-import {CompositeDisposable, Disposable} from "rx";
+import {Observable} from "rxjs";
+import {CompositeDisposable, Disposable} from "omnisharp-client";
 import {DriverState} from "omnisharp-client";
 
 export function setupFeature(features: string[], unitTestMode = true) {

@@ -1,8 +1,8 @@
-import {CompositeDisposable, Disposable} from "rx";
+import {CompositeDisposable, Disposable} from "omnisharp-client";
 import {StatusBarElement} from "../views/status-bar-view";
 
 class StatusBar implements IAtomFeature {
-    private disposable: Rx.CompositeDisposable;
+    private disposable: CompositeDisposable;
     private view: StatusBarElement;
     private statusBar: any;
     private _active = false;
