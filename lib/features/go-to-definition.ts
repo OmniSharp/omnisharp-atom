@@ -50,9 +50,11 @@ class GoToDefinition implements IFeature {
                     .takeUntil(keyup)
                     .map(event => {
                         const pixelPt = this.pixelPositionFromMouseEvent(editor, view, event);
+                        if (!pixelPt) return;
                         const screenPt = editor.screenPositionForPixelPosition(pixelPt);
                         return editor.bufferPositionForScreenPosition(screenPt);
                     })
+                    .filter(x => !!x)
                     .startWith(editor.getCursorBufferPosition())
                     .map(bufferPt => ({ bufferPt, range: this.getWordRange(editor, bufferPt) }))
                     .where(z => !!z.range)
@@ -180,7 +182,11 @@ class GoToDefinition implements IFeature {
 
     private pixelPositionFromMouseEvent(editor: Atom.TextEditor, editorView: any, event: MouseEvent) {
         const clientX = event.clientX, clientY = event.clientY;
-        const linesClientRect = this.getFromShadowDom(editorView, ".lines")[0].getBoundingClientRect();
+        const shadow = this.getFromShadowDom(editorView, ".lines")[0];
+        if (!shadow)
+            return;
+        const linesClientRect = shadow.getBoundingClientRect();
+
         let top = clientY - linesClientRect.top;
         let left = clientX - linesClientRect.left;
         top += (<any>editor).getScrollTop();

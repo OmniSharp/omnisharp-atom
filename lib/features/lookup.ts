@@ -71,6 +71,8 @@ class Tooltip implements Rx.Disposable {
             .map(events => {
                 for (const event of events.reverse()) {
                     const pixelPt = this.pixelPositionFromMouseEvent(editorView, event);
+                    if (!pixelPt)
+                        continue;
                     const screenPt = editor.screenPositionForPixelPosition(pixelPt);
                     const bufferPt = editor.bufferPositionForScreenPosition(screenPt);
                     if (lastExprTypeBufferPt && lastExprTypeBufferPt.isEqual(bufferPt) && this.exprTypeTooltip)
@@ -113,7 +115,9 @@ class Tooltip implements Rx.Disposable {
 
         // find out show position
         const offset = (this.rawView.component.getFontSize() * bufferPt.column) * 0.7;
-        const rect = this.getFromShadowDom(this.editorView, ".cursor-line")[0].getBoundingClientRect();
+        const shadow = this.getFromShadowDom(this.editorView, ".cursor-line")[0];
+        if (!shadow) return;
+        const rect = shadow.getBoundingClientRect();
 
         const tooltipRect = {
             left: rect.left - offset,
@@ -207,7 +211,9 @@ class Tooltip implements Rx.Disposable {
 
     private pixelPositionFromMouseEvent(editorView: any, event: MouseEvent) {
         const clientX = event.clientX, clientY = event.clientY;
-        const linesClientRect = this.getFromShadowDom(editorView, ".lines")[0].getBoundingClientRect();
+        const shadow = this.getFromShadowDom(editorView, ".lines")[0];
+        if (!shadow) return;
+        const linesClientRect = shadow.getBoundingClientRect();
         let top = clientY - linesClientRect.top;
         let left = clientX - linesClientRect.left;
         top += (<any>this.editor).getScrollTop();
