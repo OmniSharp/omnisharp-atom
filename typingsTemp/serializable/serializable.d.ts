@@ -1,4 +1,4 @@
-// Type definitions for serializable (v1.0.0)
+// Type definitions for serializable (v1.0.3)
 // Project: https://github.com/atom/serializable
 // Definitions by: david-driscoll <https://github.com/david-driscoll/>
 // Definitions: https://github.com/borisyankov/DefinitelyTyped

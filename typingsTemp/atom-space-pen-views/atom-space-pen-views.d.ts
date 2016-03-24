@@ -1,4 +1,4 @@
-// Type definitions for atom-space-pen-views (v2.1.0)
+// Type definitions for atom-space-pen-views (v2.2.0)
 // Project: https://github.com/atom/atom-space-pen-views
 // Definitions by: david-driscoll <https://github.com/david-driscoll/>
 // Definitions: https://github.com/borisyankov/DefinitelyTyped
@@ -99,7 +99,7 @@ declare module AtomSpacePenViews {
          * 
          * For example if the objects you pass to {::setItems} are of the type
          * `{"id": 3, "name": "Atom"}` then you would return `"name"` from this method
-         * to fuzzy filter by that property when text is entered into this view"s
+         * to fuzzy filter by that property when text is entered into this view's
          * editor.
          * Returns the property name to fuzzy filter by.
          */
@@ -131,13 +131,13 @@ declare module AtomSpacePenViews {
     
         /**
          * Set the error message to display.
-         * @param message? - The {String} error message (default: ""). 
+         * @param message? - The {String} error message (default: ''). 
          */
         setError(message? : string) : void;
     
         /**
          * Set the loading message to display.
-         * @param message? - The {String} loading message (default: ""). 
+         * @param message? - The {String} loading message (default: ''). 
          */
         setLoading(message? : string) : void;
     
@@ -257,8 +257,8 @@ declare module "atom-space-pen-views" {
     class SelectListView extends AtomSpacePenViews.SelectListView {}
     class TextEditorView extends AtomSpacePenViews.TextEditorView {}
     class View extends SpacePen.View {}
-    const jQuery : JQueryStatic;
-    const $ : JQueryStatic;
+    var jQuery : JQueryStatic;
+    var $ : JQueryStatic;
     function $$(fn: Function): JQuery;
     function $$$(fn: Function): Node;
 }

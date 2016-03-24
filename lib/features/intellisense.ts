@@ -12,7 +12,7 @@ class Intellisense implements IFeature {
             cd.add(editor.onWillInsertText(event => {
                 if (event.text.length > 1) return;
 
-                if (event.text === " " || event.text === ";" || event.text === ".") {
+                if (event.text === ";" || event.text === ".") {
                     atom.commands.dispatch(atom.views.getView(editor), "autocomplete-plus:confirm");
                 }
             }));

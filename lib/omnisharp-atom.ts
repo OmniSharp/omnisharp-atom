@@ -312,7 +312,7 @@ class OmniSharpAtom {
         const omnisharpAdvancedFileNew = Omni.packageDir + "/omnisharp-atom/keymaps/omnisharp-file-new.cson";
         this.disposable.add(atom.config.observe("omnisharp-atom.enableAdvancedFileNew", (enabled: boolean) => {
             if (enabled) {
-                atom.keymaps.loadKeymap(omnisharpAdvancedFileNew);
+                disposable = atom.keymaps.loadKeymap(omnisharpAdvancedFileNew);
             } else {
                 if (disposable) disposable.dispose();
                 atom.keymaps.removeBindingsFromSource(omnisharpAdvancedFileNew);
@@ -343,7 +343,7 @@ class OmniSharpAtom {
             title: "Enable `Advanced File New`",
             description: "Enable `Advanced File New` when doing ctrl-n/cmd-n within a C# editor.",
             type: "boolean",
-            default: true
+            default: false
         },
         useLeftLabelColumnForSuggestions: {
             title: "Use Left-Label column in Suggestions",

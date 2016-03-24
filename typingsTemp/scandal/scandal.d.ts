@@ -263,7 +263,7 @@ declare module Scandal {
         /**
          * This field or method was not documented by atomdoc, assume it is private. Use with caution.
          */
-        constructor({ dryReplace } : { dryReplace? : any });
+        constructor(options : { dryReplace? : any });
     
         /**
          * This field or method was not documented by atomdoc, assume it is private. Use with caution.
@@ -358,7 +358,7 @@ declare module Scandal {
         /**
          * Construct a {PathSearcher} object.
          */
-        constructor({ maxLineLength, wordBreakRegex } : { maxLineLength? : number; wordBreakRegex? : any });
+        constructor(options : { maxLineLength? : number; wordBreakRegex? : any });
     
         /**
          * Search an array of paths.
@@ -394,10 +394,10 @@ declare module Scandal {
 
 }
 declare module "scandal" {
-    const main: any;
-    const replace: any;
+    var main: any;
+    var replace: any;
     class PathSearcher extends Scandal.PathSearcher {}
     class PathScanner extends Scandal.PathScanner {}
-    const PathReplacer: any;
+    var PathReplacer: any;
     export = Serializable.Serializable;
 }
