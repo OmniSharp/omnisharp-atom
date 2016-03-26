@@ -4,14 +4,14 @@ import {frameworkSelector} from "../atom/framework-selector";
 const $: JQueryStatic = require("jquery");
 
 interface FrameworkSelectorState {
-    frameworks?: Models.DnxFramework[];
-    activeFramework?: Models.DnxFramework;
+    frameworks?: Models.DotNetFramework[];
+    activeFramework?: Models.DotNetFramework;
     alignLeft?: boolean;
 }
 
 export class FrameworkSelectorComponent extends HTMLAnchorElement implements WebComponent {
-    public frameworks: Models.DnxFramework[];
-    private _activeFramework: Models.DnxFramework;
+    public frameworks: Models.DotNetFramework[];
+    private _activeFramework: Models.DotNetFramework;
     public get activeFramework() { return this._activeFramework; }
     public set activeFramework(value) { this._activeFramework = value; this.innerText = this.activeFramework.FriendlyName; }
 
@@ -23,7 +23,7 @@ export class FrameworkSelectorComponent extends HTMLAnchorElement implements Web
                 attachTo: ".framework-selector",
                 alignLeft: this.alignLeft,
                 items: this.frameworks,
-                save: (framework: Models.DnxFramework) => {
+                save: (framework: Models.DotNetFramework) => {
                     frameworkSelector.setActiveFramework(framework);
                     view.hide();
                 }
@@ -38,7 +38,7 @@ export class FrameworkSelectorComponent extends HTMLAnchorElement implements Web
 (<any>exports).FrameworkSelectorComponent = (<any>document).registerElement("omnisharp-framework-selector", { prototype: FrameworkSelectorComponent.prototype });
 
 export class FrameworkSelectorSelectListView extends SpacePen.SelectListView {
-    constructor(public editor: Atom.TextEditor, private options: { alignLeft: boolean; attachTo: string; items: Models.DnxFramework[]; save(item: any): void }) {
+    constructor(public editor: Atom.TextEditor, private options: { alignLeft: boolean; attachTo: string; items: Models.DotNetFramework[]; save(item: any): void }) {
         super();
         this.$.addClass("code-actions-overlay");
         (<any>this).filterEditorView.model.placeholderText = "Filter list";

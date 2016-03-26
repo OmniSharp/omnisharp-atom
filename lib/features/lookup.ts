@@ -13,22 +13,19 @@ class TypeLookup implements IFeature {
     private disposable: CompositeDisposable;
 
     public activate() {
+        let tooltip: Tooltip;
         /* tslint:disable:no-string-literal */
         this.disposable = new CompositeDisposable();
         this.disposable.add(Omni.switchActiveEditor((editor, cd) => {
             // subscribe for tooltips
             // inspiration : https://github.com/chaika2013/ide-haskell
-            editor.omnisharp.set("__omniTooltip", () => {
-                const editorView = $(atom.views.getView(editor));
-                const tooltip = new Tooltip(editorView, editor);
-                cd.add(tooltip);
-                return tooltip;
-            });
+            const editorView = $(atom.views.getView(editor));
+            tooltip = new Tooltip(editorView, editor);
+            cd.add(tooltip);
         }));
 
         this.disposable.add(Omni.addTextEditorCommand("omnisharp-atom:type-lookup", () => {
             Omni.activeEditor.first().subscribe(editor => {
-                const tooltip = editor.omnisharp.get<Tooltip>("__omniTooltip");
                 tooltip.showExpressionTypeOnCommand();
             });
         }));

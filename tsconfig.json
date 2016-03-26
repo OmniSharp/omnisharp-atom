@@ -41,7 +41,6 @@
     "./lib/typings.d.ts"
   ],
   "files": [
-    "./lib/atom/command-runner.ts",
     "./lib/atom/dock.ts",
     "./lib/atom/feature-buttons.ts",
     "./lib/atom/framework-selector.ts",
@@ -115,7 +114,6 @@
     "./spec/atom/update-project-spec.ts",
     "./spec/features/code-format-spec.ts",
     "./spec/features/code-lens-spec.ts",
-    "./spec/features/command-runner-spec.ts",
     "./spec/features/find-symbols-spec.ts",
     "./spec/features/find-usages-spec.ts",
     "./spec/features/go-to-definition-spec.ts",

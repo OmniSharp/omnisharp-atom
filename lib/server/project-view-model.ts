@@ -5,8 +5,10 @@ import {Observable, ReplaySubject} from "rxjs";
 
 const projectFactories: { [key: string]: { new (project: any, solutionPath: string): any; }; } = {
     MsBuildProject: <any>MsBuildProjectViewModel,
-    DnxProject: <any>DnxProjectViewModel
+    DotNetProject: <any>DotNetProjectViewModel
 };
+// TEMP
+projectFactories["DnxProject"] = projectFactories["DotNetProject"];
 
 const supportedProjectTypes = _.keys(projectFactories);
 export function projectViewModelFactory(omnisharpProject: Models.ProjectInformationResponse, solutionPath: string) {
@@ -17,7 +19,10 @@ export function projectViewModelFactory(omnisharpProject: Models.ProjectInformat
     }
 
     const results: ProjectViewModel<any>[] = [];
+    let skipDnx = false;
+    if (projectTypes["DotNetProject"] && projectTypes["DnxProject"]) skipDnx = true;
     _.each(projectTypes, projectType => {
+        if (skipDnx && _.startsWith(projectType, "Dnx")) return;
         if (projectType && projectFactories[projectType]) {
             results.push(new projectFactories[projectType](omnisharpProject[projectType], solutionPath));
         }
@@ -29,8 +34,8 @@ const workspaceFactories: { [key: string]: (workspace: any, solutionPath: string
     MsBuild: (workspace: Models.MsBuildWorkspaceInformation, solutionPath: string) => {
         return _.map(workspace.Projects, projectInformation => new MsBuildProjectViewModel(projectInformation, solutionPath));
     },
-    Dnx: (workspace: Models.DnxWorkspaceInformation, solutionPath: string) => {
-        return _.map(workspace.Projects, projectInformation => new DnxProjectViewModel(projectInformation, solutionPath));
+    DotNet: (workspace: Models.DotNetWorkspaceInformation, solutionPath: string) => {
+        return _.map(workspace.Projects, projectInformation => new DotNetProjectViewModel(projectInformation, solutionPath));
     },
     ScriptCs: (workspace: ScriptCs.ScriptCsContext, solutionPath: string) => {
         if (workspace.CsxFiles.length > 0)
@@ -38,11 +43,16 @@ const workspaceFactories: { [key: string]: (workspace: any, solutionPath: string
         return [];
     },
 };
+// TEMP
+workspaceFactories["Dnx"] = workspaceFactories["DotNet"];
 
 export function workspaceViewModelFactory(omnisharpWorkspace: Models.WorkspaceInformationResponse, solutionPath: string) {
     const projects: any[] = [];
+    let skipDnx = false;
+    if (omnisharpWorkspace["DotNet"] && omnisharpWorkspace["Dnx"]) skipDnx = true;
     _.forIn(omnisharpWorkspace, (item, key) => {
         const factory = workspaceFactories[key];
+        if (skipDnx && _.startsWith(key, "Dnx")) return;
         if (factory) {
             projects.push(...factory(item, solutionPath));
         }
@@ -55,7 +65,7 @@ export abstract class ProjectViewModel<T> implements IProjectViewModel {
     constructor(project: T, solutionPath: string) {
         this.solutionPath = solutionPath;
         this.init(project);
-        this.observe = { activeFramework: <Observable<Models.DnxFramework>><any>this._subjectActiveFramework };
+        this.observe = { activeFramework: <Observable<Models.DotNetFramework>><any>this._subjectActiveFramework };
         this._subjectActiveFramework.next(this._frameworks[0]);
     }
 
@@ -87,8 +97,8 @@ export abstract class ProjectViewModel<T> implements IProjectViewModel {
         return this._filesSet;
     }
 
-    private _subjectActiveFramework = new ReplaySubject<Models.DnxFramework>(1);
-    private _activeFramework: Models.DnxFramework;
+    private _subjectActiveFramework = new ReplaySubject<Models.DotNetFramework>(1);
+    private _activeFramework: Models.DotNetFramework;
     public get activeFramework() {
         if (!this._activeFramework) {
             this._activeFramework = this.frameworks[0];
@@ -102,7 +112,7 @@ export abstract class ProjectViewModel<T> implements IProjectViewModel {
         }
     }
 
-    private _frameworks: Models.DnxFramework[] = [{ FriendlyName: "All", Name: "all", ShortName: "all" }];
+    private _frameworks: Models.DotNetFramework[] = [{ FriendlyName: "All", Name: "all", ShortName: "all" }];
     public get frameworks() { return this._frameworks; }
     public set frameworks(value) {
         this._frameworks = [{ FriendlyName: "All", Name: "all", ShortName: "all" }].concat(value);
@@ -115,12 +125,8 @@ export abstract class ProjectViewModel<T> implements IProjectViewModel {
     public get configurations() { return this._configurations; }
     public set configurations(value) { this._configurations = value || []; }
 
-    private _commands: { [key: string]: string } = {};
-    public get commands() { return this._commands; }
-    public set commands(value) { this._commands = value || {}; }
-
     public observe: {
-        activeFramework: Observable<Models.DnxFramework>;
+        activeFramework: Observable<Models.DotNetFramework>;
     };
 
     public abstract init(value: T): void;
@@ -132,12 +138,11 @@ export abstract class ProjectViewModel<T> implements IProjectViewModel {
         this.frameworks = other.frameworks;
         this.activeFramework = this._activeFramework;
         this.configurations = other.configurations;
-        this.commands = other.commands;
     }
 
     public toJSON() {
-        const {name, path, solutionPath, sourceFiles, frameworks, configurations, commands} = this;
-        return { name, path, solutionPath, sourceFiles, frameworks, configurations, commands };
+        const {name, path, solutionPath, sourceFiles, frameworks, configurations} = this;
+        return { name, path, solutionPath, sourceFiles, frameworks, configurations };
     }
 
     public dispose() {
@@ -170,14 +175,13 @@ class MsBuildProjectViewModel extends ProjectViewModel<Models.MSBuildProject> {
     }
 }
 
-class DnxProjectViewModel extends ProjectViewModel<Models.DnxProject> {
-    public init(project: Models.DnxProject) {
+class DotNetProjectViewModel extends ProjectViewModel<Models.DotNetProjectInformation> {
+    public init(project: Models.DotNetProjectInformation) {
         this.name = project.Name;
         this.path = project.Path;
-        this.frameworks = project.Frameworks;
-        this.configurations = project.Configurations;
-        this.commands = project.Commands;
-        this.sourceFiles = project.SourceFiles;
+        this.frameworks = project.Frameworks || [];
+        this.configurations = (project.Configurations || []).map(x => x.Name);
+        this.sourceFiles = project.SourceFiles || [];
     }
 }
 

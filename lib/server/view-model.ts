@@ -3,10 +3,9 @@ import {Solution} from "./solution";
 import {Models, DriverState, OmnisharpClientStatus} from "omnisharp-client";
 import {Observable, Subject, ReplaySubject} from "rxjs";
 import {CompositeDisposable, Disposable, IDisposable} from "omnisharp-client";
-import {basename, normalize, join} from "path";
+import {normalize} from "path";
 import {ProjectViewModel, projectViewModelFactory, workspaceViewModelFactory} from "./project-view-model";
 import {OutputMessageElement} from "../views/output-message-element";
-const win32 = process.platform === "win32";
 let fastdom: typeof Fastdom = require("fastdom");
 
 export interface VMViewState {
@@ -36,8 +35,6 @@ export class ViewModel implements VMViewState, IDisposable {
 
     public get state() { return this._solution.currentState; };
     public packageSources: string[] = [];
-    public runtime = "";
-    public runtimePath: string;
     public projects: ProjectViewModel<any>[] = [];
     private _projectAddedStream = new Subject<ProjectViewModel<any>>();
     private _projectRemovedStream = new Subject<ProjectViewModel<any>>();
@@ -136,12 +133,10 @@ export class ViewModel implements VMViewState, IDisposable {
             .subscribe(() => {
                 _solution.projects({ ExcludeSourceFiles: false });
 
-                if (_solution.runtime) {
-                    _solution.packagesource({ ProjectPath: _solution.path })
-                        .subscribe(response => {
-                            this.packageSources = response.Sources;
-                        });
-                }
+                _solution.packagesource({ ProjectPath: _solution.path })
+                    .subscribe(response => {
+                        this.packageSources = response.Sources;
+                    });
             }));
 
         this._disposable.add(_solution.state.filter(z => z === DriverState.Disconnected).subscribe(() => {
@@ -190,9 +185,9 @@ export class ViewModel implements VMViewState, IDisposable {
             });
         }));
 
-        this._disposable.add(_solution.observe.projects
-            .filter(z => z.response && z.response.Dnx && z.response.Dnx.Projects.length > 0)
-            .map(z => z.response.Dnx)
+        /*this._disposable.add(_solution.observe.projects
+            .filter(z => z.response && z.response.DotNet && z.response.DotNet.Projects.length > 0)
+            .map(z => z.response.DotNet)
             .subscribe(system => {
                 if (system.RuntimePath) {
                     this.runtime = basename(system.RuntimePath);
@@ -213,7 +208,7 @@ export class ViewModel implements VMViewState, IDisposable {
 
                     this._stateStream.next(this);
                 }
-            }));
+            }));*/
 
         this._disposable.add(this._projectAddedStream);
         this._disposable.add(this._projectChangedStream);
