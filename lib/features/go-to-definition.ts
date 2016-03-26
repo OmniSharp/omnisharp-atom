@@ -55,7 +55,7 @@ class GoToDefinition implements IFeature {
                         const screenPt = editor.screenPositionForPixelPosition(pixelPt);
                         return editor.bufferPositionForScreenPosition(screenPt);
                     })
-                    .filter(x => !!x)
+                    .filter(a => !!a)
                     .startWith(editor.getCursorBufferPosition())
                     .map(bufferPt => ({ bufferPt, range: this.getWordRange(editor, bufferPt) }))
                     .filter(z => !!z.range)
