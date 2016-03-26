@@ -106,8 +106,7 @@ export class ViewModel implements VMViewState, IDisposable {
             .publishReplay(1).refCount();
 
         const outputObservable = _solution.logs
-            .windowTime(100)
-            .flatMap(x => x.startWith(null).last())
+            .inspectTime(100)
             .map(() => output);
 
         const state = this._stateStream;
