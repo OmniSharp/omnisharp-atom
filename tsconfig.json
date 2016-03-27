@@ -71,6 +71,7 @@
     "./lib/features/signature-help.ts",
     "./lib/omnisharp-atom.ts",
     "./lib/omnisharp.ts",
+    "./lib/operators/bufferFor.ts",
     "./lib/server/atom-projects.ts",
     "./lib/server/composite-solution.ts",
     "./lib/server/metadata-editor.ts",

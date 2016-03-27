@@ -8,6 +8,7 @@ import {Omni} from "../server/omni";
 import {TooltipView} from "../views/tooltip-view";
 const $: JQueryStatic = require("jquery");
 const escape = require("escape-html");
+import {bufferFor} from "../operators/bufferFor";
 
 class TypeLookup implements IFeature {
     private disposable: CompositeDisposable;
@@ -63,9 +64,7 @@ class Tooltip implements IDisposable {
         const mouseout = Observable.fromEvent<MouseEvent>(scroll[0], "mouseout");
         this.keydown = Observable.fromEvent<KeyboardEvent>(scroll[0], "keydown");
 
-        cd.add(mousemove
-            .observeOn(Scheduler.queue)
-            .bufferTime(400)
+        cd.add(bufferFor(mousemove.observeOn(Scheduler.queue), 400)
             .map(events => {
                 for (const event of events.reverse()) {
                     const pixelPt = this.pixelPositionFromMouseEvent(editorView, event);

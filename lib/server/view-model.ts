@@ -7,6 +7,7 @@ import {normalize} from "path";
 import {ProjectViewModel, projectViewModelFactory, workspaceViewModelFactory} from "./project-view-model";
 import {OutputMessageElement} from "../views/output-message-element";
 let fastdom: typeof Fastdom = require("fastdom");
+import {bufferFor} from "../operators/bufferFor";
 
 export interface VMViewState {
     isOff: boolean;
@@ -67,8 +68,7 @@ export class ViewModel implements VMViewState, IDisposable {
             }
         }));
 
-        this._disposable.add(_solution.logs
-            .bufferTime(100)
+        this._disposable.add(bufferFor(_solution.logs, 100)
             .subscribe(items => {
                 let removals: Element[] = [];
                 if (this.outputElement.children.length === 1000) {
