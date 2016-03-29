@@ -8,27 +8,25 @@ import {Omni} from "../server/omni";
 import {TooltipView} from "../views/tooltip-view";
 const $: JQueryStatic = require("jquery");
 const escape = require("escape-html");
+import {bufferFor} from "../operators/bufferFor";
 
 class TypeLookup implements IFeature {
     private disposable: CompositeDisposable;
 
     public activate() {
+        let tooltip: Tooltip;
         /* tslint:disable:no-string-literal */
         this.disposable = new CompositeDisposable();
         this.disposable.add(Omni.switchActiveEditor((editor, cd) => {
             // subscribe for tooltips
             // inspiration : https://github.com/chaika2013/ide-haskell
-            editor.omnisharp.set("__omniTooltip", () => {
-                const editorView = $(atom.views.getView(editor));
-                const tooltip = new Tooltip(editorView, editor);
-                cd.add(tooltip);
-                return tooltip;
-            });
+            const editorView = $(atom.views.getView(editor));
+            tooltip = new Tooltip(editorView, editor);
+            cd.add(tooltip);
         }));
 
         this.disposable.add(Omni.addTextEditorCommand("omnisharp-atom:type-lookup", () => {
             Omni.activeEditor.first().subscribe(editor => {
-                const tooltip = editor.omnisharp.get<Tooltip>("__omniTooltip");
                 tooltip.showExpressionTypeOnCommand();
             });
         }));
@@ -66,9 +64,7 @@ class Tooltip implements IDisposable {
         const mouseout = Observable.fromEvent<MouseEvent>(scroll[0], "mouseout");
         this.keydown = Observable.fromEvent<KeyboardEvent>(scroll[0], "keydown");
 
-        cd.add(mousemove
-            .observeOn(Scheduler.queue)
-            .bufferTime(400)
+        cd.add(bufferFor(mousemove.observeOn(Scheduler.queue), 400)
             .map(events => {
                 for (const event of events.reverse()) {
                     const pixelPt = this.pixelPositionFromMouseEvent(editorView, event);

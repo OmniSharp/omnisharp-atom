@@ -1,8 +1,6 @@
 /* tslint:disable:no-string-literal */
-/* tslint:disable:variable-name */
-const Convert = require("ansi-to-html");
+import {Convert} from "../services/ansi-to-html";
 const convert = new Convert();
-/* tslint:enable:variable-name */
 import _ from "lodash";
 
 // ctrl-r. ctrl-t run test

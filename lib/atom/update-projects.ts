@@ -6,6 +6,7 @@ import {ProjectViewModel} from "../server/project-view-model";
 import * as fs from "fs";
 const stat = Observable.bindNodeCallback(fs.stat);
 import {dirname} from "path";
+import {bufferFor} from "../operators/bufferFor";
 
 class UpdateProject implements IAtomFeature {
     private disposable: CompositeDisposable;
@@ -29,21 +30,27 @@ class UpdateProject implements IAtomFeature {
         this._paths = atom.project.getPaths();
         atom.project.onDidChangePaths((paths: any[]) => this._paths = paths);
 
-        this.disposable.add(Omni.listener.model.projectAdded
-            .filter(z => this._autoAddExternalProjects || this._nagAddExternalProjects)
-            .filter(z => !_.startsWith(z.path, z.solutionPath))
-            .filter(z => !_.some(this._paths, x => _.startsWith(z.path, x)))
-            .bufferTime(1000)
-            .filter(z => z.length > 0)
-            .subscribe(project => this.handleProjectAdded(project)));
+        this.disposable.add(
+            bufferFor(
+                Omni.listener.model.projectAdded
+                    .filter(z => this._autoAddExternalProjects || this._nagAddExternalProjects)
+                    .filter(z => !_.startsWith(z.path, z.solutionPath))
+                    .filter(z => !_.some(this._paths, x => _.startsWith(z.path, x))),
+                1000
+            )
+                .filter(z => z.length > 0)
+                .subscribe(project => this.handleProjectAdded(project)));
 
-        this.disposable.add(Omni.listener.model.projectRemoved
-            .filter(z => this._autoAddExternalProjects || this._nagAddExternalProjects)
-            .filter(z => !_.startsWith(z.path, z.solutionPath))
-            .filter(z => _.some(this._paths, x => _.startsWith(z.path, x)))
-            .bufferTime(1000)
-            .filter(z => z.length > 0)
-            .subscribe(project => this.handleProjectRemoved(project)));
+        this.disposable.add(
+            bufferFor(
+                Omni.listener.model.projectRemoved
+                    .filter(z => this._autoAddExternalProjects || this._nagAddExternalProjects)
+                    .filter(z => !_.startsWith(z.path, z.solutionPath))
+                    .filter(z => _.some(this._paths, x => _.startsWith(z.path, x))),
+                1000
+            )
+                .filter(z => z.length > 0)
+                .subscribe(project => this.handleProjectRemoved(project)));
 
         Omni.registerConfiguration(solution => {
             if (!solution.temporary) {
@@ -86,7 +93,7 @@ class UpdateProject implements IAtomFeature {
     }
 
     private getProjectDirectories(projects: ProjectViewModel<any>[]) {
-        return Observable.fromArray(_.uniq(projects.map(z => z.path)))
+        return Observable.from<string>(_.uniq(projects.map(z => z.path)))
             .flatMap(project => stat(project), (project, st) => {
                 if (st.isDirectory()) {
                     return project;

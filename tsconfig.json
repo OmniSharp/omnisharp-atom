@@ -41,7 +41,6 @@
     "./lib/typings.d.ts"
   ],
   "files": [
-    "./lib/atom/command-runner.ts",
     "./lib/atom/dock.ts",
     "./lib/atom/feature-buttons.ts",
     "./lib/atom/framework-selector.ts",
@@ -72,6 +71,7 @@
     "./lib/features/signature-help.ts",
     "./lib/omnisharp-atom.ts",
     "./lib/omnisharp.ts",
+    "./lib/operators/bufferFor.ts",
     "./lib/server/atom-projects.ts",
     "./lib/server/composite-solution.ts",
     "./lib/server/metadata-editor.ts",
@@ -82,6 +82,7 @@
     "./lib/server/solution-manager.ts",
     "./lib/server/solution.ts",
     "./lib/server/view-model.ts",
+    "./lib/services/ansi-to-html.ts",
     "./lib/services/apply-changes.ts",
     "./lib/services/completion-provider.ts",
     "./lib/services/framework-provider.ts",
@@ -115,7 +116,6 @@
     "./spec/atom/update-project-spec.ts",
     "./spec/features/code-format-spec.ts",
     "./spec/features/code-lens-spec.ts",
-    "./spec/features/command-runner-spec.ts",
     "./spec/features/find-symbols-spec.ts",
     "./spec/features/find-usages-spec.ts",
     "./spec/features/go-to-definition-spec.ts",

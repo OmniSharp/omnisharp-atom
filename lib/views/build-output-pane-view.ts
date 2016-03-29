@@ -1,7 +1,5 @@
 /* tslint:disable:no-string-literal */
-/* tslint:disable:variable-name */
-const Convert = require("ansi-to-html");
-/* tslint:enable:variable-name */
+import {Convert} from "../services/ansi-to-html";
 import _ from "lodash";
 import {server} from "../atom/server-information";
 import {CompositeDisposable} from "omnisharp-client";

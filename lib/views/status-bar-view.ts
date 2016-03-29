@@ -6,7 +6,6 @@ import {Omni} from "../server/omni";
 import {OmnisharpClientStatus} from "omnisharp-client";
 import {server} from "../atom/server-information";
 import {SolutionManager} from "../server/solution-manager";
-import {commandRunner} from "../atom/command-runner";
 let fastdom: typeof Fastdom = require("fastdom");
 
 function addClassIfNotincludes(icon: HTMLElement, ...cls: string[]) {
@@ -126,41 +125,6 @@ export class FlameElement extends HTMLAnchorElement implements WebComponent {
 
 (<any>exports).FlameElement = (<any>document).registerElement("omnisharp-flame", { prototype: FlameElement.prototype });
 
-export enum CommandRunnerState { Running, Started, Off };
-export class CommandRunnerElement extends HTMLAnchorElement implements WebComponent {
-    private _state: CommandRunnerState;
-
-    public createdCallback() {
-        this.classList.add("omnisharp-atom-button", "icon", "icon-clock");
-    }
-
-    public attachedCallback() {
-        if (this._state === undefined)
-            this.updateState(CommandRunnerState.Off);
-    }
-
-    public updateState(state: CommandRunnerState) {
-        if (this._state !== state) {
-            this._state = state;
-            if (state === CommandRunnerState.Running) {
-                addClassIfNotincludes(this, "text-info");
-                removeClassIfincludes(this, "text-subtle", "icon-flame-loading");
-            } else {
-                removeClassIfincludes(this, "text-info");
-                addClassIfNotincludes(this, "text-subtle", "icon-flame-loading");
-            }
-
-            if (state === CommandRunnerState.Off) {
-                fastdom.measure(() => this.style.display !== "none" && fastdom.mutate(() => this.style.display = "none"));
-            } else {
-                fastdom.measure(() => this.style.display === "none" && fastdom.mutate(() => this.style.display = ""));
-            }
-        }
-    }
-}
-
-(<any>exports).CommandRunnerElement = (<any>document).registerElement("omnisharp-command-runner", { prototype: CommandRunnerElement.prototype });
-
 export class DiagnosticsElement extends HTMLAnchorElement implements WebComponent {
     private _state: {
         errorCount: number;
@@ -264,7 +228,6 @@ export class StatusBarElement extends HTMLElement implements WebComponent, IDisp
     private _state: StatusBarState;
     private _disposable: CompositeDisposable;
     private _flame: FlameElement;
-    private _commandRunner: CommandRunnerElement;
     private _diagnostics: DiagnosticsElement;
     private _projectCount: ProjectCountElement;
 
@@ -274,9 +237,6 @@ export class StatusBarElement extends HTMLElement implements WebComponent, IDisp
         const flameElement = this._flame = <FlameElement>new exports.FlameElement();
         this.appendChild(flameElement);
         flameElement.onclick = () => this.toggle();
-
-        const commandRunnerElement = this._commandRunner = <CommandRunnerElement>new exports.CommandRunnerElement();
-        this.appendChild(commandRunnerElement);
 
         const projectCount = this._projectCount = <ProjectCountElement>new exports.ProjectCountElement();
         this.appendChild(projectCount);
@@ -327,17 +287,6 @@ export class StatusBarElement extends HTMLElement implements WebComponent, IDisp
         this._disposable.add(Omni.activeEditorOrConfigEditor.subscribe(editor => {
             this._updateVisible(!!editor);
         }));
-
-        this._disposable.add(commandRunner.observe.processes
-            .subscribe(processes => {
-                if (_.every(processes, process => process.started)) {
-                    this._commandRunner.updateState(CommandRunnerState.Started);
-                } else if (processes.length > 0) {
-                    this._commandRunner.updateState(CommandRunnerState.Running);
-                } else {
-                    this._commandRunner.updateState(CommandRunnerState.Off);
-                }
-            }));
 
         this._disposable.add(SolutionManager.activeSolution
             .subscribe(solutions => {
