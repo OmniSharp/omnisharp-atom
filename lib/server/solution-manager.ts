@@ -5,7 +5,7 @@ import {RefCountDisposable, IDisposable, Disposable, CompositeDisposable} from "
 import {Solution} from "./solution";
 import {AtomProjectTracker} from "./atom-projects";
 import {SolutionObserver, SolutionAggregateObserver} from "./composite-solution";
-import {DriverState, findCandidates, Candidate} from "omnisharp-client";
+import {DriverState, findCandidates} from "omnisharp-client";
 import {GenericSelectListView} from "../views/generic-list-view";
 import {OmnisharpTextEditor, isOmnisharpTextEditor, OmnisharpEditorContext} from "./omnisharp-text-editor";
 
@@ -140,7 +140,7 @@ class SolutionInstanceManager {
             .map(project => {
                 return this._candidateFinder(project)
                     .flatMap(candidates => {
-                        return Observable.from<Candidate>(candidates.map(x => x.path))
+                        return Observable.from<string>(candidates.map(x => x.path))
                             .flatMap(x => this._findRepositoryForPath(x), (path, repo) => ({ path, repo }))
                             .toArray()
                             .toPromise()
@@ -475,7 +475,7 @@ class SolutionInstanceManager {
                 if (r) return;
             }
 
-            this._activeSearch.then(() => Observable.from<Candidate>(candidates.map(x => x.path))
+            this._activeSearch.then(() => Observable.from<string>(candidates.map(x => x.path))
                 .flatMap(x => this._findRepositoryForPath(x), (path, repo) => ({ path, repo }))
                 .toArray()
                 .toPromise())
