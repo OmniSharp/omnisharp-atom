@@ -26,3 +26,5 @@ addons:
       - git
       - libgnome-keyring-dev
       - fakeroot
+notifications:
+  slack: omnisharp:UN1OlhsHD8hUXy8SEr1L6Zar
