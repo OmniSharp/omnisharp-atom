@@ -16,7 +16,7 @@ class ReloadWorkspace implements IFeature {
     public reloadWorkspace() {
         return Omni.solutions
             .flatMap(solution => {
-                return Observable.fromArray(solution.model.projects)
+                return Observable.from(solution.model.projects)
                     .flatMap(x => x.sourceFiles)
                     .observeOn(Scheduler.queue)
                     .concatMap(file => oexists(file).filter(x => !x)

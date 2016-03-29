@@ -42,7 +42,7 @@ function resetPreviewTab() {
 
 export function applyAllChanges(changes: Models.ModifiedFileResponse[]) {
     resetPreviewTab();
-    return Observable.fromArray(changes)
+    return Observable.from(changes)
         .concatMap(change => <Promise<Atom.TextEditor>><any>atom.workspace.open(change.FileName, undefined)
             .then(editor => {
                 resetPreviewTab();

@@ -80,7 +80,7 @@ class GeneratorAspnet implements IFeature {
                 .concat(messages.identical)
                 .concat(messages.force);
 
-            return Observable.fromArray(["Startup.cs", "Program.cs", ".cs"])
+            return Observable.from(["Startup.cs", "Program.cs", ".cs"])
                 .concatMap(file => filter(allMessages, message => endsWith(message, file)))
                 .take(1)
                 .map(file => path.join(messages.cwd, file))
