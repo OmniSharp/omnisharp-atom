@@ -86,7 +86,7 @@ class UpdateProject implements IAtomFeature {
     }
 
     private getProjectDirectories(projects: ProjectViewModel<any>[]) {
-        return Observable.from<ProjectViewModel<any>>(_.uniq(projects.map(z => z.path)))
+        return Observable.from<string>(_.uniq(projects.map(z => z.path)))
             .flatMap(project => stat(project), (project, st) => {
                 if (st.isDirectory()) {
                     return project;

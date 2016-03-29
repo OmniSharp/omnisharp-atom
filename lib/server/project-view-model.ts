@@ -29,7 +29,7 @@ const workspaceFactories: { [key: string]: (workspace: any, solutionPath: string
     MsBuild: (workspace: Models.MsBuildWorkspaceInformation, solutionPath: string) => {
         return _.map(workspace.Projects, projectInformation => new MsBuildProjectViewModel(projectInformation, solutionPath));
     },
-    Dnx: (workspace: Models.DnxWorkspaceInformation, solutionPath: string) => {
+    Dnx: (workspace: Models.DotNetWorkspaceInformation, solutionPath: string) => {
         return _.map(workspace.Projects, projectInformation => new DnxProjectViewModel(projectInformation, solutionPath));
     },
     ScriptCs: (workspace: ScriptCs.ScriptCsContext, solutionPath: string) => {
@@ -55,7 +55,7 @@ export abstract class ProjectViewModel<T> implements IProjectViewModel {
     constructor(project: T, solutionPath: string) {
         this.solutionPath = solutionPath;
         this.init(project);
-        this.observe = { activeFramework: <Observable<Models.DnxFramework>><any>this._subjectActiveFramework };
+        this.observe = { activeFramework: <Observable<Models.DotNetFramework>><any>this._subjectActiveFramework };
         this._subjectActiveFramework.next(this._frameworks[0]);
     }
 
@@ -87,8 +87,8 @@ export abstract class ProjectViewModel<T> implements IProjectViewModel {
         return this._filesSet;
     }
 
-    private _subjectActiveFramework = new ReplaySubject<Models.DnxFramework>(1);
-    private _activeFramework: Models.DnxFramework;
+    private _subjectActiveFramework = new ReplaySubject<Models.DotNetFramework>(1);
+    private _activeFramework: Models.DotNetFramework;
     public get activeFramework() {
         if (!this._activeFramework) {
             this._activeFramework = this.frameworks[0];
@@ -102,7 +102,7 @@ export abstract class ProjectViewModel<T> implements IProjectViewModel {
         }
     }
 
-    private _frameworks: Models.DnxFramework[] = [{ FriendlyName: "All", Name: "all", ShortName: "all" }];
+    private _frameworks: Models.DotNetFramework[] = [{ FriendlyName: "All", Name: "all", ShortName: "all" }];
     public get frameworks() { return this._frameworks; }
     public set frameworks(value) {
         this._frameworks = [{ FriendlyName: "All", Name: "all", ShortName: "all" }].concat(value);
@@ -120,7 +120,7 @@ export abstract class ProjectViewModel<T> implements IProjectViewModel {
     public set commands(value) { this._commands = value || {}; }
 
     public observe: {
-        activeFramework: Observable<Models.DnxFramework>;
+        activeFramework: Observable<Models.DotNetFramework>;
     };
 
     public abstract init(value: T): void;
@@ -170,8 +170,8 @@ class MsBuildProjectViewModel extends ProjectViewModel<Models.MSBuildProject> {
     }
 }
 
-class DnxProjectViewModel extends ProjectViewModel<Models.DnxProject> {
-    public init(project: Models.DnxProject) {
+class DnxProjectViewModel extends ProjectViewModel<Models.DotNetProjectInformation> {
+    public init(project: Models.DotNetProjectInformation) {
         this.name = project.Name;
         this.path = project.Path;
         this.frameworks = project.Frameworks;

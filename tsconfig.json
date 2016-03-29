@@ -82,6 +82,7 @@
     "./lib/server/solution-manager.ts",
     "./lib/server/solution.ts",
     "./lib/server/view-model.ts",
+    "./lib/services/ansi-to-html.ts",
     "./lib/services/apply-changes.ts",
     "./lib/services/completion-provider.ts",
     "./lib/services/framework-provider.ts",

@@ -90,7 +90,7 @@ class FrameworkSelector implements IAtomFeature {
         this.disposable.dispose();
     }
 
-    public setActiveFramework(framework: Models.DnxFramework) {
+    public setActiveFramework(framework: Models.DotNetFramework) {
         if (this.project) {
             this.project.activeFramework = framework;
             this._component.activeFramework = framework;

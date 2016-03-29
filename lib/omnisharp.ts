@@ -10,8 +10,8 @@ export interface ExtendApi extends Api.V2 {
 export interface IProjectViewModel {
     name: string;
     path: string;
-    activeFramework: Models.DnxFramework;
-    frameworks: Models.DnxFramework[];
+    activeFramework: Models.DotNetFramework;
+    frameworks: Models.DotNetFramework[];
     configurations: string[];
     commands: { [key: string]: string };
 }
