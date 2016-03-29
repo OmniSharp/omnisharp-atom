@@ -78,7 +78,6 @@ class CodeAction implements IFeature {
             cd.add(onDidChangeCursorPosition);
 
             const onDidStopChanging = new Subject<any>();
-            cd.add(onDidStopChanging);
 
             cd.add(Observable.combineLatest(
                 <Observable<{ oldBufferPosition: TextBuffer.Point; oldScreenPosition: TextBuffer.Point; newBufferPosition: TextBuffer.Point; newScreenPosition: TextBuffer.Point; textChanged: boolean; cursor: Atom.Cursor; }>><any>onDidChangeCursorPosition,

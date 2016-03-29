@@ -7,6 +7,7 @@ import {CompositeDisposable, IDisposable} from "omnisharp-client";
 import {File} from "atom";
 import {ProjectViewModel} from "../server/project-view-model";
 import {Solution} from "../server/solution";
+import {bufferFor} from "../operators/bufferFor";
 
 function projectLock(solution: Solution, project: ProjectViewModel<any>, filePath: string) {
     const disposable = new CompositeDisposable();
@@ -39,7 +40,7 @@ class FileMonitor implements IFeature {
     public activate() {
         this.disposable = new CompositeDisposable();
 
-        const changes = Observable.merge(Omni.listener.model.projectAdded, Omni.listener.model.projectChanged)
+        const changes = bufferFor(Observable.merge(Omni.listener.model.projectAdded, Omni.listener.model.projectChanged)
             .map(project => ({ project, filePath: path.join(project.path, "project.lock.json") }))
             .filter(({ filePath}) => fs.existsSync(filePath))
             .flatMap(({ project, filePath}) =>
@@ -56,8 +57,7 @@ class FileMonitor implements IFeature {
                 this.filesMap.set(project, lock);
                 return lock.observable.map(path => ({ solution, filePath }));
             })
-            .share()
-            .bufferTime(30000);
+            .share(), 30000);
 
         this.disposable.add(changes
             .subscribe(changs => {

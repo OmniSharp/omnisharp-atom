@@ -25,7 +25,7 @@ class NotificationHandler implements IFeature {
 
         this.disposable.add(Omni.listener.events
             .filter(z => z.Event === "log")
-            .filter(z => z.Body.Name === "Dnx.PackagesRestoreTool")
+            .filter(z => _.includes(z.Body.Name, "PackagesRestoreTool"))
             .filter(z => z.Body.Message.startsWith("Installing"))
             .subscribe(e => this.packageRestoreNotification.handleEvents(e)));
     }

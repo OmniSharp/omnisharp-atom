@@ -84,7 +84,7 @@ export class SolutionStatusCard extends HTMLDivElement implements WebComponent {
         this.modelDisposable.dispose();
         this.modelDisposable = new CompositeDisposable();
 
-        this.modelDisposable.add(this._model.observe.state.delay(10).subscribe(({index, path, runtime, state, isReady, isOff, isOn}) => {
+        this.modelDisposable.add(this._model.observe.state.delay(10).subscribe(({index, path, /*runtime,*/ state, isReady, isOff, isOn}) => {
             fastdom.mutate(() => {
                 const name = `${basename(path)} (${index})`;
                 if (this._name.innerText !== name) {
@@ -130,13 +130,13 @@ export class SolutionStatusCard extends HTMLDivElement implements WebComponent {
 
                 this.verifyPosition();
 
-                if (runtime) {
+                /*if (runtime) {
                     this._runtimeText.style.display = "";
                     this._runtimeText.innerText = runtime;
-                } else {
+                } else {*/
                     this._runtimeText.style.display = "none";
                     this._runtimeText.innerText = "";
-                }
+                /*}*/
             });
         }));
 

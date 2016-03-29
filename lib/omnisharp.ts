@@ -13,5 +13,4 @@ export interface IProjectViewModel {
     activeFramework: Models.DotNetFramework;
     frameworks: Models.DotNetFramework[];
     configurations: string[];
-    commands: { [key: string]: string };
 }
