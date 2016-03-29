@@ -2,6 +2,7 @@ import {Observable, Scheduler} from "rxjs";
 import {CompositeDisposable} from "omnisharp-client";
 import {Omni} from "../server/omni";
 import {exists} from "fs";
+import {ProjectViewModel} from "../server/project-view-model";
 const oexists = Observable.bindCallback(exists);
 
 class ReloadWorkspace implements IFeature {
@@ -16,7 +17,7 @@ class ReloadWorkspace implements IFeature {
     public reloadWorkspace() {
         return Omni.solutions
             .flatMap(solution => {
-                return Observable.fromArray(solution.model.projects)
+                return Observable.from<ProjectViewModel<any>>(solution.model.projects)
                     .flatMap(x => x.sourceFiles)
                     .observeOn(Scheduler.queue)
                     .concatMap(file => oexists(file).filter(x => !x)

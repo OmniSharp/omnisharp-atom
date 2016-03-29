@@ -5,7 +5,7 @@ import {RefCountDisposable, IDisposable, Disposable, CompositeDisposable} from "
 import {Solution} from "./solution";
 import {AtomProjectTracker} from "./atom-projects";
 import {SolutionObserver, SolutionAggregateObserver} from "./composite-solution";
-import {DriverState, findCandidates} from "omnisharp-client";
+import {DriverState, findCandidates, Candidate} from "omnisharp-client";
 import {GenericSelectListView} from "../views/generic-list-view";
 import {OmnisharpTextEditor, isOmnisharpTextEditor, OmnisharpEditorContext} from "./omnisharp-text-editor";
 
@@ -140,7 +140,7 @@ class SolutionInstanceManager {
             .map(project => {
                 return this._candidateFinder(project)
                     .flatMap(candidates => {
-                        return Observable.fromArray(candidates.map(x => x.path))
+                        return Observable.from<Candidate>(candidates.map(x => x.path))
                             .flatMap(x => this._findRepositoryForPath(x), (path, repo) => ({ path, repo }))
                             .toArray()
                             .toPromise()
@@ -161,7 +161,7 @@ class SolutionInstanceManager {
     }
 
     private _findRepositoryForPath(workingPath: string) {
-        return Observable.fromArray<REPOSITORY>(atom.project.getRepositories() || [])
+        return Observable.from<REPOSITORY>(atom.project.getRepositories() || [])
             .filter(x => !!x)
             .flatMap(repo => repo.async.getWorkingDirectory(), (repo, directory) => ({ repo, directory }))
             .filter(({directory}) => path.normalize(directory) === path.normalize(workingPath))
@@ -475,7 +475,7 @@ class SolutionInstanceManager {
                 if (r) return;
             }
 
-            this._activeSearch.then(() => Observable.fromArray(candidates.map(x => x.path))
+            this._activeSearch.then(() => Observable.from<Candidate>(candidates.map(x => x.path))
                 .flatMap(x => this._findRepositoryForPath(x), (path, repo) => ({ path, repo }))
                 .toArray()
                 .toPromise())
