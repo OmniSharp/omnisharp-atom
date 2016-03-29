@@ -1,7 +1,4 @@
-/* tslint:disable:variable-name */
-const Convert = require("ansi-to-html");
-/* tslint:enable:variable-name */
-
+import {Convert} from "../services/ansi-to-html";
 const convert = new Convert();
 
 const props = {

@@ -58,7 +58,6 @@
     "prepublish": "typings install && gulp npm-prepublish"
   },
   "dependencies": {
-    "ansi-to-html": "^0.4.1",
     "atom-package-deps": "^4.0.1",
     "atom-space-pen-views": "^2.2.0",
     "babel-plugin-transform-es2015-modules-commonjs": "^6.3.13",
@@ -66,6 +65,7 @@
     "babel-preset-stage-3": "^6.3.13",
     "chai": "^3.5.0",
     "del": "^2.2.0",
+    "entities": "^1.1.1",
     "escape-html": "^1.0.1",
     "fastdom": "^1.0.1",
     "font-awesome": "^4.5.0",
