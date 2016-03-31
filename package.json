@@ -82,7 +82,7 @@
     "gulp-typescript": "^2.12.1",
     "gulp-util": "^3.0.7",
     "jquery": "^2.2.2",
-    "lodash": "^4.6.1",
+    "lodash": "^4.7.0",
     "merge-stream": "^1.0.0",
     "mocha": "^2.4.5",
     "mocha-unfunk-reporter": "^0.4.0",
