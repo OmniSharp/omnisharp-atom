@@ -93,7 +93,7 @@
     "through2": "^2.0.1",
     "tslint": "^3.6.0",
     "typescript": "^1.8.9",
-    "typings": "^0.7.9"
+    "typings": "^0.8.0"
   },
   "consumedServices": {
     "status-bar": {
