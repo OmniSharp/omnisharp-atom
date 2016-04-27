@@ -104,13 +104,16 @@ export const provider = [
         lintOnFly: true,
         lint: (editor: Atom.TextEditor) => {
             const path = editor.getPath();
-            const o = Observable.defer(() => codeCheck.doCodeCheck(editor));
-            return o
-                .timeoutWith(30000, Observable.of(<Models.DiagnosticLocation[]>[]))
-                .flatMap(x => x)
-                .filter(z => z.FileName === path && (showHiddenDiagnostics || z.LogLevel !== "Hidden"))
-                .map(error => mapValues(editor, error))
-                .toArray()
+            return Observable.race<Models.DiagnosticLocation[]>(
+                    codeCheck.doCodeCheck(editor),
+                    Omni.diagnostics.take(1).delay(30000)
+                )
+                .map(x => _(x)
+                    .filter(z => z.FileName === path)
+                    .filter(z => showHiddenDiagnostics || z.LogLevel !== "Hidden")
+                    .map(error => mapValues(editor, error))
+                    .value()
+                )
                 .toPromise();
         }
     }, {
@@ -119,11 +122,15 @@ export const provider = [
         scope: "project",
         lintOnFly: false,
         lint: (editor: Atom.TextEditor) => {
-            return Omni.activeModel
-                .flatMap(x => x.diagnostics)
-                .filter(z => showHiddenDiagnostics || z.LogLevel !== "Hidden")
-                .map(error => mapValues(editor, error))
-                .toArray()
+            return Observable.race<Models.DiagnosticLocation[]>(
+                Omni.diagnostics.skip(1).take(1),
+                Omni.diagnostics.take(1).delay(3000)
+            )
+                .map(x => _(x)
+                    .filter(z => showHiddenDiagnostics || z.LogLevel !== "Hidden")
+                    .map(error => mapValues(editor, error))
+                    .value()
+                )
                 .toPromise();
         }
     }

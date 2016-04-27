@@ -96,14 +96,6 @@ class Highlight implements IFeature {
         this.disposable.add(Omni.eachEditor((editor, cd) => {
             this.setupEditor(editor, cd);
 
-            cd.add(editor.omnisharp.project
-                .observe.activeFramework
-                .skip(1)
-                .distinctUntilChanged()
-                .subscribe(() => {
-                    editor.omnisharp.get<Subscriber<boolean>>(HIGHLIGHT_REQUEST).next(true);
-                }));
-
             cd.add(editor.omnisharp
                 .get<Observable<{ editor: OmnisharpTextEditor; highlights: Models.HighlightSpan[]; projects: string[] }>>(HIGHLIGHT)
                 .subscribe(() => {
@@ -112,6 +104,7 @@ class Highlight implements IFeature {
         }));
 
         this.disposable.add(Omni.switchActiveEditor((editor, cd) => {
+            editor.omnisharp.get<Subject<boolean>>(HIGHLIGHT_REQUEST).next(true);
             if (editor.displayBuffer.tokenizedBuffer["silentRetokenizeLines"]) {
                 editor.displayBuffer.tokenizedBuffer["silentRetokenizeLines"]();
             }
