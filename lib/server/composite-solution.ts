@@ -1,8 +1,8 @@
-import {ObservationClientV2, AggregateClientV2} from "omnisharp-client";
+import {ReactiveObservationClient, ReactiveCombinationClient} from "omnisharp-client";
 import {Solution} from "./solution";
 import {ViewModel} from "./view-model";
 
-export class SolutionObserver extends ObservationClientV2<Solution> {
+export class SolutionObserver extends ReactiveObservationClient<Solution> {
     public model: typeof ViewModel.prototype.observe;
 
     constructor(solutions: Solution[] = []) {
@@ -21,4 +21,4 @@ export class SolutionObserver extends ObservationClientV2<Solution> {
     }
 }
 
-export class SolutionAggregateObserver extends AggregateClientV2<Solution> { }
+export class SolutionAggregateObserver extends ReactiveCombinationClient<Solution> { }

@@ -1,9 +1,9 @@
 import _ from "lodash";
 import {Observable, Subject} from "rxjs";
 import {CompositeDisposable} from "omnisharp-client";
-import {Models, RequestOptions, ClientV2, DriverState, OmnisharpClientOptions} from "omnisharp-client";
+import {Models, RequestOptions, ReactiveClient, DriverState, ReactiveClientOptions} from "omnisharp-client";
 
-interface SolutionOptions extends OmnisharpClientOptions {
+interface SolutionOptions extends ReactiveClientOptions {
     temporary: boolean;
     repository: Atom.GitRepository;
     index: number;
@@ -11,7 +11,7 @@ interface SolutionOptions extends OmnisharpClientOptions {
 
 import {ViewModel} from "./view-model";
 
-export class Solution extends ClientV2 {
+export class Solution extends ReactiveClient {
     private static _regex = new RegExp(String.fromCharCode(0xFFFD), "g");
 
     public model: ViewModel;
