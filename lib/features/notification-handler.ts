@@ -3,7 +3,7 @@ import _ from "lodash";
 import {Omni} from "../server/omni";
 import {CompositeDisposable} from "omnisharp-client";
 import * as path from "path";
-const $ : JQueryStatic = require("jquery");
+const $: JQueryStatic = require("jquery");
 
 class NotificationHandler implements IFeature {
     private disposable: CompositeDisposable;
@@ -66,16 +66,18 @@ class PackageRestoreNotification {
             this.notification.show("Package restore started", "Starting..");
         }
 
-        const projectName = this.findProjectNameFromFileName(event.FileName);
-        // Client gets more than one of each UnresolvedDependencies events for each project
-        // Don"t show multiple instances of a project in the notification
-        if (!_.some(this.knownProjects, (knownProject) => { return knownProject === projectName; })) {
-            this.knownProjects.push(projectName);
-            this.notification.addDetail(`Unresolved dependencies for ${projectName}:`, true);
-            if (event.UnresolvedDependencies) {
-                event.UnresolvedDependencies.forEach(dep => {
-                    this.notification.addDetail(` - ${dep.Name} ${dep.Version}`);
-                });
+        if (event.FileName) {
+            const projectName = this.findProjectNameFromFileName(event.FileName);
+            // Client gets more than one of each UnresolvedDependencies events for each project
+            // Don"t show multiple instances of a project in the notification
+            if (!_.some(this.knownProjects, (knownProject) => { return knownProject === projectName; })) {
+                this.knownProjects.push(projectName);
+                this.notification.addDetail(`Unresolved dependencies for ${projectName}:`, true);
+                if (event.UnresolvedDependencies) {
+                    event.UnresolvedDependencies.forEach(dep => {
+                        this.notification.addDetail(` - ${dep.Name} ${dep.Version}`);
+                    });
+                }
             }
         }
     };

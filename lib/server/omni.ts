@@ -1,4 +1,4 @@
-import {Observable, ReplaySubject, Subject, BehaviorSubject, Scheduler} from "rxjs";
+import {Observable, ReplaySubject, Subject, BehaviorSubject, Scheduler, Observer} from "rxjs";
 import {CompositeDisposable, Disposable, IDisposable, createObservable} from "omnisharp-client";
 import {SolutionManager} from "./solution-manager";
 import {Solution} from "./solution";
@@ -19,9 +19,8 @@ const statefulProperties = ["isOff", "isConnecting", "isOn", "isReady", "isError
 
 function wrapEditorObservable(observable: Observable<OmnisharpTextEditor>) {
     return observable
-        .subscribeOn(Scheduler.queue)
-        .observeOn(Scheduler.queue)
-        .debounceTime(DEBOUNCE_TIMEOUT)
+        .subscribeOn(Scheduler.async)
+        .observeOn(Scheduler.async)
         .filter(editor => !editor || editor && !editor.isDestroyed());
 }
 
@@ -30,36 +29,42 @@ class OmniManager implements IDisposable {
 
     private _editors: Observable<OmnisharpTextEditor>;
     private _configEditors: Observable<OmnisharpTextEditor>;
-    private _underlyingEditors: OmnisharpTextEditor[] = [];
+    private _underlyingEditors = new Set<OmnisharpTextEditor>();
 
     public get viewModelStatefulProperties() { return statefulProperties; }
 
     private _activeEditorOrConfigEditorSubject = new BehaviorSubject<OmnisharpTextEditor>(null);
     private _activeEditorOrConfigEditor = wrapEditorObservable(<Observable<OmnisharpTextEditor>><any>this._activeEditorOrConfigEditorSubject)
-        .publishReplay(1).refCount();
+        .debounceTime(DEBOUNCE_TIMEOUT)
+        .publishReplay(1)
+        .refCount();
 
     private _activeEditor = wrapEditorObservable(<Observable<OmnisharpTextEditor>><any>this._activeEditorOrConfigEditorSubject)
-        .delay(DEBOUNCE_TIMEOUT)
+        .debounceTime(DEBOUNCE_TIMEOUT)
         .map(x => x && x.omnisharp && !x.omnisharp.config ? x : null)
-        .publishReplay(1).refCount();
+        .publishReplay(1)
+        .refCount();
 
     private _activeConfigEditor = wrapEditorObservable(<Observable<OmnisharpTextEditor>><any>this._activeEditorOrConfigEditorSubject)
-        .delay(DEBOUNCE_TIMEOUT)
+        .debounceTime(DEBOUNCE_TIMEOUT)
         .map(x => x && x.omnisharp && x.omnisharp.config ? x : null)
-        .publishReplay(1).refCount();
+        .publishReplay(1)
+        .refCount();
 
     private _activeProject = this._activeEditorOrConfigEditor
         .filter(editor => editor && !editor.isDestroyed())
         .switchMap(editor => editor.omnisharp.solution.model.getProjectForEditor(editor))
         .distinctUntilChanged()
-        .publishReplay(1).refCount();
+        .publishReplay(1)
+        .refCount();
 
     private _activeFramework = this._activeEditorOrConfigEditor
         .filter(editor => editor && !editor.isDestroyed())
         .switchMap(editor => editor.omnisharp.solution.model.getProjectForEditor(editor))
         .switchMap(project => project.observe.activeFramework, (project, framework) => ({ project, framework }))
         .distinctUntilChanged()
-        .publishReplay(1).refCount();
+        .publishReplay(1)
+        .refCount();
 
     private _diagnosticsSubject = new Subject<Models.DiagnosticLocation[]>();
     private _diagnostics = this._diagnosticsSubject.cache(1);
@@ -77,19 +82,6 @@ class OmniManager implements IDisposable {
         const editors = this.createTextEditorObservable(this.disposable);
         this._editors = wrapEditorObservable(editors.filter(x => !x.omnisharp.config));
         this._configEditors = wrapEditorObservable(editors.filter(x => x.omnisharp.config));
-
-        SolutionManager.setupContextCallback = editor => {
-            this._underlyingEditors.push(editor);
-            editor.omnisharp.config = _.endsWith(editor.getPath(), "project.json");
-
-            this.disposable.add(Disposable.create(() => {
-                _.pull(this._underlyingEditors, editor);
-            }));
-
-            editor.omnisharp.solution.disposable.add(Disposable.create(() => {
-                _.pull(this._underlyingEditors, editor);
-            }));
-        };
 
         // Restore solutions after the server was disconnected
         this.disposable.add(SolutionManager.activeSolution.subscribe(solution => {
@@ -239,32 +231,37 @@ class OmniManager implements IDisposable {
     }
 
     private createTextEditorObservable(disposable: CompositeDisposable) {
-        this._createSafeGuard(this._supportedExtensions, disposable);
+        const safeGuard = this._createSafeGuard(this._supportedExtensions, disposable);
 
-        return Observable.merge<OmnisharpTextEditor>(
-            Observable.defer(() => Observable.from(this._underlyingEditors)),
-            createObservable<OmnisharpTextEditor>(observer => {
-                const dis = atom.workspace.observeTextEditors((editor: Atom.TextEditor) => {
-                    const cb = () => {
-                        if (this._isOmniSharpEditor(editor)) {
-                            SolutionManager.getSolutionForEditor(editor)
-                                .subscribe(() => observer.next(<any>editor));
-                        }
-                    };
+        const observeTextEditors = createObservable<Atom.TextEditor>(observer => {
+            const dis = atom.workspace.observeTextEditors((editor: Atom.TextEditor) => {
+                observer.next(editor);
+            });
 
-                    const path = editor.getPath();
-                    if (!path) {
-                        const disposer = editor.onDidChangePath(() => {
-                            cb();
-                            disposer.dispose();
-                        });
-                    } else {
-                        cb();
-                    }
-                });
+            return () => dis.dispose();
+        }).share();
 
-                return () => dis.dispose();
-            }));
+        this.disposable.add(
+            Observable.merge(observeTextEditors.filter(x => !!x.getPath()), safeGuard)
+                .mergeMap(editor => SolutionManager.getSolutionForEditor(editor), (editor, solution) => <OmnisharpTextEditor>editor)
+                .subscribe()
+        );
+
+        return Observable.merge(
+            Observable.defer(() => Observable.from<OmnisharpTextEditor>(<any>this._underlyingEditors)),
+            SolutionManager.setupEditors
+                .do(editor => {
+                    this._underlyingEditors.add(editor);
+                    editor.omnisharp.config = _.endsWith(editor.getPath(), "project.json");
+
+                    this.disposable.add(Disposable.create(() => {
+                        this._underlyingEditors.delete(editor);
+                    }));
+
+                    editor.omnisharp.solution.disposable.add(Disposable.create(() => {
+                        this._underlyingEditors.delete(editor);
+                    }));
+                }));
     }
 
     private _createSafeGuard(extensions: string[], disposable: CompositeDisposable) {
@@ -273,17 +270,27 @@ class OmniManager implements IDisposable {
         disposable.add(atom.workspace.observeActivePaneItem((pane: any) => editorSubject.next(pane)));
         const editorObservable = editorSubject.filter(z => z && !!z.getGrammar).startWith(null);
 
-        disposable.add(Observable.zip(editorObservable, editorObservable.skip(1), (editor, nextEditor) => ({ editor, nextEditor }))
+        return Observable.zip(editorObservable, editorObservable.skip(1), (editor, nextEditor) => ({ editor, nextEditor }))
             .debounceTime(50)
-            .subscribe(function({editor, nextEditor}) {
+            .switchMap(({nextEditor}) => {
                 const path = nextEditor.getPath();
                 if (!path) {
                     // editor isn"t saved yet.
-                    if (editor && _.some(extensions, ext => _.endsWith(editor.getPath(), ext))) {
+                    if (nextEditor && this._isOmniSharpEditor(nextEditor)) {
                         atom.notifications.addInfo("OmniSharp", { detail: "Functionality will limited until the file has been saved." });
                     }
+
+                    return new Promise<Atom.TextEditor>((resolve, reject) => {
+                        const disposer = nextEditor.onDidChangePath(() => {
+                            resolve(nextEditor);
+                            disposer.dispose();
+                        });
+                    });
                 }
-            }));
+
+                return Promise.resolve(null);
+            })
+            .filter(x => !!x);
     }
 
     /**

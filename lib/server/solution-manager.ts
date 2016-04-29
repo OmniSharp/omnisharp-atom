@@ -40,6 +40,9 @@ class SolutionInstanceManager {
     private _disposableSolutionMap = new WeakMap<Solution, IDisposable>();
     private _findSolutionCache = new Map<string, Observable<Solution>>();
     private _candidateFinderCache = new Set<string>();
+    private _setupEditorsSubject = new Subject<OmnisharpTextEditor>();
+    private _setupEditorsObservable = this._setupEditorsSubject.asObservable();
+    public get setupEditors() { return this._setupEditorsObservable; }
 
     private _activated = false;
     private _nextIndex = 0;
@@ -348,14 +351,10 @@ class SolutionInstanceManager {
             }));
         }
 
-        if (this.setupContextCallback) {
-            this.setupContextCallback(result);
-        }
+        this._setupEditorsSubject.next(result);
 
         return result;
     }
-
-    public setupContextCallback: (editor: OmnisharpTextEditor) => void;
 
     private _getSolutionForEditor(editor: Atom.TextEditor) {
         if (!editor) {
@@ -611,15 +610,17 @@ function addCandidatesInOrder(candidates: { path: string; repo: ASYNC_REPOSITORY
     const candidate = cds.shift();
     const handleCandidate = (cand: { path: string; repo: ASYNC_REPOSITORY; isProject: boolean; }) => {
         cb(cand.path, cand.repo, cand.isProject)
-            .subscribe({ complete: () => {
-                if (cds.length) {
-                    cand = cds.shift();
-                    handleCandidate(cand);
-                } else {
-                    asyncSubject.next(candidates);
-                    asyncSubject.complete();
+            .subscribe({
+                complete: () => {
+                    if (cds.length) {
+                        cand = cds.shift();
+                        handleCandidate(cand);
+                    } else {
+                        asyncSubject.next(candidates);
+                        asyncSubject.complete();
+                    }
                 }
-            } });
+            });
     };
     handleCandidate(candidate);
     return asyncSubject.toPromise();

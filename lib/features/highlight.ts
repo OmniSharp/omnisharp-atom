@@ -85,7 +85,7 @@ class Highlight implements IFeature {
                             context.solution.observe.codecheck
                                 .filter(x => x.request.FileName === editor.getPath())
                                 .map(x => <Models.DiagnosticLocation[]>(x.response && x.response.QuickFixes || []))
-                            )
+                        )
                             .take(1)
                             .do((value) => this.unusedCodeRows.set(editor.getPath(), filter(value, x => x.LogLevel === "Hidden")))
                         )
@@ -101,6 +101,7 @@ class Highlight implements IFeature {
                 .subscribe(() => {
                     editor.displayBuffer.tokenizedBuffer["silentRetokenizeLines"]();
                 }));
+            editor.omnisharp.get<Subject<boolean>>(HIGHLIGHT_REQUEST).next(true);
         }));
 
         this.disposable.add(Omni.switchActiveEditor((editor, cd) => {
@@ -173,9 +174,11 @@ class Highlight implements IFeature {
         disposable.add(editor.omnisharp.solution
             .whenConnected()
             .delay(1000)
-            .subscribe({ complete: () => {
-                issueRequest.next(true);
-            } }));
+            .subscribe({
+                complete: () => {
+                    issueRequest.next(true);
+                }
+            }));
     }
 
     public required = false;

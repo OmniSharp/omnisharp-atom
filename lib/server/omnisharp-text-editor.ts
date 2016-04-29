@@ -16,6 +16,7 @@ export class OmnisharpEditorContext implements IDisposable {
     private _project: ProjectViewModel<any>;
     private _items = new Map<string, any>();
     private _disposable = new CompositeDisposable();
+    private _loaded = false;
 
     constructor(editor: Atom.TextEditor, solution: Solution) {
         this._editor = <any>editor;
@@ -25,11 +26,11 @@ export class OmnisharpEditorContext implements IDisposable {
         this._disposable.add(solution.model
             .getProjectForEditor(editor)
             .take(1)
-            .subscribe((project) => this._project.update(project)));
-
-        this._disposable.add(Disposable.create(() => {
-            this._items.forEach(item => item.dispose && item.dispose());
-        }));
+            .subscribe((project) => this._project.update(project)),
+            this.solution.whenConnected().subscribe(() => this._loaded = true),
+            Disposable.create(() => {
+                this._items.forEach(item => item.dispose && item.dispose());
+            }));
     }
 
     public dispose() {
@@ -38,6 +39,15 @@ export class OmnisharpEditorContext implements IDisposable {
 
     public get solution() { return this._solution; }
     public get project() { return this._project; }
+    public get loaded() { return this._loaded; }
+    public onLoad<T extends Function>(callback: T) {
+        if (!this._loaded) {
+            this._disposable.add(this.solution.whenConnected()
+                .subscribe(() => callback()));
+            return;
+        }
+        callback();
+    }
 
     public get temp() { return this._items.has("___TEMP___") && this._items.get("___TEMP___") || false; }
     public set temp(value: boolean) {
