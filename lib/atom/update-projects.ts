@@ -36,8 +36,7 @@ class UpdateProject implements IAtomFeature {
                     .filter(z => this._autoAddExternalProjects || this._nagAddExternalProjects)
                     .filter(z => !_.startsWith(z.path, z.solutionPath))
                     .filter(z => !_.some(this._paths, x => _.startsWith(z.path, x))),
-                1000
-            )
+                1000)
                 .filter(z => z.length > 0)
                 .subscribe(project => this.handleProjectAdded(project)));
 
@@ -47,8 +46,7 @@ class UpdateProject implements IAtomFeature {
                     .filter(z => this._autoAddExternalProjects || this._nagAddExternalProjects)
                     .filter(z => !_.startsWith(z.path, z.solutionPath))
                     .filter(z => _.some(this._paths, x => _.startsWith(z.path, x))),
-                1000
-            )
+                1000)
                 .filter(z => z.length > 0)
                 .subscribe(project => this.handleProjectRemoved(project)));
 

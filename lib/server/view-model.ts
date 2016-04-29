@@ -60,37 +60,38 @@ export class ViewModel implements VMViewState, IDisposable {
         this.outputElement.classList.add("messages-container");
 
         // Manage our build log for display
-        this._disposable.add(_solution.logs.subscribe(event => {
-            this.output.push(event);
+        this._disposable.add(_solution.logs
+            .subscribe(event => {
+                this.output.push(event);
 
-            if (this.output.length > 1000) {
-                this.output.shift();
-            }
-        }));
-
-        this._disposable.add(bufferFor(_solution.logs, 100)
-            .subscribe(items => {
-                let removals: Element[] = [];
-                if (this.outputElement.children.length === 1000) {
-                    for (let i = 0; i < items.length; i++) {
-                        removals.push(this.outputElement.children[i]);
-                    }
+                if (this.output.length > 1000) {
+                    this.output.shift();
                 }
+            }),
+            bufferFor(_solution.logs, 100)
+                .subscribe(items => {
+                    let removals: Element[] = [];
+                    if (this.outputElement.children.length === 1000) {
+                        for (let i = 0; i < items.length; i++) {
+                            removals.push(this.outputElement.children[i]);
+                        }
+                    }
 
-                fastdom.mutate(() => {
-                    _.each(removals, x => x.remove());
+                    fastdom.mutate(() => {
+                        _.each(removals, x => x.remove());
 
-                    _.each(items, event => {
-                        this.outputElement.appendChild(OutputMessageElement.create(event));
+                        _.each(items, event => {
+                            this.outputElement.appendChild(OutputMessageElement.create(event));
+                        });
                     });
-                });
-            }));
-
-        this._disposable.add(_solution.state.filter(z => z === DriverState.Disconnected).subscribe(() => {
-            _.each(this.projects.slice(), project => this._projectRemovedStream.next(project));
-            this.projects = [];
-            this.diagnostics = [];
-        }));
+                }),
+            _solution.state.filter(z => z === DriverState.Disconnected)
+                .subscribe(() => {
+                    _.each(this.projects.slice(), project => this._projectRemovedStream.next(project));
+                    this.projects = [];
+                    this.diagnostics = [];
+                })
+        );
 
         const {codecheck} = this._setupCodecheck(_solution);
         const status = this._setupStatus(_solution);

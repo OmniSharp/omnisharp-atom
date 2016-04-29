@@ -12,13 +12,13 @@ class BufferForOperator<T> implements Operator<T, T[]> {
     constructor(private bufferDuration: number, private scheduler: Scheduler) {
     }
 
-    public call(subscriber: Subscriber<T[]>): Subscriber<T> {
-        return new BufferForSubscriber(subscriber, this.bufferDuration, this.scheduler);
+    public call(subscriber: Subscriber<T[]>, source: any): Subscriber<T> {
+        return source._subscribe(new BufferForSubscriber(subscriber, this.bufferDuration, this.scheduler));
     }
 }
 
 class BufferForSubscriber<T> extends Subscriber<T> {
-    private buffer: T[] = [];
+    private buffer: T[];
     private open = false;
 
     constructor(destination: Subscriber<T[]>, private bufferDuration: number, private scheduler: Scheduler) {
@@ -52,7 +52,7 @@ class BufferForSubscriber<T> extends Subscriber<T> {
             this.destination.next(buffer);
         }
 
-        this.buffer = [];
+        this.buffer = null;
     }
 
     public openBuffer() {
@@ -63,5 +63,6 @@ class BufferForSubscriber<T> extends Subscriber<T> {
         this.add(schedule);
 
         this.open = true;
+        this.buffer = [];
     }
 }
