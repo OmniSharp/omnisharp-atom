@@ -79,7 +79,7 @@
     "gulp-sourcemap": "^1.0.1",
     "gulp-sourcemaps": "^1.6.0",
     "gulp-tslint": "^5.0.0",
-    "gulp-typescript": "^2.13.0",
+    "gulp-typescript": "^2.13.1",
     "gulp-util": "^3.0.7",
     "jquery": "^2.2.3",
     "lodash": "^4.11.1",
