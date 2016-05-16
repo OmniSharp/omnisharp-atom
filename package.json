@@ -71,7 +71,7 @@
     "font-awesome": "^4.6.1",
     "fs-plus": "^2.8.2",
     "fuzzaldrin": "^2.1.0",
-    "generator-aspnet": "0.0.93",
+    "generator-aspnet": "0.1.0",
     "glob": "^7.0.3",
     "globby": "^4.0.0",
     "gulp": "^3.9.1",
