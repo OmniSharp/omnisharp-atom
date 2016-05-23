@@ -84,7 +84,7 @@
     "jquery": "^2.2.3",
     "lodash": "^4.11.1",
     "merge-stream": "^1.0.0",
-    "mocha": "^2.4.5",
+    "mocha": "^2.5.1",
     "mocha-unfunk-reporter": "^0.4.0",
     "omnisharp-client": "^4.2.1",
     "rimraf": "^2.5.2",
