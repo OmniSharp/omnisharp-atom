@@ -1,18 +1,20 @@
 {
   "name": "omnisharp-atom",
-  "ambientDependencies": {
-    "Q": "github:DefinitelyTyped/DefinitelyTyped/q/Q.d.ts#fc341765ebbb04b7109981a25dced01f488f4d94",
-    "assertion-error": "github:DefinitelyTyped/DefinitelyTyped/assertion-error/assertion-error.d.ts#fc341765ebbb04b7109981a25dced01f488f4d94",
-    "jquery": "github:DefinitelyTyped/DefinitelyTyped/jquery/jquery.d.ts#ac3a1f059f655059484d6aa5ba1f0f85908ae06c",
-    "mixto": "github:DefinitelyTyped/DefinitelyTyped/mixto/mixto.d.ts#ac3a1f059f655059484d6aa5ba1f0f85908ae06c",
-    "node": "github:DefinitelyTyped/DefinitelyTyped/node/node.d.ts#ac3a1f059f655059484d6aa5ba1f0f85908ae06c",
-    "semver": "github:DefinitelyTyped/DefinitelyTyped/semver/semver.d.ts#ac3a1f059f655059484d6aa5ba1f0f85908ae06c"
-  },
-  "ambientDevDependencies": {
-    "chai": "github:DefinitelyTyped/DefinitelyTyped/chai/chai.d.ts#1914a00b3c740348dae407ee0d2be89b0b58ad7f",
-    "mocha": "github:DefinitelyTyped/DefinitelyTyped/mocha/mocha.d.ts#d6dd320291705694ba8e1a79497a908e9f5e6617"
-  },
   "dependencies": {
-    "lodash": "github:david-driscoll/lodash-ts"
+    "lodash": "github:david-driscoll/lodash-ts",
+    "semver": "registry:npm/semver#5.0.0+20160211003958"
+  },
+  "globalDependencies": {
+    "assertion-error": "registry:dt/assertion-error#1.0.0+20160316155526",
+    "jquery": "registry:dt/jquery#1.10.0+20160417213236",
+    "mixto": "registry:dt/mixto#0.0.0+20160317120654",
+    "node": "registry:env/node#4.0.0+20160507210304",
+    "q": "registry:dt/q#0.0.0+20160417152954"
+  },
+  "devDependencies": {
+    "chai": "registry:npm/chai#3.5.0+20160415060238"
+  },
+  "globalDevDependencies": {
+    "mocha": "registry:env/mocha#2.2.5+20160321223601"
   }
 }
