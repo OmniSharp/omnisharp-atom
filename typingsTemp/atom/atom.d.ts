@@ -12,7 +12,7 @@
 /// <reference path="../atom-keymap/atom-keymap.d.ts" />
 /// <reference path="../scandal/scandal.d.ts" />
 /// <reference path="../pathwatcher/pathwatcher.d.ts" />
-/// <reference path="../../typings/main/ambient/semver/index.d.ts" />
+/// <reference path="../../typings/modules/semver/index.d.ts" />
 declare module Atom {
     /**
      * Atom global for dealing with packages, themes, menus, and the window.
