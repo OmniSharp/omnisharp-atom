@@ -8,7 +8,7 @@ import {Observable} from "rxjs";
 import {CompositeDisposable} from "omnisharp-client";
 import {codeCheck} from "../features/code-check";
 
-interface LinterError {
+interface LinterMessage {
     type: string; // "error" | "warning"
     text?: string;
     html?: string;
@@ -17,13 +17,36 @@ interface LinterError {
     [key: string]: any;
 }
 
-function mapValues(editor: Atom.TextEditor, error: Models.DiagnosticLocation): LinterError {
+interface IndieRegistry {
+    register(options: { name: string; }): Indie;
+    has(indie: any): Boolean;
+    unregister(indie: any): void;
+}
+
+interface Indie {
+    setMessages(messages: LinterMessage[]): void;
+    deleteMessages(): void;
+    dispose(): void;
+}
+
+function mapValues(editor: Atom.TextEditor, error: Models.DiagnosticLocation): LinterMessage {
     const level = error.LogLevel.toLowerCase();
 
     return {
         type: level,
         text: `${error.Text} [${Omni.getFrameworks(error.Projects)}] `,
         filePath: editor.getPath(),
+        range: new Range([error.Line, error.Column], [error.EndLine, error.EndColumn])
+    };
+}
+
+function mapIndieValues(error: Models.DiagnosticLocation): LinterMessage {
+    const level = error.LogLevel.toLowerCase();
+
+    return {
+        type: level,
+        text: `${error.Text} [${Omni.getFrameworks(error.Projects)}] `,
+        filePath: error.FileName,
         range: new Range([error.Line, error.Column], [error.EndLine, error.EndColumn])
     };
 }
@@ -104,10 +127,7 @@ export const provider = [
         lintOnFly: true,
         lint: (editor: Atom.TextEditor) => {
             const path = editor.getPath();
-            return Observable.race<Models.DiagnosticLocation[]>(
-                    codeCheck.doCodeCheck(editor),
-                    Omni.diagnostics.take(1).delay(30000)
-                )
+            return codeCheck.doCodeCheck(editor)
                 .map(x => _(x)
                     .filter(z => z.FileName === path)
                     .filter(z => showHiddenDiagnostics || z.LogLevel !== "Hidden")
@@ -135,3 +155,19 @@ export const provider = [
         }
     }
 ];
+
+export function registerIndie(registry: IndieRegistry, disposable: CompositeDisposable) {
+    const linter = registry.register({ name: "c#" });
+    disposable.add(
+        linter,
+        Omni.diagnostics
+            .map(x => _(x)
+                .filter(z => showHiddenDiagnostics || z.LogLevel !== "Hidden")
+                .map(error => mapIndieValues(error))
+                .value())
+            .subscribe(messages => {
+                linter.setMessages(messages);
+            })
+    );
+}
+

@@ -284,9 +284,10 @@ class OmniSharpAtom {
         return require("./services/completion-provider");
     }
 
-    public provideLinter() {
-        const LinterProvider = require("./services/linter-provider");
-        return LinterProvider.provider;
+    public provideLinter(): any[] {
+        return [];
+        //const LinterProvider = require("./services/linter-provider");
+        //return LinterProvider.provider;
     }
 
     public provideProjectJson() {
@@ -304,6 +305,10 @@ class OmniSharpAtom {
         }));
 
         this.disposable.add(LinterProvider.init(linter));
+    }
+
+    public consumeIndieLinter(linter: any) {
+        require("./services/linter-provider").registerIndie(linter, this.disposable);
     }
     /* tslint:enable:variable-name */
 
