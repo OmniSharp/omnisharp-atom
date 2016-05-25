@@ -6,10 +6,8 @@ notifications:
     on_failure: change
 before_install:
   - curl -sSL https://dist.asp.net/dnvm/dnvminstall.sh | sh && source ~/.dnx/dnvm/dnvm.sh
-  - dnvm install 1.0.0-beta4
-  - dnvm upgrade
 script:
-  - ./build-package.sh
+  - travis_retry ./build-package.sh
 os:
   - linux
   - osx
