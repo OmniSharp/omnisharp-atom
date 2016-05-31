@@ -70,6 +70,14 @@ class OmniManager implements IDisposable {
     private _diagnostics = this._diagnosticsSubject.cache(1);
     public get diagnostics() { return this._diagnostics; }
 
+    private _diagnosticCountsSubject = new Subject<{ [key: string]: number; }>();
+    private _diagnosticCounts = this._diagnosticCountsSubject.cache(1);
+    public get diagnosticsCounts() { return this._diagnosticCounts; }
+
+    private _diagnosticsByFileSubject = new Subject<Map<string, Models.DiagnosticLocation[]>>();
+    private _diagnosticsByFile = this._diagnosticsByFileSubject.cache(1);
+    public get diagnosticsByFile() { return this._diagnosticsByFile; }
+
     private _isOff = true;
 
     public get isOff() { return this._isOff; }
@@ -150,7 +158,32 @@ class OmniManager implements IDisposable {
         // Cache this result, because the underlying implementation of observe will
         //    create a cache of the last recieved value.  This allows us to pick pick
         //    up from where we left off.
-        const combinationObservable = this.aggregateListener.observe(z => z.model.observe.codecheck);
+        const codeCheckAggregate = this.aggregateListener.observe(z => z.model.observe.codecheck)
+            .debounceTime(200)
+            .map(data => _(data).flatMap(x => x.value).value());
+        const codeCheckCountAggregate = this.aggregateListener.observe(z => z.model.observe.codecheckCounts)
+            .debounceTime(200)
+            .map(items => {
+                const result: typeof ViewModel.prototype.diagnosticCounts = {};
+                _.each(items, (y) => {
+                    _.each(y.value, (x, k) => {
+                        if (!result[k]) result[k] = 0;
+                        result[k] += x;
+                    });
+                });
+                return result;
+            });
+        const codeCheckByFileAggregate = this.aggregateListener.observe(z => z.model.observe.codecheckByFile.map(x => z.model.diagnosticsByFile))
+            .debounceTime(200)
+            .map(x => {
+                const map = new Map<string, Models.DiagnosticLocation[]>();
+                _.each(x, z => {
+                    for (let [file, diagnostics] of z.value) {
+                        map.set(file, diagnostics);
+                    }
+                });
+                return map;
+            });
 
         let showDiagnosticsForAllSolutions = new ReplaySubject<boolean>(1);
         this.disposable.add(atom.config.observe("omnisharp-atom.showDiagnosticsForAllSolutions", function(enabled) {
@@ -159,26 +192,56 @@ class OmniManager implements IDisposable {
 
         this.disposable.add(showDiagnosticsForAllSolutions);
 
-        this.disposable.add(Observable.combineLatest( // Combine both the active model and the configuration changes together
+        const baseDiagnostics = Observable.combineLatest( // Combine both the active model and the configuration changes together
             this.activeModel.startWith(null), <Observable<boolean>><any>showDiagnosticsForAllSolutions, showDiagnosticsForAllSolutions.skip(1).startWith(atom.config.get<boolean>("omnisharp-atom.showDiagnosticsForAllSolutions")),
             (model, enabled, wasEnabled) => ({ model, enabled, wasEnabled }))
             // If the setting is enabled (and hasn"t changed) then we don"t need to redo the subscription
             .filter(ctx => (!(ctx.enabled && ctx.wasEnabled === ctx.enabled)))
-            .switchMap(ctx => {
-                const {enabled, model} = ctx;
+            .share();
 
-                if (enabled) {
-                    return combinationObservable
-                        .debounceTime(200)
-                        .map(data => _.flatten<Models.DiagnosticLocation>(data));
-                } else if (model) {
-                    return model.observe.codecheck;
-                }
+        this.disposable.add(
+            baseDiagnostics
+                .switchMap(ctx => {
+                    const {enabled, model} = ctx;
 
-                return Observable.of(<Models.DiagnosticLocation[]>[]);
-            })
-            .startWith([])
-            .subscribe(this._diagnosticsSubject)
+                    if (enabled) {
+                        return codeCheckAggregate;
+                    } else if (model) {
+                        return model.observe.codecheck;
+                    }
+
+                    return Observable.of([]);
+                })
+                .startWith([])
+                .subscribe(this._diagnosticsSubject),
+            baseDiagnostics
+                .switchMap(ctx => {
+                    const {enabled, model} = ctx;
+
+                    if (enabled) {
+                        return codeCheckCountAggregate;
+                    } else if (model) {
+                        return model.observe.codecheckCounts;
+                    }
+
+                    return <any>Observable.empty<{ [index: string]: number; }>();
+                })
+                .startWith({})
+                .subscribe(this._diagnosticCountsSubject),
+            baseDiagnostics
+                .switchMap(ctx => {
+                    const {enabled, model} = ctx;
+
+                    if (enabled) {
+                        return codeCheckByFileAggregate;
+                    } else if (model) {
+                        return model.observe.codecheckByFile.map(x => model.diagnosticsByFile);
+                    }
+
+                    return Observable.of(new Map<string, Models.DiagnosticLocation[]>());
+                })
+                .startWith(new Map<string, Models.DiagnosticLocation[]>())
+                .subscribe(this._diagnosticsByFileSubject)
         );
     }
 

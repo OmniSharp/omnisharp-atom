@@ -1,11 +1,11 @@
 import {Models} from "omnisharp-client";
-import _ from "lodash";
 import {Observable, Subject} from "rxjs";
-import {CompositeDisposable, Disposable} from "omnisharp-client";
+import {CompositeDisposable} from "omnisharp-client";
 import {Omni} from "../server/omni";
 import {dock} from "../atom/dock";
 import {CodeCheckOutputElement} from "../views/codecheck-output-pane-view";
 import {reloadWorkspace} from "./reload-workspace";
+import {filter} from "lodash";
 
 class CodeCheck implements IFeature {
     private disposable: CompositeDisposable;
@@ -13,7 +13,6 @@ class CodeCheck implements IFeature {
     public displayDiagnostics: Models.DiagnosticLocation[] = [];
     public selectedIndex: number = 0;
     private scrollTop: number = 0;
-    private _editorSubjects = new WeakMap<Atom.TextEditor, () => Observable<Models.DiagnosticLocation[]>>();
     private _fullCodeCheck: Subject<any>;
     private _window = new CodeCheckOutputElement;
 
@@ -44,35 +43,6 @@ class CodeCheck implements IFeature {
             this._window.prev();
             Omni.navigateTo(this._window.current);
         }));
-
-        this.disposable.add(Omni.eachEditor((editor, cd) => {
-            const subject = new Subject<any>();
-
-            const o = subject
-                .debounceTime(100)
-                .filter(() => !editor.isDestroyed())
-                .flatMap(() => this._doCodeCheck(editor))
-                .map(response => response.QuickFixes || [])
-                .share();
-
-            this._editorSubjects.set(editor, () => {
-                const result = o.take(1);
-                subject.next(null);
-                return result as Observable<Models.DiagnosticLocation[]>;
-            });
-
-            cd.add(o.subscribe());
-
-            cd.add(editor.getBuffer().onDidSave(() => subject.next(null)));
-            cd.add(editor.getBuffer().onDidReload(() => subject.next(null)));
-            cd.add(editor.getBuffer().onDidStopChanging(() => subject.next(null)));
-            cd.add(Disposable.create(() => this._editorSubjects.delete(editor)));
-        }));
-
-        // Linter is doing this for us!
-        /*this.disposable.add(Omni.switchActiveEditor((editor, cd) => {
-            cd.add(Omni.whenEditorConnected(editor).subscribe(() => this.doCodeCheck(editor)));
-        }));*/
 
         this.disposable.add(Omni.diagnostics
             .subscribe(diagnostics => {
@@ -126,26 +96,11 @@ class CodeCheck implements IFeature {
     }
 
     public filterOnlyWarningsAndErrors(quickFixes: Models.DiagnosticLocation[]): Models.DiagnosticLocation[] {
-        return _.filter(quickFixes, (quickFix: Models.DiagnosticLocation) => {
-            return quickFix.LogLevel !== "Hidden";
-        });
+        return filter(quickFixes, x => x.LogLevel !== "Hidden");
     }
 
     public dispose() {
         this.disposable.dispose();
-    }
-
-    private _doCodeCheck(editor: Atom.TextEditor) {
-        return Omni.request(editor, solution => solution.codecheck({}));
-    };
-
-    public doCodeCheck(editor: Atom.TextEditor): Observable<Models.DiagnosticLocation[]> {
-        const callback = this._editorSubjects.get(editor);
-        if (callback) {
-            return callback();
-        }
-        return Observable.timer(100)
-            .flatMap(() => this.doCodeCheck(editor));
     }
 
     public required = true;

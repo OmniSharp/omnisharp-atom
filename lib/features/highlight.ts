@@ -79,19 +79,16 @@ class Highlight implements IFeature {
                                 (<any>editor.getGrammar()).setResponses(highlights, projects.length > 0);
                             }
                         })
-                        .flatMap(() => Observable.race<Models.DiagnosticLocation[]>(
-                            // Wait for a new codecheck, otherwise look at what exists
-                            context.solution.model.observe.codecheck.delay(4000),
-                            context.solution.observe.codecheck
-                                .filter(x => x.request.FileName === editor.getPath())
-                                .map(x => <Models.DiagnosticLocation[]>(x.response && x.response.QuickFixes || []))
-                        )
-                            .take(1)
-                            .do((value) => this.unusedCodeRows.set(editor.getPath(), filter(value, x => x.LogLevel === "Hidden")))
-                        )
                         .publishReplay(1)
                         .refCount();
                 }))));
+
+        this.disposable.add(Omni.listener.model.codecheckByFile
+            .subscribe(changes => {
+                for (let [file, diagnostics] of changes) {
+                    this.unusedCodeRows.set(file, filter(diagnostics, x => x.LogLevel === "Hidden"));
+                }
+            }));
 
         this.disposable.add(Omni.eachEditor((editor, cd) => {
             this.setupEditor(editor, cd);
@@ -110,15 +107,6 @@ class Highlight implements IFeature {
                 editor.displayBuffer.tokenizedBuffer["silentRetokenizeLines"]();
             }
         }));
-
-        this.disposable.add(Omni.listener.codecheck
-            .flatMap(x => x.response && <Models.DiagnosticLocation[]>x.response.QuickFixes || [])
-            .filter(x => x.LogLevel === "Hidden")
-            .groupBy(x => x.FileName, x => x)
-            .flatMap(x => x.toArray(), ({key}, result) => ({ key, result }))
-            .subscribe(({key, result}) => {
-                this.unusedCodeRows.set(key, result);
-            }));
 
         this.disposable.add(Disposable.create(() => {
             this.unusedCodeRows.clear();

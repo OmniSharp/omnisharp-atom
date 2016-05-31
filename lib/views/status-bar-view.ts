@@ -254,12 +254,10 @@ export class StatusBarElement extends HTMLElement implements WebComponent, IDisp
     }
 
     public attachedCallback() {
-        this._disposable.add(Omni.diagnostics.subscribe(diagnostics => {
-            const counts = _.countBy(diagnostics, quickFix => quickFix.LogLevel);
-
+        this._disposable.add(Omni.diagnosticsCounts.subscribe(counts => {
             this._diagnostics.updateState({
-                errorCount: counts["Error"] || 0,
-                warningCount: counts["Warning"] || 0
+                errorCount: counts["error"] || 0,
+                warningCount: counts["warning"] || 0
             });
         }));
 

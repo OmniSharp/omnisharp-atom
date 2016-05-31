@@ -10,6 +10,8 @@ export class SolutionObserver extends ReactiveObservationClient<Solution> {
 
         this.model = {
             codecheck: this.makeMergeObserable((solution: Solution) => solution.model.observe.codecheck),
+            codecheckCounts: this.makeMergeObserable((solution: Solution) => solution.model.observe.codecheckCounts),
+            codecheckByFile: this.makeMergeObserable((solution: Solution) => solution.model.observe.codecheckByFile),
             output: this.makeMergeObserable((solution: Solution) => solution.model.observe.output),
             status: this.makeMergeObserable((solution: Solution) => solution.model.observe.status),
             state: this.makeMergeObserable((solution: Solution) => solution.model.observe.state),

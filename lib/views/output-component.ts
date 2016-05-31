@@ -153,8 +153,8 @@ export class OutputElement<TItem, TElement extends MessageElement<TItem>> extend
         this.selectedIndex = this._selectedIndex - 1;
     }
 
-    public updateOutput(output: TItem[]) {
-        this.output = output.slice();
+    public updateOutput(output: TItem[] | IterableIterator<TItem>) {
+        this.output = _.toArray(output);
         this._update();
     }
 

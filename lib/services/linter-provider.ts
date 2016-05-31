@@ -4,9 +4,7 @@ import {Omni} from "../server/omni";
 const Range = require("atom").Range;
 /* tslint:enable:variable-name */
 import _ from "lodash";
-import {Observable} from "rxjs";
 import {CompositeDisposable} from "omnisharp-client";
-import {codeCheck} from "../features/code-check";
 
 interface LinterMessage {
     type: string; // "error" | "warning"
@@ -27,17 +25,6 @@ interface Indie {
     setMessages(messages: LinterMessage[]): void;
     deleteMessages(): void;
     dispose(): void;
-}
-
-function mapValues(editor: Atom.TextEditor, error: Models.DiagnosticLocation): LinterMessage {
-    const level = error.LogLevel.toLowerCase();
-
-    return {
-        type: level,
-        text: `${error.Text} [${Omni.getFrameworks(error.Projects)}] `,
-        filePath: editor.getPath(),
-        range: new Range([error.Line, error.Column], [error.EndLine, error.EndColumn])
-    };
 }
 
 function mapIndieValues(error: Models.DiagnosticLocation): LinterMessage {
@@ -119,53 +106,19 @@ export function init(linter: { getEditorLinter: (editor: Atom.TextEditor) => { l
     return disposable;
 }
 
-export const provider = [
-    {
-        name: "c#",
-        get grammarScopes() { return Omni.grammars.map((x: any) => x.scopeName); },
-        scope: "file",
-        lintOnFly: true,
-        lint: (editor: Atom.TextEditor) => {
-            const path = editor.getPath();
-            return codeCheck.doCodeCheck(editor)
-                .map(x => _(x)
-                    .filter(z => z.FileName === path)
-                    .filter(z => showHiddenDiagnostics || z.LogLevel !== "Hidden")
-                    .map(error => mapValues(editor, error))
-                    .value()
-                )
-                .toPromise();
-        }
-    }, {
-        name: "c#",
-        get grammarScopes() { return Omni.grammars.map((x: any) => x.scopeName); },
-        scope: "project",
-        lintOnFly: false,
-        lint: (editor: Atom.TextEditor) => {
-            return Observable.race<Models.DiagnosticLocation[]>(
-                Omni.diagnostics.skip(1).take(1),
-                Omni.diagnostics.take(1).delay(3000)
-            )
-                .map(x => _(x)
-                    .filter(z => showHiddenDiagnostics || z.LogLevel !== "Hidden")
-                    .map(error => mapValues(editor, error))
-                    .value()
-                )
-                .toPromise();
-        }
-    }
-];
-
 export function registerIndie(registry: IndieRegistry, disposable: CompositeDisposable) {
     const linter = registry.register({ name: "c#" });
     disposable.add(
         linter,
         Omni.diagnostics
-            .map(x => _(x)
-                .filter(z => showHiddenDiagnostics || z.LogLevel !== "Hidden")
-                .map(error => mapIndieValues(error))
-                .value())
-            .subscribe(messages => {
+            .subscribe(diagnostics => {
+                const messages: LinterMessage[] = [];
+                for (let item of diagnostics) {
+                    if (showHiddenDiagnostics || item.LogLevel !== "Hidden") {
+                        messages.push(mapIndieValues(item));
+                    }
+                }
+
                 linter.setMessages(messages);
             })
     );

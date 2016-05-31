@@ -17,6 +17,14 @@ export interface VMViewState {
     isError: boolean;
 }
 
+function getDiagnostics(map: Map<string, Models.DiagnosticLocation[]>): Models.DiagnosticLocation[] {
+    const result: Models.DiagnosticLocation[] = [];
+    for (let items of map.values()) {
+        result.push(...items);
+    }
+    return result;
+}
+
 export class ViewModel implements VMViewState, IDisposable {
     public isOff: boolean;
     public isConnecting: boolean;
@@ -32,7 +40,15 @@ export class ViewModel implements VMViewState, IDisposable {
     public get path() { return this._solution.path; }
     public output: OutputMessage[] = [];
     public outputElement = document.createElement("div");
-    public diagnostics: Models.DiagnosticLocation[] = [];
+    public diagnosticsByFile = new Map<string, Models.DiagnosticLocation[]>();
+    public get diagnostics() {
+        return getDiagnostics(this.diagnosticsByFile);
+    }
+    public diagnosticCounts: { [index: string]: number; } = { errors: 0, warnings: 0, hidden: 0 };
+
+    public errors: number = 0;
+    public warnings: number = 0;
+    public hidden: number = 0;
 
     public get state() { return this._solution.currentState; };
     public packageSources: string[] = [];
@@ -44,6 +60,8 @@ export class ViewModel implements VMViewState, IDisposable {
 
     public observe: {
         codecheck: Observable<Models.DiagnosticLocation[]>;
+        codecheckCounts: Observable<{ [index: string]: number; }>;
+        codecheckByFile: Observable<Map<string, Models.DiagnosticLocation[]>>;
         output: Observable<OutputMessage[]>;
         status: Observable<OmnisharpClientStatus>;
         state: Observable<ViewModel>;
@@ -89,11 +107,11 @@ export class ViewModel implements VMViewState, IDisposable {
                 .subscribe(() => {
                     _.each(this.projects.slice(), project => this._projectRemovedStream.next(project));
                     this.projects = [];
-                    this.diagnostics = [];
+                    this.diagnosticsByFile.clear();
                 })
         );
 
-        const {codecheck} = this._setupCodecheck(_solution);
+        const {codecheck, codecheckByFile, codecheckCounts} = this._setupCodecheck(_solution);
         const status = this._setupStatus(_solution);
         const output = this.output;
 
@@ -114,6 +132,8 @@ export class ViewModel implements VMViewState, IDisposable {
 
         this.observe = {
             get codecheck() { return codecheck; },
+            get codecheckCounts() { return codecheckCounts; },
+            get codecheckByFile() { return codecheckByFile; },
             get output() { return outputObservable; },
             get status() { return status; },
             get state() { return <Observable<ViewModel>><any>state; },
@@ -185,31 +205,6 @@ export class ViewModel implements VMViewState, IDisposable {
             });
         }));
 
-        /*this._disposable.add(_solution.observe.projects
-            .filter(z => z.response && z.response.DotNet && z.response.DotNet.Projects.length > 0)
-            .map(z => z.response.DotNet)
-            .subscribe(system => {
-                if (system.RuntimePath) {
-                    this.runtime = basename(system.RuntimePath);
-
-                    let path = normalize(system.RuntimePath);
-                    if (win32) {
-                        const home = process.env.HOME || process.env.USERPROFILE;
-                        if (home && home.trim()) {
-                            const processHome = normalize(home);
-                            // Handles the case where home path does not have a trailing slash.
-                            if (_.startsWith(path, processHome)) {
-                                path = path.replace(processHome, "");
-                                path = join(processHome, path);
-                            }
-                        }
-                    }
-                    this.runtimePath = path;
-
-                    this._stateStream.next(this);
-                }
-            }));*/
-
         this._disposable.add(this._projectAddedStream);
         this._disposable.add(this._projectChangedStream);
         this._disposable.add(this._projectRemovedStream);
@@ -269,29 +264,51 @@ export class ViewModel implements VMViewState, IDisposable {
     }
 
     private _setupCodecheck(_solution: Solution) {
-        const codecheck = Observable.merge(
-            // Catch global code checks
-            _solution.observe.codecheck
-                .filter(z => !z.request.FileName)
-                .map(z => z.response || <any>{})
-                .map(z => <Models.DiagnosticLocation[]>z.QuickFixes || []),
-            // Evict diagnostics from a code check for the given file
-            // Then insert the new diagnostics
-            _solution.observe.codecheck
-                .filter(z => !!z.request.FileName)
-                .map((ctx) => {
-                    let {request, response} = ctx;
-                    if (!response) response = <any>{};
-                    const results = _.filter(this.diagnostics, (fix: Models.DiagnosticLocation) => request.FileName !== fix.FileName);
-                    results.unshift(...<Models.DiagnosticLocation[]>response.QuickFixes || []);
-                    return results;
-                }))
-            .map(data => _.sortBy(data, quickFix => quickFix.LogLevel))
-            .startWith([])
-            .publishReplay(1).refCount();
+        const baseCodecheck = _solution.observe.diagnostic
+            .map(data => {
+                const files: string[] = [];
+                const counts = this.diagnosticCounts;
+                for (let result of data.Results) {
+                    files.push(result.FileName);
+                    if (this.diagnosticsByFile.has(result.FileName)) {
+                        const old = this.diagnosticsByFile.get(result.FileName);
+                        this.diagnosticsByFile.delete(result.FileName);
 
-        this._disposable.add(codecheck.subscribe((data) => this.diagnostics = data));
-        return { codecheck };
+                        const grouped = _.groupBy(old, x => x.LogLevel);
+                        _.each(grouped, (items, key) => {
+                            counts[key.toLowerCase()] -= items.length;
+                            if (counts[key.toLowerCase()] < 0) counts[key.toLowerCase()] = 0;
+                        });
+                    }
+
+                    this.diagnosticsByFile.set(result.FileName, _.sortBy(result.QuickFixes, x => x.Line, quickFix => quickFix.LogLevel, x => x.Text));
+                    const grouped = _.groupBy(result.QuickFixes, x => x.LogLevel);
+                    _.each(grouped, (items, key) => {
+                        counts[key.toLowerCase()] += items.length;
+                    });
+                }
+                return files;
+            })
+            .share();
+
+        const codecheck = baseCodecheck
+            .map(x => this.diagnostics)
+            .cache(1);
+
+        const codecheckByFile = baseCodecheck
+            .map(files => {
+                const map = new Map<string, Models.DiagnosticLocation[]>();
+                _.each(files, file => map.set(file, this.diagnosticsByFile.get(file)));
+                return map;
+            })
+            .cache(1);
+
+        const codecheckCounts = baseCodecheck
+            .map(x => this.diagnosticCounts)
+            .cache(1);
+
+        this._disposable.add(baseCodecheck.subscribe());
+        return { codecheck, codecheckByFile, codecheckCounts };
     }
 
     private _setupStatus(_solution: Solution) {
