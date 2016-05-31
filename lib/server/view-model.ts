@@ -17,14 +17,6 @@ export interface VMViewState {
     isError: boolean;
 }
 
-function getDiagnostics(map: Map<string, Models.DiagnosticLocation[]>): Models.DiagnosticLocation[] {
-    const result: Models.DiagnosticLocation[] = [];
-    for (let items of map.values()) {
-        result.push(...items);
-    }
-    return result;
-}
-
 export class ViewModel implements VMViewState, IDisposable {
     public isOff: boolean;
     public isConnecting: boolean;
@@ -42,7 +34,7 @@ export class ViewModel implements VMViewState, IDisposable {
     public outputElement = document.createElement("div");
     public diagnosticsByFile = new Map<string, Models.DiagnosticLocation[]>();
     public get diagnostics() {
-        return getDiagnostics(this.diagnosticsByFile);
+        return _.flatMap(_.toArray(this.diagnosticsByFile.values()), x => x);
     }
     public diagnosticCounts: { [index: string]: number; } = { errors: 0, warnings: 0, hidden: 0 };
 
@@ -268,7 +260,7 @@ export class ViewModel implements VMViewState, IDisposable {
             .map(data => {
                 const files: string[] = [];
                 const counts = this.diagnosticCounts;
-                for (let result of data.Results) {
+                _.each(data.Results, result => {
                     files.push(result.FileName);
                     if (this.diagnosticsByFile.has(result.FileName)) {
                         const old = this.diagnosticsByFile.get(result.FileName);
@@ -286,7 +278,7 @@ export class ViewModel implements VMViewState, IDisposable {
                     _.each(grouped, (items, key) => {
                         counts[key.toLowerCase()] += items.length;
                     });
-                }
+                });
                 return files;
             })
             .share();

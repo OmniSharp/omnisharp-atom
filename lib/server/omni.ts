@@ -144,6 +144,9 @@ class OmniManager implements IDisposable {
 
             cd.add(editor.onDidSave(() => this.request(editor, solution => solution.updatebuffer({ FromDisk: true }, { silent: true }))));
 
+            cd.add(this.request(editor, sln => sln.open({})).subscribe());
+            cd.add(() => this.request(editor, sln => sln.close({})).subscribe());
+
             cd.add(editor.onDidDestroy(() => {
                 cd.dispose();
             }));
