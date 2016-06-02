@@ -25,7 +25,7 @@ export class ViewModel implements VMViewState, IDisposable {
     public isError: boolean;
 
     private _uniqueId: string;
-    private _disposable = new CompositeDisposable();
+    public disposable = new CompositeDisposable();
     public get uniqueId() { return this._solution.uniqueId; }
 
     public get index() { return this._solution.index; }
@@ -70,7 +70,7 @@ export class ViewModel implements VMViewState, IDisposable {
         this.outputElement.classList.add("messages-container");
 
         // Manage our build log for display
-        this._disposable.add(_solution.logs
+        this.disposable.add(_solution.logs
             .subscribe(event => {
                 this.output.push(event);
 
@@ -135,13 +135,13 @@ export class ViewModel implements VMViewState, IDisposable {
             get projectChanged() { return _projectChangedStream; },
         };
 
-        this._disposable.add(_solution.state.subscribe(_.bind(this._updateState, this)));
+        this.disposable.add(_solution.state.subscribe(_.bind(this._updateState, this)));
 
         /* tslint:disable */
         (window["clients"] || (window["clients"] = [])).push(this);  //TEMP
         /* tslint:enable */
 
-        this._disposable.add(_solution.state.filter(z => z === DriverState.Connected)
+        this.disposable.add(_solution.state.filter(z => z === DriverState.Connected)
             .subscribe(() => {
                 _solution.projects({ ExcludeSourceFiles: false });
 
@@ -151,11 +151,11 @@ export class ViewModel implements VMViewState, IDisposable {
                     });
             }));
 
-        this._disposable.add(_solution.state.filter(z => z === DriverState.Disconnected).subscribe(() => {
+        this.disposable.add(_solution.state.filter(z => z === DriverState.Disconnected).subscribe(() => {
             _.each(this.projects.slice(), project => this._projectRemovedStream.next(project));
         }));
 
-        this._disposable.add(_solution.observe.projectAdded.subscribe(projectInformation => {
+        this.disposable.add(_solution.observe.projectAdded.subscribe(projectInformation => {
             _.each(projectViewModelFactory(projectInformation, _solution.projectPath), project => {
                 if (!_.some(this.projects, { path: project.path })) {
                     this.projects.push(project);
@@ -164,7 +164,7 @@ export class ViewModel implements VMViewState, IDisposable {
             });
         }));
 
-        this._disposable.add(_solution.observe.projectRemoved.subscribe(projectInformation => {
+        this.disposable.add(_solution.observe.projectRemoved.subscribe(projectInformation => {
             _.each(projectViewModelFactory(projectInformation, _solution.projectPath), project => {
                 const found: ProjectViewModel<any> = _.find(this.projects, { path: project.path });
                 if (found) {
@@ -174,7 +174,7 @@ export class ViewModel implements VMViewState, IDisposable {
             });
         }));
 
-        this._disposable.add(_solution.observe.projectChanged.subscribe(projectInformation => {
+        this.disposable.add(_solution.observe.projectChanged.subscribe(projectInformation => {
             _.each(projectViewModelFactory(projectInformation, _solution.projectPath), project => {
                 const found: ProjectViewModel<any> = _.find(this.projects, { path: project.path });
                 if (found) {
@@ -184,7 +184,7 @@ export class ViewModel implements VMViewState, IDisposable {
             });
         }));
 
-        this._disposable.add(_solution.observe.projects.subscribe(context => {
+        this.disposable.add(_solution.observe.projects.subscribe(context => {
             _.each(workspaceViewModelFactory(context.response, _solution.projectPath), project => {
                 const found: ProjectViewModel<any> = _.find(this.projects, { path: project.path });
                 if (found) {
@@ -197,17 +197,17 @@ export class ViewModel implements VMViewState, IDisposable {
             });
         }));
 
-        this._disposable.add(this._projectAddedStream);
-        this._disposable.add(this._projectChangedStream);
-        this._disposable.add(this._projectRemovedStream);
+        this.disposable.add(this._projectAddedStream);
+        this.disposable.add(this._projectChangedStream);
+        this.disposable.add(this._projectRemovedStream);
 
-        this._disposable.add(Disposable.create(() => {
+        this.disposable.add(Disposable.create(() => {
             _.each(this.projects, x => x.dispose());
         }));
     }
 
     public dispose() {
-        this._disposable.dispose();
+        this.disposable.dispose();
     }
 
     public getProjectForEditor(editor: Atom.TextEditor) {
@@ -299,7 +299,7 @@ export class ViewModel implements VMViewState, IDisposable {
             .map(x => this.diagnosticCounts)
             .cache(1);
 
-        this._disposable.add(baseCodecheck.subscribe());
+        this.disposable.add(baseCodecheck.subscribe());
         return { codecheck, codecheckByFile, codecheckCounts };
     }
 

@@ -93,7 +93,7 @@ export class Solution extends ReactiveClient {
             const editor = this._currentEditor;
 
             const marker = editor.getCursorBufferPosition();
-            _.defaults(request, { Column: marker.column, Line: marker.row, FileName: editor.getURI(), Buffer: editor.getBuffer().getLines().join("\n") });
+            _.defaults(request, { Column: marker.column, Line: marker.row, FileName: editor.getURI(), Buffer: editor.getBuffer().getText() });
             /*
             TODO: Update once rename/code actions don"t apply changes to the workspace
             const omniChanges: { oldRange: { start: TextBuffer.Point, end: TextBuffer.Point }; newRange: { start: TextBuffer.Point, end: TextBuffer.Point }; oldText: string; newText: string; }[] = (<any>editor).__omniChanges__ || [];

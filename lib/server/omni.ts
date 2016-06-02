@@ -144,14 +144,11 @@ class OmniManager implements IDisposable {
 
             cd.add(editor.onDidSave(() => this.request(editor, solution => solution.updatebuffer({ FromDisk: true }, { silent: true }))));
 
-            cd.add(this.request(editor, sln => sln.open({})).subscribe());
-            cd.add(() => this.request(editor, sln => sln.close({})).subscribe());
-
             cd.add(editor.onDidDestroy(() => {
                 cd.dispose();
             }));
 
-            this.disposable.add(cd);
+            editor.omnisharp.solution.disposable.add(cd);
         }));
 
         this.disposable.add(Disposable.create(() => {
@@ -470,9 +467,11 @@ class OmniManager implements IDisposable {
         outerCd.add(this.activeModel.filter(z => !!z).subscribe(model => {
             const cd = new CompositeDisposable();
             outerCd.add(cd);
+            model.disposable.add(cd);
 
             cd.add(this.activeModel.filter(active => active !== model)
                 .subscribe(() => {
+                    model.disposable.remove(cd);
                     outerCd.remove(cd);
                     cd.dispose();
                 }));
@@ -492,9 +491,11 @@ class OmniManager implements IDisposable {
         outerCd.add(this.activeSolution.filter(z => !!z).subscribe(solution => {
             const cd = new CompositeDisposable();
             outerCd.add(cd);
+            solution.disposable.add(cd);
 
             cd.add(this.activeSolution.filter(active => active !== solution)
                 .subscribe(() => {
+                    solution.disposable.remove(cd);
                     outerCd.remove(cd);
                     cd.dispose();
                 }));
@@ -514,9 +515,11 @@ class OmniManager implements IDisposable {
         outerCd.add(this.activeEditor.filter(z => !!z).subscribe(editor => {
             const cd = new CompositeDisposable();
             outerCd.add(cd);
+            editor.omnisharp.solution.disposable.add(cd);
 
             cd.add(this.activeEditor.filter(active => active !== editor)
                 .subscribe(() => {
+                    editor.omnisharp.solution.disposable.remove(cd);
                     outerCd.remove(cd);
                     cd.dispose();
                 }));
@@ -547,9 +550,11 @@ class OmniManager implements IDisposable {
         outerCd.add(this.activeConfigEditor.filter(z => !!z).subscribe(editor => {
             const cd = new CompositeDisposable();
             outerCd.add(cd);
+            editor.omnisharp.solution.disposable.add(cd);
 
             cd.add(this.activeConfigEditor.filter(active => active !== editor)
                 .subscribe(() => {
+                    editor.omnisharp.solution.disposable.remove(cd);
                     outerCd.remove(cd);
                     cd.dispose();
                 }));
@@ -603,8 +608,10 @@ class OmniManager implements IDisposable {
         outerCd.add(this._editors.subscribe(editor => {
             const cd = new CompositeDisposable();
             outerCd.add(cd);
+            editor.omnisharp.solution.disposable.add(cd);
 
             cd.add(editor.onDidDestroy((() => {
+            editor.omnisharp.solution.disposable.remove(cd);
                 outerCd.remove(cd);
                 cd.dispose();
             })));
@@ -620,8 +627,10 @@ class OmniManager implements IDisposable {
         outerCd.add(this._configEditors.subscribe(editor => {
             const cd = new CompositeDisposable();
             outerCd.add(cd);
+            editor.omnisharp.solution.disposable.add(cd);
 
             cd.add(editor.onDidDestroy((() => {
+                editor.omnisharp.solution.disposable.remove(cd);
                 outerCd.remove(cd);
                 cd.dispose();
             })));

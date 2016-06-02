@@ -23,14 +23,21 @@ export class OmnisharpEditorContext implements IDisposable {
         this._solution = solution;
         this._project = new EmptyProjectViewModel(null, solution.path);
 
-        this._disposable.add(solution.model
-            .getProjectForEditor(editor)
-            .take(1)
-            .subscribe((project) => this._project.update(project)),
+        this._disposable.add(
+            solution.model
+                .getProjectForEditor(editor)
+                .take(1)
+                .subscribe((project) => this._project.update(project)),
             this.solution.whenConnected().subscribe(() => this._loaded = true),
             Disposable.create(() => {
                 this._items.forEach(item => item.dispose && item.dispose());
-            }));
+            }),
+            solution.open({ FileName: editor.getPath() }).subscribe(),
+            () => {
+                solution.disposable.add(solution.close({ FileName: editor.getPath() }).subscribe());
+            }
+        );
+
     }
 
     public dispose() {
