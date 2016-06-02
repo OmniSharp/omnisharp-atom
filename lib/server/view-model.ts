@@ -34,7 +34,10 @@ export class ViewModel implements VMViewState, IDisposable {
     public outputElement = document.createElement("div");
     public diagnosticsByFile = new Map<string, Models.DiagnosticLocation[]>();
     public get diagnostics() {
-        return _.flatMap(_.toArray(this.diagnosticsByFile.values()), x => x);
+        return  _(_.toArray(this.diagnosticsByFile.values()))
+            .flatMap(x => x)
+            .sortBy(x => x.LogLevel, x => x.FileName, x => x.Line, x => x.Column, x => x.Text)
+            .value();
     }
     public diagnosticCounts: { [index: string]: number; } = { errors: 0, warnings: 0, hidden: 0 };
 
