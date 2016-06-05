@@ -139,7 +139,7 @@ export class Solution extends ReactiveClient {
             tempR.Changes = null;
         }
 
-        return super.request<TRequest, TResponse>(action, request, options);
+        return <any>super.request<TRequest, TResponse>(action, request, options);
     }
 
     private setupRepository() {

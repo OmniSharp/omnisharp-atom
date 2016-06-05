@@ -8,7 +8,6 @@ import {ProjectViewModel} from "./project-view-model";
 import {ViewModel} from "./view-model";
 import * as fs from "fs";
 import * as path from "path";
-import {ExtendApi} from "../omnisharp";
 import {Models} from "omnisharp-client";
 import {OmnisharpTextEditor, isOmnisharpTextEditor} from "./omnisharp-text-editor";
 import {metadataOpener} from "./metadata-editor";
@@ -158,10 +157,10 @@ class OmniManager implements IDisposable {
         // Cache this result, because the underlying implementation of observe will
         //    create a cache of the last recieved value.  This allows us to pick pick
         //    up from where we left off.
-        const codeCheckAggregate = this.aggregateListener.observe(z => z.model.observe.codecheck)
+        const codeCheckAggregate = this.aggregateListener.listenTo(z => z.model.observe.codecheck)
             .debounceTime(200)
             .map(data => _(data).flatMap(x => x.value).value());
-        const codeCheckCountAggregate = this.aggregateListener.observe(z => z.model.observe.codecheckCounts)
+        const codeCheckCountAggregate = this.aggregateListener.listenTo(z => z.model.observe.codecheckCounts)
             .debounceTime(200)
             .map(items => {
                 const result: typeof ViewModel.prototype.diagnosticCounts = {};
@@ -173,7 +172,7 @@ class OmniManager implements IDisposable {
                 });
                 return result;
             });
-        const codeCheckByFileAggregate = this.aggregateListener.observe(z => z.model.observe.codecheckByFile.map(x => z.model.diagnosticsByFile))
+        const codeCheckByFileAggregate = this.aggregateListener.listenTo(z => z.model.observe.codecheckByFile.map(x => z.model.diagnosticsByFile))
             .debounceTime(200)
             .map(x => {
                 const map = new Map<string, Models.DiagnosticLocation[]>();
@@ -388,9 +387,9 @@ class OmniManager implements IDisposable {
      * The callback will then issue the request
      * NOTE: This API only exposes the operation Api and doesn"t expose the event api, as we are requesting something to happen
      */
-    public request<T>(editor: Atom.TextEditor, callback: (solution: ExtendApi) => Observable<T>): Observable<T>;
-    public request<T>(callback: (solution: ExtendApi) => Observable<T>): Observable<T>;
-    public request<T>(editor: Atom.TextEditor | ((solution: ExtendApi) => Observable<T> | Promise<T>), callback?: (solution: ExtendApi) => Observable<T>): Observable<T> {
+    public request<T>(editor: Atom.TextEditor, callback: (solution: Solution) => Observable<T>): Observable<T>;
+    public request<T>(callback: (solution: Solution) => Observable<T>): Observable<T>;
+    public request<T>(editor: Atom.TextEditor | ((solution: Solution) => Observable<T> | Promise<T>), callback?: (solution: Solution) => Observable<T>): Observable<T> {
         if (_.isFunction(editor)) {
             callback = <any>editor;
             editor = null;
