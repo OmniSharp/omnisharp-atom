@@ -331,16 +331,7 @@ class SolutionInstanceManager {
     private _setupEditorWithContext(editor: Atom.TextEditor, solution: Solution) {
         const context = new OmnisharpEditorContext(editor, solution);
         const result: OmnisharpTextEditor = <any>editor;
-        result.omnisharp = context;
-
-        const view: HTMLElement = <any>atom.views.getView(editor);
-        view.classList.add("omnisharp-editor");
-
-        context.solution.disposable.add(Disposable.create(() => {
-            context.dispose();
-            result.omnisharp = null;
-            view.classList.remove("omnisharp-editor");
-        }));
+        this._disposable.add(context);
 
         if (solution && !context.temp && this._temporarySolutions.has(solution)) {
             const refCountDisposable = this._temporarySolutions.get(solution);

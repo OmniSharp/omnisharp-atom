@@ -83,7 +83,7 @@ class Highlight implements IFeature {
                         .refCount();
                 }))));
 
-        this.disposable.add(Omni.listener.model.codecheckByFile
+        this.disposable.add(Omni.listener.model.diagnosticsByFile
             .subscribe(changes => {
                 for (let [file, diagnostics] of changes) {
                     this.unusedCodeRows.set(file, filter(diagnostics, x => x.LogLevel === "Hidden"));

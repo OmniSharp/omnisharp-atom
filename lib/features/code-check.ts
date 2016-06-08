@@ -81,7 +81,7 @@ class CodeCheck implements IFeature {
                 .toArray()
                 .concatMap(x => Omni.solutions)
                 .concatMap(solution => solution.whenConnected()
-                    .do(() => solution.codecheck({ FileName: null })))
+                    .do(() => solution.diagnostics({ FileName: null })))
             )
             .subscribe());
 

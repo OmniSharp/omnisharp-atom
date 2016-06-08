@@ -54,9 +54,9 @@ export class ViewModel implements VMViewState, IDisposable {
     private _stateStream = new ReplaySubject<ViewModel>(1);
 
     public observe: {
-        codecheck: Observable<Models.DiagnosticLocation[]>;
-        codecheckCounts: Observable<{ [index: string]: number; }>;
-        codecheckByFile: Observable<Map<string, Models.DiagnosticLocation[]>>;
+        diagnostics: Observable<Models.DiagnosticLocation[]>;
+        diagnosticsCounts: Observable<{ [index: string]: number; }>;
+        diagnosticsByFile: Observable<Map<string, Models.DiagnosticLocation[]>>;
         output: Observable<OutputMessage[]>;
         status: Observable<OmnisharpClientStatus>;
         state: Observable<ViewModel>;
@@ -106,7 +106,7 @@ export class ViewModel implements VMViewState, IDisposable {
                 })
         );
 
-        const {codecheck, codecheckByFile, codecheckCounts} = this._setupCodecheck(_solution);
+        const {diagnostics, diagnosticsByFile, diagnosticsCounts} = this._setupCodecheck(_solution);
         const status = this._setupStatus(_solution);
         const output = this.output;
 
@@ -126,9 +126,9 @@ export class ViewModel implements VMViewState, IDisposable {
         const state = this._stateStream;
 
         this.observe = {
-            get codecheck() { return codecheck; },
-            get codecheckCounts() { return codecheckCounts; },
-            get codecheckByFile() { return codecheckByFile; },
+            get diagnostics() { return diagnostics; },
+            get diagnosticsCounts() { return diagnosticsCounts; },
+            get diagnosticsByFile() { return diagnosticsByFile; },
             get output() { return outputObservable; },
             get status() { return status; },
             get state() { return <Observable<ViewModel>><any>state; },
@@ -286,11 +286,11 @@ export class ViewModel implements VMViewState, IDisposable {
             })
             .share();
 
-        const codecheck = baseCodecheck
+        const diagnostics = baseCodecheck
             .map(x => this.diagnostics)
             .cache(1);
 
-        const codecheckByFile = baseCodecheck
+        const diagnosticsByFile = baseCodecheck
             .map(files => {
                 const map = new Map<string, Models.DiagnosticLocation[]>();
                 _.each(files, file => map.set(file, this.diagnosticsByFile.get(file)));
@@ -298,12 +298,12 @@ export class ViewModel implements VMViewState, IDisposable {
             })
             .cache(1);
 
-        const codecheckCounts = baseCodecheck
+        const diagnosticsCounts = baseCodecheck
             .map(x => this.diagnosticCounts)
             .cache(1);
 
         this.disposable.add(baseCodecheck.subscribe());
-        return { codecheck, codecheckByFile, codecheckCounts };
+        return { diagnostics, diagnosticsByFile, diagnosticsCounts };
     }
 
     private _setupStatus(_solution: Solution) {

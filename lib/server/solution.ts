@@ -2,6 +2,7 @@ import _ from "lodash";
 import {Observable, Subject} from "rxjs";
 import {CompositeDisposable} from "omnisharp-client";
 import {Models, RequestOptions, ReactiveClient, DriverState, ReactiveClientOptions} from "omnisharp-client";
+import {OmnisharpTextEditor} from "./omnisharp-text-editor";
 
 interface SolutionOptions extends ReactiveClientOptions {
     temporary: boolean;
@@ -82,38 +83,23 @@ export class Solution extends ReactiveClient {
         }));
     }
 
-    private _currentEditor: Atom.TextEditor;
-    public withEditor(editor: Atom.TextEditor) {
+    private _currentEditor: OmnisharpTextEditor;
+    public withEditor(editor: OmnisharpTextEditor) {
         this._currentEditor = editor;
         return this;
     }
+
     private _fixupRequest<TRequest, TResponse>(action: string, request: TRequest) {
         // Only send changes for requests that really need them.
         if (this._currentEditor && _.isObject(request)) {
             const editor = this._currentEditor;
-
             const marker = editor.getCursorBufferPosition();
-            _.defaults(request, { Column: marker.column, Line: marker.row, FileName: editor.getURI(), Buffer: editor.getBuffer().getText() });
-            /*
-            TODO: Update once rename/code actions don"t apply changes to the workspace
-            const omniChanges: { oldRange: { start: TextBuffer.Point, end: TextBuffer.Point }; newRange: { start: TextBuffer.Point, end: TextBuffer.Point }; oldText: string; newText: string; }[] = (<any>editor).__omniChanges__ || [];
-            const computedChanges: Models.LinePositionSpanTextChange[];
-
-            if (_.some(["goto", "navigate", "find", "package"], x => _.startsWith(action, x))) {
-                computedChanges = null;
-            } else {
-                computedChanges = omniChanges.map(change => <Models.LinePositionSpanTextChange>{
-                    NewText: change.newText,
-                    StartLine: change.oldRange.start.row,
-                    StartColumn: change.oldRange.start.column,
-                    EndLine: change.oldRange.end.row,
-                    EndColumn: change.oldRange.end.column
-                });
+            let computedChanges: Models.LinePositionSpanTextChange[] = null;
+            if (!_.some(["/goto", "/navigate", "/find", "/package"], x => _.startsWith(action, x))) {
+                computedChanges = editor.omnisharp.popChanges();
             }
 
-            omniChanges.splice(0, omniChanges.length);
-            _.defaults(request, { Changes: computedChanges });
-            */
+            _.defaults(request, { Column: marker.column, Line: marker.row, FileName: editor.getURI(), Changes: computedChanges });
         }
 
         /* tslint:disable:no-string-literal */

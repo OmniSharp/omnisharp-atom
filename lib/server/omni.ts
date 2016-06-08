@@ -126,30 +126,6 @@ class OmniManager implements IDisposable {
                 })
                 .subscribe(this._activeEditorOrConfigEditorSubject));
 
-        this.disposable.add(this._editors.subscribe(editor => {
-            const cd = new CompositeDisposable();
-            // TODO: Update once rename/codeactions support optional workspace changes
-            //const omniChanges: { oldRange: TextBuffer.Range; newRange: TextBuffer.Range; oldText: string; newText: string; }[] = (<any>editor).__omniChanges__ = [];
-
-            /*cd.add(editor.getBuffer().onDidChange((change: { oldRange: TextBuffer.Range; newRange: TextBuffer.Range; oldText: string; newText: string; }) => {
-                //omniChanges.push(change);
-            }));*/
-
-            cd.add(editor.onDidStopChanging(_.debounce(() => {
-                /*if (omniChanges.length) {
-                }*/
-                this.request(editor, solution => solution.updatebuffer({}, { silent: true }));
-            }, 1000)));
-
-            cd.add(editor.onDidSave(() => this.request(editor, solution => solution.updatebuffer({ FromDisk: true }, { silent: true }))));
-
-            cd.add(editor.onDidDestroy(() => {
-                cd.dispose();
-            }));
-
-            editor.omnisharp.solution.disposable.add(cd);
-        }));
-
         this.disposable.add(Disposable.create(() => {
             this._activeEditorOrConfigEditorSubject.next(null);
         }));
@@ -157,10 +133,10 @@ class OmniManager implements IDisposable {
         // Cache this result, because the underlying implementation of observe will
         //    create a cache of the last recieved value.  This allows us to pick pick
         //    up from where we left off.
-        const codeCheckAggregate = this.aggregateListener.listenTo(z => z.model.observe.codecheck)
+        const codeCheckAggregate = this.aggregateListener.listenTo(z => z.model.observe.diagnostics)
             .debounceTime(200)
             .map(data => _(data).flatMap(x => x.value).value());
-        const codeCheckCountAggregate = this.aggregateListener.listenTo(z => z.model.observe.codecheckCounts)
+        const codeCheckCountAggregate = this.aggregateListener.listenTo(z => z.model.observe.diagnosticsCounts)
             .debounceTime(200)
             .map(items => {
                 const result: typeof ViewModel.prototype.diagnosticCounts = {};
@@ -172,7 +148,7 @@ class OmniManager implements IDisposable {
                 });
                 return result;
             });
-        const codeCheckByFileAggregate = this.aggregateListener.listenTo(z => z.model.observe.codecheckByFile.map(x => z.model.diagnosticsByFile))
+        const codeCheckByFileAggregate = this.aggregateListener.listenTo(z => z.model.observe.diagnosticsByFile.map(x => z.model.diagnosticsByFile))
             .debounceTime(200)
             .map(x => {
                 const map = new Map<string, Models.DiagnosticLocation[]>();
@@ -206,7 +182,7 @@ class OmniManager implements IDisposable {
                     if (enabled) {
                         return codeCheckAggregate;
                     } else if (model) {
-                        return model.observe.codecheck;
+                        return model.observe.diagnostics;
                     }
 
                     return Observable.of([]);
@@ -220,7 +196,7 @@ class OmniManager implements IDisposable {
                     if (enabled) {
                         return codeCheckCountAggregate;
                     } else if (model) {
-                        return model.observe.codecheckCounts;
+                        return model.observe.diagnosticsCounts;
                     }
 
                     return <any>Observable.empty<{ [index: string]: number; }>();
@@ -234,7 +210,7 @@ class OmniManager implements IDisposable {
                     if (enabled) {
                         return codeCheckByFileAggregate;
                     } else if (model) {
-                        return model.observe.codecheckByFile.map(x => model.diagnosticsByFile);
+                        return model.observe.diagnosticsByFile.map(x => model.diagnosticsByFile);
                     }
 
                     return Observable.of(new Map<string, Models.DiagnosticLocation[]>());
@@ -323,7 +299,8 @@ class OmniManager implements IDisposable {
                     editor.omnisharp.solution.disposable.add(Disposable.create(() => {
                         this._underlyingEditors.delete(editor);
                     }));
-                }));
+                }))
+                .share();
     }
 
     private _createSafeGuard(extensions: string[], disposable: CompositeDisposable) {
@@ -610,7 +587,7 @@ class OmniManager implements IDisposable {
             editor.omnisharp.solution.disposable.add(cd);
 
             cd.add(editor.onDidDestroy((() => {
-            editor.omnisharp.solution.disposable.remove(cd);
+                editor.omnisharp.solution.disposable.remove(cd);
                 outerCd.remove(cd);
                 cd.dispose();
             })));

@@ -9,9 +9,9 @@ export class SolutionObserver extends ReactiveObservationClient<Solution> {
         super(solutions);
 
         this.model = {
-            codecheck: this.makeObservable((solution: Solution) => solution.model.observe.codecheck),
-            codecheckCounts: this.makeObservable((solution: Solution) => solution.model.observe.codecheckCounts),
-            codecheckByFile: this.makeObservable((solution: Solution) => solution.model.observe.codecheckByFile),
+            diagnostics: this.makeObservable((solution: Solution) => solution.model.observe.diagnostics),
+            diagnosticsCounts: this.makeObservable((solution: Solution) => solution.model.observe.diagnosticsCounts),
+            diagnosticsByFile: this.makeObservable((solution: Solution) => solution.model.observe.diagnosticsByFile),
             output: this.makeObservable((solution: Solution) => solution.model.observe.output),
             status: this.makeObservable((solution: Solution) => solution.model.observe.status),
             state: this.makeObservable((solution: Solution) => solution.model.observe.state),
