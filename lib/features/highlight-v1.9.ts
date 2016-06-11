@@ -45,7 +45,7 @@ class Highlight implements IFeature {
     private unusedCodeRows = new UnusedMap();
 
     public activate() {
-        if (Omni.atomVersionGreaterThan("1.8.0")) {
+        if (!Omni.atomVersionGreaterThan("1.8.0")) {
             return;
         }
         this.disposable = new CompositeDisposable();
@@ -99,15 +99,15 @@ class Highlight implements IFeature {
             cd.add(editor.omnisharp
                 .get<Observable<{ editor: OmnisharpTextEditor; highlights: Models.HighlightSpan[]; projects: string[] }>>(HIGHLIGHT)
                 .subscribe(() => {
-                    editor.displayBuffer.tokenizedBuffer["silentRetokenizeLines"]();
+                    (editor as any).tokenizedBuffer["silentRetokenizeLines"]();
                 }));
             editor.omnisharp.get<Subject<boolean>>(HIGHLIGHT_REQUEST).next(true);
         }));
 
         this.disposable.add(Omni.switchActiveEditor((editor, cd) => {
             editor.omnisharp.get<Subject<boolean>>(HIGHLIGHT_REQUEST).next(true);
-            if (editor.displayBuffer.tokenizedBuffer["silentRetokenizeLines"]) {
-                editor.displayBuffer.tokenizedBuffer["silentRetokenizeLines"]();
+            if ((editor as any).tokenizedBuffer["silentRetokenizeLines"]) {
+                (editor as any).tokenizedBuffer["silentRetokenizeLines"]();
             }
         }));
 
@@ -139,7 +139,7 @@ class Highlight implements IFeature {
         disposable.add(Disposable.create(() => {
             (<any>editor.getGrammar()).linesToFetch = [];
             if ((<any>editor.getGrammar()).responses) (<any>editor.getGrammar()).responses.clear();
-            editor.displayBuffer.tokenizedBuffer.retokenizeLines();
+            (editor as any).tokenizedBuffer.retokenizeLines();
             delete editor["_oldGrammar"];
         }));
 
@@ -183,27 +183,27 @@ export function augmentEditor(editor: Atom.TextEditor, unusedCodeRows: UnusedMap
         editor["_oldGrammar"] = editor.getGrammar();
     if (!editor["_setGrammar"])
         editor["_setGrammar"] = editor.setGrammar;
-    if (!editor.displayBuffer.tokenizedBuffer["_buildTokenizedLineForRowWithText"])
-        editor.displayBuffer.tokenizedBuffer["_buildTokenizedLineForRowWithText"] = editor.displayBuffer.tokenizedBuffer.buildTokenizedLineForRowWithText;
-    if (!editor.displayBuffer.tokenizedBuffer["_markTokenizationComplete"])
-        editor.displayBuffer.tokenizedBuffer["_markTokenizationComplete"] = editor.displayBuffer.tokenizedBuffer.markTokenizationComplete;
-    if (!editor.displayBuffer.tokenizedBuffer["_retokenizeLines"])
-        editor.displayBuffer.tokenizedBuffer["_retokenizeLines"] = editor.displayBuffer.tokenizedBuffer.retokenizeLines;
-    if (!editor.displayBuffer.tokenizedBuffer["_tokenizeInBackground"])
-        editor.displayBuffer.tokenizedBuffer["_tokenizeInBackground"] = editor.displayBuffer.tokenizedBuffer.tokenizeInBackground;
-    if (!editor.displayBuffer.tokenizedBuffer["_chunkSize"])
-        editor.displayBuffer.tokenizedBuffer["chunkSize"] = 20;
+    if (!(editor as any).tokenizedBuffer["_buildTokenizedLineForRowWithText"])
+        (editor as any).tokenizedBuffer["_buildTokenizedLineForRowWithText"] = (editor as any).tokenizedBuffer.buildTokenizedLineForRowWithText;
+    if (!(editor as any).tokenizedBuffer["_markTokenizationComplete"])
+        (editor as any).tokenizedBuffer["_markTokenizationComplete"] = (editor as any).tokenizedBuffer.markTokenizationComplete;
+    if (!(editor as any).tokenizedBuffer["_retokenizeLines"])
+        (editor as any).tokenizedBuffer["_retokenizeLines"] = (editor as any).tokenizedBuffer.retokenizeLines;
+    if (!(editor as any).tokenizedBuffer["_tokenizeInBackground"])
+        (editor as any).tokenizedBuffer["_tokenizeInBackground"] = (editor as any).tokenizedBuffer.tokenizeInBackground;
+    if (!(editor as any).tokenizedBuffer["_chunkSize"])
+        (editor as any).tokenizedBuffer["chunkSize"] = 20;
 
     editor.setGrammar = setGrammar;
     if (doSetGrammar) editor.setGrammar(editor.getGrammar());
 
-    (<any>editor.displayBuffer.tokenizedBuffer).buildTokenizedLineForRowWithText = function(row: number) {
+    (<any>(editor as any).tokenizedBuffer).buildTokenizedLineForRowWithText = function(row: number) {
         (<any>editor.getGrammar())["__row__"] = row;
-        return editor.displayBuffer.tokenizedBuffer["_buildTokenizedLineForRowWithText"].apply(this, arguments);
+        return (editor as any).tokenizedBuffer["_buildTokenizedLineForRowWithText"].apply(this, arguments);
     };
 
-    if (!(<any>editor.displayBuffer.tokenizedBuffer).silentRetokenizeLines) {
-        (<any>editor.displayBuffer.tokenizedBuffer).silentRetokenizeLines = debounce(function() {
+    if (!(<any>(editor as any).tokenizedBuffer).silentRetokenizeLines) {
+        (<any>(editor as any).tokenizedBuffer).silentRetokenizeLines = debounce(function() {
             if ((<any>editor.getGrammar()).isObserveRetokenizing)
                 (<any>editor.getGrammar()).isObserveRetokenizing.next(false);
             let lastRow: number;
@@ -219,19 +219,19 @@ export function augmentEditor(editor: Atom.TextEditor, unusedCodeRows: UnusedMap
         }, DEBOUNCE_TIME, { leading: true, trailing: true });
     }
 
-    (<any>editor.displayBuffer.tokenizedBuffer).markTokenizationComplete = function() {
+    (<any>(editor as any).tokenizedBuffer).markTokenizationComplete = function() {
         if ((<any>editor.getGrammar()).isObserveRetokenizing)
             (<any>editor.getGrammar()).isObserveRetokenizing.next(true);
-        return editor.displayBuffer.tokenizedBuffer["_markTokenizationComplete"].apply(this, arguments);
+        return (editor as any).tokenizedBuffer["_markTokenizationComplete"].apply(this, arguments);
     };
 
-    (<any>editor.displayBuffer.tokenizedBuffer).retokenizeLines = function() {
+    (<any>(editor as any).tokenizedBuffer).retokenizeLines = function() {
         if ((<any>editor.getGrammar()).isObserveRetokenizing)
             (<any>editor.getGrammar()).isObserveRetokenizing.next(false);
-        return editor.displayBuffer.tokenizedBuffer["_retokenizeLines"].apply(this, arguments);
+        return (editor as any).tokenizedBuffer["_retokenizeLines"].apply(this, arguments);
     };
 
-    (<any>editor.displayBuffer.tokenizedBuffer).tokenizeInBackground = function() {
+    (<any>(editor as any).tokenizedBuffer).tokenizeInBackground = function() {
         if (!this.visible || this.pendingChunk || !this.isAlive())
             return;
 
@@ -244,7 +244,7 @@ export function augmentEditor(editor: Atom.TextEditor, unusedCodeRows: UnusedMap
         });
     };
 
-    (<any>editor.displayBuffer.tokenizedBuffer).scopesFromTags = function(startingScopes: number[], tags: number[]) {
+    (<any>(editor as any).tokenizedBuffer).scopesFromTags = function(startingScopes: number[], tags: number[]) {
         const scopes = startingScopes.slice();
         const grammar = (<any>editor.getGrammar());
         for (let i = 0, len = tags.length; i < len; i++) {
@@ -741,4 +741,4 @@ class UnusedMap {
     }
 }
 
-export const enhancedHighlighting = new Highlight;
+export const enhancedHighlighting19 = new Highlight;

@@ -11,6 +11,7 @@ import * as path from "path";
 import {Models} from "omnisharp-client";
 import {OmnisharpTextEditor, isOmnisharpTextEditor} from "./omnisharp-text-editor";
 import {metadataOpener} from "./metadata-editor";
+import {SemVer, gt as semverGt} from "semver";
 
 // Time we wait to try and do our active switch tasks.
 const DEBOUNCE_TIMEOUT = 100;
@@ -298,7 +299,7 @@ class OmniManager implements IDisposable {
                         this._underlyingEditors.delete(editor);
                     }));
                 }))
-                .share();
+            .share();
     }
 
     private _createSafeGuard(extensions: string[], disposable: CompositeDisposable) {
@@ -651,6 +652,18 @@ class OmniManager implements IDisposable {
             }
         }
         return this._packageDir;
+    }
+
+    private _atomVersion: SemVer;
+    public get atomVersion() {
+        if (!this._atomVersion) {
+            this._atomVersion = new SemVer(<any>atom.getVersion());
+        }
+        return this._atomVersion;
+    }
+
+    public atomVersionGreaterThan(version: string) {
+        return semverGt(<any>atom.getVersion(), version);
     }
 }
 
