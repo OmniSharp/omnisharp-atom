@@ -157,7 +157,7 @@ class SolutionInstanceManager {
                                     });
                                 return addCandidatesInOrder(newCandidates, (candidate, repo, isProject) => this._addSolution(candidate, repo, isProject, { project }));
                             });
-                    });
+                    }).toPromise();
             })
             .subscribe(candidateObservable => {
                 this._activeSearch = this._activeSearch.then(() => candidateObservable);

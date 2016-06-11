@@ -1,7 +1,7 @@
 /// <reference path="../typings.d.ts" />
 import {Models} from "omnisharp-client";
 import _ from "lodash";
-import {Observable, Subject, Scheduler, Subscription} from "rxjs";
+import {Observable, Subject, Subscription} from "rxjs";
 import {CompositeDisposable, Disposable, IDisposable} from "omnisharp-client";
 import {Omni} from "../server/omni";
 let fastdom: typeof Fastdom = require("fastdom");

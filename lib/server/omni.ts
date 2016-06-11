@@ -1,4 +1,4 @@
-import {Observable, ReplaySubject, Subject, BehaviorSubject, Scheduler} from "rxjs";
+import {Observable, ReplaySubject, Subject, BehaviorSubject} from "rxjs";
 import {CompositeDisposable, Disposable, IDisposable, createObservable} from "omnisharp-client";
 import {SolutionManager} from "./solution-manager";
 import {Solution} from "./solution";
@@ -32,18 +32,18 @@ class OmniManager implements IDisposable {
 
     private _activeEditorOrConfigEditorSubject = new BehaviorSubject<OmnisharpTextEditor>(null);
     private _activeEditorOrConfigEditor = wrapEditorObservable(<Observable<OmnisharpTextEditor>><any>this._activeEditorOrConfigEditorSubject)
-        //.debounceTime(DEBOUNCE_TIMEOUT)
+        .debounceTime(DEBOUNCE_TIMEOUT)
         .publishReplay(1)
         .refCount();
 
     private _activeEditor = wrapEditorObservable(<Observable<OmnisharpTextEditor>><any>this._activeEditorOrConfigEditorSubject)
-        //.debounceTime(DEBOUNCE_TIMEOUT)
+        .debounceTime(DEBOUNCE_TIMEOUT)
         .map(x => x && x.omnisharp && !x.omnisharp.config ? x : null)
         .publishReplay(1)
         .refCount();
 
     private _activeConfigEditor = wrapEditorObservable(<Observable<OmnisharpTextEditor>><any>this._activeEditorOrConfigEditorSubject)
-        //.debounceTime(DEBOUNCE_TIMEOUT)
+        .debounceTime(DEBOUNCE_TIMEOUT)
         .map(x => x && x.omnisharp && x.omnisharp.config ? x : null)
         .publishReplay(1)
         .refCount();
