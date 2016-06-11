@@ -18,8 +18,6 @@ const statefulProperties = ["isOff", "isConnecting", "isOn", "isReady", "isError
 
 function wrapEditorObservable(observable: Observable<OmnisharpTextEditor>) {
     return observable
-        .subscribeOn(Scheduler.async)
-        .observeOn(Scheduler.async)
         .filter(editor => !editor || editor && !editor.isDestroyed());
 }
 
@@ -34,18 +32,18 @@ class OmniManager implements IDisposable {
 
     private _activeEditorOrConfigEditorSubject = new BehaviorSubject<OmnisharpTextEditor>(null);
     private _activeEditorOrConfigEditor = wrapEditorObservable(<Observable<OmnisharpTextEditor>><any>this._activeEditorOrConfigEditorSubject)
-        .debounceTime(DEBOUNCE_TIMEOUT)
+        //.debounceTime(DEBOUNCE_TIMEOUT)
         .publishReplay(1)
         .refCount();
 
     private _activeEditor = wrapEditorObservable(<Observable<OmnisharpTextEditor>><any>this._activeEditorOrConfigEditorSubject)
-        .debounceTime(DEBOUNCE_TIMEOUT)
+        //.debounceTime(DEBOUNCE_TIMEOUT)
         .map(x => x && x.omnisharp && !x.omnisharp.config ? x : null)
         .publishReplay(1)
         .refCount();
 
     private _activeConfigEditor = wrapEditorObservable(<Observable<OmnisharpTextEditor>><any>this._activeEditorOrConfigEditorSubject)
-        .debounceTime(DEBOUNCE_TIMEOUT)
+        //.debounceTime(DEBOUNCE_TIMEOUT)
         .map(x => x && x.omnisharp && x.omnisharp.config ? x : null)
         .publishReplay(1)
         .refCount();

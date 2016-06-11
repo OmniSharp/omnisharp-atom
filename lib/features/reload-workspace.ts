@@ -19,7 +19,6 @@ class ReloadWorkspace implements IFeature {
             .flatMap(solution => {
                 return Observable.from<ProjectViewModel<any>>(solution.model.projects)
                     .flatMap(x => x.sourceFiles)
-                    .observeOn(Scheduler.queue)
                     .concatMap(file => oexists(file).filter(x => !x)
                         .flatMap(() => solution.updatebuffer({ FileName: file, Buffer: "" })));
             });

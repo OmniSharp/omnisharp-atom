@@ -35,7 +35,7 @@ const workspaceFactories: { [key: string]: (workspace: any, solutionPath: string
     DotNet: (workspace: Models.DotNetWorkspaceInformation, solutionPath: string) => {
         return _.map(workspace.Projects, projectInformation => new DotNetProjectViewModel(projectInformation, solutionPath));
     },
-    ScriptCs: (workspace: ScriptCs.ScriptCsContext, solutionPath: string) => {
+    ScriptCs: (workspace: ScriptCs.ScriptCsContextModel, solutionPath: string) => {
         /*if (workspace.CsxFiles.length > 0)
             return [new ScriptCsProjectViewModel(workspace, solutionPath)];
         */
@@ -182,10 +182,10 @@ class DotNetProjectViewModel extends ProjectViewModel<Models.DotNetProjectInform
     }
 }
 
-class ScriptCsProjectViewModel extends ProjectViewModel<ScriptCs.ScriptCsContext> {
-    public init(project: ScriptCs.ScriptCsContext) {
+class ScriptCsProjectViewModel extends ProjectViewModel<ScriptCs.ScriptCsContextModel> {
+    public init(project: ScriptCs.ScriptCsContextModel) {
         this.name = "ScriptCs";
-        this.path = "";// project.Path;
-        this.sourceFiles = [];// project.CsxFiles;
+        this.path = project.RootPath;
+        this.sourceFiles = project.CsxFilesBeingProcessed;
     }
 }

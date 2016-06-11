@@ -63,7 +63,7 @@ class Tooltip implements IDisposable {
         const mouseout = Observable.fromEvent<MouseEvent>(scroll[0], "mouseout");
         this.keydown = Observable.fromEvent<KeyboardEvent>(scroll[0], "keydown");
 
-        cd.add(mousemove.observeOn(Scheduler.queue)
+        cd.add(mousemove
             .auditTime(200)
             .map(event => {
                 const pixelPt = this.pixelPositionFromMouseEvent(editorView, event);

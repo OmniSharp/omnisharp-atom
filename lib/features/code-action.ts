@@ -83,7 +83,6 @@ class CodeAction implements IFeature {
                 <Observable<{ oldBufferPosition: TextBuffer.Point; oldScreenPosition: TextBuffer.Point; newBufferPosition: TextBuffer.Point; newScreenPosition: TextBuffer.Point; textChanged: boolean; cursor: Atom.Cursor; }>><any>onDidChangeCursorPosition,
                 <Observable<any>><any>onDidStopChanging,
                 (cursor, changing) => cursor)
-                .observeOn(Scheduler.queue)
                 .debounceTime(1000)
                 .subscribe(cursor => update(cursor.newBufferPosition)));
 

@@ -61,6 +61,8 @@ export class OmnisharpEditorContext implements IDisposable {
             }),
             editor.onDidSave(() => solution.updatebuffer({ FileName: editor.getPath(), FromDisk: true }, { silent: true }))
         );
+
+        solution.disposable.add(this);
     }
 
     public dispose() {

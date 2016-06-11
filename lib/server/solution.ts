@@ -1,7 +1,7 @@
 import _ from "lodash";
 import {Observable, Subject} from "rxjs";
 import {CompositeDisposable} from "omnisharp-client";
-import {Models, RequestOptions, ReactiveClient, DriverState, ReactiveClientOptions} from "omnisharp-client";
+import {Models, RequestOptions, ReactiveClient, DriverState, ReactiveClientOptions, Runtime} from "omnisharp-client";
 import {OmnisharpTextEditor} from "./omnisharp-text-editor";
 
 interface SolutionOptions extends ReactiveClientOptions {
@@ -31,7 +31,7 @@ export class Solution extends ReactiveClient {
     public set isFolderPerFile(value) { this._isFolderPerFile = value; }
 
     constructor(options: SolutionOptions) {
-        super(options);
+        super(_.defaults(options, { runtime: Runtime.CoreClr }));
         this.configureSolution();
         this.temporary = options.temporary;
         this.model = new ViewModel(this);

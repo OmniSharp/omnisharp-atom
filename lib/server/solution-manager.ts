@@ -206,7 +206,8 @@ class SolutionInstanceManager {
 
         const cd = new CompositeDisposable();
 
-        this._solutionDisposable.add(cd);
+        this._solutionDisposable.add(solution);
+        solution.disposable.add(cd);
         this._disposableSolutionMap.set(solution, cd);
 
         solution.disposable.add(Disposable.create(() => {
@@ -226,7 +227,6 @@ class SolutionInstanceManager {
                 this._activeSolution.next(this._activeSolutions.length ? this._activeSolutions[0] : null);
             }
         }));
-        cd.add(solution);
 
         this._configurations.forEach(config => config(solution));
         this._solutions.set(candidate, solution);
