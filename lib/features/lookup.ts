@@ -2,7 +2,7 @@
 // and https://atom.io/packages/ide-flow
 // https://atom.io/packages/atom-typescript
 import {Models} from "omnisharp-client";
-import {Observable, Scheduler, Subscription} from "rxjs";
+import {Observable, Subscription} from "rxjs";
 import {CompositeDisposable, Disposable, IDisposable} from "omnisharp-client";
 import {Omni} from "../server/omni";
 import {TooltipView} from "../views/tooltip-view";
@@ -63,7 +63,7 @@ class Tooltip implements IDisposable {
         const mouseout = Observable.fromEvent<MouseEvent>(scroll[0], "mouseout");
         this.keydown = Observable.fromEvent<KeyboardEvent>(scroll[0], "keydown");
 
-        cd.add(mousemove.observeOn(Scheduler.queue)
+        cd.add(mousemove
             .auditTime(200)
             .map(event => {
                 const pixelPt = this.pixelPositionFromMouseEvent(editorView, event);

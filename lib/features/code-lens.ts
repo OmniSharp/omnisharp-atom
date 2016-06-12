@@ -1,7 +1,7 @@
 /// <reference path="../typings.d.ts" />
 import {Models} from "omnisharp-client";
 import _ from "lodash";
-import {Observable, Subject, Scheduler, Subscription} from "rxjs";
+import {Observable, Subject, Subscription} from "rxjs";
 import {CompositeDisposable, Disposable, IDisposable} from "omnisharp-client";
 import {Omni} from "../server/omni";
 let fastdom: typeof Fastdom = require("fastdom");
@@ -108,7 +108,6 @@ class CodeLens implements IFeature {
         }
 
         return Omni.request(editor, solution => solution.currentfilemembersasflat({ Buffer: null, Changes: null }))
-            .observeOn(Scheduler.queue)
             .filter(fileMembers => !!fileMembers)
             .flatMap(fileMembers => fileMembers)
             .concatMap(fileMember => {
@@ -184,7 +183,6 @@ export class Lens implements IDisposable {
         this._path = _editor.getPath();
 
         this._updateObservable = this._update
-            .observeOn(Scheduler.queue)
             .filter(x => !!x)
             .flatMap(() => Omni.request(this._editor, solution =>
                 solution.findusages({ FileName: this._path, Column: this._member.Column + 1, Line: this._member.Line, Buffer: null, Changes: null }, { silent: true })))

@@ -11,6 +11,7 @@ import {OmnisharpTextEditor, isOmnisharpTextEditor, OmnisharpEditorContext} from
 
 type ASYNC_REPOSITORY = { getWorkingDirectory(): Promise<string>; };
 type REPOSITORY = { async: ASYNC_REPOSITORY; };
+const SOLUTION_LOAD_TIME = 30000;
 
 let openSelectList: GenericSelectListView;
 class SolutionInstanceManager {
@@ -40,9 +41,6 @@ class SolutionInstanceManager {
     private _disposableSolutionMap = new WeakMap<Solution, IDisposable>();
     private _findSolutionCache = new Map<string, Observable<Solution>>();
     private _candidateFinderCache = new Set<string>();
-    private _setupEditorsSubject = new Subject<OmnisharpTextEditor>();
-    private _setupEditorsObservable = this._setupEditorsSubject.asObservable();
-    public get setupEditors() { return this._setupEditorsObservable; }
 
     private _activated = false;
     private _nextIndex = 0;
@@ -156,7 +154,7 @@ class SolutionInstanceManager {
                                     });
                                 return addCandidatesInOrder(newCandidates, (candidate, repo, isProject) => this._addSolution(candidate, repo, isProject, { project }));
                             });
-                    });
+                    }).toPromise();
             })
             .subscribe(candidateObservable => {
                 this._activeSearch = this._activeSearch.then(() => candidateObservable);
@@ -205,7 +203,8 @@ class SolutionInstanceManager {
 
         const cd = new CompositeDisposable();
 
-        this._solutionDisposable.add(cd);
+        this._solutionDisposable.add(solution);
+        solution.disposable.add(cd);
         this._disposableSolutionMap.set(solution, cd);
 
         solution.disposable.add(Disposable.create(() => {
@@ -225,7 +224,6 @@ class SolutionInstanceManager {
                 this._activeSolution.next(this._activeSolutions.length ? this._activeSolutions[0] : null);
             }
         }));
-        cd.add(solution);
 
         this._configurations.forEach(config => config(solution));
         this._solutions.set(candidate, solution);
@@ -266,7 +264,7 @@ class SolutionInstanceManager {
             .debounceTime(100)
             .take(1)
             .map(() => solution)
-            .timeout(15000, Scheduler.queue) // Wait 30 seconds for the project to load.
+            .timeout(SOLUTION_LOAD_TIME, Scheduler.queue) // Wait 30 seconds for the project to load.
             .subscribe(() => {
                 // We loaded successfully return the solution
                 result.next(solution);
@@ -330,16 +328,7 @@ class SolutionInstanceManager {
     private _setupEditorWithContext(editor: Atom.TextEditor, solution: Solution) {
         const context = new OmnisharpEditorContext(editor, solution);
         const result: OmnisharpTextEditor = <any>editor;
-        result.omnisharp = context;
-
-        const view: HTMLElement = <any>atom.views.getView(editor);
-        view.classList.add("omnisharp-editor");
-
-        context.solution.disposable.add(Disposable.create(() => {
-            context.dispose();
-            result.omnisharp = null;
-            view.classList.remove("omnisharp-editor");
-        }));
+        this._disposable.add(context);
 
         if (solution && !context.temp && this._temporarySolutions.has(solution)) {
             const refCountDisposable = this._temporarySolutions.get(solution);
@@ -350,8 +339,6 @@ class SolutionInstanceManager {
                 this._removeSolution(solution.path);
             }));
         }
-
-        this._setupEditorsSubject.next(result);
 
         return result;
     }
@@ -441,26 +428,35 @@ class SolutionInstanceManager {
 
     private _findSolutionForUnderlyingPath(location: string, isFolderPerFile: boolean): Observable<Solution> {
         const directory = path.dirname(location);
-        const subject = new AsyncSubject<Solution>();
 
         if (!this._activated) {
             return this.activatedSubject.take(1)
                 .flatMap(() => this._findSolutionForUnderlyingPath(location, isFolderPerFile));
         }
 
-        if (this._findSolutionCache.has(location)) {
-            return this._findSolutionCache.get(location);
+        const segments = location.split(path.sep);
+        const mappedLocations = segments.map((loc, index) => {
+            return _.take(segments, index + 1).join(path.sep);
+        });
+
+        for (let l of mappedLocations) {
+            if (this._findSolutionCache.has(l)) {
+                return this._findSolutionCache.get(l);
+            }
         }
 
-        this._findSolutionCache.set(location, <Observable<Solution>><any>subject);
-        subject.do({ complete: () => this._findSolutionCache.delete(location) });
+        const subject = new AsyncSubject<Solution>();
+        _.each(mappedLocations, l => {
+            this._findSolutionCache.set(l, <Observable<Solution>><any>subject);
+            subject.subscribe({ complete: () => this._findSolutionCache.delete(l) });
+        });
 
         const project = this._intersectAtomProjectPath(directory);
         const cb = (candidates: { path: string; isProject: boolean }[]) => {
             // We only want to search for solutions after the main solutions have been processed.
             // We can get into this race condition if the user has windows that were opened previously.
             if (!this._activated) {
-                _.delay(cb, 5000);
+                _.delay(cb, SOLUTION_LOAD_TIME);
                 return;
             }
 

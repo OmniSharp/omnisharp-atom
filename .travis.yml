@@ -4,8 +4,6 @@ notifications:
   email:
     on_success: change
     on_failure: change
-before_install:
-  - curl -sSL https://dist.asp.net/dnvm/dnvminstall.sh | sh && source ~/.dnx/dnvm/dnvm.sh
 script:
   - travis_retry ./build-package.sh
 os:
@@ -24,5 +22,6 @@ addons:
       - git
       - libgnome-keyring-dev
       - fakeroot
+      - libstdc++6
 notifications:
   slack: omnisharp:UN1OlhsHD8hUXy8SEr1L6Zar

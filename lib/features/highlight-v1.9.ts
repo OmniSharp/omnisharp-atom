@@ -45,75 +45,70 @@ class Highlight implements IFeature {
     private unusedCodeRows = new UnusedMap();
 
     public activate() {
-        if (Omni.atomVersion.minor === 1 && Omni.atomVersion.minor <= 8) {
+        if (!(Omni.atomVersion.minor !== 1 || Omni.atomVersion.minor > 8)) {
             return;
         }
         this.disposable = new CompositeDisposable();
         this.editors = [];
 
-        this.disposable.add(registerContextItem(HIGHLIGHT_REQUEST, (context) => new Subject<boolean>()));
-        this.disposable.add(registerContextItem(HIGHLIGHT, (context, editor) =>
-            context.get<Subject<boolean>>(HIGHLIGHT_REQUEST)
-                .startWith(true)
-                .switchMap(() => Observable.defer(() => {
-                    const projects = context.project.activeFramework.Name === "all" ? [] : [context.project.activeFramework.Name];
+        this.disposable.add(
+            registerContextItem(HIGHLIGHT_REQUEST, (context) => new Subject<boolean>()),
+            registerContextItem(HIGHLIGHT, (context, editor) =>
+                context.get<Subject<boolean>>(HIGHLIGHT_REQUEST)
+                    .startWith(true)
+                    .debounceTime(100)
+                    .switchMap(() => Observable.defer(() => {
+                        const projects = context.project.activeFramework.Name === "all" ? [] : [context.project.activeFramework.Name];
 
-                    let linesToFetch = uniq<number>((<any>editor.getGrammar()).linesToFetch);
-                    if (!linesToFetch || !linesToFetch.length)
-                        linesToFetch = [];
+                        let linesToFetch = uniq<number>((<any>editor.getGrammar()).linesToFetch);
+                        if (!linesToFetch || !linesToFetch.length)
+                            linesToFetch = [];
 
-                    // Reset code rows
-                    this.unusedCodeRows.set(editor.getPath(), []);
+                        return Observable.combineLatest(
+                            this.unusedCodeRows.get(editor.getPath()),
+                            Omni.request(editor, solution => solution.highlight({
+                                ProjectNames: projects,
+                                Lines: linesToFetch,
+                                ExcludeClassifications
+                            })),
+                            (quickfixes, response) => ({
+                                editor,
+                                projects,
+                                highlights: getHighlightsFromQuickFixes(editor.getPath(), quickfixes, projects).concat(response ? response.Highlights : [])
+                            }))
+                            .do(({highlights}) => {
+                                if (editor.getGrammar) {
+                                    (<any>editor.getGrammar()).setResponses(highlights, projects.length > 0);
+                                }
+                            })
+                            .publishReplay(1)
+                            .refCount();
+                    }))),
+            Omni.listener.model.diagnosticsByFile
+                .subscribe(changes => {
+                    for (let [file, diagnostics] of changes) {
+                        this.unusedCodeRows.set(file, filter(diagnostics, x => x.LogLevel === "Hidden"));
+                    }
+                }),
+            Omni.eachEditor((editor, cd) => {
+                this.setupEditor(editor, cd);
 
-                    return Observable.combineLatest(
-                        this.unusedCodeRows.get(editor.getPath()),
-                        Omni.request(editor, solution => solution.highlight({
-                            ProjectNames: projects,
-                            Lines: linesToFetch,
-                            ExcludeClassifications
-                        })),
-                        (quickfixes, response) => ({
-                            editor,
-                            projects,
-                            highlights: (response ? response.Highlights : []).concat(getHighlightsFromQuickFixes(editor.getPath(), quickfixes, projects))
-                        }))
-                        .do(({highlights}) => {
-                            if (editor.getGrammar) {
-                                (<any>editor.getGrammar()).setResponses(highlights, projects.length > 0);
-                            }
-                        })
-                        .publishReplay(1)
-                        .refCount();
-                }))));
-
-        this.disposable.add(Omni.listener.model.diagnosticsByFile
-            .subscribe(changes => {
-                for (let [file, diagnostics] of changes) {
-                    this.unusedCodeRows.set(file, filter(diagnostics, x => x.LogLevel === "Hidden"));
+                cd.add(editor.omnisharp
+                    .get<Observable<{ editor: OmnisharpTextEditor; highlights: Models.HighlightSpan[]; projects: string[] }>>(HIGHLIGHT)
+                    .subscribe(() => {
+                        (editor as any).tokenizedBuffer["silentRetokenizeLines"]();
+                    }));
+                editor.omnisharp.get<Subject<boolean>>(HIGHLIGHT_REQUEST).next(true);
+            }),
+            Omni.switchActiveEditor((editor, cd) => {
+                editor.omnisharp.get<Subject<boolean>>(HIGHLIGHT_REQUEST).next(true);
+                if ((editor as any).tokenizedBuffer["silentRetokenizeLines"]) {
+                    (editor as any).tokenizedBuffer["silentRetokenizeLines"]();
                 }
+            }),
+            Disposable.create(() => {
+                this.unusedCodeRows.clear();
             }));
-
-        this.disposable.add(Omni.eachEditor((editor, cd) => {
-            this.setupEditor(editor, cd);
-
-            cd.add(editor.omnisharp
-                .get<Observable<{ editor: OmnisharpTextEditor; highlights: Models.HighlightSpan[]; projects: string[] }>>(HIGHLIGHT)
-                .subscribe(() => {
-                    editor.displayBuffer.tokenizedBuffer["silentRetokenizeLines"]();
-                }));
-            editor.omnisharp.get<Subject<boolean>>(HIGHLIGHT_REQUEST).next(true);
-        }));
-
-        this.disposable.add(Omni.switchActiveEditor((editor, cd) => {
-            editor.omnisharp.get<Subject<boolean>>(HIGHLIGHT_REQUEST).next(true);
-            if (editor.displayBuffer.tokenizedBuffer["silentRetokenizeLines"]) {
-                editor.displayBuffer.tokenizedBuffer["silentRetokenizeLines"]();
-            }
-        }));
-
-        this.disposable.add(Disposable.create(() => {
-            this.unusedCodeRows.clear();
-        }));
     }
 
     public dispose() {
@@ -129,17 +124,13 @@ class Highlight implements IFeature {
 
         augmentEditor(editor, this.unusedCodeRows, true);
 
-        disposable.add(Disposable.create(() => {
-            this.unusedCodeRows.delete(editor.getPath());
-        }));
-
         this.editors.push(editor);
         this.disposable.add(disposable);
 
         disposable.add(Disposable.create(() => {
             (<any>editor.getGrammar()).linesToFetch = [];
             if ((<any>editor.getGrammar()).responses) (<any>editor.getGrammar()).responses.clear();
-            editor.displayBuffer.tokenizedBuffer.retokenizeLines();
+            (editor as any).tokenizedBuffer.retokenizeLines();
             delete editor["_oldGrammar"];
         }));
 
@@ -183,27 +174,27 @@ export function augmentEditor(editor: Atom.TextEditor, unusedCodeRows: UnusedMap
         editor["_oldGrammar"] = editor.getGrammar();
     if (!editor["_setGrammar"])
         editor["_setGrammar"] = editor.setGrammar;
-    if (!editor.displayBuffer.tokenizedBuffer["_buildTokenizedLineForRowWithText"])
-        editor.displayBuffer.tokenizedBuffer["_buildTokenizedLineForRowWithText"] = editor.displayBuffer.tokenizedBuffer.buildTokenizedLineForRowWithText;
-    if (!editor.displayBuffer.tokenizedBuffer["_markTokenizationComplete"])
-        editor.displayBuffer.tokenizedBuffer["_markTokenizationComplete"] = editor.displayBuffer.tokenizedBuffer.markTokenizationComplete;
-    if (!editor.displayBuffer.tokenizedBuffer["_retokenizeLines"])
-        editor.displayBuffer.tokenizedBuffer["_retokenizeLines"] = editor.displayBuffer.tokenizedBuffer.retokenizeLines;
-    if (!editor.displayBuffer.tokenizedBuffer["_tokenizeInBackground"])
-        editor.displayBuffer.tokenizedBuffer["_tokenizeInBackground"] = editor.displayBuffer.tokenizedBuffer.tokenizeInBackground;
-    if (!editor.displayBuffer.tokenizedBuffer["_chunkSize"])
-        editor.displayBuffer.tokenizedBuffer["chunkSize"] = 20;
+    if (!(editor as any).tokenizedBuffer["_buildTokenizedLineForRowWithText"])
+        (editor as any).tokenizedBuffer["_buildTokenizedLineForRowWithText"] = (editor as any).tokenizedBuffer.buildTokenizedLineForRowWithText;
+    if (!(editor as any).tokenizedBuffer["_markTokenizationComplete"])
+        (editor as any).tokenizedBuffer["_markTokenizationComplete"] = (editor as any).tokenizedBuffer.markTokenizationComplete;
+    if (!(editor as any).tokenizedBuffer["_retokenizeLines"])
+        (editor as any).tokenizedBuffer["_retokenizeLines"] = (editor as any).tokenizedBuffer.retokenizeLines;
+    if (!(editor as any).tokenizedBuffer["_tokenizeInBackground"])
+        (editor as any).tokenizedBuffer["_tokenizeInBackground"] = (editor as any).tokenizedBuffer.tokenizeInBackground;
+    if (!(editor as any).tokenizedBuffer["_chunkSize"])
+        (editor as any).tokenizedBuffer["chunkSize"] = 20;
 
     editor.setGrammar = setGrammar;
     if (doSetGrammar) editor.setGrammar(editor.getGrammar());
 
-    (<any>editor.displayBuffer.tokenizedBuffer).buildTokenizedLineForRowWithText = function(row: number) {
+    (<any>(editor as any).tokenizedBuffer).buildTokenizedLineForRowWithText = function(row: number) {
         (<any>editor.getGrammar())["__row__"] = row;
-        return editor.displayBuffer.tokenizedBuffer["_buildTokenizedLineForRowWithText"].apply(this, arguments);
+        return (editor as any).tokenizedBuffer["_buildTokenizedLineForRowWithText"].apply(this, arguments);
     };
 
-    if (!(<any>editor.displayBuffer.tokenizedBuffer).silentRetokenizeLines) {
-        (<any>editor.displayBuffer.tokenizedBuffer).silentRetokenizeLines = debounce(function() {
+    if (!(<any>(editor as any).tokenizedBuffer).silentRetokenizeLines) {
+        (<any>(editor as any).tokenizedBuffer).silentRetokenizeLines = debounce(function() {
             if ((<any>editor.getGrammar()).isObserveRetokenizing)
                 (<any>editor.getGrammar()).isObserveRetokenizing.next(false);
             let lastRow: number;
@@ -219,19 +210,19 @@ export function augmentEditor(editor: Atom.TextEditor, unusedCodeRows: UnusedMap
         }, DEBOUNCE_TIME, { leading: true, trailing: true });
     }
 
-    (<any>editor.displayBuffer.tokenizedBuffer).markTokenizationComplete = function() {
+    (<any>(editor as any).tokenizedBuffer).markTokenizationComplete = function() {
         if ((<any>editor.getGrammar()).isObserveRetokenizing)
             (<any>editor.getGrammar()).isObserveRetokenizing.next(true);
-        return editor.displayBuffer.tokenizedBuffer["_markTokenizationComplete"].apply(this, arguments);
+        return (editor as any).tokenizedBuffer["_markTokenizationComplete"].apply(this, arguments);
     };
 
-    (<any>editor.displayBuffer.tokenizedBuffer).retokenizeLines = function() {
+    (<any>(editor as any).tokenizedBuffer).retokenizeLines = function() {
         if ((<any>editor.getGrammar()).isObserveRetokenizing)
             (<any>editor.getGrammar()).isObserveRetokenizing.next(false);
-        return editor.displayBuffer.tokenizedBuffer["_retokenizeLines"].apply(this, arguments);
+        return (editor as any).tokenizedBuffer["_retokenizeLines"].apply(this, arguments);
     };
 
-    (<any>editor.displayBuffer.tokenizedBuffer).tokenizeInBackground = function() {
+    (<any>(editor as any).tokenizedBuffer).tokenizeInBackground = function() {
         if (!this.visible || this.pendingChunk || !this.isAlive())
             return;
 
@@ -244,7 +235,7 @@ export function augmentEditor(editor: Atom.TextEditor, unusedCodeRows: UnusedMap
         });
     };
 
-    (<any>editor.displayBuffer.tokenizedBuffer).scopesFromTags = function(startingScopes: number[], tags: number[]) {
+    (<any>(editor as any).tokenizedBuffer).scopesFromTags = function(startingScopes: number[], tags: number[]) {
         const scopes = startingScopes.slice();
         const grammar = (<any>editor.getGrammar());
         for (let i = 0, len = tags.length; i < len; i++) {
@@ -741,4 +732,4 @@ class UnusedMap {
     }
 }
 
-export const enhancedHighlighting = new Highlight;
+export const enhancedHighlighting19 = new Highlight;
