@@ -1,4 +1,4 @@
-import {Observable, ReplaySubject, Subject, BehaviorSubject} from "rxjs";
+import {Observable, ReplaySubject, Subject, BehaviorSubject, Scheduler} from "rxjs";
 import {CompositeDisposable, Disposable, IDisposable, createObservable} from "omnisharp-client";
 import {SolutionManager} from "./solution-manager";
 import {Solution} from "./solution";
@@ -9,7 +9,7 @@ import {ViewModel} from "./view-model";
 import * as fs from "fs";
 import * as path from "path";
 import {Models} from "omnisharp-client";
-import {OmnisharpTextEditor, isOmnisharpTextEditor} from "./omnisharp-text-editor";
+import {OmnisharpTextEditor, isOmnisharpTextEditor, OmnisharpEditorContext} from "./omnisharp-text-editor";
 import {metadataOpener} from "./metadata-editor";
 import {SemVer, gt as semverGt} from "semver";
 
@@ -19,6 +19,8 @@ const statefulProperties = ["isOff", "isConnecting", "isOn", "isReady", "isError
 
 function wrapEditorObservable(observable: Observable<OmnisharpTextEditor>) {
     return observable
+        .subscribeOn(Scheduler.async)
+        .observeOn(Scheduler.async)
         .filter(editor => !editor || editor && !editor.isDestroyed());
 }
 
@@ -281,25 +283,30 @@ class OmniManager implements IDisposable {
         this.disposable.add(
             Observable.merge(observeTextEditors.filter(x => !!x.getPath()), safeGuard)
                 .mergeMap(editor => SolutionManager.getSolutionForEditor(editor), (editor, solution) => <OmnisharpTextEditor>editor)
-                .subscribe()
-        );
-
-        return Observable.merge(
-            Observable.defer(() => Observable.from<OmnisharpTextEditor>(<any>this._underlyingEditors)),
-            SolutionManager.setupEditors
-                .do(editor => {
+                .subscribe(),
+            OmnisharpEditorContext.created
+                .subscribe(editor => {
                     this._underlyingEditors.add(editor);
                     editor.omnisharp.config = _.endsWith(editor.getPath(), "project.json");
 
-                    this.disposable.add(Disposable.create(() => {
+                    const dis = Disposable.create(() => {
                         this._underlyingEditors.delete(editor);
-                    }));
+                    });
 
-                    editor.omnisharp.solution.disposable.add(Disposable.create(() => {
-                        this._underlyingEditors.delete(editor);
-                    }));
-                }))
-            .share();
+                    this.disposable.add(
+                        dis,
+                        editor.onDidDestroy(() => dis.dispose())
+                    );
+
+                    editor.omnisharp.solution.disposable.add(dis);
+                })
+        );
+
+        const liveEditors = OmnisharpEditorContext.created;
+        return Observable.merge(
+            Observable.defer(() => Observable.from<OmnisharpTextEditor>(<any>this._underlyingEditors)),
+            liveEditors
+        );
     }
 
     private _createSafeGuard(extensions: string[], disposable: CompositeDisposable) {

@@ -3,6 +3,7 @@ import {Models} from "omnisharp-client";
 import {Solution} from "./solution";
 import {ProjectViewModel, EmptyProjectViewModel} from "./project-view-model";
 import _ from "lodash";
+import {Subject} from "rxjs";
 
 const contextItems = new Map<string, (context: OmnisharpEditorContext, editor: OmnisharpTextEditor) => any>();
 export function registerContextItem<T>(name: string, callback: (context: OmnisharpEditorContext, editor: OmnisharpTextEditor) => T) {
@@ -13,6 +14,9 @@ export function registerContextItem<T>(name: string, callback: (context: Omnisha
 export type AtomTextChange = { oldRange: TextBuffer.Range; newRange: TextBuffer.Range; oldText: string; newText: string; };
 
 export class OmnisharpEditorContext implements IDisposable {
+    private static _createdSubject = new Subject<OmnisharpTextEditor>();
+    public static get created() { return OmnisharpEditorContext._createdSubject.asObservable(); }
+
     private _editor: OmnisharpTextEditor;
     private _solution: Solution;
     private _metadata: boolean;
@@ -63,6 +67,8 @@ export class OmnisharpEditorContext implements IDisposable {
         );
 
         solution.disposable.add(this);
+
+        OmnisharpEditorContext._createdSubject.next(<any>editor);
     }
 
     public dispose() {

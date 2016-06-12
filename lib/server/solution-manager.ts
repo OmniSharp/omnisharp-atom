@@ -41,9 +41,6 @@ class SolutionInstanceManager {
     private _disposableSolutionMap = new WeakMap<Solution, IDisposable>();
     private _findSolutionCache = new Map<string, Observable<Solution>>();
     private _candidateFinderCache = new Set<string>();
-    private _setupEditorsSubject = new Subject<OmnisharpTextEditor>();
-    private _setupEditorsObservable = this._setupEditorsSubject.asObservable();
-    public get setupEditors() { return this._setupEditorsObservable; }
 
     private _activated = false;
     private _nextIndex = 0;
@@ -342,8 +339,6 @@ class SolutionInstanceManager {
                 this._removeSolution(solution.path);
             }));
         }
-
-        this._setupEditorsSubject.next(result);
 
         return result;
     }

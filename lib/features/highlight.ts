@@ -45,7 +45,7 @@ class Highlight implements IFeature {
     private unusedCodeRows = new UnusedMap();
 
     public activate() {
-        if (Omni.atomVersionGreaterThan("1.8.0")) {
+        if (Omni.atomVersion.minor === 1 && Omni.atomVersion.minor <= 8) {
             return;
         }
         this.disposable = new CompositeDisposable();

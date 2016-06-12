@@ -45,75 +45,70 @@ class Highlight implements IFeature {
     private unusedCodeRows = new UnusedMap();
 
     public activate() {
-        if (!Omni.atomVersionGreaterThan("1.8.0")) {
+        if (!(Omni.atomVersion.minor !== 1 || Omni.atomVersion.minor > 8)) {
             return;
         }
         this.disposable = new CompositeDisposable();
         this.editors = [];
 
-        this.disposable.add(registerContextItem(HIGHLIGHT_REQUEST, (context) => new Subject<boolean>()));
-        this.disposable.add(registerContextItem(HIGHLIGHT, (context, editor) =>
-            context.get<Subject<boolean>>(HIGHLIGHT_REQUEST)
-                .startWith(true)
-                .switchMap(() => Observable.defer(() => {
-                    const projects = context.project.activeFramework.Name === "all" ? [] : [context.project.activeFramework.Name];
+        this.disposable.add(
+            registerContextItem(HIGHLIGHT_REQUEST, (context) => new Subject<boolean>()),
+            registerContextItem(HIGHLIGHT, (context, editor) =>
+                context.get<Subject<boolean>>(HIGHLIGHT_REQUEST)
+                    .startWith(true)
+                    .debounceTime(100)
+                    .switchMap(() => Observable.defer(() => {
+                        const projects = context.project.activeFramework.Name === "all" ? [] : [context.project.activeFramework.Name];
 
-                    let linesToFetch = uniq<number>((<any>editor.getGrammar()).linesToFetch);
-                    if (!linesToFetch || !linesToFetch.length)
-                        linesToFetch = [];
+                        let linesToFetch = uniq<number>((<any>editor.getGrammar()).linesToFetch);
+                        if (!linesToFetch || !linesToFetch.length)
+                            linesToFetch = [];
 
-                    // Reset code rows
-                    this.unusedCodeRows.set(editor.getPath(), []);
+                        return Observable.combineLatest(
+                            this.unusedCodeRows.get(editor.getPath()),
+                            Omni.request(editor, solution => solution.highlight({
+                                ProjectNames: projects,
+                                Lines: linesToFetch,
+                                ExcludeClassifications
+                            })),
+                            (quickfixes, response) => ({
+                                editor,
+                                projects,
+                                highlights: getHighlightsFromQuickFixes(editor.getPath(), quickfixes, projects).concat(response ? response.Highlights : [])
+                            }))
+                            .do(({highlights}) => {
+                                if (editor.getGrammar) {
+                                    (<any>editor.getGrammar()).setResponses(highlights, projects.length > 0);
+                                }
+                            })
+                            .publishReplay(1)
+                            .refCount();
+                    }))),
+            Omni.listener.model.diagnosticsByFile
+                .subscribe(changes => {
+                    for (let [file, diagnostics] of changes) {
+                        this.unusedCodeRows.set(file, filter(diagnostics, x => x.LogLevel === "Hidden"));
+                    }
+                }),
+            Omni.eachEditor((editor, cd) => {
+                this.setupEditor(editor, cd);
 
-                    return Observable.combineLatest(
-                        this.unusedCodeRows.get(editor.getPath()),
-                        Omni.request(editor, solution => solution.highlight({
-                            ProjectNames: projects,
-                            Lines: linesToFetch,
-                            ExcludeClassifications
-                        })),
-                        (quickfixes, response) => ({
-                            editor,
-                            projects,
-                            highlights: (response ? response.Highlights : []).concat(getHighlightsFromQuickFixes(editor.getPath(), quickfixes, projects))
-                        }))
-                        .do(({highlights}) => {
-                            if (editor.getGrammar) {
-                                (<any>editor.getGrammar()).setResponses(highlights, projects.length > 0);
-                            }
-                        })
-                        .publishReplay(1)
-                        .refCount();
-                }))));
-
-        this.disposable.add(Omni.listener.model.diagnosticsByFile
-            .subscribe(changes => {
-                for (let [file, diagnostics] of changes) {
-                    this.unusedCodeRows.set(file, filter(diagnostics, x => x.LogLevel === "Hidden"));
-                }
-            }));
-
-        this.disposable.add(Omni.eachEditor((editor, cd) => {
-            this.setupEditor(editor, cd);
-
-            cd.add(editor.omnisharp
-                .get<Observable<{ editor: OmnisharpTextEditor; highlights: Models.HighlightSpan[]; projects: string[] }>>(HIGHLIGHT)
-                .subscribe(() => {
+                cd.add(editor.omnisharp
+                    .get<Observable<{ editor: OmnisharpTextEditor; highlights: Models.HighlightSpan[]; projects: string[] }>>(HIGHLIGHT)
+                    .subscribe(() => {
+                        (editor as any).tokenizedBuffer["silentRetokenizeLines"]();
+                    }));
+                editor.omnisharp.get<Subject<boolean>>(HIGHLIGHT_REQUEST).next(true);
+            }),
+            Omni.switchActiveEditor((editor, cd) => {
+                editor.omnisharp.get<Subject<boolean>>(HIGHLIGHT_REQUEST).next(true);
+                if ((editor as any).tokenizedBuffer["silentRetokenizeLines"]) {
                     (editor as any).tokenizedBuffer["silentRetokenizeLines"]();
-                }));
-            editor.omnisharp.get<Subject<boolean>>(HIGHLIGHT_REQUEST).next(true);
-        }));
-
-        this.disposable.add(Omni.switchActiveEditor((editor, cd) => {
-            editor.omnisharp.get<Subject<boolean>>(HIGHLIGHT_REQUEST).next(true);
-            if ((editor as any).tokenizedBuffer["silentRetokenizeLines"]) {
-                (editor as any).tokenizedBuffer["silentRetokenizeLines"]();
-            }
-        }));
-
-        this.disposable.add(Disposable.create(() => {
-            this.unusedCodeRows.clear();
-        }));
+                }
+            }),
+            Disposable.create(() => {
+                this.unusedCodeRows.clear();
+            }));
     }
 
     public dispose() {
@@ -128,10 +123,6 @@ class Highlight implements IFeature {
         const issueRequest = editor.omnisharp.get<Subject<boolean>>(HIGHLIGHT_REQUEST);
 
         augmentEditor(editor, this.unusedCodeRows, true);
-
-        disposable.add(Disposable.create(() => {
-            this.unusedCodeRows.delete(editor.getPath());
-        }));
 
         this.editors.push(editor);
         this.disposable.add(disposable);

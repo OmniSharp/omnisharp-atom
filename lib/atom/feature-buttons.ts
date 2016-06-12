@@ -10,18 +10,28 @@ interface IButton {
     tooltip: string;
 }
 
-const buttons = [
-    {
-        name: "enhanced-highlighting",
-        config: "omnisharp-atom.enhancedHighlighting",
-        icon: "icon-pencil",
-        tooltip: "Enable / Disable Enhanced Highlighting"
-    }, {
+const buttons = [{
         name: "code-lens",
         config: "omnisharp-atom.codeLens",
         icon: "icon-telescope",
         tooltip: "Enable / Disable Code Lens"
     }];
+
+if (Omni.atomVersion.minor !== 1 || Omni.atomVersion.minor > 8) {
+    buttons.unshift({
+        name: "enhanced-highlighting",
+        config: "omnisharp-atom.enhancedHighlighting19",
+        icon: "icon-pencil",
+        tooltip: "Enable / Disable Enhanced Highlighting"
+    });
+} else {
+    buttons.unshift({
+        name: "enhanced-highlighting",
+        config: "omnisharp-atom.enhancedHighlighting",
+        icon: "icon-pencil",
+        tooltip: "Enable / Disable Enhanced Highlighting"
+    });
+}
 
 class FeatureEditorButtons implements IAtomFeature {
     private disposable: CompositeDisposable;
