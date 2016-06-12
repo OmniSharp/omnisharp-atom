@@ -137,6 +137,7 @@ class OmniManager implements IDisposable {
         const codeCheckAggregate = this.aggregateListener.listenTo(z => z.model.observe.diagnostics)
             .debounceTime(200)
             .map(data => _(data).flatMap(x => x.value).value());
+
         const codeCheckCountAggregate = this.aggregateListener.listenTo(z => z.model.observe.diagnosticsCounts)
             .debounceTime(200)
             .map(items => {
@@ -149,6 +150,7 @@ class OmniManager implements IDisposable {
                 });
                 return result;
             });
+
         const codeCheckByFileAggregate = this.aggregateListener.listenTo(z => z.model.observe.diagnosticsByFile.map(x => z.model.diagnosticsByFile))
             .debounceTime(200)
             .map(x => {

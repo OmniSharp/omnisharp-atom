@@ -34,12 +34,12 @@ export class ViewModel implements VMViewState, IDisposable {
     public outputElement = document.createElement("div");
     public diagnosticsByFile = new Map<string, Models.DiagnosticLocation[]>();
     public get diagnostics() {
-        return  _(_.toArray(this.diagnosticsByFile.values()))
+        return _(_.toArray(this.diagnosticsByFile.values()))
             .flatMap(x => x)
             .sortBy(x => x.LogLevel, x => x.FileName, x => x.Line, x => x.Column, x => x.Text)
             .value();
     }
-    public diagnosticCounts: { [index: string]: number; } = { errors: 0, warnings: 0, hidden: 0 };
+    public diagnosticCounts: { [index: string]: number; } = { error: 0, warning: 0, hidden: 0 };
 
     public errors: number = 0;
     public warnings: number = 0;
@@ -269,17 +269,19 @@ export class ViewModel implements VMViewState, IDisposable {
                         const old = this.diagnosticsByFile.get(result.FileName);
                         this.diagnosticsByFile.delete(result.FileName);
 
-                        const grouped = _.groupBy(old, x => x.LogLevel);
+                        const grouped = _.groupBy(old, x => x.LogLevel.toLowerCase());
                         _.each(grouped, (items, key) => {
-                            counts[key.toLowerCase()] -= items.length;
-                            if (counts[key.toLowerCase()] < 0) counts[key.toLowerCase()] = 0;
+                            if (!_.isNumber(counts[key])) { counts[key] = 0; }
+                            counts[key] -= items.length;
+                            if (counts[key] < 0) counts[key] = 0;
                         });
                     }
 
                     this.diagnosticsByFile.set(result.FileName, _.sortBy(result.QuickFixes, x => x.Line, quickFix => quickFix.LogLevel, x => x.Text));
-                    const grouped = _.groupBy(result.QuickFixes, x => x.LogLevel);
+                    const grouped = _.groupBy(result.QuickFixes, x => x.LogLevel.toLowerCase());
                     _.each(grouped, (items, key) => {
-                        counts[key.toLowerCase()] += items.length;
+                        if (!_.isNumber(counts[key])) { counts[key] = 0; }
+                        counts[key] += items.length;
                     });
                 });
                 return files;
