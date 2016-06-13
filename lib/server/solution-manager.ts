@@ -5,7 +5,7 @@ import {RefCountDisposable, IDisposable, Disposable, CompositeDisposable} from "
 import {Solution} from "./solution";
 import {AtomProjectTracker} from "./atom-projects";
 import {SolutionObserver, SolutionAggregateObserver} from "./composite-solution";
-import {DriverState, findCandidates} from "omnisharp-client";
+import {DriverState, findCandidates, Runtime, Candidate} from "omnisharp-client";
 import {GenericSelectListView} from "../views/generic-list-view";
 import {OmnisharpTextEditor, isOmnisharpTextEditor, OmnisharpEditorContext} from "./omnisharp-text-editor";
 
@@ -141,18 +141,18 @@ class SolutionInstanceManager {
             .map(project => {
                 return this._candidateFinder(project)
                     .flatMap(candidates => {
-                        return Observable.from<string>(candidates.map(x => x.path))
-                            .flatMap(x => this._findRepositoryForPath(x), (path, repo) => ({ path, repo }))
+                        return Observable.from(candidates)
+                            .flatMap(x => this._findRepositoryForPath(x.path), (candidate, repo) => ({ candidate, repo }))
                             .toArray()
                             .toPromise()
                             .then(repos => {
                                 const newCandidates = _.difference(candidates.map(z => z.path), fromIterator(this._solutions.keys())).map(z => _.find(candidates, { path: z }))
-                                    .map(({ path, isProject }) => {
-                                        const found = _.find(repos, x => x.path === path);
+                                    .map(({ path, isProject, originalFile }) => {
+                                        const found = _.find(repos, x => x.candidate.path === path);
                                         const repo = found && found.repo;
-                                        return { path, isProject, repo };
+                                        return { path, isProject, repo, originalFile };
                                     });
-                                return addCandidatesInOrder(newCandidates, (candidate, repo, isProject) => this._addSolution(candidate, repo, isProject, { project }));
+                                return addCandidatesInOrder(newCandidates, (candidate, repo, isProject, originalFile) => this._addSolution(candidate, repo, isProject, { originalFile, project }));
                             });
                     }).toPromise();
             })
@@ -170,7 +170,7 @@ class SolutionInstanceManager {
             .map(x => x.repo.async);
     }
 
-    private _addSolution(candidate: string, repo: ASYNC_REPOSITORY, isProject: boolean, {temporary = false, project}: { delay?: number; temporary?: boolean; project?: string; }) {
+    private _addSolution(candidate: string, repo: ASYNC_REPOSITORY, isProject: boolean, {temporary = false, project, originalFile}: { delay?: number; temporary?: boolean; project?: string; originalFile?: string; }) {
         const projectPath = candidate;
         if (_.endsWith(candidate, ".sln")) {
             candidate = path.dirname(candidate);
@@ -194,7 +194,8 @@ class SolutionInstanceManager {
             projectPath: projectPath,
             index: ++this._nextIndex,
             temporary: temporary,
-            repository: <any>repo
+            repository: <any>repo,
+            runtime: _.endsWith(originalFile, ".csx") ? Runtime.ClrOrMono : Runtime.CoreClr
         });
 
         if (!isProject) {
@@ -452,7 +453,7 @@ class SolutionInstanceManager {
         });
 
         const project = this._intersectAtomProjectPath(directory);
-        const cb = (candidates: { path: string; isProject: boolean }[]) => {
+        const cb = (candidates: Candidate[]) => {
             // We only want to search for solutions after the main solutions have been processed.
             // We can get into this race condition if the user has windows that were opened previously.
             if (!this._activated) {
@@ -470,18 +471,18 @@ class SolutionInstanceManager {
                 if (r) return;
             }
 
-            this._activeSearch.then(() => Observable.from<string>(candidates.map(x => x.path))
-                .flatMap(x => this._findRepositoryForPath(x), (path, repo) => ({ path, repo }))
+            this._activeSearch.then(() => Observable.from(candidates)
+                .flatMap(x => this._findRepositoryForPath(x.path), (candidate, repo) => ({ candidate, repo }))
                 .toArray()
                 .toPromise())
                 .then(repos => {
                     const newCandidates = _.difference(candidates.map(z => z.path), fromIterator(this._solutions.keys())).map(z => _.find(candidates, { path: z }))
-                        .map(({ path, isProject }) => {
-                            const found = _.find(repos, x => x.path === path);
+                        .map(({ path, isProject, originalFile }) => {
+                            const found = _.find(repos, x => x.candidate.path === path);
                             const repo = found && found.repo;
-                            return { path, isProject, repo };
+                            return { path, isProject, repo, originalFile };
                         });
-                    addCandidatesInOrder(newCandidates, (candidate, repo, isProject) => this._addSolution(candidate, repo, isProject, { temporary: !project }))
+                    addCandidatesInOrder(newCandidates, (candidate, repo, isProject, originalFile) => this._addSolution(candidate, repo, isProject, { temporary: !project, originalFile }))
                         .then(() => {
                             if (!isFolderPerFile) {
                                 // Attempt to see if this file is part a solution
@@ -593,7 +594,7 @@ class SolutionInstanceManager {
     }
 }
 
-function addCandidatesInOrder(candidates: { path: string; repo: ASYNC_REPOSITORY; isProject: boolean; }[], cb: (candidate: string, repo: ASYNC_REPOSITORY, isProject: boolean) => Observable<Solution>) {
+function addCandidatesInOrder(candidates: { path: string; repo: ASYNC_REPOSITORY; isProject: boolean; originalFile: string; }[], cb: (candidate: string, repo: ASYNC_REPOSITORY, isProject: boolean, originalFile: string) => Observable<Solution>) {
     const asyncSubject = new AsyncSubject();
 
     if (!candidates.length) {
@@ -604,8 +605,8 @@ function addCandidatesInOrder(candidates: { path: string; repo: ASYNC_REPOSITORY
 
     const cds = candidates.slice();
     const candidate = cds.shift();
-    const handleCandidate = (cand: { path: string; repo: ASYNC_REPOSITORY; isProject: boolean; }) => {
-        cb(cand.path, cand.repo, cand.isProject)
+    const handleCandidate = (cand: { path: string; repo: ASYNC_REPOSITORY; isProject: boolean; originalFile: string; }) => {
+        cb(cand.path, cand.repo, cand.isProject, cand.originalFile)
             .subscribe({
                 complete: () => {
                     if (cds.length) {
