@@ -67,7 +67,7 @@
     "del": "^2.2.0",
     "entities": "^1.1.1",
     "escape-html": "^1.0.1",
-    "fastdom": "^1.0.2",
+    "fastdom": "^1.0.3",
     "font-awesome": "^4.6.3",
     "fs-plus": "^2.9.1",
     "fuzzaldrin": "^2.1.0",
