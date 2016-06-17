@@ -73,7 +73,7 @@
     "fuzzaldrin": "^2.1.0",
     "generator-aspnet": "^0.1.0",
     "glob": "^7.0.3",
-    "globby": "^4.1.0",
+    "globby": "^5.0.0",
     "gulp": "^3.9.1",
     "gulp-babel": "^6.1.2",
     "gulp-sourcemap": "^1.0.1",
