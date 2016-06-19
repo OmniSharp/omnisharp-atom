@@ -61,7 +61,7 @@
     "atom-package-deps": "^4.0.1",
     "atom-space-pen-views": "^2.2.0",
     "babel-plugin-transform-es2015-modules-commonjs": "^6.3.13",
-    "babel-preset-es2015": "^6.3.13",
+    "babel-preset-es2015": "^6.9.0",
     "babel-preset-stage-3": "^6.3.13",
     "chai": "^3.5.0",
     "del": "^2.2.0",
