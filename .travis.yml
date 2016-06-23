@@ -1,5 +1,6 @@
 language: csharp
-sudo: false
+sudo: required
+dist: trusty
 notifications:
   email:
     on_success: change
