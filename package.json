@@ -91,7 +91,7 @@
     "rxjs": "^5.0.0-beta.9",
     "semver": "^5.0.3",
     "through2": "^2.0.1",
-    "tslint": "^3.11.0",
+    "tslint": "^3.12.1",
     "typescript": "^1.8.10",
     "typings": "^1.3.0"
   },
