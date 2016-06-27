@@ -62,7 +62,7 @@
     "atom-space-pen-views": "^2.2.0",
     "babel-plugin-transform-es2015-modules-commonjs": "^6.3.13",
     "babel-preset-es2015": "^6.3.13",
-    "babel-preset-stage-3": "^6.3.13",
+    "babel-preset-stage-3": "^6.11.0",
     "chai": "^3.5.0",
     "del": "^2.2.1",
     "entities": "^1.1.1",
