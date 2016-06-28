@@ -3,7 +3,6 @@ import {Observable, AsyncSubject} from "rxjs";
 import {CompositeDisposable, Disposable, IDisposable} from "omnisharp-client";
 import path from "path";
 import fs from "fs";
-import npm from "npm";
 
 // TODO: Remove these at some point to stream line startup.
 import {Omni} from "./server/omni";
@@ -61,8 +60,8 @@ class OmniSharpAtom {
             .mergeMap(() => Observable.bindNodeCallback(fs.exists)(generatorAspnet))
             .switchMap(exists => {
                 if (exists) {
-                    return Observable.bindNodeCallback(npm.commands.info)(["generator-aspnet"])
-                        .map(z => z.version !== require(`${generatorAspnet}/package.json`))
+                    return Observable.bindNodeCallback(npm.commands.view)(["generator-aspnet"])
+                        .map(z => z.version !== require(`${generatorAspnet}/package.json`));
                 } else {
                     return Observable.of(true);
                 }

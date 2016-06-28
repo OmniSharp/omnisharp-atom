@@ -9,7 +9,6 @@
     "jquery": "registry:dt/jquery#1.10.0+20160417213236",
     "mixto": "registry:dt/mixto#0.0.0+20160317120654",
     "node": "registry:env/node#4.0.0+20160507210304",
-    "npm": "registry:dt/npm#0.0.0+20160317120654",
     "q": "registry:dt/q#0.0.0+20160417152954"
   },
   "devDependencies": {
