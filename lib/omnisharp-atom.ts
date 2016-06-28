@@ -1,8 +1,9 @@
 import _ from "lodash";
 import {Observable, AsyncSubject} from "rxjs";
 import {CompositeDisposable, Disposable, IDisposable} from "omnisharp-client";
-import * as path from "path";
-import * as fs from "fs";
+import path from "path";
+import fs from "fs";
+import npm from "npm";
 
 // TODO: Remove these at some point to stream line startup.
 import {Omni} from "./server/omni";
@@ -46,15 +47,46 @@ class OmniSharpAtom {
         _.each(grammars.grammars, grammarCb);
         this.disposable.add(atom.grammars.onDidAddGrammar(grammarCb));
 
-        require("atom-package-deps").install("omnisharp-atom")
-            .then(() => {
-                console.info("Activating omnisharp-atom solution tracking...");
-                Omni.activate();
-                this.disposable.add(Omni);
+        const currentRoot = process.cwd();
+        const npmRoot = `${Omni.packageDir}/omnisharp-atom`;
+        const generatorAspnet = `${npmRoot}/node_modules/generator-aspnet`;
 
-                this._started.next(true);
-                this._started.complete();
+        process.chdir(npmRoot);
+
+        // Check if generator-aspnet is installed
+        // if not installed install
+        // if outdated install
+        // otherwise finish
+        const shouldInstallAspnetGenerator = Observable.bindCallback(npm.load)()
+            .mergeMap(() => Observable.bindNodeCallback(fs.exists)(generatorAspnet))
+            .switchMap(exists => {
+                if (exists) {
+                    return Observable.bindNodeCallback(npm.commands.info)(["generator-aspnet"])
+                        .map(z => z.version !== require(`${generatorAspnet}/package.json`))
+                } else {
+                    return Observable.of(true);
+                }
             })
+            .switchMap(x => {
+                if (x) {
+                    return Observable.bindNodeCallback(npm.commands.install)(["generator-aspnet"])
+                        .do(() => process.chdir(currentRoot));
+                }
+                return Observable.of(undefined);
+            })
+            .toPromise();
+
+        Promise.all([
+            shouldInstallAspnetGenerator,
+            require("atom-package-deps").install("omnisharp-atom")
+        ]).then(() => {
+            console.info("Activating omnisharp-atom solution tracking...");
+            Omni.activate();
+            this.disposable.add(Omni);
+
+            this._started.next(true);
+            this._started.complete();
+        })
             /* tslint:disable:no-string-literal */
             .then(() => this.loadFeatures(this.getFeatures("atom").delay(Omni["_kick_in_the_pants_"] ? 0 : 2000)).toPromise())
             /* tslint:enable:no-string-literal */
@@ -72,14 +104,16 @@ class OmniSharpAtom {
                 // Only activate features once we have a solution!
                 this.disposable.add(startingObservable
                     .flatMap(() => this.loadFeatures(this.getFeatures("features")))
-                    .subscribe({ complete: () => {
-                        this.disposable.add(atom.workspace.observeTextEditors((editor: Atom.TextEditor) => {
-                            this.detectAutoToggleGrammar(editor);
-                        }));
+                    .subscribe({
+                        complete: () => {
+                            this.disposable.add(atom.workspace.observeTextEditors((editor: Atom.TextEditor) => {
+                                this.detectAutoToggleGrammar(editor);
+                            }));
 
-                        this._activated.next(true);
-                        this._activated.complete();
-                    } }));
+                            this._activated.next(true);
+                            this._activated.complete();
+                        }
+                    }));
 
             });
     }
@@ -154,12 +188,14 @@ class OmniSharpAtom {
             .map(f => f.activate())
             .filter(x => !!x)
             .toArray()
-            .do({ complete: () => {
-                (<any>atom.config).setSchema("omnisharp-atom", {
-                    type: "object",
-                    properties: this.config
-                });
-            }})
+            .do({
+                complete: () => {
+                    (<any>atom.config).setSchema("omnisharp-atom", {
+                        type: "object",
+                        properties: this.config
+                    });
+                }
+            })
             .concatMap(x => x)
             .do(x => x());
     }

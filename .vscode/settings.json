@@ -3,11 +3,9 @@
   "files.exclude": {
     "**/.git": true,
     "**/node_modules": true,
-    "**/**.d.ts": true,
     "**/**.js.map": true,
     "**/lib/**/*.js": true,
     "**/spec/**/*.js": true,
-    "**/typings": true,
     "**/.DS_Store": true
   }
 }
