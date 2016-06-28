@@ -64,7 +64,6 @@
     "fastdom": "^1.0.3",
     "font-awesome": "^4.6.3",
     "fuzzaldrin": "^2.1.0",
-    "generator-aspnet": "^0.2.0",
     "globby": "^5.0.0",
     "jquery": "^3.0.0",
     "lodash": "^4.13.1",
