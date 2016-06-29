@@ -46,46 +46,15 @@ class OmniSharpAtom {
         _.each(grammars.grammars, grammarCb);
         this.disposable.add(atom.grammars.onDidAddGrammar(grammarCb));
 
-        const currentRoot = process.cwd();
-        const npmRoot = `${Omni.packageDir}/omnisharp-atom`;
-        const generatorAspnet = `${npmRoot}/node_modules/generator-aspnet`;
+        require("atom-package-deps").install("omnisharp-atom")
+            .then(() => {
+                console.info("Activating omnisharp-atom solution tracking...");
+                Omni.activate();
+                this.disposable.add(Omni);
 
-        process.chdir(npmRoot);
-
-        // Check if generator-aspnet is installed
-        // if not installed install
-        // if outdated install
-        // otherwise finish
-        const shouldInstallAspnetGenerator = Observable.bindCallback(npm.load)()
-            .mergeMap(() => Observable.bindNodeCallback(fs.exists)(generatorAspnet))
-            .switchMap(exists => {
-                if (exists) {
-                    return Observable.bindNodeCallback(npm.commands.view)(["generator-aspnet"])
-                        .map(z => z.version !== require(`${generatorAspnet}/package.json`));
-                } else {
-                    return Observable.of(true);
-                }
+                this._started.next(true);
+                this._started.complete();
             })
-            .switchMap(x => {
-                if (x) {
-                    return Observable.bindNodeCallback(npm.commands.install)(["generator-aspnet"])
-                        .do(() => process.chdir(currentRoot));
-                }
-                return Observable.of(undefined);
-            })
-            .toPromise();
-
-        Promise.all([
-            shouldInstallAspnetGenerator,
-            require("atom-package-deps").install("omnisharp-atom")
-        ]).then(() => {
-            console.info("Activating omnisharp-atom solution tracking...");
-            Omni.activate();
-            this.disposable.add(Omni);
-
-            this._started.next(true);
-            this._started.complete();
-        })
             /* tslint:disable:no-string-literal */
             .then(() => this.loadFeatures(this.getFeatures("atom").delay(Omni["_kick_in_the_pants_"] ? 0 : 2000)).toPromise())
             /* tslint:enable:no-string-literal */
@@ -124,8 +93,7 @@ class OmniSharpAtom {
 
         console.info(`Getting features for "${folder}"...`);
 
-        const packageDir = Omni.packageDir;
-        const featureDir = `${packageDir}/omnisharp-atom/lib/${folder}`;
+        const featureDir = `${__dirname}/${folder}`;
 
         function loadFeature(file: string) {
             const result = require(`./${folder}/${file}`);
