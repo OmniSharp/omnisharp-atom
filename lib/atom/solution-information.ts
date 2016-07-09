@@ -72,7 +72,11 @@ class SolutionInformation implements IFeature {
             this.card.updateCard(SolutionManager.activeSolutions[this.selectedIndex].model, SolutionManager.activeSolutions.length);
             this.selectedDisposable = Disposable.of(
                 SolutionManager.activeSolutions[this.selectedIndex].state
-                    .subscribe(() => this.card.updateCard(SolutionManager.activeSolutions[this.selectedIndex].model, SolutionManager.activeSolutions.length))
+                    .subscribe(() => {
+                        if (this.card) {
+                            this.card.updateCard(SolutionManager.activeSolutions[this.selectedIndex].model, SolutionManager.activeSolutions.length);
+                        }
+                    })
             );
         }
     }

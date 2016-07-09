@@ -16,7 +16,6 @@
 /// <reference path="typings/globals/jquery/index.d.ts" />
 /// <reference path="typings/globals/mixto/index.d.ts" />
 /// <reference path="typings/globals/node/index.d.ts" />
-/// <reference path="typings/globals/npm/index.d.ts" />
 /// <reference path="typings/modules/semver/index.d.ts" />
 /// <reference path="typings/modules/lodash/index.d.ts" />
 
