@@ -113,7 +113,7 @@ class OmniSharpAtom {
 
                     const features: { key: string, activate: () => () => void }[] = [];
                     _.each(feature, (value: IFeature, key: string) => {
-                        if (!_.isFunction(value)) {
+                        if (!_.isFunction(value) && !_.isArray(value)) {
                             if (!value.required) {
                                 this.config[key] = {
                                     title: `${value.title}`,

@@ -188,13 +188,13 @@ export function augmentEditor(editor: Atom.TextEditor, unusedCodeRows: UnusedMap
     editor.setGrammar = setGrammar;
     if (doSetGrammar) editor.setGrammar(editor.getGrammar());
 
-    (<any>(editor as any).tokenizedBuffer).buildTokenizedLineForRowWithText = function(row: number) {
+    (<any>(editor as any).tokenizedBuffer).buildTokenizedLineForRowWithText = function (row: number) {
         (<any>editor.getGrammar())["__row__"] = row;
         return (editor as any).tokenizedBuffer["_buildTokenizedLineForRowWithText"].apply(this, arguments);
     };
 
     if (!(<any>(editor as any).tokenizedBuffer).silentRetokenizeLines) {
-        (<any>(editor as any).tokenizedBuffer).silentRetokenizeLines = debounce(function() {
+        (<any>(editor as any).tokenizedBuffer).silentRetokenizeLines = debounce(function () {
             if ((<any>editor.getGrammar()).isObserveRetokenizing)
                 (<any>editor.getGrammar()).isObserveRetokenizing.next(false);
             let lastRow: number;
@@ -210,19 +210,19 @@ export function augmentEditor(editor: Atom.TextEditor, unusedCodeRows: UnusedMap
         }, DEBOUNCE_TIME, { leading: true, trailing: true });
     }
 
-    (<any>(editor as any).tokenizedBuffer).markTokenizationComplete = function() {
+    (<any>(editor as any).tokenizedBuffer).markTokenizationComplete = function () {
         if ((<any>editor.getGrammar()).isObserveRetokenizing)
             (<any>editor.getGrammar()).isObserveRetokenizing.next(true);
         return (editor as any).tokenizedBuffer["_markTokenizationComplete"].apply(this, arguments);
     };
 
-    (<any>(editor as any).tokenizedBuffer).retokenizeLines = function() {
+    (<any>(editor as any).tokenizedBuffer).retokenizeLines = function () {
         if ((<any>editor.getGrammar()).isObserveRetokenizing)
             (<any>editor.getGrammar()).isObserveRetokenizing.next(false);
         return (editor as any).tokenizedBuffer["_retokenizeLines"].apply(this, arguments);
     };
 
-    (<any>(editor as any).tokenizedBuffer).tokenizeInBackground = function() {
+    (<any>(editor as any).tokenizedBuffer).tokenizeInBackground = function () {
         if (!this.visible || this.pendingChunk || !this.isAlive())
             return;
 
@@ -235,7 +235,7 @@ export function augmentEditor(editor: Atom.TextEditor, unusedCodeRows: UnusedMap
         });
     };
 
-    (<any>(editor as any).tokenizedBuffer).scopesFromTags = function(startingScopes: number[], tags: number[]) {
+    (<any>(editor as any).tokenizedBuffer).scopesFromTags = function (startingScopes: number[], tags: number[]) {
         const scopes = startingScopes.slice();
         const grammar = (<any>editor.getGrammar());
         for (let i = 0, len = tags.length; i < len; i++) {
@@ -402,7 +402,7 @@ class Grammar {
 extend(Grammar.prototype, AtomGrammar.prototype);
 
 Grammar.prototype["omnisharp"] = true;
-Grammar.prototype["tokenizeLine"] = function(line: string, ruleStack: any[], firstLine = false): { tags: number[]; ruleStack: any } {
+Grammar.prototype["tokenizeLine"] = function (line: string, ruleStack: any[], firstLine = false): { tags: number[]; ruleStack: any } {
     const baseResult = AtomGrammar.prototype.tokenizeLine.call(this, line, ruleStack, firstLine);
     let tags: any[];
 
@@ -425,7 +425,7 @@ Grammar.prototype["tokenizeLine"] = function(line: string, ruleStack: any[], fir
     return baseResult;
 };
 
-(Grammar.prototype as any).getCsTokensForLine = function(highlights: Models.HighlightSpan[], line: string, row: number, ruleStack: any[], firstLine: boolean, tags: number[]) {
+(Grammar.prototype as any).getCsTokensForLine = function (highlights: Models.HighlightSpan[], line: string, row: number, ruleStack: any[], firstLine: boolean, tags: number[]) {
     ruleStack = [{ rule: this.getInitialRule() }];
 
     each(highlights, (highlight) => {
@@ -528,7 +528,7 @@ Grammar.prototype["tokenizeLine"] = function(line: string, ruleStack: any[], fir
     return tags;
 };
 
-const getIdForScope = (function() {
+const getIdForScope = (function () {
     const ids: { [key: string]: { [key: string]: number }; } = {};
     const grammars: any = {};
 
@@ -696,7 +696,11 @@ export function getEnhancedGrammar(editor: Atom.TextEditor, grammar?: FirstMate.
     if (!grammar) grammar = editor.getGrammar();
     if (!grammar["omnisharp"] && Omni.isValidGrammar(grammar)) {
         const newGrammar = new Grammar(editor, grammar, options);
-        each(grammar, (x, i) => has(grammar, i) && (newGrammar[i] = x));
+        each(grammar, (x, i) => {
+            if (has(grammar, i)) {
+                newGrammar[i] = x;
+            }
+        });
         grammar = <any>newGrammar;
     }
     return grammar;

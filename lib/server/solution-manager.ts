@@ -9,8 +9,7 @@ import {DriverState, findCandidates, Runtime, Candidate} from "omnisharp-client"
 import {GenericSelectListView} from "../views/generic-list-view";
 import {OmnisharpTextEditor, isOmnisharpTextEditor, OmnisharpEditorContext} from "./omnisharp-text-editor";
 
-type ASYNC_REPOSITORY = { getWorkingDirectory(): Promise<string>; };
-type REPOSITORY = { async: ASYNC_REPOSITORY; };
+type REPOSITORY = { getWorkingDirectory(): string; };
 const SOLUTION_LOAD_TIME = 30000;
 
 let openSelectList: GenericSelectListView;
@@ -164,13 +163,13 @@ class SolutionInstanceManager {
     private _findRepositoryForPath(workingPath: string) {
         return Observable.from<REPOSITORY>(atom.project.getRepositories() || [])
             .filter(x => !!x)
-            .flatMap(repo => repo.async.getWorkingDirectory(), (repo, directory) => ({ repo, directory }))
+            .map(repo => ({ repo, directory: repo.getWorkingDirectory() }))
             .filter(({directory}) => path.normalize(directory) === path.normalize(workingPath))
             .take(1)
-            .map(x => x.repo.async);
+            .map(x => x.repo);
     }
 
-    private _addSolution(candidate: string, repo: ASYNC_REPOSITORY, isProject: boolean, {temporary = false, project, originalFile}: { delay?: number; temporary?: boolean; project?: string; originalFile?: string; }) {
+    private _addSolution(candidate: string, repo: REPOSITORY, isProject: boolean, {temporary = false, project, originalFile}: { delay?: number; temporary?: boolean; project?: string; originalFile?: string; }) {
         const projectPath = candidate;
         if (_.endsWith(candidate, ".sln")) {
             candidate = path.dirname(candidate);
@@ -528,7 +527,9 @@ class SolutionInstanceManager {
                         slns.map(x => ({ displayName: x.path, name: x.path })),
                         (result: any) => {
                             items.unshift(...slns.filter(x => x.path === result));
-                            _.each(candidates, x => this._candidateFinderCache.add(x.path));
+                            _.each(candidates, x => {
+                                this._candidateFinderCache.add(x.path);
+                            });
 
                             asyncResult.complete();
                         },
@@ -594,7 +595,7 @@ class SolutionInstanceManager {
     }
 }
 
-function addCandidatesInOrder(candidates: { path: string; repo: ASYNC_REPOSITORY; isProject: boolean; originalFile: string; }[], cb: (candidate: string, repo: ASYNC_REPOSITORY, isProject: boolean, originalFile: string) => Observable<Solution>) {
+function addCandidatesInOrder(candidates: { path: string; repo: REPOSITORY; isProject: boolean; originalFile: string; }[], cb: (candidate: string, repo: REPOSITORY, isProject: boolean, originalFile: string) => Observable<Solution>) {
     const asyncSubject = new AsyncSubject();
 
     if (!candidates.length) {
@@ -605,7 +606,7 @@ function addCandidatesInOrder(candidates: { path: string; repo: ASYNC_REPOSITORY
 
     const cds = candidates.slice();
     const candidate = cds.shift();
-    const handleCandidate = (cand: { path: string; repo: ASYNC_REPOSITORY; isProject: boolean; originalFile: string; }) => {
+    const handleCandidate = (cand: { path: string; repo: REPOSITORY; isProject: boolean; originalFile: string; }) => {
         cb(cand.path, cand.repo, cand.isProject, cand.originalFile)
             .subscribe({
                 complete: () => {

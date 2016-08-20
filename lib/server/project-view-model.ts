@@ -89,7 +89,9 @@ export abstract class ProjectViewModel<T> implements IProjectViewModel {
     public get filesSet() {
         if (!this._filesSet) {
             this._filesSet = new Set<string>();
-            _.each(this._sourceFiles, file => this._filesSet.add(file));
+            _.each(this._sourceFiles, file => {
+                this._filesSet.add(file);
+            });
         }
         return this._filesSet;
     }

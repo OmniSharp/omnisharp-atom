@@ -70,7 +70,7 @@ export class GenericSelectListView extends spacePen.SelectListView {
         });
 
         // infer the generator somehow? based on the project information?  store in the project system??
-        const commands = _.sortBy(this._items, "displayName");
+        const commands = _.sortBy(this._items, x => x.displayName);
         this.setItems(commands);
         this.focusFilterEditor();
     }

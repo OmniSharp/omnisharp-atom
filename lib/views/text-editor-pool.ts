@@ -2,7 +2,7 @@ import {Models} from "omnisharp-client";
 import {Observable} from "rxjs";
 import {Disposable, CompositeDisposable, IDisposable} from "omnisharp-client";
 import _ from "lodash";
-import {getEnhancedGrammar, augmentEditor, ExcludeClassifications} from "../features/highlight";
+import {getEnhancedGrammar, augmentEditor, ExcludeClassifications} from "../features/highlight-v1.9";
 import {Omni} from "../server/omni";
 let fastdom: typeof Fastdom = require("fastdom");
 

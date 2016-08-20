@@ -295,7 +295,9 @@ export class ViewModel implements VMViewState, IDisposable {
         const diagnosticsByFile = baseCodecheck
             .map(files => {
                 const map = new Map<string, Models.DiagnosticLocation[]>();
-                _.each(files, file => map.set(file, this.diagnosticsByFile.get(file)));
+                _.each(files, file => {
+                    map.set(file, this.diagnosticsByFile.get(file));
+                });
                 return map;
             })
             .cache(1);

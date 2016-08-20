@@ -10,6 +10,7 @@
     "declaration": false,
     "noImplicitAny": true,
     "removeComments": true,
+    "noEmitOnError": false,
     "noLib": false,
     "preserveConstEnums": true,
     "experimentalDecorators": true,
