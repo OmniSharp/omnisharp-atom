@@ -1,4 +1,4 @@
-import {CompositeDisposable} from "omnisharp-client";
+import {CompositeDisposable} from "ts-disposables";
 import {Omni} from "../server/omni";
 import {readFileSync} from "fs";
 import {join} from "path";

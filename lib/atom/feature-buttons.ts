@@ -1,4 +1,4 @@
-import {CompositeDisposable, Disposable, IDisposable} from "omnisharp-client";
+import {CompositeDisposable, Disposable, IDisposable} from "ts-disposables";
 import {each} from "lodash";
 import {Omni} from "../server/omni";
 import {dock} from "../atom/dock";

@@ -1,7 +1,7 @@
 import {Models} from "omnisharp-client";
 import _ from "lodash";
 import {Observable, Subscription} from "rxjs";
-import {CompositeDisposable} from "omnisharp-client";
+import {CompositeDisposable} from "ts-disposables";
 import {Omni} from "../server/omni";
 const $: JQueryStatic = require("jquery");
 /* tslint:disable:variable-name */

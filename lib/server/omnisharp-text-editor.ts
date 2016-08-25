@@ -1,4 +1,4 @@
-import {CompositeDisposable, Disposable, IDisposable} from "omnisharp-client";
+import {CompositeDisposable, Disposable, IDisposable} from "ts-disposables";
 import {Models} from "omnisharp-client";
 import {Solution} from "./solution";
 import {ProjectViewModel, EmptyProjectViewModel} from "./project-view-model";

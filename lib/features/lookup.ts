@@ -3,7 +3,7 @@
 // https://atom.io/packages/atom-typescript
 import {Models} from "omnisharp-client";
 import {Observable, Subscription} from "rxjs";
-import {CompositeDisposable, Disposable, IDisposable} from "omnisharp-client";
+import {CompositeDisposable, Disposable, IDisposable} from "ts-disposables";
 import {Omni} from "../server/omni";
 import {TooltipView} from "../views/tooltip-view";
 const $: JQueryStatic = require("jquery");

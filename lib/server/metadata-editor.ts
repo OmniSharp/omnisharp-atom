@@ -3,7 +3,7 @@ import {TextEditor} from "atom";
 import {SolutionManager} from "./solution-manager";
 import {startsWith} from "lodash";
 import {OmnisharpTextEditor, OmnisharpEditorContext} from "./omnisharp-text-editor";
-import {IDisposable} from "omnisharp-client";
+import {IDisposable} from "ts-disposables";
 
 const metadataUri = "omnisharp://metadata/";
 export function metadataOpener(): IDisposable {

@@ -1,7 +1,7 @@
 import {Models} from "omnisharp-client";
 import _ from "lodash";
 import {Subject, Observable} from "rxjs";
-import {CompositeDisposable, IDisposable} from "omnisharp-client";
+import {CompositeDisposable, IDisposable} from "ts-disposables";
 import {Omni} from "../server/omni";
 import * as SpacePen from "atom-space-pen-views";
 import {applyAllChanges} from "../services/apply-changes";

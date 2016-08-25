@@ -1,6 +1,6 @@
 import {Models} from "omnisharp-client";
 import {Observable, Subject} from "rxjs";
-import {CompositeDisposable, Disposable} from "omnisharp-client";
+import {CompositeDisposable, Disposable} from "ts-disposables";
 import {Omni} from "../server/omni";
 import {dock} from "../atom/dock";
 import {TestResultsWindow} from "../views/test-results-window";

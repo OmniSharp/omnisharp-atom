@@ -2,7 +2,7 @@
 import {Models} from "omnisharp-client";
 import _ from "lodash";
 import {Observable, Subject, Subscription} from "rxjs";
-import {CompositeDisposable, Disposable, IDisposable} from "omnisharp-client";
+import {CompositeDisposable, Disposable, IDisposable} from "ts-disposables";
 import {Omni} from "../server/omni";
 let fastdom: typeof Fastdom = require("fastdom");
 

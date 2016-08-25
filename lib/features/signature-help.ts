@@ -1,6 +1,6 @@
 import {Models} from "omnisharp-client";
 import {Observable, Subject} from "rxjs";
-import {CompositeDisposable, Disposable, IDisposable} from "omnisharp-client";
+import {CompositeDisposable, Disposable, IDisposable} from "ts-disposables";
 import {Omni} from "../server/omni";
 import _ from "lodash";
 import {SignatureView} from "../views/signature-help-view";

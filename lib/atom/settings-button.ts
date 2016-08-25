@@ -1,4 +1,4 @@
-import {CompositeDisposable, IDisposable} from "omnisharp-client";
+import {CompositeDisposable, IDisposable} from "ts-disposables";
 import {dock} from "../atom/dock";
 
 class SettingsButton implements IFeature {

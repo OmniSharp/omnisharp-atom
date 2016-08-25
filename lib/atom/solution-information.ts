@@ -1,4 +1,4 @@
-import {CompositeDisposable, Disposable, IDisposable} from "omnisharp-client";
+import {CompositeDisposable, Disposable, IDisposable} from "ts-disposables";
 import _ from "lodash";
 import {SolutionStatusCard} from "../views/solution-status-view";
 import {SolutionManager} from "../server/solution-manager";

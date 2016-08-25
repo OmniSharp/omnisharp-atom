@@ -1,7 +1,7 @@
 import {Omni} from "../server/omni";
 import {Models} from "omnisharp-client";
 import _ from "lodash";
-import {CompositeDisposable, IDisposable} from "omnisharp-client";
+import {CompositeDisposable, IDisposable} from "ts-disposables";
 const filter = require("fuzzaldrin").filter;
 
 interface RequestOptions {

@@ -1,5 +1,5 @@
 import {Subject} from "rxjs";
-import {CompositeDisposable, IDisposable} from "omnisharp-client";
+import {CompositeDisposable, IDisposable} from "ts-disposables";
 import {difference} from "lodash";
 
 export class AtomProjectTracker implements IDisposable {

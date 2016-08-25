@@ -2,7 +2,7 @@ import _ from "lodash";
 import {Solution} from "./solution";
 import {Models, DriverState, OmnisharpClientStatus} from "omnisharp-client";
 import {Observable, Subject, ReplaySubject} from "rxjs";
-import {CompositeDisposable, Disposable, IDisposable} from "omnisharp-client";
+import {CompositeDisposable, Disposable, IDisposable} from "ts-disposables";
 import {normalize} from "path";
 import {ProjectViewModel, projectViewModelFactory, workspaceViewModelFactory} from "./project-view-model";
 import {OutputMessageElement} from "../views/output-message-element";

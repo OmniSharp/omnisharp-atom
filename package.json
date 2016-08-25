@@ -69,7 +69,8 @@
     "lodash": "^4.13.1",
     "omnisharp-client": "^5.0.11",
     "rxjs": "5.0.0-beta.10",
-    "semver": "^5.0.3"
+    "semver": "^5.0.3",
+    "ts-disposables": "^2.2.3"
   },
   "devDependencies": {
     "babel-plugin-transform-es2015-modules-commonjs": "^6.10.3",
@@ -89,7 +90,7 @@
     "mocha-unfunk-reporter": "^0.4.0",
     "through2": "^2.0.1",
     "tslint": "^3.12.1",
-    "typescript": "^1.8.10",
+    "typescript": "^2.0.0",
     "typings": "^1.3.1"
   },
   "consumedServices": {

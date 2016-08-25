@@ -1,6 +1,6 @@
 /* tslint:disable:no-string-literal */
 import {Observable} from "rxjs";
-import {CompositeDisposable, IDisposable} from "omnisharp-client";
+import {CompositeDisposable, IDisposable} from "ts-disposables";
 import _ from "lodash";
 import {Omni} from "../server/omni";
 import {OmnisharpClientStatus} from "omnisharp-client";

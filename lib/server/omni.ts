@@ -1,5 +1,6 @@
 import {Observable, ReplaySubject, Subject, BehaviorSubject, Scheduler} from "rxjs";
-import {CompositeDisposable, Disposable, IDisposable, createObservable} from "omnisharp-client";
+import {createObservable} from "omnisharp-client";
+import {CompositeDisposable, Disposable, IDisposable} from "ts-disposables";
 import {SolutionManager} from "./solution-manager";
 import {Solution} from "./solution";
 import _ from "lodash";

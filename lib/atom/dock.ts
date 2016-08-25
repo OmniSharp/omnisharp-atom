@@ -1,4 +1,4 @@
-import {CompositeDisposable, Disposable, IDisposable} from "omnisharp-client";
+import {CompositeDisposable, Disposable, IDisposable} from "ts-disposables";
 import {DockWindow, DocButtonOptions, PaneButtonOptions} from "../views/dock-window";
 
 

@@ -1,6 +1,6 @@
 import _ from "lodash";
 import {Observable, AsyncSubject} from "rxjs";
-import {CompositeDisposable, Disposable, IDisposable} from "omnisharp-client";
+import {CompositeDisposable, Disposable, IDisposable} from "ts-disposables";
 import path from "path";
 import fs from "fs";
 

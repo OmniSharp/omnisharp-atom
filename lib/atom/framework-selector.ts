@@ -1,5 +1,5 @@
 import {Models} from "omnisharp-client";
-import {CompositeDisposable, Disposable} from "omnisharp-client";
+import {CompositeDisposable, Disposable} from "ts-disposables";
 import {ProjectViewModel} from "../server/project-view-model";
 import {Omni} from "../server/omni";
 import {FrameworkSelectorComponent} from "../views/framework-selector-view";

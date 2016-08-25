@@ -11,6 +11,7 @@
     "noImplicitAny": true,
     "removeComments": true,
     "noEmitOnError": false,
+    "skipLibCheck": true,
     "noLib": false,
     "preserveConstEnums": true,
     "experimentalDecorators": true,

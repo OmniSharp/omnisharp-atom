@@ -1,6 +1,6 @@
 import _ from "lodash";
 import {Observable, Subject} from "rxjs";
-import {CompositeDisposable} from "omnisharp-client";
+import {CompositeDisposable} from "ts-disposables";
 import {Models, RequestOptions, ReactiveClient, DriverState, ReactiveClientOptions, Runtime} from "omnisharp-client";
 import {OmnisharpTextEditor} from "./omnisharp-text-editor";
 

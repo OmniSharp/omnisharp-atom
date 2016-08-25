@@ -1,5 +1,5 @@
 import {Observable} from "rxjs";
-import {Disposable, CompositeDisposable, SingleAssignmentDisposable, IDisposable} from "omnisharp-client";
+import {Disposable, CompositeDisposable, SingleAssignmentDisposable, IDisposable} from "ts-disposables";
 
 export interface ToggleButton {
     id: string;

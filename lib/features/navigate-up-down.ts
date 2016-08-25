@@ -1,5 +1,5 @@
 import {Models} from "omnisharp-client";
-import {CompositeDisposable} from "omnisharp-client";
+import {CompositeDisposable} from "ts-disposables";
 import {Omni} from "../server/omni";
 
 class Navigate implements IFeature {

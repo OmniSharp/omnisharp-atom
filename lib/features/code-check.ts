@@ -1,6 +1,6 @@
 import {Models} from "omnisharp-client";
 import {Observable, Subject} from "rxjs";
-import {CompositeDisposable} from "omnisharp-client";
+import {CompositeDisposable} from "ts-disposables";
 import {Omni} from "../server/omni";
 import {dock} from "../atom/dock";
 import {CodeCheckOutputElement} from "../views/codecheck-output-pane-view";

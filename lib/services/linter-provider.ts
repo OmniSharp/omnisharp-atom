@@ -4,7 +4,7 @@ import {Omni} from "../server/omni";
 const Range = require("atom").Range;
 /* tslint:enable:variable-name */
 import _ from "lodash";
-import {CompositeDisposable} from "omnisharp-client";
+import {CompositeDisposable} from "ts-disposables";
 
 interface LinterMessage {
     type: string; // "error" | "warning"

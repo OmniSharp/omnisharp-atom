@@ -1,4 +1,4 @@
-import {CompositeDisposable, Disposable} from "omnisharp-client";
+import {CompositeDisposable, Disposable} from "ts-disposables";
 import {StatusBarElement} from "../views/status-bar-view";
 
 class StatusBar implements IAtomFeature {

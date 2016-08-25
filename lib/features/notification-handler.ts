@@ -1,7 +1,7 @@
 import {Models, Stdio} from "omnisharp-client";
 import _ from "lodash";
 import {Omni} from "../server/omni";
-import {CompositeDisposable} from "omnisharp-client";
+import {CompositeDisposable} from "ts-disposables";
 import * as path from "path";
 const $: JQueryStatic = require("jquery");
 

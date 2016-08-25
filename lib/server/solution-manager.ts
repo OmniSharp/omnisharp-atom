@@ -1,7 +1,7 @@
 import _ from "lodash";
 import * as path from "path";
 import {Observable, AsyncSubject, BehaviorSubject, Scheduler, Subject} from "rxjs";
-import {RefCountDisposable, IDisposable, Disposable, CompositeDisposable} from "omnisharp-client";
+import {RefCountDisposable, IDisposable, Disposable, CompositeDisposable} from "ts-disposables";
 import {Solution} from "./solution";
 import {AtomProjectTracker} from "./atom-projects";
 import {SolutionObserver, SolutionAggregateObserver} from "./composite-solution";

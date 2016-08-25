@@ -1,5 +1,5 @@
 import {Observable} from "rxjs";
-import {CompositeDisposable} from "omnisharp-client";
+import {CompositeDisposable} from "ts-disposables";
 import {each, endsWith, filter} from "lodash";
 import * as path from "path";
 

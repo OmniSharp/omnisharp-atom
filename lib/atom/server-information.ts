@@ -1,5 +1,5 @@
 import {Observable} from "rxjs";
-import {CompositeDisposable} from "omnisharp-client";
+import {CompositeDisposable} from "ts-disposables";
 import {Omni} from "../server/omni";
 import {OmnisharpClientStatus} from "omnisharp-client";
 import {dock} from "../atom/dock";

@@ -3,7 +3,7 @@ import * as fs from "fs";
 import {Omni} from "../server/omni";
 import _ from "lodash";
 import {Observable, Subject} from "rxjs";
-import {CompositeDisposable, IDisposable} from "omnisharp-client";
+import {CompositeDisposable, IDisposable} from "ts-disposables";
 import {File} from "atom";
 import {ProjectViewModel} from "../server/project-view-model";
 import {Solution} from "../server/solution";

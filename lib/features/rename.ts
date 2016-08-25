@@ -1,5 +1,5 @@
 import _ from "lodash";
-import {CompositeDisposable} from "omnisharp-client";
+import {CompositeDisposable} from "ts-disposables";
 import {RenameView} from "../views/rename-view";
 import {Omni} from "../server/omni";
 import {applyAllChanges} from "../services/apply-changes";

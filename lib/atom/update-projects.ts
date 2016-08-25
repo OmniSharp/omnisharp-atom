@@ -1,5 +1,5 @@
 import {Observable} from "rxjs";
-import {CompositeDisposable} from "omnisharp-client";
+import {CompositeDisposable} from "ts-disposables";
 import _ from "lodash";
 import {Omni} from "../server/omni";
 import {ProjectViewModel} from "../server/project-view-model";
