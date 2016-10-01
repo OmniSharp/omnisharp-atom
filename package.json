@@ -75,7 +75,7 @@
   "devDependencies": {
     "babel-plugin-transform-es2015-modules-commonjs": "^6.10.3",
     "babel-preset-es2015": "^6.9.0",
-    "babel-preset-stage-3": "^6.11.0",
+    "babel-preset-stage-3": "^6.17.0",
     "chai": "^3.5.0",
     "del": "^2.2.1",
     "gulp": "^3.9.1",
