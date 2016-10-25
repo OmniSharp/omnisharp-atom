@@ -62,7 +62,7 @@
     "entities": "^1.1.1",
     "escape-html": "^1.0.1",
     "fastdom": "^1.0.3",
-    "font-awesome": "^4.6.3",
+    "font-awesome": "^4.7.0",
     "fuzzaldrin": "^2.1.0",
     "globby": "^5.0.0",
     "jquery": "^3.0.0",
