@@ -1,6 +1,6 @@
 /// <reference path="../tsd.d.ts" />
 import {expect} from "chai";
-import {CompositeDisposable} from "omnisharp-client";
+import {CompositeDisposable} from "ts-disposables";
 import {setupFeature, openEditor} from "../test-helpers";
 import {RenameView} from "../../lib/views/rename-view";
 import {Observable} from "rxjs";

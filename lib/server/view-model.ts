@@ -290,7 +290,7 @@ export class ViewModel implements VMViewState, IDisposable {
 
         const diagnostics = baseCodecheck
             .map(x => this.diagnostics)
-            .cache(1);
+            .publishReplay(1).refCount();
 
         const diagnosticsByFile = baseCodecheck
             .map(files => {
@@ -300,11 +300,11 @@ export class ViewModel implements VMViewState, IDisposable {
                 });
                 return map;
             })
-            .cache(1);
+            .publishReplay(1).refCount();
 
         const diagnosticsCounts = baseCodecheck
             .map(x => this.diagnosticCounts)
-            .cache(1);
+            .publishReplay(1).refCount();
 
         this.disposable.add(baseCodecheck.subscribe());
         return { diagnostics, diagnosticsByFile, diagnosticsCounts };

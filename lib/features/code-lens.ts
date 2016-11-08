@@ -66,7 +66,7 @@ class CodeLens implements IFeature {
             };
 
             cd.add(editor.getBuffer().onDidStopChanging(_.debounce(() => {
-                if (!subject.isUnsubscribed) subject.next(true);
+                if (!subject.isStopped) subject.next(true);
                 bindDidChange();
             }, 5000)));
 
@@ -218,7 +218,7 @@ export class Lens implements IDisposable {
     }
 
     private _issueUpdate = _.debounce((isVisible: boolean) => {
-        if (!this._update.isUnsubscribed) { this._update.next(isVisible); }
+        if (!this._update.isStopped) { this._update.next(isVisible); }
     }, 250);
 
     public updateTop(lineHeight: number) {

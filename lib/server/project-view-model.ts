@@ -106,7 +106,7 @@ export abstract class ProjectViewModel<T> implements IProjectViewModel {
     }
     public set activeFramework(value) {
         this._activeFramework = value;
-        if (!this._subjectActiveFramework.isUnsubscribed) {
+        if (!this._subjectActiveFramework.isStopped) {
             this._subjectActiveFramework.next(this._activeFramework);
         }
     }

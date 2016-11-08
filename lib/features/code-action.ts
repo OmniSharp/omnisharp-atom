@@ -100,7 +100,7 @@ class CodeAction implements IFeature {
                     }
                 }
 
-                if (!onDidChangeCursorPosition.isUnsubscribed) {
+                if (!onDidChangeCursorPosition.isStopped) {
                     onDidChangeCursorPosition.next(e);
                 }
             }, 1000)));

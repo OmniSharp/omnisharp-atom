@@ -8,4 +8,6 @@
     "**/spec/**/*.js": true,
     "**/.DS_Store": true
   }
+,
+"typescript.tsdk": "./node_modules/typescript/lib"
 }
