@@ -23,10 +23,12 @@ var metadata = {
 
 gulp.task('typescript', ['clean'], function() {
     return tsProject.src()
-        .pipe(tslint())
-        .pipe(tslint.report('prose'))
+        .pipe(tslint({
+            formatter: 'verbose'
+        }))
+        .pipe(tslint.report())
         .pipe(sourcemaps.init())
-        .pipe(ts(tsProject))
+        .pipe(tsProject())
         .pipe(babel())
         .pipe(sourcemaps.write())
         .pipe(gulp.dest('.'));

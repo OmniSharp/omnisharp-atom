@@ -553,7 +553,7 @@ class SolutionInstanceManager {
                         _.defer(() => listView.toggle());
                     }
 
-                    asyncResult.do({ complete: () => openSelectList = null });
+                    asyncResult.do({ complete: () => { openSelectList = null; } });
                     openSelectList = listView;
 
                     return <Observable<typeof candidates>><any>asyncResult;

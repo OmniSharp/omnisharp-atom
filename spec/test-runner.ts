@@ -1,6 +1,6 @@
 import {join} from "path";
 import {readFileSync} from "fs";
-import {CompositeDisposable} from "omnisharp-client";
+import {CompositeDisposable} from "ts-disposables";
 
 module.exports = function(
     {testPaths, buildAtomEnvironment, buildDefaultApplicationDelegate, headless}: {

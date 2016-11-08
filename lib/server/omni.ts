@@ -68,15 +68,15 @@ class OmniManager implements IDisposable {
         .refCount();
 
     private _diagnosticsSubject = new Subject<Models.DiagnosticLocation[]>();
-    private _diagnostics = this._diagnosticsSubject.cache(1);
+    private _diagnostics = this._diagnosticsSubject.publishReplay(1).refCount();
     public get diagnostics() { return this._diagnostics; }
 
     private _diagnosticCountsSubject = new Subject<{ [key: string]: number; }>();
-    private _diagnosticCounts = this._diagnosticCountsSubject.cache(1);
+    private _diagnosticCounts = this._diagnosticCountsSubject.publishReplay(1).refCount();
     public get diagnosticsCounts() { return this._diagnosticCounts; }
 
     private _diagnosticsByFileSubject = new Subject<Map<string, Models.DiagnosticLocation[]>>();
-    private _diagnosticsByFile = this._diagnosticsByFileSubject.cache(1);
+    private _diagnosticsByFile = this._diagnosticsByFileSubject.publishReplay(1).refCount();
     public get diagnosticsByFile() { return this._diagnosticsByFile; }
 
     private _isOff = true;
