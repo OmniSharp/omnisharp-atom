@@ -84,7 +84,7 @@
     "gulp-sourcemaps": "^1.6.0",
     "gulp-tslint": "^5.0.0",
     "gulp-typescript": "^2.13.6",
-    "gulp-util": "^3.0.7",
+    "gulp-util": "^3.0.8",
     "merge-stream": "^1.0.0",
     "mocha": "^2.5.3",
     "mocha-unfunk-reporter": "^0.4.0",
