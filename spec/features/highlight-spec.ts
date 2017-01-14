@@ -1,6 +1,6 @@
 /// <reference path="../tsd.d.ts" />
-import {setupFeature} from "../test-helpers";
+import {setupFeature} from '../test-helpers';
 
-describe("Highlight", () => {
-    setupFeature(["features/highlight"]);
+describe('Highlight', () => {
+    setupFeature(['features/highlight']);
 });

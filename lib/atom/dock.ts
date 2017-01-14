@@ -1,11 +1,11 @@
-import {CompositeDisposable, Disposable, IDisposable} from "ts-disposables";
-import {DockWindow, DocButtonOptions, PaneButtonOptions} from "../views/dock-window";
+import {CompositeDisposable, Disposable, IDisposable} from 'ts-disposables';
+import {DockWindow, DocButtonOptions, PaneButtonOptions} from '../views/dock-window';
 
 
 function fromDock(key?: string) {
     return function fromDock(target: Object, propertyKey: string, descriptor: TypedPropertyDescriptor<any>) {
         const internalKey = `${key || propertyKey}`;
-        descriptor.value = function() {
+        descriptor.value = function () {
             return this.dock[internalKey].apply(this.dock, arguments);
         };
     };
@@ -19,22 +19,22 @@ class Dock implements IAtomFeature {
     public activate() {
         this.disposable = new CompositeDisposable();
 
-        this.disposable.add(atom.commands.add("atom-workspace", "omnisharp-atom:toggle-dock", () => this.toggle()));
-        this.disposable.add(atom.commands.add("atom-workspace", "omnisharp-atom:show-dock", () => this.show()));
-        this.disposable.add(atom.commands.add("atom-workspace", "omnisharp-atom:hide-dock", () => this.hide()));
-        this.disposable.add(atom.commands.add("atom-workspace", "core:close", () => this.hide()));
-        this.disposable.add(atom.commands.add("atom-workspace", "core:cancel", () => this.hide()));
+        this.disposable.add(atom.commands.add('atom-workspace', 'omnisharp-atom:toggle-dock', () => this.toggle()));
+        this.disposable.add(atom.commands.add('atom-workspace', 'omnisharp-atom:show-dock', () => this.show()));
+        this.disposable.add(atom.commands.add('atom-workspace', 'omnisharp-atom:hide-dock', () => this.hide()));
+        this.disposable.add(atom.commands.add('atom-workspace', 'core:close', () => this.hide()));
+        this.disposable.add(atom.commands.add('atom-workspace', 'core:cancel', () => this.hide()));
     }
 
     public attach() {
         const p = atom.workspace.addBottomPanel({
-            item: document.createElement("span"),
+            item: document.createElement('span'),
             visible: false,
             priority: 1000
         });
 
         this.view = p.item.parentElement;
-        this.view.classList.add("omnisharp-atom-pane");
+        this.view.classList.add('omnisharp-atom-pane');
         this.dock.setPanel(p);
 
         this.view.appendChild(this.dock);
@@ -53,17 +53,17 @@ class Dock implements IAtomFeature {
     public get selected() { return this.dock.selected; }
     public set selected(value) { this.dock.selected = value; }
 
-    @fromDock("toggleView")
+    @fromDock('toggleView')
     public toggle() { /* */ }
 
-    @fromDock("showView")
+    @fromDock('showView')
     public show() { /* */ };
 
-    @fromDock("hideView")
+    @fromDock('hideView')
     public hide() { /* */ };
 
     @fromDock()
-    public addWindow(id: string, title: string, view: Element, options: PaneButtonOptions = { priority: 1000 }, parentDisposable?: IDisposable): IDisposable { throw new Error(""); }
+    public addWindow(id: string, title: string, view: Element, options: PaneButtonOptions = { priority: 1000 }, parentDisposable?: IDisposable): IDisposable { throw new Error(''); }
 
     @fromDock()
     public toggleWindow(selected: string) { /* */ }
@@ -72,11 +72,11 @@ class Dock implements IAtomFeature {
     public selectWindow(selected: string) { /* */ }
 
     @fromDock()
-    public addButton(id: string, title: string, view: Element, options: DocButtonOptions = { priority: 1000 }, parentDisposable?: IDisposable): IDisposable { throw new Error(""); }
+    public addButton(id: string, title: string, view: Element, options: DocButtonOptions = { priority: 1000 }, parentDisposable?: IDisposable): IDisposable { throw new Error(''); }
 
     public required = true;
-    public title = "Dock";
-    public description = "The dock window used to show logs and diagnostics and other things.";
+    public title = 'Dock';
+    public description = 'The dock window used to show logs and diagnostics and other things.';
 }
 
 export const dock = new Dock;

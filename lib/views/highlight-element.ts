@@ -1,5 +1,5 @@
-import {Models} from "omnisharp-client";
-import {EditorElement} from "./text-editor-pool";
+import {Models} from 'omnisharp-client';
+import {EditorElement} from './text-editor-pool';
 
 export class HighlightElement extends HTMLElement implements WebComponent {
     private _editor: EditorElement;
@@ -29,4 +29,4 @@ export class HighlightElement extends HTMLElement implements WebComponent {
     }
 }
 
-(<any>exports).HighlightElement = (<any>document).registerElement("omnisharp-highlight-element", { prototype: HighlightElement.prototype });
+(<any>exports).HighlightElement = (<any>document).registerElement('omnisharp-highlight-element', { prototype: HighlightElement.prototype });

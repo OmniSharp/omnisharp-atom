@@ -1,10 +1,10 @@
-import {Models} from "omnisharp-client";
-import {OmniSelectListView} from "../services/omni-select-list-view";
-import {Omni} from "../server/omni";
+import {Models} from 'omnisharp-client';
+import {Omni} from '../server/omni';
+import {OmniSelectListView} from '../services/omni-select-list-view';
 
 export class FindSymbolsView extends OmniSelectListView {
     constructor() {
-        super("Find Symbols");
+        super('Find Symbols');
 
         this.setMaxItems(50);
     }
@@ -21,7 +21,7 @@ export class FindSymbolsView extends OmniSelectListView {
     }
 
     public getFilterKey() {
-        return "Text";
+        return 'Text';
     }
 
     public confirmed(item: any): any {

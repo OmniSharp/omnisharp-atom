@@ -1,7 +1,7 @@
-import {Models} from "omnisharp-client";
-import * as SpacePen from "atom-space-pen-views";
-import {frameworkSelector} from "../atom/framework-selector";
-const $: JQueryStatic = require("jquery");
+import * as SpacePen from 'atom-space-pen-views';
+import {Models} from 'omnisharp-client';
+import {frameworkSelector} from '../atom/framework-selector';
+const $: JQueryStatic = require('jquery');
 
 interface FrameworkSelectorState {
     frameworks?: Models.DotNetFramework[];
@@ -18,9 +18,9 @@ export class FrameworkSelectorComponent extends HTMLAnchorElement implements Web
     public alignLeft: boolean;
 
     public createdCallback() {
-        this.onclick = (e) => {
+        this.onclick = e => {
             const view = new FrameworkSelectorSelectListView(atom.workspace.getActiveTextEditor(), {
-                attachTo: ".framework-selector",
+                attachTo: '.framework-selector',
                 alignLeft: this.alignLeft,
                 items: this.frameworks,
                 save: (framework: Models.DotNetFramework) => {
@@ -35,13 +35,13 @@ export class FrameworkSelectorComponent extends HTMLAnchorElement implements Web
     }
 }
 
-(<any>exports).FrameworkSelectorComponent = (<any>document).registerElement("omnisharp-framework-selector", { prototype: FrameworkSelectorComponent.prototype });
+(<any>exports).FrameworkSelectorComponent = (<any>document).registerElement('omnisharp-framework-selector', { prototype: FrameworkSelectorComponent.prototype });
 
 export class FrameworkSelectorSelectListView extends SpacePen.SelectListView {
     constructor(public editor: Atom.TextEditor, private options: { alignLeft: boolean; attachTo: string; items: Models.DotNetFramework[]; save(item: any): void }) {
         super();
-        this.$.addClass("code-actions-overlay");
-        (<any>this).filterEditorView.model.placeholderText = "Filter list";
+        this.$.addClass('code-actions-overlay');
+        (<any>this).filterEditorView.model.placeholderText = 'Filter list';
     }
 
     get $(): JQuery {
@@ -69,14 +69,14 @@ export class FrameworkSelectorSelectListView extends SpacePen.SelectListView {
         if (offset) {
             if (this.options.alignLeft) {
                 $(node).css({
-                    position: "fixed",
+                    position: 'fixed',
                     top: offset.top - node.clientHeight - 18,
                     left: offset.left,
                     width: width
                 });
             } else {
                 $(node).css({
-                    position: "fixed",
+                    position: 'fixed',
                     top: offset.top - node.clientHeight - 18,
                     left: offset.left - width + attachTo[0].clientWidth,
                     width: width
@@ -94,13 +94,13 @@ export class FrameworkSelectorSelectListView extends SpacePen.SelectListView {
         this.hide();
     }
 
-    public getFilterKey() { return "Name"; }
+    public getFilterKey() { return 'Name'; }
 
     public viewForItem(item: any) {
-        return SpacePen.$$(function() {
+        return SpacePen.$$(function () {
             return this.li({
-                "class": "event",
-                "data-event-name": item.Name
+                'class': 'event',
+                'data-event-name': item.Name
             }, () => {
                 return this.span(item.FriendlyName, {
                     title: item.FriendlyName

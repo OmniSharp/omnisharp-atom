@@ -1,13 +1,13 @@
 // Inspiration : https://atom.io/packages/ide-haskell
 // and https://atom.io/packages/ide-flow
 // https://atom.io/packages/atom-typescript
-import {Models} from "omnisharp-client";
-import {Observable, Subscription} from "rxjs";
-import {CompositeDisposable, Disposable, IDisposable} from "ts-disposables";
-import {Omni} from "../server/omni";
-import {TooltipView} from "../views/tooltip-view";
-const $: JQueryStatic = require("jquery");
-const escape = require("escape-html");
+import {Models} from 'omnisharp-client';
+import {Observable, Subscription} from 'rxjs';
+import {CompositeDisposable, Disposable, IDisposable} from 'ts-disposables';
+import {Omni} from '../server/omni';
+import {TooltipView} from '../views/tooltip-view';
+const $: JQueryStatic = require('jquery');
+const escape = require('escape-html');
 
 class TypeLookup implements IFeature {
     private disposable: CompositeDisposable;
@@ -24,7 +24,7 @@ class TypeLookup implements IFeature {
             cd.add(tooltip);
         }));
 
-        this.disposable.add(Omni.addTextEditorCommand("omnisharp-atom:type-lookup", () => {
+        this.disposable.add(Omni.addTextEditorCommand('omnisharp-atom:type-lookup', () => {
             Omni.activeEditor.first().subscribe(editor => {
                 tooltip.showExpressionTypeOnCommand();
             });
@@ -37,8 +37,8 @@ class TypeLookup implements IFeature {
     }
 
     public required = false;
-    public title = "Tooltip Lookup";
-    public description = "Adds hover tooltips to the editor, also has a keybind";
+    public title = 'Tooltip Lookup';
+    public description = 'Adds hover tooltips to the editor, also has a keybind';
 }
 
 class Tooltip implements IDisposable {
@@ -53,15 +53,15 @@ class Tooltip implements IDisposable {
 
         const cd = this.disposable = new CompositeDisposable();
 
-        const scroll = this.getFromShadowDom(editorView, ".scroll-view");
+        const scroll = this.getFromShadowDom(editorView, '.scroll-view');
         if (!scroll[0]) return;
 
         // to debounce mousemove event"s firing for some reason on some machines
         let lastExprTypeBufferPt: any;
 
-        const mousemove = Observable.fromEvent<MouseEvent>(scroll[0], "mousemove");
-        const mouseout = Observable.fromEvent<MouseEvent>(scroll[0], "mouseout");
-        this.keydown = Observable.fromEvent<KeyboardEvent>(scroll[0], "keydown");
+        const mousemove = Observable.fromEvent<MouseEvent>(scroll[0], 'mousemove');
+        const mouseout = Observable.fromEvent<MouseEvent>(scroll[0], 'mouseout');
+        this.keydown = Observable.fromEvent<KeyboardEvent>(scroll[0], 'keydown');
 
         cd.add(mousemove
             .auditTime(200)
@@ -85,7 +85,7 @@ class Tooltip implements IDisposable {
                 this.showExpressionTypeOnMouseOver(event, bufferPt);
             }));
 
-        cd.add(mouseout.subscribe((e) => this.hideExpressionType()));
+        cd.add(mouseout.subscribe(e => this.hideExpressionType()));
 
         cd.add(Omni.switchActiveEditor((edit, innerCd) => {
             innerCd.add(Disposable.create(() => this.hideExpressionType()));
@@ -97,7 +97,7 @@ class Tooltip implements IDisposable {
     }
 
     private subcribeKeyDown() {
-        this.keydownSubscription = this.keydown.subscribe((e) => this.hideExpressionType());
+        this.keydownSubscription = this.keydown.subscribe(e => this.hideExpressionType());
         this.disposable.add(this.keydownSubscription);
     }
 
@@ -110,7 +110,7 @@ class Tooltip implements IDisposable {
 
         // find out show position
         const offset = (this.rawView.component.getFontSize() * bufferPt.column) * 0.7;
-        const shadow = this.getFromShadowDom(this.editorView, ".cursor-line")[0];
+        const shadow = this.getFromShadowDom(this.editorView, '.cursor-line')[0];
         if (!shadow) return;
         const rect = shadow.getBoundingClientRect();
 
@@ -206,7 +206,7 @@ class Tooltip implements IDisposable {
 
     private pixelPositionFromMouseEvent(editorView: any, event: MouseEvent) {
         const clientX = event.clientX, clientY = event.clientY;
-        const shadow = this.getFromShadowDom(editorView, ".lines")[0];
+        const shadow = this.getFromShadowDom(editorView, '.lines')[0];
         if (!shadow) return;
         const linesClientRect = shadow.getBoundingClientRect();
         let top = clientY - linesClientRect.top;

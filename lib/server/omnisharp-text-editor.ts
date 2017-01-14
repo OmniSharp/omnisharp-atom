@@ -1,23 +1,28 @@
-import {CompositeDisposable, Disposable, IDisposable} from "ts-disposables";
-import {Models} from "omnisharp-client";
-import {Solution} from "./solution";
-import {ProjectViewModel, EmptyProjectViewModel} from "./project-view-model";
-import _ from "lodash";
-import {Subject} from "rxjs";
+import { map } from 'lodash';
+import { Models } from 'omnisharp-client';
+import { Subject } from 'rxjs';
+import { CompositeDisposable, Disposable, IDisposable } from 'ts-disposables';
+import { EmptyProjectViewModel, ProjectViewModel } from './project-view-model';
+import { Solution } from './solution';
 
-const contextItems = new Map<string, (context: OmnisharpEditorContext, editor: OmnisharpTextEditor) => any>();
-export function registerContextItem<T>(name: string, callback: (context: OmnisharpEditorContext, editor: OmnisharpTextEditor) => T) {
+const contextItems = new Map<string, (context: OmnisharpEditorContext, editor: IOmnisharpTextEditor) => any>();
+export function registerContextItem<T>(name: string, callback: (context: OmnisharpEditorContext, editor: IOmnisharpTextEditor) => T) {
     contextItems.set(name, callback);
     return Disposable.create(() => contextItems.delete(name));
 }
 
-export type AtomTextChange = { oldRange: TextBuffer.Range; newRange: TextBuffer.Range; oldText: string; newText: string; };
+export interface IAtomTextChange {
+    oldRange: TextBuffer.Range;
+    newRange: TextBuffer.Range;
+    oldText: string;
+    newText: string;
+}
 
 export class OmnisharpEditorContext implements IDisposable {
-    private static _createdSubject = new Subject<OmnisharpTextEditor>();
+    private static _createdSubject = new Subject<IOmnisharpTextEditor>();
     public static get created() { return OmnisharpEditorContext._createdSubject.asObservable(); }
 
-    private _editor: OmnisharpTextEditor;
+    private _editor: IOmnisharpTextEditor;
     private _solution: Solution;
     private _metadata: boolean;
     private _config: boolean;
@@ -25,27 +30,27 @@ export class OmnisharpEditorContext implements IDisposable {
     private _items = new Map<string, any>();
     private _disposable = new CompositeDisposable();
     private _loaded = false;
-    private _changes: AtomTextChange[] = [];
+    private _changes: IAtomTextChange[] = [];
 
-    constructor(editor: Atom.TextEditor, solution: Solution) {
-        if ((<any>editor).omnisharp) return;
+    public constructor(editor: Atom.TextEditor, solution: Solution) {
+        if ((<any>editor).omnisharp) { return; }
         this._editor = <any>editor;
         this._editor.omnisharp = this;
         this._solution = solution;
         this._project = new EmptyProjectViewModel(null, solution.path);
 
         const view: HTMLElement = <any>atom.views.getView(editor);
-        view.classList.add("omnisharp-editor");
+        view.classList.add('omnisharp-editor');
 
         this._disposable.add(
             () => {
                 this._editor.omnisharp = null;
-                view.classList.remove("omnisharp-editor");
+                view.classList.remove('omnisharp-editor');
             },
             solution.model
                 .getProjectForEditor(editor)
                 .take(1)
-                .subscribe((project) => this._project.update(project)),
+                .subscribe(project => this._project.update(project)),
             this.solution.whenConnected().subscribe(() => this._loaded = true),
             Disposable.create(() => {
                 this._items.forEach(item => item.dispose && item.dispose());
@@ -87,10 +92,10 @@ export class OmnisharpEditorContext implements IDisposable {
         callback();
     }
 
-    public get temp() { return this._items.has("___TEMP___") && this._items.get("___TEMP___") || false; }
+    public get temp() { return this._items.has('___TEMP___') && this._items.get('___TEMP___') || false; }
     public set temp(value: boolean) {
-        if (!this._items.has("___TEMP___")) {
-            this._items.set("___TEMP___", value);
+        if (!this._items.has('___TEMP___')) {
+            this._items.set('___TEMP___', value);
         }
     }
 
@@ -100,9 +105,10 @@ export class OmnisharpEditorContext implements IDisposable {
     public get config() { return this._config; }
     public set config(value) { this._config = value; }
 
-    public set<T>(name: string, callback: (context: OmnisharpEditorContext, editor: OmnisharpTextEditor) => T) {
-        if (this._items.has(name))
+    public set<T>(name: string, callback: (context: OmnisharpEditorContext, editor: IOmnisharpTextEditor) => T) {
+        if (this._items.has(name)) {
             return this._items.get(name);
+        }
 
         const result = callback(this, this._editor);
         this._items.set(name, result);
@@ -116,7 +122,7 @@ export class OmnisharpEditorContext implements IDisposable {
         return <any>this._items.get(name);
     }
 
-    public pushChange(change: AtomTextChange) {
+    public pushChange(change: IAtomTextChange) {
         this._changes.push(change);
     }
 
@@ -124,7 +130,7 @@ export class OmnisharpEditorContext implements IDisposable {
         if (!this._changes.length) {
             return null;
         }
-        return _.map(this._changes.splice(0, this._changes.length), change => <Models.LinePositionSpanTextChange>{
+        return map(this._changes.splice(0, this._changes.length), change => <Models.LinePositionSpanTextChange>{
             NewText: change.newText,
             StartLine: change.oldRange.start.row,
             StartColumn: change.oldRange.start.column,
@@ -136,8 +142,8 @@ export class OmnisharpEditorContext implements IDisposable {
     public get hasChanges() { return !!this._changes.length; }
 }
 
-export interface OmnisharpTextEditor extends Atom.TextEditor {
+export interface IOmnisharpTextEditor extends Atom.TextEditor {
     omnisharp: OmnisharpEditorContext;
 }
 
-export function isOmnisharpTextEditor(editor: any): editor is OmnisharpTextEditor { return editor && !!(<any>editor).omnisharp; }
+export function isOmnisharpTextEditor(editor: any): editor is IOmnisharpTextEditor { return editor && !!(<any>editor).omnisharp; }

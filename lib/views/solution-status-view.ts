@@ -1,15 +1,14 @@
-import _ from "lodash";
-import {ViewModel} from "../server/view-model";
-import {ProjectViewModel} from "../server/project-view-model";
-import {DriverState} from "omnisharp-client";
-import {CompositeDisposable}  from "ts-disposables";
-const $: JQueryStatic = require("jquery");
-let fastdom: typeof Fastdom = require("fastdom");
-import {basename} from "path";
+import { toArray, truncate } from 'lodash';
+import { DriverState } from 'omnisharp-client';
+import { CompositeDisposable } from 'ts-disposables';
+import { ProjectViewModel } from '../server/project-view-model';
+import { ViewModel } from '../server/view-model';
+const $: JQueryStatic = require('jquery');
+import { basename } from 'path';
 
 function truncateStringReverse(str: string, maxLength = 55) {
-    const reversedString = _.toArray(str).reverse().join("");
-    return _.toArray(_.truncate(reversedString, maxLength)).reverse().join("");
+    const reversedString = toArray(str).reverse().join('');
+    return toArray(truncate(reversedString, maxLength)).reverse().join('');
 }
 
 
@@ -18,15 +17,15 @@ export interface ProjectDisplayElement extends HTMLDivElement {
     key: string;
 }
 
-const getMessageElement = (function() {
+const getMessageElement = (function () {
     const projectProps = {
         get: function project() { return this._project; },
         set: function project(project: ProjectViewModel<any>) {
             this._project = project;
             this._key = project.path;
 
-            const path = truncateStringReverse(project.path.replace(this.project.solutionPath, ""), 24);
-            this.title = `${path} [${project.frameworks.filter(z => z.Name !== "all").map(x => x.FriendlyName)}]`;
+            const path = truncateStringReverse(project.path.replace(this.project.solutionPath, ''), 24);
+            this.title = `${path} [${project.frameworks.filter(z => z.Name !== 'all').map(x => x.FriendlyName)}]`;
             this.innerText = project.name;
         }
     };
@@ -36,17 +35,17 @@ const getMessageElement = (function() {
     };
 
     return function getMessageElement(): ProjectDisplayElement {
-        const element: ProjectDisplayElement = <any>document.createElement("div");
-        element.classList.add("project", "name");
-        Object.defineProperty(element, "project", projectProps);
-        Object.defineProperty(element, "key", keyProps);
+        const element: ProjectDisplayElement = <any>document.createElement('div');
+        element.classList.add('project', 'name');
+        Object.defineProperty(element, 'project', projectProps);
+        Object.defineProperty(element, 'key', keyProps);
 
         return element;
     };
 })();
 
 export class SolutionStatusCard extends HTMLDivElement implements WebComponent {
-    public displayName = "Card";
+    public displayName = 'Card';
 
     private modelDisposable: CompositeDisposable;
     public attachTo: string;
@@ -85,118 +84,114 @@ export class SolutionStatusCard extends HTMLDivElement implements WebComponent {
         this.modelDisposable = new CompositeDisposable();
 
         this.modelDisposable.add(this._model.observe.state.delay(10).subscribe(({index, path, /*runtime,*/ state, isReady, isOff, isOn}) => {
-            fastdom.mutate(() => {
-                const name = `${basename(path)} (${index})`;
-                if (this._name.innerText !== name) {
-                    this._name.innerText = name;
-                }
+            const name = `${basename(path)} (${index})`;
+            if (this._name.innerText !== name) {
+                this._name.innerText = name;
+            }
 
-                if (state === DriverState.Connected) {
-                    this._statusText.innerText = "Online";
-                } else if (state === DriverState.Connecting) {
-                    this._statusText.innerText = "Loading";
-                } else if (state === DriverState.Disconnected) {
-                    this._statusText.innerText = "Offline";
-                } else {
-                    this._statusText.innerText = DriverState[state];
-                }
+            if (state === DriverState.Connected) {
+                this._statusText.innerText = 'Online';
+            } else if (state === DriverState.Connecting) {
+                this._statusText.innerText = 'Loading';
+            } else if (state === DriverState.Disconnected) {
+                this._statusText.innerText = 'Offline';
+            } else {
+                this._statusText.innerText = DriverState[state];
+            }
 
-                if (isReady) {
-                    this._startBtn.style.display = "none";
-                    this._stopBtn.style.display = "";
-                } else if (isOff) {
-                    this._startBtn.style.display = "";
-                    this._stopBtn.style.display = "none";
-                } else {
-                    this._startBtn.style.display = "none";
-                    this._stopBtn.style.display = "none";
-                }
+            if (isReady) {
+                this._startBtn.style.display = 'none';
+                this._stopBtn.style.display = '';
+            } else if (isOff) {
+                this._startBtn.style.display = '';
+                this._stopBtn.style.display = 'none';
+            } else {
+                this._startBtn.style.display = 'none';
+                this._stopBtn.style.display = 'none';
+            }
 
-                if (isOn) {
-                    this._restartBtn.style.display = "";
-                } else {
-                    this._restartBtn.style.display = "none";
-                }
+            if (isOn) {
+                this._restartBtn.style.display = '';
+            } else {
+                this._restartBtn.style.display = 'none';
+            }
 
-                if (isOff) {
-                    this._projects.style.display = "none";
-                } else {
-                    this._projects.style.display = "";
-                }
+            if (isOff) {
+                this._projects.style.display = 'none';
+            } else {
+                this._projects.style.display = '';
+            }
 
-                //this._statusText.innerText = DriverState[state];
-                this._statusItem.className = "pull-left stats-item";
-                this._statusItem.classList.add(DriverState[state].toLowerCase());
+            //this._statusText.innerText = DriverState[state];
+            this._statusItem.className = 'pull-left stats-item';
+            this._statusItem.classList.add(DriverState[state].toLowerCase());
 
-                this.verifyPosition();
+            this.verifyPosition();
 
-                /*if (runtime) {
-                    this._runtimeText.style.display = "";
-                    this._runtimeText.innerText = runtime;
-                } else {*/
-                    this._runtimeText.style.display = "none";
-                    this._runtimeText.innerText = "";
-                /*}*/
-            });
+            /*if (runtime) {
+                this._runtimeText.style.display = "";
+                this._runtimeText.innerText = runtime;
+            } else {*/
+            this._runtimeText.style.display = 'none';
+            this._runtimeText.innerText = '';
+            /*}*/
         }));
 
         this.modelDisposable.add(this._model.observe.projects.subscribe(projects => {
-            fastdom.mutate(() => {
-                for (let i = 0, len = this._projects.children.length > projects.length ? this._projects.children.length : projects.length; i < len; i++) {
-                    const item = projects[i];
-                    let child: ProjectDisplayElement = <any>this._projects.children[i];
+            for (let i = 0, len = this._projects.children.length > projects.length ? this._projects.children.length : projects.length; i < len; i++) {
+                const item = projects[i];
+                let child: ProjectDisplayElement = <any>this._projects.children[i];
 
-                    if (!item && child) {
-                        child.remove();
-                        continue;
-                    } else if (item && !child) {
-                        child = getMessageElement();
-                        this._projects.appendChild(child);
-                    }
-
-                    if (child && child.key !== item.path) {
-                        child.project = item;
-                    }
+                if (!item && child) {
+                    child.remove();
+                    continue;
+                } else if (item && !child) {
+                    child = getMessageElement();
+                    this._projects.appendChild(child);
                 }
 
-                this.verifyPosition();
-            });
+                if (child && child.key !== item.path) {
+                    child.project = item;
+                }
+            }
+
+            this.verifyPosition();
         }));
     }
 
     private _getMetaControls() {
-        this._stopBtn = document.createElement("button");
-        this._stopBtn.classList.add("btn", "btn-xs", "btn-error");
-        this._stopBtn.onclick = () => atom.commands.dispatch(atom.views.getView(atom.workspace), "omnisharp-atom:stop-server");
+        this._stopBtn = document.createElement('button');
+        this._stopBtn.classList.add('btn', 'btn-xs', 'btn-error');
+        this._stopBtn.onclick = () => atom.commands.dispatch(atom.views.getView(atom.workspace), 'omnisharp-atom:stop-server');
 
-        let span = document.createElement("span");
-        span.classList.add("fa", "fa-stop");
+        let span = document.createElement('span');
+        span.classList.add('fa', 'fa-stop');
         this._stopBtn.appendChild(span);
-        this._stopBtn.innerHTML += " Stop";
+        this._stopBtn.innerHTML += ' Stop';
 
-        this._startBtn = document.createElement("button");
-        this._startBtn.classList.add("btn", "btn-xs", "btn-success");
-        this._startBtn.onclick = () => atom.commands.dispatch(atom.views.getView(atom.workspace), "omnisharp-atom:start-server");
+        this._startBtn = document.createElement('button');
+        this._startBtn.classList.add('btn', 'btn-xs', 'btn-success');
+        this._startBtn.onclick = () => atom.commands.dispatch(atom.views.getView(atom.workspace), 'omnisharp-atom:start-server');
 
-        span = document.createElement("span");
-        span.classList.add("fa", "fa-play");
+        span = document.createElement('span');
+        span.classList.add('fa', 'fa-play');
         this._startBtn.appendChild(span);
-        this._startBtn.innerHTML += " Start";
+        this._startBtn.innerHTML += ' Start';
 
-        this._restartBtn = document.createElement("button");
-        this._restartBtn.classList.add("btn", "btn-xs", "btn-info");
-        this._restartBtn.onclick = () => atom.commands.dispatch(atom.views.getView(atom.workspace), "omnisharp-atom:restart-server");
+        this._restartBtn = document.createElement('button');
+        this._restartBtn.classList.add('btn', 'btn-xs', 'btn-info');
+        this._restartBtn.onclick = () => atom.commands.dispatch(atom.views.getView(atom.workspace), 'omnisharp-atom:restart-server');
 
-        span = document.createElement("span");
-        span.classList.add("fa", "fa-refresh");
+        span = document.createElement('span');
+        span.classList.add('fa', 'fa-refresh');
         this._restartBtn.appendChild(span);
-        this._restartBtn.innerHTML += " Restart";
+        this._restartBtn.innerHTML += ' Restart';
 
-        const metaControls = document.createElement("div");
-        metaControls.classList.add("meta-controls");
+        const metaControls = document.createElement('div');
+        metaControls.classList.add('meta-controls');
 
-        const buttonGroup = document.createElement("div");
-        buttonGroup.classList.add("btn-group");
+        const buttonGroup = document.createElement('div');
+        buttonGroup.classList.add('btn-group');
         metaControls.appendChild(buttonGroup);
 
         buttonGroup.appendChild(this._startBtn);
@@ -207,45 +202,45 @@ export class SolutionStatusCard extends HTMLDivElement implements WebComponent {
     }
 
     private _getStatusItem() {
-        this._statusItem = document.createElement("span");
-        this._statusItem.classList.add("pull-left", "stats-item");
+        this._statusItem = document.createElement('span');
+        this._statusItem.classList.add('pull-left', 'stats-item');
 
-        const statusContainer = document.createElement("span");
+        const statusContainer = document.createElement('span');
         this._statusItem.appendChild(statusContainer);
-        const icon = document.createElement("span");
+        const icon = document.createElement('span');
         statusContainer.appendChild(icon);
-        icon.classList.add("icon", "icon-zap");
+        icon.classList.add('icon', 'icon-zap');
 
-        this._statusText = document.createElement("span");
+        this._statusText = document.createElement('span');
         statusContainer.appendChild(this._statusText);
 
         return this._statusItem;
     }
 
     private _getVersions() {
-        const versions = document.createElement("span");
-        versions.classList.add("pull-right", "stats-item");
+        const versions = document.createElement('span');
+        versions.classList.add('pull-right', 'stats-item');
 
-        const spans = document.createElement("span");
-        spans.classList.add("icon", "icon-versions");
+        const spans = document.createElement('span');
+        spans.classList.add('icon', 'icon-versions');
         versions.appendChild(spans);
 
-        this._runtimeText = document.createElement("span");
+        this._runtimeText = document.createElement('span');
         versions.appendChild(this._runtimeText);
 
         return versions;
     }
 
     private _getBody() {
-        const body = document.createElement("div");
+        const body = document.createElement('div');
         this._body = body;
-        body.classList.add("body");
+        body.classList.add('body');
 
-        const header = document.createElement("h4");
-        header.classList.add("name");
+        const header = document.createElement('h4');
+        header.classList.add('name');
         body.appendChild(header);
 
-        this._name = document.createElement("span");
+        this._name = document.createElement('span');
         header.appendChild(this._name);
 
         const versions = this._getVersions();
@@ -261,28 +256,28 @@ export class SolutionStatusCard extends HTMLDivElement implements WebComponent {
     }
 
     private _getProjects() {
-        this._projects = document.createElement("div");
-        this._projects.classList.add("meta", "meta-projects");
+        this._projects = document.createElement('div');
+        this._projects.classList.add('meta', 'meta-projects');
 
-        const header = document.createElement("div");
-        header.classList.add("header");
-        header.innerText = "Projects";
+        const header = document.createElement('div');
+        header.classList.add('header');
+        header.innerText = 'Projects';
 
         return this._projects;
     }
 
     private _getButtons() {
-        this._buttons = document.createElement("div");
-        this._buttons.classList.add("selector", "btn-group", "btn-group-xs");
+        this._buttons = document.createElement('div');
+        this._buttons.classList.add('selector', 'btn-group', 'btn-group-xs');
 
-        const left = document.createElement("div");
-        left.classList.add("btn", "btn-xs", "icon", "icon-triangle-left");
-        left.onclick = (e) => atom.commands.dispatch(atom.views.getView(atom.workspace), "omnisharp-atom:previous-solution-status");
+        const left = document.createElement('div');
+        left.classList.add('btn', 'btn-xs', 'icon', 'icon-triangle-left');
+        left.onclick = e => atom.commands.dispatch(atom.views.getView(atom.workspace), 'omnisharp-atom:previous-solution-status');
         this._buttons.appendChild(left);
 
-        const right = document.createElement("div");
-        right.classList.add("btn", "btn-xs", "icon", "icon-triangle-right");
-        right.onclick = (e) => atom.commands.dispatch(atom.views.getView(atom.workspace), "omnisharp-atom:next-solution-status");
+        const right = document.createElement('div');
+        right.classList.add('btn', 'btn-xs', 'icon', 'icon-triangle-right');
+        right.onclick = e => atom.commands.dispatch(atom.views.getView(atom.workspace), 'omnisharp-atom:next-solution-status');
         this._buttons.appendChild(right);
 
         return this._buttons;
@@ -291,7 +286,7 @@ export class SolutionStatusCard extends HTMLDivElement implements WebComponent {
     public createdCallback() {
         this.modelDisposable = new CompositeDisposable();
 
-        this.classList.add("omnisharp-card");
+        this.classList.add('omnisharp-card');
 
         this._getButtons();
 
@@ -315,7 +310,7 @@ export class SolutionStatusCard extends HTMLDivElement implements WebComponent {
         const offset = $(document.querySelectorAll(this.attachTo)).offset();
         if (offset) {
             $(this).css({
-                position: "fixed",
+                position: 'fixed',
                 top: offset.top - this.clientHeight,
                 left: offset.left
             });
@@ -323,4 +318,4 @@ export class SolutionStatusCard extends HTMLDivElement implements WebComponent {
     }
 }
 
-(<any>exports).SolutionStatusCard = (<any>document).registerElement("omnisharp-solution-card", { prototype: SolutionStatusCard.prototype });
+(<any>exports).SolutionStatusCard = (<any>document).registerElement('omnisharp-solution-card', { prototype: SolutionStatusCard.prototype });

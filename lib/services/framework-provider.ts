@@ -1,7 +1,7 @@
-import _ from "lodash";
-import {Observable} from "rxjs";
-import {ajax} from "jquery";
-const filter = require("fuzzaldrin").filter;
+import { ajax } from 'jquery';
+import { keys } from 'lodash';
+import { Observable } from 'rxjs';
+const filter = require('fuzzaldrin').filter;
 
 const frameworkCache = new Map<string, { [key: string]: string }>();
 
@@ -34,7 +34,7 @@ interface IAutocompleteProvider {
 }
 
 function makeSuggestion(item: string, replacementPrefix: string) {
-    const type = "package";
+    const type = 'package';
 
     return {
         _search: item,
@@ -43,7 +43,7 @@ function makeSuggestion(item: string, replacementPrefix: string) {
         type: type,
         displayText: item,
         replacementPrefix,
-        className: "autocomplete-project-json",
+        className: 'autocomplete-project-json',
     };
 }
 
@@ -55,12 +55,12 @@ class NugetNameProvider implements IAutocompleteProvider {
         const framework = options.path.match(nameRegex)[1];
 
         return fetchFrameworkFromGithub(framework)
-            .map(_.keys)
+            .map(keys)
             .map(z => z.map(x => makeSuggestion(x, options.replacementPrefix)))
-            .map(s => filter(s, options.prefix, { key: "_search" }))
+            .map(s => filter(s, options.prefix, { key: '_search' }))
             .toPromise();
     }
-    public fileMatchs = ["project.json"];
+    public fileMatchs = ['project.json'];
     public pathMatch(path: string) {
         return path && !!path.match(nameRegex);
     }
@@ -77,7 +77,7 @@ class NugetVersionProvider implements IAutocompleteProvider {
             .map(x => [makeSuggestion(x[name], options.replacementPrefix)])
             .toPromise();
     }
-    public fileMatchs = ["project.json"];
+    public fileMatchs = ['project.json'];
     public pathMatch(path: string) {
         return path && !!path.match(versionRegex);
     }

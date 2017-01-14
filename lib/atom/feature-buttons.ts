@@ -1,7 +1,7 @@
-import {CompositeDisposable, Disposable, IDisposable} from "ts-disposables";
-import {each} from "lodash";
-import {Omni} from "../server/omni";
-import {dock} from "../atom/dock";
+import {each} from 'lodash';
+import {CompositeDisposable, Disposable, IDisposable} from 'ts-disposables';
+import {dock} from '../atom/dock';
+import {Omni} from '../server/omni';
 
 interface IButton {
     name: string;
@@ -11,25 +11,25 @@ interface IButton {
 }
 
 const buttons = [{
-        name: "code-lens",
-        config: "omnisharp-atom.codeLens",
-        icon: "icon-telescope",
-        tooltip: "Enable / Disable Code Lens"
+        name: 'code-lens',
+        config: 'omnisharp-atom.codeLens',
+        icon: 'icon-telescope',
+        tooltip: 'Enable / Disable Code Lens'
     }];
 
 if (Omni.atomVersion.minor !== 1 || Omni.atomVersion.minor > 8) {
     buttons.unshift({
-        name: "enhanced-highlighting",
-        config: "omnisharp-atom.enhancedHighlighting19",
-        icon: "icon-pencil",
-        tooltip: "Enable / Disable Enhanced Highlighting"
+        name: 'enhanced-highlighting',
+        config: 'omnisharp-atom.enhancedHighlighting19',
+        icon: 'icon-pencil',
+        tooltip: 'Enable / Disable Enhanced Highlighting'
     });
 } else {
     buttons.unshift({
-        name: "enhanced-highlighting",
-        config: "omnisharp-atom.enhancedHighlighting",
-        icon: "icon-pencil",
-        tooltip: "Enable / Disable Enhanced Highlighting"
+        name: 'enhanced-highlighting',
+        config: 'omnisharp-atom.enhancedHighlighting',
+        icon: 'icon-pencil',
+        tooltip: 'Enable / Disable Enhanced Highlighting'
     });
 }
 
@@ -65,9 +65,9 @@ class FeatureEditorButtons implements IAtomFeature {
 
     private _button(button: IButton, index: number) {
         const {name, config, icon, tooltip} = button;
-        const view = document.createElement("span");
-        view.classList.add("inline-block", `${name}-button`, icon);
-        view.style.display = "none";
+        const view = document.createElement('span');
+        view.classList.add('inline-block', `${name}-button`, icon);
+        view.style.display = 'none';
         view.onclick = () => atom.config.set(config, !atom.config.get(config));
 
         let tooltipDisposable: IDisposable;
@@ -83,7 +83,7 @@ class FeatureEditorButtons implements IAtomFeature {
         };
 
         let tile: any;
-        if (atom.config.get("grammar-selector.showOnRightSideOfStatusBar")) {
+        if (atom.config.get('grammar-selector.showOnRightSideOfStatusBar')) {
             tile = this.statusBar.addRightTile({
                 item: view,
                 priority: 9 - index - 1
@@ -97,9 +97,9 @@ class FeatureEditorButtons implements IAtomFeature {
 
         this.disposable.add(atom.config.observe(config, (value: boolean) => {
             if (value) {
-                view.classList.add("text-success");
+                view.classList.add('text-success');
             } else {
-                view.classList.remove("text-success");
+                view.classList.remove('text-success');
             }
         }));
 
@@ -109,12 +109,12 @@ class FeatureEditorButtons implements IAtomFeature {
         }));
 
         this.disposable.add(Omni.activeEditor
-            .subscribe((editor) => editor ? (view.style.display = "") : (view.style.display = "none")));
+            .subscribe(editor => editor ? (view.style.display = '') : (view.style.display = 'none')));
     }
 
     public required = false;
-    public title = "Show Editor Feature Buttons";
-    public description = "Shows feature toggle buttons in the editor.";
+    public title = 'Show Editor Feature Buttons';
+    public description = 'Shows feature toggle buttons in the editor.';
     public default = true;
 }
 
@@ -153,19 +153,19 @@ class FeatureButtons implements IFeature {
         const {name, config, icon, tooltip} = button;
 
         let tooltipDisposable: IDisposable;
-        const htmlButton = document.createElement("a");
+        const htmlButton = document.createElement('a');
         htmlButton.id = `${icon}-name`;
-        htmlButton.classList.add("btn",icon);
+        htmlButton.classList.add('btn',icon);
         if (enabled) {
-            htmlButton.classList.add("btn-success");
+            htmlButton.classList.add('btn-success');
         }
 
         htmlButton.onclick = () => atom.config.set(config, !atom.config.get(config));
-        htmlButton.onmouseenter = (e) => {
+        htmlButton.onmouseenter = e => {
             tooltipDisposable = atom.tooltips.add(<any>e.currentTarget, { title: tooltip });
             this.disposable.add(tooltipDisposable);
         };
-        htmlButton.onmouseleave = (e) => {
+        htmlButton.onmouseleave = e => {
             if (tooltipDisposable) {
                 this.disposable.remove(tooltipDisposable);
                 tooltipDisposable.dispose();
@@ -183,8 +183,8 @@ class FeatureButtons implements IFeature {
     }
 
     public required = false;
-    public title = "Show Feature Toggles";
-    public description = "Shows feature toggle buttons in the omnisharp window.";
+    public title = 'Show Feature Toggles';
+    public description = 'Shows feature toggle buttons in the omnisharp window.';
     public default = true;
 }
 

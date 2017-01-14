@@ -1,6 +1,6 @@
-import {CompositeDisposable} from "ts-disposables";
-import {Omni} from "../server/omni";
-import {defer} from "lodash";
+import {defer} from 'lodash';
+import {CompositeDisposable} from 'ts-disposables';
+import {Omni} from '../server/omni';
 
 class Intellisense implements IFeature {
     private disposable: CompositeDisposable;
@@ -12,16 +12,16 @@ class Intellisense implements IFeature {
             cd.add(editor.onWillInsertText(event => {
                 if (event.text.length > 1) return;
 
-                if (event.text === ";" || event.text === ".") {
-                    atom.commands.dispatch(atom.views.getView(editor), "autocomplete-plus:confirm");
+                if (event.text === ';' || event.text === '.') {
+                    atom.commands.dispatch(atom.views.getView(editor), 'autocomplete-plus:confirm');
                 }
             }));
 
             cd.add(editor.onDidInsertText(event => {
                 if (event.text.length > 1) return;
 
-                if (event.text === ".") {
-                    defer(() => atom.commands.dispatch(atom.views.getView(editor), "autocomplete-plus:activate"));
+                if (event.text === '.') {
+                    defer(() => atom.commands.dispatch(atom.views.getView(editor), 'autocomplete-plus:activate'));
                 }
             }));
         }));
@@ -33,7 +33,7 @@ class Intellisense implements IFeature {
 
     public required = false;
     public default = true;
-    public title = "Intellisense";
-    public description = "Augments some of the issues with Atoms autocomplete-plus package";
+    public title = 'Intellisense';
+    public description = 'Augments some of the issues with Atoms autocomplete-plus package';
 }
 export const intellisense = new Intellisense;

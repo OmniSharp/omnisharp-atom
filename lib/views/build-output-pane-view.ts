@@ -1,11 +1,12 @@
 /* tslint:disable:no-string-literal */
-import {Convert} from "../services/ansi-to-html";
-import _ from "lodash";
-import {server} from "../atom/server-information";
-import {CompositeDisposable} from "ts-disposables";
+import { each } from 'lodash';
+import { CompositeDisposable } from 'ts-disposables';
+import { server } from '../atom/server-information';
+import { Convert } from '../services/ansi-to-html';
 
+// tslint:disable-next-line:export-name
 export class BuildOutputWindow extends HTMLDivElement implements WebComponent {
-    public displayName = "BuildOutputWindow";
+    public displayName = 'BuildOutputWindow';
     private _convert: any;
     private _output: OutputMessage[];
     private disposable: CompositeDisposable;
@@ -14,14 +15,14 @@ export class BuildOutputWindow extends HTMLDivElement implements WebComponent {
         this._convert = new Convert();
         this._output = [];
 
-        this.classList.add("build-output-pane-view", "native-key-bindings");
+        this.classList.add('build-output-pane-view', 'native-key-bindings');
         this.tabIndex = -1;
     }
 
     public attachedCallback() {
         this.disposable = new CompositeDisposable();
         this.disposable.add(server.observe.outputElement.subscribe(element => {
-            _.each(this.children, child => child.remove());
+            each(this.children, child => child.remove());
             this.appendChild(element);
         }));
         this.disposable.add(server.observe.output.delay(100).subscribe(() => this.scrollToBottom()));

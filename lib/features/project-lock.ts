@@ -1,28 +1,27 @@
-import * as path from "path";
-import * as fs from "fs";
-import {Omni} from "../server/omni";
-import _ from "lodash";
-import {Observable, Subject} from "rxjs";
-import {CompositeDisposable, IDisposable} from "ts-disposables";
-import {File} from "atom";
-import {ProjectViewModel} from "../server/project-view-model";
-import {Solution} from "../server/solution";
-import {bufferFor} from "../operators/bufferFor";
+import { File } from 'atom';
+import * as fs from 'fs';
+import { delay, each, groupBy, map, uniq } from 'lodash';
+import * as path from 'path';
+import { Observable, Subject } from 'rxjs';
+import { CompositeDisposable, IDisposable } from 'ts-disposables';
+import { Omni } from '../server/omni';
+import { ProjectViewModel } from '../server/project-view-model';
+import { Solution } from '../server/solution';
 
 function projectLock(solution: Solution, project: ProjectViewModel<any>, filePath: string) {
     const disposable = new CompositeDisposable();
     const subject = new Subject<string>();
-    let file = new File(filePath),
-        onDidChange = file.onDidChange(() => subject.next(filePath)),
-        onWillThrowWatchError = file.onWillThrowWatchError(() => {
-            subject.next(filePath);
-            disposable.remove(onDidChange);
-            onDidChange.dispose();
-            _.delay(() => {
-                onDidChange = file.onDidChange(() => subject.next(filePath));
-                disposable.add(onDidChange);
-            }, 5000);
-        });
+    const file = new File(filePath);
+    let onDidChange = file.onDidChange(() => subject.next(filePath));
+    const onWillThrowWatchError = file.onWillThrowWatchError(() => {
+        subject.next(filePath);
+        disposable.remove(onDidChange);
+        onDidChange.dispose();
+        delay(() => {
+            onDidChange = file.onDidChange(() => subject.next(filePath));
+            disposable.add(onDidChange);
+        }, 5000);
+    });
 
     disposable.add(onDidChange);
     disposable.add(onWillThrowWatchError);
@@ -34,16 +33,20 @@ function projectLock(solution: Solution, project: ProjectViewModel<any>, filePat
 }
 
 class FileMonitor implements IFeature {
+    public required = false;
+    public title = 'Project Monitor';
+    public description = 'Monitors project.lock.json files for changes outside of atom, and keeps the running solution in sync';
+
     private disposable: CompositeDisposable;
     private filesMap = new WeakMap<ProjectViewModel<any>, IDisposable>();
 
     public activate() {
         this.disposable = new CompositeDisposable();
 
-        const changes = bufferFor(Observable.merge(Omni.listener.model.projectAdded, Omni.listener.model.projectChanged)
-            .map(project => ({ project, filePath: path.join(project.path, "project.lock.json") }))
-            .filter(({ filePath}) => fs.existsSync(filePath))
-            .flatMap(({ project, filePath}) =>
+        const changes = Observable.merge(Omni.listener.model.projectAdded, Omni.listener.model.projectChanged)
+            .map(project => ({ project, filePath: path.join(project.path, 'project.lock.json') }))
+            .filter(({ filePath }) => fs.existsSync(filePath))
+            .flatMap(({ project, filePath }) =>
                 Omni.getSolutionForProject(project).map(solution => ({ solution, project, filePath })))
             .filter(x => !!x.solution)
             .flatMap(({ solution, project, filePath }) => {
@@ -57,15 +60,12 @@ class FileMonitor implements IFeature {
                 this.filesMap.set(project, lock);
                 return lock.observable.map(path => ({ solution, filePath }));
             })
-            .share(), 30000);
+            .share();
 
         this.disposable.add(changes
-            .subscribe(changs => {
-                _.each(_.groupBy(changs, x => x.solution.uniqueId), chang => {
-                    const solution = chang[0].solution;
-                    const paths = _.uniq(chang.map(x => x.filePath));
-                    solution.filesChanged(paths.map(z => ({ FileName: z })));
-                });
+            .subscribe(change => {
+                const solution = change[0].solution;
+                solution.filesChanged({ FileName: change });
             }));
 
         this.disposable.add(Omni.listener.model.projectRemoved
@@ -81,10 +81,7 @@ class FileMonitor implements IFeature {
     public dispose() {
         this.disposable.dispose();
     }
-
-    public required = false;
-    public title = "Project Monitor";
-    public description = "Monitors project.lock.json files for changes outside of atom, and keeps the running solution in sync";
 }
 
-export const fileMonitor = new FileMonitor;
+// tslint:disable-next-line:export-name
+export const fileMonitor = new FileMonitor();

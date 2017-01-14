@@ -1,5 +1,5 @@
-import {CompositeDisposable, Disposable} from "ts-disposables";
-import {StatusBarElement} from "../views/status-bar-view";
+import {CompositeDisposable, Disposable} from 'ts-disposables';
+import {StatusBarElement} from '../views/status-bar-view';
 
 class StatusBar implements IAtomFeature {
     private disposable: CompositeDisposable;
@@ -43,8 +43,8 @@ class StatusBar implements IAtomFeature {
     }
 
     public required = true;
-    public title = "Status Bar";
-    public description = "Adds the OmniSharp status icon to the status bar.";
+    public title = 'Status Bar';
+    public description = 'Adds the OmniSharp status icon to the status bar.';
 }
 
 export const statusBar = new StatusBar;

@@ -1,16 +1,16 @@
-import {Observable} from "rxjs";
-import {CompositeDisposable} from "ts-disposables";
-import {Omni} from "../server/omni";
-import {OmnisharpClientStatus} from "omnisharp-client";
-import {dock} from "../atom/dock";
-import {OutputWindow} from "../views/omni-output-pane-view";
-import {ViewModel} from "../server/view-model";
-import {IProjectViewModel} from "../omnisharp";
+import { IOmnisharpClientStatus } from 'omnisharp-client';
+import { Observable } from 'rxjs';
+import { CompositeDisposable } from 'ts-disposables';
+import { dock } from '../atom/dock';
+import { IProjectViewModel } from '../omnisharp';
+import { Omni } from '../server/omni';
+import { ViewModel } from '../server/view-model';
+import { OutputWindow } from '../views/omni-output-pane-view';
 
 class ServerInformation implements IFeature {
     private disposable: CompositeDisposable;
     public observe: {
-        status: Observable<OmnisharpClientStatus>;
+        status: Observable<IOmnisharpClientStatus>;
         output: Observable<OutputMessage[]>;
         outputElement: Observable<HTMLDivElement>;
         projects: Observable<IProjectViewModel[]>;
@@ -30,8 +30,8 @@ class ServerInformation implements IFeature {
         this.disposable.add(Omni.activeModel.subscribe(z => this.model = z));
         this.observe = { status, output, outputElement, projects, model: Omni.activeModel };
 
-        this.disposable.add(dock.addWindow("output", "Omnisharp output", new OutputWindow, {}));
-        dock.selected = "output";
+        this.disposable.add(dock.addWindow('output', 'Omnisharp output', new OutputWindow, {}));
+        dock.selected = 'output';
     }
 
     private setupStatus() {
@@ -53,7 +53,7 @@ class ServerInformation implements IFeature {
     private setupOutputElement() {
         return Omni.activeModel
             .map(z => z.outputElement)
-            .startWith(document.createElement("div"))
+            .startWith(document.createElement('div'))
             .share();
     }
 
@@ -68,8 +68,8 @@ class ServerInformation implements IFeature {
     }
 
     public required = true;
-    public title = "Server Information";
-    public description = "Monitors server output and status.";
+    public title = 'Server Information';
+    public description = 'Monitors server output and status.';
 }
 
 export const server = new ServerInformation;

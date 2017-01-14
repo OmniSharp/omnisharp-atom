@@ -1,20 +1,35 @@
 {
-  "externalTranspiler": {
-    "name": "babel",
-    "options": {}
-  },
   "compilerOptions": {
-    "target": "es6",
-    "module": "es6",
+    "target": "es5",
+    "lib": [
+      "es5",
+      "dom",
+      "es2015.core",
+      "es2015.collection",
+      "es2015.generator",
+      "es2015.iterable",
+      "es2015.promise",
+      "es2015.reflect",
+      "es2015.symbol",
+      "es2015.symbol.wellknown"
+    ],
+    "baseUrl": "",
+    "paths": {
+      "rxjs": [
+        "node_modules/rxjs"
+      ]
+    },
     "moduleResolution": "node",
-    "declaration": false,
-    "noImplicitAny": true,
-    "removeComments": true,
+    "diagnostics": true,
     "noEmitOnError": false,
-    "skipLibCheck": true,
-    "noLib": false,
     "preserveConstEnums": true,
+    "noImplicitAny": true,
+    "skipLibCheck": true,
+    "emitDecoratorMetadata": true,
     "experimentalDecorators": true,
+    "declaration": false,
+    "removeComments": true,
+    "noLib": false,
     "suppressImplicitAnyIndexErrors": true,
     "allowSyntheticDefaultImports": true,
     "sourceMap": true
@@ -34,7 +49,11 @@
     "placeOpenBraceOnNewLineForFunctions": false,
     "placeOpenBraceOnNewLineForControlBlocks": false
   },
-  "exclude": ["node_modules", "typingsTemp", "typings"],
+  "exclude": [
+    "node_modules",
+    "typingsTemp",
+    "typings"
+  ],
   "atom": {
     "rewriteTsconfig": true
   }

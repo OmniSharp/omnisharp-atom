@@ -1,14 +1,13 @@
 /// <reference path="../typings.d.ts" />
 /* tslint:disable:no-string-literal */
-import {Models} from "omnisharp-client";
-let fastdom: typeof Fastdom = require("fastdom");
-import _ from "lodash";
+import { Models } from 'omnisharp-client';
+import { trim, each, find } from 'lodash';
 
-const parseString = (function() {
+const parseString = (function () {
     const parser = new DOMParser();
 
-    return function(xml: string) {
-        return parser.parseFromString(xml, "text/xml");
+    return function (xml: string) {
+        return parser.parseFromString(xml, 'text/xml');
     };
 })();
 
@@ -31,26 +30,26 @@ export class SignatureView extends HTMLDivElement { /* implements WebComponent *
         this._lastIndex = -1;
         this._editorLineHeight = 0;
 
-        this._inner = document.createElement("div");
-        this._label = document.createElement("span");
-        this._documentation = document.createElement("div");
-        this._parameterDocumentation = document.createElement("div");
-        this._parameterDocumentation.style.marginLeft = "2.4em";
-        this._arrows = document.createElement("span");
-        this._parameters = document.createElement("span");
-        this._count = document.createElement("span");
+        this._inner = document.createElement('div');
+        this._label = document.createElement('span');
+        this._documentation = document.createElement('div');
+        this._parameterDocumentation = document.createElement('div');
+        this._parameterDocumentation.style.marginLeft = '2.4em';
+        this._arrows = document.createElement('span');
+        this._parameters = document.createElement('span');
+        this._count = document.createElement('span');
         this._parametersList = [];
 
-        this.classList.add("tooltip");
-        this._inner.classList.add("tooltip-inner");
+        this.classList.add('tooltip');
+        this._inner.classList.add('tooltip-inner');
 
         this._setupArrows();
 
-        let open = document.createElement("span");
-        open.innerText = "(";
+        let open = document.createElement('span');
+        open.innerText = '(';
 
-        let close = document.createElement("span");
-        close.innerText = ")";
+        let close = document.createElement('span');
+        close.innerText = ')';
 
         this.appendChild(this._inner);
         this._inner.appendChild(this._documentation);
@@ -62,11 +61,11 @@ export class SignatureView extends HTMLDivElement { /* implements WebComponent *
         this._inner.appendChild(this._parameters);
         this._inner.appendChild(close);
 
-        open = document.createElement("span");
-        open.innerText = " [";
+        open = document.createElement('span');
+        open.innerText = ' [';
 
-        close = document.createElement("span");
-        close.innerText = "]";
+        close = document.createElement('span');
+        close.innerText = ']';
 
         this._inner.appendChild(open);
         this._inner.appendChild(this._count);
@@ -87,17 +86,17 @@ export class SignatureView extends HTMLDivElement { /* implements WebComponent *
             this._selectedIndex = 0;
         }
 
-        fastdom.mutate(() => this._count.innerText = (this._selectedIndex + 1).toString());
+        this._count.innerText = (this._selectedIndex + 1).toString();
         this.updateMember(this._member);
     }
 
     private _setupArrows() {
-        const up = document.createElement("a");
-        up.classList.add("icon-arrow-up");
+        const up = document.createElement('a');
+        up.classList.add('icon-arrow-up');
         up.onclick = () => this.moveIndex(-1);
 
-        const down = document.createElement("a");
-        down.classList.add("icon-arrow-down");
+        const down = document.createElement('a');
+        down.classList.add('icon-arrow-down');
         down.onclick = () => this.moveIndex(1);
 
         this._arrows.appendChild(up);
@@ -111,7 +110,7 @@ export class SignatureView extends HTMLDivElement { /* implements WebComponent *
             this.updateMember(this._member);
     }
 
-    //@_d(m => _.debounce(m, 200, { leading: true, trailing: true }))
+    //@_d(m => debounce(m, 200, { leading: true, trailing: true }))
     public updateMember(member: Models.SignatureHelp) {
         this._member = member;
 
@@ -132,120 +131,111 @@ export class SignatureView extends HTMLDivElement { /* implements WebComponent *
 
         if (this._lastIndex !== this._selectedIndex) {
             this._lastIndex = this._selectedIndex;
-            fastdom.mutate(() => {
-                this._count.innerText = (this._selectedIndex + 1).toString();
-                this._label.innerText = signature.Name;
-                this._documentation.innerText = signature.Documentation;
+            this._count.innerText = (this._selectedIndex + 1).toString();
+            this._label.innerText = signature.Name;
+            this._documentation.innerText = signature.Documentation;
 
-                if (docs && signature.Documentation) {
-                    const s: NodeListOf<HTMLElement> = <any>docs.getElementsByTagName("summary");
-                    if (s.length) {
-                        const summary = _.trim((s[0]).innerHTML);
-                        this._documentation.innerText = summary;
-                    } else {
-                        this._documentation.innerText = "";
-                        this._documentation.style.display = "none";
-                    }
-
-                    this._documentation.style.display = "";
+            if (docs && signature.Documentation) {
+                const s: NodeListOf<HTMLElement> = <any>docs.getElementsByTagName('summary');
+                if (s.length) {
+                    const summary = trim((s[0]).innerHTML);
+                    this._documentation.innerText = summary;
                 } else {
-                    this._documentation.innerText = "";
-                    this._documentation.style.display = "none";
+                    this._documentation.innerText = '';
+                    this._documentation.style.display = 'none';
                 }
 
-                if (member.Signatures.length > 1) {
-                    this._arrows.style.display = "";
-                } else {
-                    this._arrows.style.display = "none";
-                }
-            });
+                this._documentation.style.display = '';
+            } else {
+                this._documentation.innerText = '';
+                this._documentation.style.display = 'none';
+            }
+
+            if (member.Signatures.length > 1) {
+                this._arrows.style.display = '';
+            } else {
+                this._arrows.style.display = 'none';
+            }
 
             this._parametersList = [];
 
-            fastdom.mutate(() => {
-                const parameters = signature.Parameters;
-                const parametersElement = document.createElement("span");
-                _.each(parameters, (parameter, i) => {
-                    const view: SignatureParameterView = <any>new exports.SignatureParameterView();
-                    view.setMember(parameter);
-                    view.setCurrent(i === member.ActiveParameter);
+            const parameters = signature.Parameters;
+            const parametersElement = document.createElement('span');
+            each(parameters, (parameter, i) => {
+                const view: SignatureParameterView = <any>new exports.SignatureParameterView();
+                view.setMember(parameter);
+                view.setCurrent(i === member.ActiveParameter);
 
-                    if (i > 0) {
-                        const comma = document.createElement("span");
-                        comma.innerText = ", ";
-                        parametersElement.appendChild(comma);
-                    }
+                if (i > 0) {
+                    const comma = document.createElement('span');
+                    comma.innerText = ', ';
+                    parametersElement.appendChild(comma);
+                }
 
-                    parametersElement.appendChild(view);
-                    this._parametersList.push(view);
-                });
-
-                const currentElement = this._parameters;
-                this._inner.insertBefore(parametersElement, currentElement);
-                this._inner.removeChild(currentElement);
-
-                this._parameters = parametersElement;
+                parametersElement.appendChild(view);
+                this._parametersList.push(view);
             });
+
+            const currentElement = this._parameters;
+            this._inner.insertBefore(parametersElement, currentElement);
+            this._inner.removeChild(currentElement);
+
+            this._parameters = parametersElement;
         } else {
-            fastdom.mutate(() => {
-                _.each(signature.Parameters, (param, i) =>
-                    this._parametersList[i] && this._parametersList[i].setCurrent(i === member.ActiveParameter));
-            });
+            each(signature.Parameters, (param, i) =>
+                this._parametersList[i] && this._parametersList[i].setCurrent(i === member.ActiveParameter));
         }
 
         const currentParameter = signature.Parameters[member.ActiveParameter];
-        fastdom.measure(() => {
-            if (!currentParameter) return;
-            let summary: string;
-            if (currentParameter.Documentation) {
-                const paramDocs = parseString(currentParameter.Documentation);
+        if (!currentParameter) return;
+        let summary: string;
+        if (currentParameter.Documentation) {
+            const paramDocs = parseString(currentParameter.Documentation);
 
-                if (paramDocs) {
-                    const s: NodeListOf<HTMLElement> = <any>paramDocs.getElementsByTagName("summary");
-                    if (s.length) {
-                        const summaryElement = s[0];
-                        if (summaryElement)
-                            summary = _.trim(summaryElement.innerHTML);
-                    }
-                }
-            }
-
-            if (docs && !summary) {
-                const s: NodeListOf<HTMLElement> = <any>docs.getElementsByTagName("param");
+            if (paramDocs) {
+                const s: NodeListOf<HTMLElement> = <any>paramDocs.getElementsByTagName('summary');
                 if (s.length) {
-                    const param = <HTMLElement>_.find(s, x => x.attributes["name"] && x.attributes["name"].value === currentParameter.Name);
-                    if (param) {
-                        summary = _.trim(param.innerHTML);
-                    }
+                    const summaryElement = s[0];
+                    if (summaryElement)
+                        summary = trim(summaryElement.innerHTML);
                 }
             }
+        }
 
-            if (this._parameterDocumentation.innerText !== summary) {
-                if (summary) {
-                    this._parameterDocumentation.innerText = summary;
-                } else {
-                    this._parameterDocumentation.innerText = "";
+        if (docs && !summary) {
+            const s: NodeListOf<HTMLElement> = <any>docs.getElementsByTagName('param');
+            if (s.length) {
+                const param = <HTMLElement>find(s, x => x.attributes['name'] && x.attributes['name'].value === currentParameter.Name);
+                if (param) {
+                    summary = trim(param.innerHTML);
                 }
             }
-        });
+        }
 
-        fastdom.mutate(() => this.style.bottom = `${this.clientHeight + this._editorLineHeight}px`);
+        if (this._parameterDocumentation.innerText !== summary) {
+            if (summary) {
+                this._parameterDocumentation.innerText = summary;
+            } else {
+                this._parameterDocumentation.innerText = '';
+            }
+        }
+        this.style.bottom = `${this.clientHeight + this._editorLineHeight}px`;
     }
 
     public detachedCallback() {
-        _.each(this._parametersList, parameter => parameter.remove());
+        each(this._parametersList, parameter => parameter.remove());
         this._parametersList = [];
     }
 }
 
-(<any>exports).SignatureView = (<any>document).registerElement("omnisharp-signature-help", { prototype: SignatureView.prototype });
+(<any>exports).SignatureView = (<any>document).registerElement('omnisharp-signature-help', { prototype: SignatureView.prototype });
 
 export class SignatureParameterView extends HTMLSpanElement { /* implements WebComponent */
     private _member: Models.SignatureHelpParameter;
     private _label: HTMLSpanElement;
 
     public createdCallback() {
-        this._label = document.createElement("span");
+        this._label = document.createElement('span');
         this.appendChild(this._label);
     }
 
@@ -255,14 +245,12 @@ export class SignatureParameterView extends HTMLSpanElement { /* implements WebC
     }
 
     public setCurrent(current: boolean) {
-        fastdom.measure(() => {
-            if (!current && this.style.fontWeight === "bold") {
-                fastdom.mutate(() => this.style.fontWeight = "");
-            } else if (current && this.style.fontWeight !== "bold") {
-                fastdom.mutate(() => this.style.fontWeight = "bold");
-            }
-        });
+        if (!current && this.style.fontWeight === 'bold') {
+            this.style.fontWeight = '';
+        } else if (current && this.style.fontWeight !== 'bold') {
+            this.style.fontWeight = 'bold';
+        }
     }
 }
 
-(<any>exports).SignatureParameterView = (<any>document).registerElement("omnisharp-signature-parameter", { prototype: SignatureParameterView.prototype });
+(<any>exports).SignatureParameterView = (<any>document).registerElement('omnisharp-signature-parameter', { prototype: SignatureParameterView.prototype });

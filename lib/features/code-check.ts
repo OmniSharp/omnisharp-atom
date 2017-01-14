@@ -1,11 +1,11 @@
-import {Models} from "omnisharp-client";
-import {Observable, Subject} from "rxjs";
-import {CompositeDisposable} from "ts-disposables";
-import {Omni} from "../server/omni";
-import {dock} from "../atom/dock";
-import {CodeCheckOutputElement} from "../views/codecheck-output-pane-view";
-import {reloadWorkspace} from "./reload-workspace";
-import {filter} from "lodash";
+import {filter} from 'lodash';
+import {Models} from 'omnisharp-client';
+import {Observable, Subject} from 'rxjs';
+import {CompositeDisposable} from 'ts-disposables';
+import {dock} from '../atom/dock';
+import {Omni} from '../server/omni';
+import {CodeCheckOutputElement} from '../views/codecheck-output-pane-view';
+import {reloadWorkspace} from './reload-workspace';
 
 class CodeCheck implements IFeature {
     private disposable: CompositeDisposable;
@@ -22,24 +22,24 @@ class CodeCheck implements IFeature {
         this._fullCodeCheck = new Subject<any>();
         this.disposable.add(this._fullCodeCheck);
 
-        this.disposable.add(atom.commands.add("atom-workspace", "omnisharp-atom:next-diagnostic", () => {
+        this.disposable.add(atom.commands.add('atom-workspace', 'omnisharp-atom:next-diagnostic', () => {
             this._window.next();
         }));
 
-        this.disposable.add(atom.commands.add("atom-workspace", "omnisharp-atom:go-to-diagnostic", () => {
+        this.disposable.add(atom.commands.add('atom-workspace', 'omnisharp-atom:go-to-diagnostic', () => {
             Omni.navigateTo(this._window.current);
         }));
 
-        this.disposable.add(atom.commands.add("atom-workspace", "omnisharp-atom:previous-diagnostic", () => {
+        this.disposable.add(atom.commands.add('atom-workspace', 'omnisharp-atom:previous-diagnostic', () => {
             this._window.prev();
         }));
 
-        this.disposable.add(atom.commands.add("atom-workspace", "omnisharp-atom:go-to-next-diagnostic", () => {
+        this.disposable.add(atom.commands.add('atom-workspace', 'omnisharp-atom:go-to-next-diagnostic', () => {
             this._window.next();
             Omni.navigateTo(this._window.current);
         }));
 
-        this.disposable.add(atom.commands.add("atom-workspace", "omnisharp-atom:go-to-previous-diagnostic", () => {
+        this.disposable.add(atom.commands.add('atom-workspace', 'omnisharp-atom:go-to-previous-diagnostic', () => {
             this._window.prev();
             Omni.navigateTo(this._window.current);
         }));
@@ -58,7 +58,7 @@ class CodeCheck implements IFeature {
             .delay(100)
             .subscribe(diagnostics => this._window.update(diagnostics)));
 
-        this.disposable.add(dock.addWindow("errors", "Errors & Warnings", this._window));
+        this.disposable.add(dock.addWindow('errors', 'Errors & Warnings', this._window));
 
         let started = 0, finished = 0;
         this.disposable.add(Observable.combineLatest(
@@ -74,7 +74,7 @@ class CodeCheck implements IFeature {
             }));
 
         this.disposable.add(Omni.listener.packageRestoreFinished.debounceTime(3000).subscribe(() => this.doFullCodeCheck()));
-        this.disposable.add(atom.commands.add("atom-workspace", "omnisharp-atom:code-check", () => this.doFullCodeCheck()));
+        this.disposable.add(atom.commands.add('atom-workspace', 'omnisharp-atom:code-check', () => this.doFullCodeCheck()));
 
         this.disposable.add(this._fullCodeCheck
             .concatMap(() => reloadWorkspace.reloadWorkspace()
@@ -96,7 +96,7 @@ class CodeCheck implements IFeature {
     }
 
     public filterOnlyWarningsAndErrors(quickFixes: Models.DiagnosticLocation[]): Models.DiagnosticLocation[] {
-        return filter(quickFixes, x => x.LogLevel !== "Hidden");
+        return filter(quickFixes, x => x.LogLevel !== 'Hidden');
     }
 
     public dispose() {
@@ -104,8 +104,8 @@ class CodeCheck implements IFeature {
     }
 
     public required = true;
-    public title = "Diagnostics";
-    public description = "Support for diagnostic errors.";
+    public title = 'Diagnostics';
+    public description = 'Support for diagnostic errors.';
 }
 
 export const codeCheck = new CodeCheck;

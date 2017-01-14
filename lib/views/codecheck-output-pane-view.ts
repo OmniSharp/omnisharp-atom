@@ -1,14 +1,14 @@
-import {Models} from "omnisharp-client";
-import * as path from "path";
-import {Omni} from "../server/omni";
-import {OutputElement, MessageElement} from "./output-component";
+import {Models} from 'omnisharp-client';
+import * as path from 'path';
+import {Omni} from '../server/omni';
+import {MessageElement, OutputElement} from './output-component';
 
 export interface CodeCheckMessageElement extends MessageElement<Models.DiagnosticLocation> { }
 
-const getMessageElement = (function() {
+const getMessageElement = (function () {
     const selectedProps = {
-        get: function selected() { return this.classList.contains("selected"); },
-        set: function selected(value: boolean) { if (value) this.classList.add("selected"); else this.classList.remove("selected"); }
+        get: function selected() { return this.classList.contains('selected'); },
+        set: function selected(value: boolean) { if (value) this.classList.add('selected'); else this.classList.remove('selected'); }
     };
 
     const keyProps = {
@@ -25,18 +25,18 @@ const getMessageElement = (function() {
 
         this.classList.add(`${item.LogLevel}`);
 
-        if (item.LogLevel === "Error") {
-            this._icon.classList.add("fa-times-circle");
-            this._icon.classList.remove("fa-exclamation-triangle");
-            this._icon.classList.remove("fa-info");
-        } else if (item.LogLevel === "Warning") {
-            this._icon.classList.add("fa-exclamation-triangle");
-            this._icon.classList.remove("fa-times-circle");
-            this._icon.classList.remove("fa-info");
+        if (item.LogLevel === 'Error') {
+            this._icon.classList.add('fa-times-circle');
+            this._icon.classList.remove('fa-exclamation-triangle');
+            this._icon.classList.remove('fa-info');
+        } else if (item.LogLevel === 'Warning') {
+            this._icon.classList.add('fa-exclamation-triangle');
+            this._icon.classList.remove('fa-times-circle');
+            this._icon.classList.remove('fa-info');
         } else {
-            this._icon.classList.add("fa-info");
-            this._icon.classList.remove("fa-exclamation-triangle");
-            this._icon.classList.remove("fa-times-circle");
+            this._icon.classList.add('fa-info');
+            this._icon.classList.remove('fa-exclamation-triangle');
+            this._icon.classList.remove('fa-times-circle');
         }
 
         this._text.innerText = item.Text;
@@ -49,28 +49,28 @@ const getMessageElement = (function() {
     function detached() { /* */ }
 
     return function getMessageElement(): CodeCheckMessageElement {
-        const element: CodeCheckMessageElement = <any>document.createElement("li");
-        element.classList.add("codecheck");
+        const element: CodeCheckMessageElement = <any>document.createElement('li');
+        element.classList.add('codecheck');
 
-        const icon = (element as any)._icon = document.createElement("span");
-        icon.classList.add("fa");
+        const icon = (element as any)._icon = document.createElement('span');
+        icon.classList.add('fa');
         element.appendChild(icon);
 
-        const text = (element as any)._text = document.createElement("pre");
-        text.classList.add("text-highlight");
+        const text = (element as any)._text = document.createElement('pre');
+        text.classList.add('text-highlight');
         element.appendChild(text);
 
-        const location = (element as any)._location = document.createElement("pre");
-        location.classList.add("inline-block");
+        const location = (element as any)._location = document.createElement('pre');
+        location.classList.add('inline-block');
         element.appendChild(location);
 
-        const filename = (element as any)._filename = document.createElement("pre");
-        filename.classList.add("text-subtle", "inline-block");
+        const filename = (element as any)._filename = document.createElement('pre');
+        filename.classList.add('text-subtle', 'inline-block');
         element.appendChild(filename);
 
-        Object.defineProperty(element, "key", keyProps);
-        Object.defineProperty(element, "selected", selectedProps);
-        Object.defineProperty(element, "inview", inviewProps);
+        Object.defineProperty(element, 'key', keyProps);
+        Object.defineProperty(element, 'selected', selectedProps);
+        Object.defineProperty(element, 'inview', inviewProps);
         element.setMessage = setMessage;
         element.attached = attached;
         element.detached = detached;
@@ -80,20 +80,20 @@ const getMessageElement = (function() {
 })();
 
 export class CodeCheckOutputElement extends HTMLDivElement implements WebComponent {
-    public displayName = "FindPaneWindow";
+    public displayName = 'FindPaneWindow';
     private _list: OutputElement<Models.DiagnosticLocation, CodeCheckMessageElement>;
 
     public createdCallback() {
-        this.classList.add("codecheck-output-pane");
+        this.classList.add('codecheck-output-pane');
         this._list = new OutputElement<Models.DiagnosticLocation, CodeCheckMessageElement>();
         this.appendChild(this._list);
         this._list.getKey = (error: Models.DiagnosticLocation) => {
-            return `code-check-${error.LogLevel}-${error.FileName}-(${error.Line}-${error.Column})-(${error.EndLine}-${error.EndColumn})-(${(error.Projects || []).join("-")})`;
+            return `code-check-${error.LogLevel}-${error.FileName}-(${error.Line}-${error.Column})-(${error.EndLine}-${error.EndColumn})-(${(error.Projects || []).join('-')})`;
         };
         this._list.handleClick = (item: Models.DiagnosticLocation) => {
             this.goToLine(item);
         };
-        this._list.eventName = "diagnostic";
+        this._list.eventName = 'diagnostic';
         this._list.elementFactory = getMessageElement;
     }
 
@@ -126,4 +126,4 @@ export class CodeCheckOutputElement extends HTMLDivElement implements WebCompone
     }
 }
 
-(<any>exports).CodeCheckOutputElement = (<any>document).registerElement("omnisharp-codecheck-output", { prototype: CodeCheckOutputElement.prototype });
+(<any>exports).CodeCheckOutputElement = (<any>document).registerElement('omnisharp-codecheck-output', { prototype: CodeCheckOutputElement.prototype });

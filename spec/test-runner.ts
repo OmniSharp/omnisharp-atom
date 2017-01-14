@@ -1,8 +1,8 @@
-import {join} from "path";
-import {readFileSync} from "fs";
-import {CompositeDisposable} from "omnisharp-client";
+import {readFileSync} from 'fs';
+import {CompositeDisposable} from 'ts-disposables';
+import {join} from 'path';
 
-module.exports = function(
+module.exports = function (
     {testPaths, buildAtomEnvironment, buildDefaultApplicationDelegate, headless}: {
         testPaths: string[];
         buildAtomEnvironment: (opts: any) => Atom.Atom;
@@ -15,15 +15,15 @@ module.exports = function(
         headless: boolean
     }): Promise<number> {
     console.log(testPaths);
-    const fixtures = testPaths.map(x => join(x, "fixtures"));
+    const fixtures = testPaths.map(x => join(x, 'fixtures'));
 
     const applicationDelegate = buildDefaultApplicationDelegate();
 
     applicationDelegate.setRepresentedFilename = () => {/* */ };
     applicationDelegate.setWindowDocumentEdited = () => {/* */ };
 
-    const mochaCtor: typeof Mocha = require("mocha");
-    const globby: (paths: string[]) => Promise<string[]> = require("globby");
+    const mochaCtor: typeof Mocha = require('mocha');
+    const globby: (paths: string[]) => Promise<string[]> = require('globby');
 
     const atom = buildAtomEnvironment({
         applicationDelegate: applicationDelegate,
@@ -36,22 +36,22 @@ module.exports = function(
     (window as any).atom = atom;
     (global as any).atom = atom;
 
-    const atomDiv = document.createElement("div");
-    atomDiv.style.display = "none";
+    const atomDiv = document.createElement('div');
+    atomDiv.style.display = 'none';
     document.body.appendChild(atomDiv);
     atomDiv.appendChild(<any>atom.views.getView(atom.workspace));
 
-    const mochaDiv = document.createElement("div");
-    mochaDiv.id = "mocha";
+    const mochaDiv = document.createElement('div');
+    mochaDiv.id = 'mocha';
     document.body.appendChild(mochaDiv);
 
-    const mochaCss = document.createElement("style");
-    mochaCss.innerHTML = `html, body { overflow: inherit; }\n` + readFileSync(join(__dirname, "..", "node_modules", "mocha", "mocha.css")).toString();
+    const mochaCss = document.createElement('style');
+    mochaCss.innerHTML = `html, body { overflow: inherit; }\n` + readFileSync(join(__dirname, '..', 'node_modules', 'mocha', 'mocha.css')).toString();
     document.head.appendChild(mochaCss);
 
     const mocha = new mochaCtor({
-        ui: "bdd",
-        reporter: headless ? "mocha-unfunk-reporter" : "html",
+        ui: 'bdd',
+        reporter: headless ? 'mocha-unfunk-reporter' : 'html',
         timeout: 60000,
         //grep: new RegExp("editor switch")
     });
@@ -59,7 +59,7 @@ module.exports = function(
     let cd: CompositeDisposable;
 
     /* tslint:disable:variable-name */
-    const {SolutionManager} = require("../lib/server/solution-manager");
+    const {SolutionManager} = require('../lib/server/solution-manager');
     /* tslint:enable:variable-name */
 
     (<any>mocha).suite.beforeEach(() => {
@@ -80,7 +80,7 @@ module.exports = function(
         (atom as any).reset();
     });
 
-    return Promise.all(testPaths.map(path => globby([join(path, "**/*-spec.js")])
+    return Promise.all(testPaths.map(path => globby([join(path, '**/*-spec.js')])
         .then(fs => fs.forEach(f => mocha.addFile(f)))))
         .then(() => {
             return new Promise<number>(resolve => mocha.run(resolve));

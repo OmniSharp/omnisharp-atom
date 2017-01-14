@@ -1,10 +1,10 @@
-import {Models} from "omnisharp-client";
-import {Omni} from "../server/omni";
+import { Models } from 'omnisharp-client';
+import { Omni } from '../server/omni';
 /* tslint:disable:variable-name */
-const Range = require("atom").Range;
+const Range = require('atom').Range;
 /* tslint:enable:variable-name */
-import _ from "lodash";
-import {CompositeDisposable} from "ts-disposables";
+import { each } from 'lodash';
+import { CompositeDisposable } from 'ts-disposables';
 
 interface LinterMessage {
     type: string; // "error" | "warning"
@@ -39,19 +39,19 @@ function mapIndieValues(error: Models.DiagnosticLocation): LinterMessage {
 }
 
 function showLinter() {
-    _.each(document.querySelectorAll("linter-bottom-tab"), (element: HTMLElement) => { element.style.display = ""; });
-    _.each(document.querySelectorAll("linter-bottom-status"), (element: HTMLElement) => { element.style.display = ""; });
-    const panel = <HTMLElement>document.querySelector("linter-panel");
+    each(document.querySelectorAll('linter-bottom-tab'), (element: HTMLElement) => { element.style.display = ''; });
+    each(document.querySelectorAll('linter-bottom-status'), (element: HTMLElement) => { element.style.display = ''; });
+    const panel = <HTMLElement>document.querySelector('linter-panel');
     if (panel)
-        panel.style.display = "";
+        panel.style.display = '';
 }
 
 function hideLinter() {
-    _.each(document.querySelectorAll("linter-bottom-tab"), (element: HTMLElement) => {element.style.display = "none";});
-    _.each(document.querySelectorAll("linter-bottom-status"), (element: HTMLElement) => {element.style.display = "none";});
-    const panel = <HTMLElement>document.querySelector("linter-panel");
+    each(document.querySelectorAll('linter-bottom-tab'), (element: HTMLElement) => { element.style.display = 'none'; });
+    each(document.querySelectorAll('linter-bottom-status'), (element: HTMLElement) => { element.style.display = 'none'; });
+    const panel = <HTMLElement>document.querySelector('linter-panel');
     if (panel)
-        panel.style.display = "none";
+        panel.style.display = 'none';
 }
 
 let showHiddenDiagnostics = true;
@@ -59,7 +59,7 @@ let showHiddenDiagnostics = true;
 export function init(linter: { getEditorLinter: (editor: Atom.TextEditor) => { lint: (shouldLint: boolean) => void } }) {
     const disposable = new CompositeDisposable();
     let cd: CompositeDisposable;
-    disposable.add(atom.config.observe("omnisharp-atom.hideLinterInterface", hidden => {
+    disposable.add(atom.config.observe('omnisharp-atom.hideLinterInterface', hidden => {
         if (hidden) {
             cd = new CompositeDisposable();
             disposable.add(cd);
@@ -82,9 +82,9 @@ export function init(linter: { getEditorLinter: (editor: Atom.TextEditor) => { l
         }
     }));
 
-    disposable.add(atom.config.observe("omnisharp-atom.showHiddenDiagnostics", show => {
+    disposable.add(atom.config.observe('omnisharp-atom.showHiddenDiagnostics', show => {
         showHiddenDiagnostics = show;
-        atom.workspace.getTextEditors().forEach((editor) => {
+        atom.workspace.getTextEditors().forEach(editor => {
             const editorLinter = linter.getEditorLinter(editor);
             if (editorLinter) {
                 editorLinter.lint(true);
@@ -92,9 +92,9 @@ export function init(linter: { getEditorLinter: (editor: Atom.TextEditor) => { l
         });
     }));
 
-    disposable.add(Omni.activeEditor.filter(z => !!z).take(1).delay(1000).subscribe((e) => {
+    disposable.add(Omni.activeEditor.filter(z => !!z).take(1).delay(1000).subscribe(e => {
         Omni.whenEditorConnected(e).subscribe(() => {
-            atom.workspace.getTextEditors().forEach((editor) => {
+            atom.workspace.getTextEditors().forEach(editor => {
                 const editorLinter = linter.getEditorLinter(editor);
                 if (editorLinter) {
                     editorLinter.lint(true);
@@ -107,14 +107,14 @@ export function init(linter: { getEditorLinter: (editor: Atom.TextEditor) => { l
 }
 
 export function registerIndie(registry: IndieRegistry, disposable: CompositeDisposable) {
-    const linter = registry.register({ name: "c#" });
+    const linter = registry.register({ name: 'c#' });
     disposable.add(
         linter,
         Omni.diagnostics
             .subscribe(diagnostics => {
                 const messages: LinterMessage[] = [];
-                for (let item of diagnostics) {
-                    if (showHiddenDiagnostics || item.LogLevel !== "Hidden") {
+                for (const item of diagnostics) {
+                    if (showHiddenDiagnostics || item.LogLevel !== 'Hidden') {
                         messages.push(mapIndieValues(item));
                     }
                 }

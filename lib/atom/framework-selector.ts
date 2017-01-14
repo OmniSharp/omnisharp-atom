@@ -1,8 +1,8 @@
-import {Models} from "omnisharp-client";
-import {CompositeDisposable, Disposable} from "ts-disposables";
-import {ProjectViewModel} from "../server/project-view-model";
-import {Omni} from "../server/omni";
-import {FrameworkSelectorComponent} from "../views/framework-selector-view";
+import { Models } from 'omnisharp-client';
+import { CompositeDisposable, Disposable } from 'ts-disposables';
+import { Omni } from '../server/omni';
+import { ProjectViewModel } from '../server/project-view-model';
+import { FrameworkSelectorComponent } from '../views/framework-selector-view';
 
 class FrameworkSelector implements IAtomFeature {
     private disposable: CompositeDisposable;
@@ -30,13 +30,13 @@ class FrameworkSelector implements IAtomFeature {
     }
 
     private _attach() {
-        this.view = document.createElement("span");
-        this.view.classList.add("inline-block");
-        this.view.classList.add("framework-selector");
-        this.view.style.display = "none";
+        this.view = document.createElement('span');
+        this.view.classList.add('inline-block');
+        this.view.classList.add('framework-selector');
+        this.view.style.display = 'none';
 
         let tile: any;
-        if (atom.config.get("grammar-selector.showOnRightSideOfStatusBar")) {
+        if (atom.config.get('grammar-selector.showOnRightSideOfStatusBar')) {
             tile = this.statusBar.addRightTile({
                 item: this.view,
                 priority: 9
@@ -49,7 +49,7 @@ class FrameworkSelector implements IAtomFeature {
         }
 
         this._component = new FrameworkSelectorComponent;
-        this._component.alignLeft = !atom.config.get("grammar-selector.showOnRightSideOfStatusBar");
+        this._component.alignLeft = !atom.config.get('grammar-selector.showOnRightSideOfStatusBar');
         this.view.appendChild(this._component);
 
         this.disposable.add(Disposable.create(() => {
@@ -59,15 +59,15 @@ class FrameworkSelector implements IAtomFeature {
 
         this.disposable.add(Omni.activeEditor
             .filter(z => !z)
-            .subscribe(() => this.view.style.display = "none"));
+            .subscribe(() => this.view.style.display = 'none'));
 
         this.disposable.add(Omni.activeProject
             .filter(z => z.frameworks.length === 1)
-            .subscribe(() => this.view.style.display = "none"));
+            .subscribe(() => this.view.style.display = 'none'));
 
         this.disposable.add(Omni.activeProject
             .subscribe(project => {
-                this.view.style.display = "";
+                this.view.style.display = '';
 
                 const {frameworks, activeFramework} = project;
                 this.project = project;
@@ -77,7 +77,7 @@ class FrameworkSelector implements IAtomFeature {
 
         this.disposable.add(Omni.activeFramework
             .subscribe(ctx => {
-                this.view.style.display = "";
+                this.view.style.display = '';
 
                 const {project, framework} = ctx;
                 this.project = project;
@@ -98,8 +98,8 @@ class FrameworkSelector implements IAtomFeature {
     }
 
     public required = true;
-    public title = "Framework Selector";
-    public description = "Lets you select the framework you\"re currently targeting.";
+    public title = 'Framework Selector';
+    public description = 'Lets you select the framework you\"re currently targeting.';
 }
 
 export const frameworkSelector = new FrameworkSelector;

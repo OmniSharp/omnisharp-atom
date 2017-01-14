@@ -1,6 +1,6 @@
-import {Models} from "omnisharp-client";
-import {CompositeDisposable} from "ts-disposables";
-import {Omni} from "../server/omni";
+import {Models} from 'omnisharp-client';
+import {CompositeDisposable} from 'ts-disposables';
+import {Omni} from '../server/omni';
 
 class Navigate implements IFeature {
     private disposable: CompositeDisposable;
@@ -8,16 +8,16 @@ class Navigate implements IFeature {
     public activate() {
         this.disposable = new CompositeDisposable();
 
-        this.disposable.add(Omni.addTextEditorCommand("omnisharp-atom:navigate-up", () => {
+        this.disposable.add(Omni.addTextEditorCommand('omnisharp-atom:navigate-up', () => {
             return this.navigateUp();
         }));
 
-        this.disposable.add(Omni.addTextEditorCommand("omnisharp-atom:navigate-down", () => {
+        this.disposable.add(Omni.addTextEditorCommand('omnisharp-atom:navigate-down', () => {
             return this.navigateDown();
         }));
 
-        this.disposable.add(Omni.listener.navigateup.subscribe((data) => this.navigateTo(data.response)));
-        this.disposable.add(Omni.listener.navigatedown.subscribe((data) => this.navigateTo(data.response)));
+        this.disposable.add(Omni.listener.navigateup.subscribe(data => this.navigateTo(data.response)));
+        this.disposable.add(Omni.listener.navigatedown.subscribe(data => this.navigateTo(data.response)));
     }
 
     public dispose() {
@@ -38,7 +38,7 @@ class Navigate implements IFeature {
     }
 
     public required = true;
-    public title = "Navigate";
-    public description = "Adds server based navigation support";
+    public title = 'Navigate';
+    public description = 'Adds server based navigation support';
 }
 export const navigate = new Navigate;

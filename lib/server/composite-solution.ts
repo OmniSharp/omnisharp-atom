@@ -1,6 +1,6 @@
-import {ReactiveObservationClient, ReactiveCombinationClient} from "omnisharp-client";
-import {Solution} from "./solution";
-import {ViewModel} from "./view-model";
+import {ReactiveCombinationClient, ReactiveObservationClient} from 'omnisharp-client';
+import {Solution} from './solution';
+import {ViewModel} from './view-model';
 
 export class SolutionObserver extends ReactiveObservationClient<Solution> {
     public model: typeof ViewModel.prototype.observe;

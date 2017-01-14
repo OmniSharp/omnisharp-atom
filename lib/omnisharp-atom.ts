@@ -1,12 +1,12 @@
-import _ from "lodash";
-import {Observable, AsyncSubject} from "rxjs";
-import {CompositeDisposable, Disposable, IDisposable} from "ts-disposables";
-import path from "path";
-import fs from "fs";
+import * as fs from 'fs';
+import { bind, each, find, has, includes, isArray, isFunction, kebabCase } from 'lodash';
+import * as path from 'path';
+import { AsyncSubject, Observable } from 'rxjs';
+import { CompositeDisposable, Disposable, IDisposable } from 'ts-disposables';
 
 // TODO: Remove these at some point to stream line startup.
-import {Omni} from "./server/omni";
-const win32 = process.platform === "win32";
+import { Omni } from './server/omni';
+const win32 = process.platform === 'win32';
 
 class OmniSharpAtom {
     private disposable: CompositeDisposable;
@@ -15,24 +15,24 @@ class OmniSharpAtom {
     private _activated: AsyncSubject<boolean>;
 
     public activate(state: any) {
-        this.disposable = new CompositeDisposable;
+        this.disposable = new CompositeDisposable();
         this._started = new AsyncSubject<boolean>();
         this._activated = new AsyncSubject<boolean>();
 
         this.configureKeybindings();
 
-        this.disposable.add(atom.commands.add("atom-workspace", "omnisharp-atom:toggle", () => this.toggle()));
-        this.disposable.add(atom.commands.add("atom-workspace", "omnisharp-atom:fix-usings", () => Omni.request(solution => solution.fixusings({}))));
-        this.disposable.add(atom.commands.add("atom-workspace", "omnisharp-atom:settings", () => atom.workspace.open("atom://config/packages")
+        this.disposable.add(atom.commands.add('atom-workspace', 'omnisharp-atom:toggle', () => this.toggle()));
+        this.disposable.add(atom.commands.add('atom-workspace', 'omnisharp-atom:fix-usings', () => Omni.request(solution => solution.fixusings({}))));
+        this.disposable.add(atom.commands.add('atom-workspace', 'omnisharp-atom:settings', () => atom.workspace.open('atom://config/packages')
             .then(tab => {
-                if (tab && tab.getURI && tab.getURI() !== "atom://config/packages/omnisharp-atom") {
-                    atom.workspace.open("atom://config/packages/omnisharp-atom");
+                if (tab && tab.getURI && tab.getURI() !== 'atom://config/packages/omnisharp-atom') {
+                    atom.workspace.open('atom://config/packages/omnisharp-atom');
                 }
             })));
 
         const grammars = (<any>atom.grammars);
         const grammarCb = (grammar: { scopeName: string; }) => {
-            if (_.find(Omni.grammars, (gmr: any) => gmr.scopeName === grammar.scopeName)) {
+            if (find(Omni.grammars, (gmr: any) => gmr.scopeName === grammar.scopeName)) {
                 // ensure the scope has been inited
                 atom.grammars.startIdForScope(grammar.scopeName);
 
@@ -43,12 +43,13 @@ class OmniSharpAtom {
                 grammar.scopeName = omnisharpScopeName;
             }
         };
-        _.each(grammars.grammars, grammarCb);
+        each(grammars.grammars, grammarCb);
         this.disposable.add(atom.grammars.onDidAddGrammar(grammarCb));
 
-        require("atom-package-deps").install("omnisharp-atom")
+        // tslint:disable-next-line:no-require-imports
+        require('atom-package-deps').install('omnisharp-atom')
             .then(() => {
-                console.info("Activating omnisharp-atom solution tracking...");
+                console.info('Activating omnisharp-atom solution tracking...');
                 Omni.activate();
                 this.disposable.add(Omni);
 
@@ -56,7 +57,7 @@ class OmniSharpAtom {
                 this._started.complete();
             })
             /* tslint:disable:no-string-literal */
-            .then(() => this.loadFeatures(this.getFeatures("atom").delay(Omni["_kick_in_the_pants_"] ? 0 : 2000)).toPromise())
+            .then(() => this.loadFeatures(this.getFeatures('atom').delay(Omni['_kick_in_the_pants_'] ? 0 : 2000)).toPromise())
             /* tslint:enable:no-string-literal */
             .then(() => {
                 let startingObservable = Omni.activeSolution
@@ -64,14 +65,14 @@ class OmniSharpAtom {
                     .take(1);
 
                 /* tslint:disable:no-string-literal */
-                if (Omni["_kick_in_the_pants_"]) {
+                if (Omni['_kick_in_the_pants_']) {
                     startingObservable = Observable.of(null);
                 }
                 /* tslint:disable:no-string-literal */
 
                 // Only activate features once we have a solution!
                 this.disposable.add(startingObservable
-                    .flatMap(() => this.loadFeatures(this.getFeatures("features")))
+                    .flatMap(() => this.loadFeatures(this.getFeatures('features')))
                     .subscribe({
                         complete: () => {
                             this.disposable.add(atom.workspace.observeTextEditors((editor: Atom.TextEditor) => {
@@ -87,18 +88,19 @@ class OmniSharpAtom {
     }
 
     public getFeatures(folder: string) {
-        const whiteList = atom.config.get<boolean>("omnisharp-atom:feature-white-list");
-        const featureList = atom.config.get<string[]>("omnisharp-atom:feature-list");
-        const whiteListUndefined = (typeof whiteList === "undefined");
+        const whiteList = atom.config.get<boolean>('omnisharp-atom:feature-white-list');
+        const featureList = atom.config.get<string[]>('omnisharp-atom:feature-list');
+        const whiteListUndefined = whiteList === undefined;
 
         console.info(`Getting features for "${folder}"...`);
 
-        const featureDir = `${__dirname}/${folder}`;
+        const featureDir = path.resolve(__dirname, folder);
 
         function loadFeature(file: string) {
+            // tslint:disable-next-line:no-require-imports non-literal-require
             const result = require(`./${folder}/${file}`);
             console.info(`Loading feature "${folder}/${file}"...`);
-            return result;//_.values(result).filter(feature => !_.isFunction(feature));
+            return result; //values(result).filter(feature => !isFunction(feature));
         }
 
         return Observable.bindNodeCallback(fs.readdir)(featureDir)
@@ -107,19 +109,19 @@ class OmniSharpAtom {
             .flatMap(file => Observable.bindNodeCallback(fs.stat)(`${featureDir}/${file}`), (file, stat) => ({ file, stat }))
             .filter(z => !z.stat.isDirectory())
             .map(z => ({
-                file: `${folder}/${path.basename(z.file)}`.replace(/\.js$/, ""),
+                file: `${folder}/${path.basename(z.file)}`.replace(/\.js$/, ''),
                 load: () => {
                     const feature = loadFeature(z.file);
 
                     const features: { key: string, activate: () => () => void }[] = [];
-                    _.each(feature, (value: IFeature, key: string) => {
-                        if (!_.isFunction(value) && !_.isArray(value)) {
+                    each(feature, (value: IFeature, key: string) => {
+                        if (!isFunction(value) && !isArray(value)) {
                             if (!value.required) {
                                 this.config[key] = {
                                     title: `${value.title}`,
                                     description: value.description,
-                                    type: "boolean",
-                                    default: (_.has(value, "default") ? value.default : true)
+                                    type: 'boolean',
+                                    default: (has(value, 'default') ? value.default : true)
                                 };
                             }
 
@@ -135,14 +137,14 @@ class OmniSharpAtom {
                 }
             }))
             .filter(l => {
-                if (typeof whiteList === "undefined") {
+                if (whiteList === undefined) {
                     return true;
                 }
 
                 if (whiteList) {
-                    return _.includes(featureList, l.file);
+                    return includes(featureList, l.file);
                 } else {
-                    return !_.includes(featureList, l.file);
+                    return !includes(featureList, l.file);
                 }
             });
     }
@@ -157,8 +159,8 @@ class OmniSharpAtom {
             .toArray()
             .do({
                 complete: () => {
-                    (<any>atom.config).setSchema("omnisharp-atom", {
-                        type: "object",
+                    (<any>atom.config).setSchema('omnisharp-atom', {
+                        type: 'object',
                         properties: this.config
                     });
                 }
@@ -172,9 +174,10 @@ class OmniSharpAtom {
         let firstRun = true;
 
         // Whitelist is used for unit testing, we don"t want the config to make changes here
-        if (whiteListUndefined && _.has(this.config, key)) {
+        if (whiteListUndefined && has(this.config, key)) {
             const configKey = `omnisharp-atom.${key}`;
-            let enableDisposable: IDisposable, disableDisposable: IDisposable;
+            let enableDisposable: IDisposable;
+            let disableDisposable: IDisposable;
             this.disposable.add(atom.config.observe(configKey, enabled => {
                 if (!enabled) {
                     if (disableDisposable) {
@@ -185,7 +188,10 @@ class OmniSharpAtom {
 
                     try { value.dispose(); } catch (ex) { /* */ }
 
-                    enableDisposable = atom.commands.add("atom-workspace", `omnisharp-feature:enable-${_.kebabCase(key)}`, () => atom.config.set(configKey, true));
+                    enableDisposable = atom.commands.add(
+                        'atom-workspace',
+                        `omnisharp-feature:enable-${kebabCase(key)}`,
+                        () => atom.config.set(configKey, true));
                     this.disposable.add(enableDisposable);
                 } else {
                     if (enableDisposable) {
@@ -197,33 +203,33 @@ class OmniSharpAtom {
                     console.info(`Activating feature "${key}"...`);
                     value.activate();
 
-                    if (_.isFunction(value["attach"])) {
+                    if (isFunction(value['attach'])) {
                         if (firstRun) {
                             result = () => {
                                 console.info(`Attaching feature "${key}"...`);
-                                value["attach"]();
+                                value['attach']();
                             };
                         } else {
                             console.info(`Attaching feature "${key}"...`);
-                            value["attach"]();
+                            value['attach']();
                         }
                     }
 
-                    disableDisposable = atom.commands.add("atom-workspace", `omnisharp-feature:disable-${_.kebabCase(key)}`, () => atom.config.set(configKey, false));
+                    disableDisposable = atom.commands.add('atom-workspace', `omnisharp-feature:disable-${kebabCase(key)}`, () => atom.config.set(configKey, false));
                     this.disposable.add(disableDisposable);
                 }
                 firstRun = false;
             }));
 
 
-            this.disposable.add(atom.commands.add("atom-workspace", `omnisharp-feature:toggle-${_.kebabCase(key)}`, () => atom.config.set(configKey, !atom.config.get(configKey))));
+            this.disposable.add(atom.commands.add('atom-workspace', `omnisharp-feature:toggle-${kebabCase(key)}`, () => atom.config.set(configKey, !atom.config.get(configKey))));
         } else {
             value.activate();
 
-            if (_.isFunction(value["attach"])) {
+            if (isFunction(value['attach'])) {
                 result = () => {
                     console.info(`Attaching feature "${key}"...`);
-                    value["attach"]();
+                    value['attach']();
                 };
             }
         }
@@ -239,7 +245,7 @@ class OmniSharpAtom {
     }
 
     private detectGrammar(editor: Atom.TextEditor, grammar: FirstMate.Grammar) {
-        if (!atom.config.get("omnisharp-atom.autoStartOnCompatibleFile")) {
+        if (!atom.config.get('omnisharp-atom.autoStartOnCompatibleFile')) {
             return; //short out, if setting to not auto start is enabled
         }
 
@@ -247,8 +253,8 @@ class OmniSharpAtom {
             if (Omni.isOff) {
                 this.toggle();
             }
-        } else if (grammar.name === "JSON") {
-            if (path.basename(editor.getPath()) === "project.json") {
+        } else if (grammar.name === 'JSON') {
+            if (path.basename(editor.getPath()) === 'project.json') {
                 if (Omni.isOff) {
                     this.toggle();
                 }
@@ -269,22 +275,22 @@ class OmniSharpAtom {
     }
 
     public consumeStatusBar(statusBar: any) {
-        let f = require("./atom/status-bar");
+        let f = require('./atom/status-bar');
         f.statusBar.setup(statusBar);
-        f = require("./atom/framework-selector");
+        f = require('./atom/framework-selector');
         f.frameworkSelector.setup(statusBar);
-        f = require("./atom/feature-buttons");
+        f = require('./atom/feature-buttons');
         f.featureEditorButtons.setup(statusBar);
     }
 
     /* tslint:disable:variable-name */
     public consumeYeomanEnvironment(generatorService: any) {
-        const {generatorAspnet} = require("./atom/generator-aspnet");
+        const {generatorAspnet} = require('./atom/generator-aspnet');
         generatorAspnet.setup(generatorService);
     }
 
     public provideAutocomplete() {
-        return require("./services/completion-provider");
+        return require('./services/completion-provider');
     }
 
     public provideLinter(): any[] {
@@ -294,15 +300,15 @@ class OmniSharpAtom {
     }
 
     public provideProjectJson() {
-        return require("./services/project-provider").concat(require("./services/framework-provider"));
+        return require('./services/project-provider').concat(require('./services/framework-provider'));
     }
 
     public consumeLinter(linter: any) {
-        const LinterProvider = require("./services/linter-provider");
+        const LinterProvider = require('./services/linter-provider');
         const linters = LinterProvider.provider;
 
         this.disposable.add(Disposable.create(() => {
-            _.each(linters, l => {
+            each(linters, l => {
                 linter.deleteLinter(l);
             });
         }));
@@ -311,14 +317,14 @@ class OmniSharpAtom {
     }
 
     public consumeIndieLinter(linter: any) {
-        require("./services/linter-provider").registerIndie(linter, this.disposable);
+        require('./services/linter-provider').registerIndie(linter, this.disposable);
     }
     /* tslint:enable:variable-name */
 
     private configureKeybindings() {
         let disposable: EventKit.Disposable;
-        const omnisharpAdvancedFileNew = Omni.packageDir + "/omnisharp-atom/keymaps/omnisharp-file-new.cson";
-        this.disposable.add(atom.config.observe("omnisharp-atom.enableAdvancedFileNew", (enabled: boolean) => {
+        const omnisharpAdvancedFileNew = Omni.packageDir + '/omnisharp-atom/keymaps/omnisharp-file-new.cson';
+        this.disposable.add(atom.config.observe('omnisharp-atom.enableAdvancedFileNew', (enabled: boolean) => {
             if (enabled) {
                 disposable = atom.keymaps.loadKeymap(omnisharpAdvancedFileNew);
             } else {
@@ -330,84 +336,84 @@ class OmniSharpAtom {
 
     public config = {
         autoStartOnCompatibleFile: {
-            title: "Autostart Omnisharp Roslyn",
-            description: "Automatically starts Omnisharp Roslyn when a compatible file is opened.",
-            type: "boolean",
+            title: 'Autostart Omnisharp Roslyn',
+            description: 'Automatically starts Omnisharp Roslyn when a compatible file is opened.',
+            type: 'boolean',
             default: true
         },
         developerMode: {
-            title: "Developer Mode",
-            description: "Outputs detailed server calls in console.log",
-            type: "boolean",
+            title: 'Developer Mode',
+            description: 'Outputs detailed server calls in console.log',
+            type: 'boolean',
             default: false
         },
         showDiagnosticsForAllSolutions: {
-            title: "Show Diagnostics for all Solutions",
-            description: "Advanced: This will show diagnostics for all open solutions.  NOTE: May take a restart or change to each server to take effect when turned on.",
-            type: "boolean",
+            title: 'Show Diagnostics for all Solutions',
+            description: 'Advanced: This will show diagnostics for all open solutions.  NOTE: May take a restart or change to each server to take effect when turned on.',
+            type: 'boolean',
             default: false
         },
         enableAdvancedFileNew: {
-            title: "Enable `Advanced File New`",
-            description: "Enable `Advanced File New` when doing ctrl-n/cmd-n within a C# editor.",
-            type: "boolean",
+            title: 'Enable `Advanced File New`',
+            description: 'Enable `Advanced File New` when doing ctrl-n/cmd-n within a C# editor.',
+            type: 'boolean',
             default: false
         },
         useLeftLabelColumnForSuggestions: {
-            title: "Use Left-Label column in Suggestions",
-            description: "Shows return types in a right-aligned column to the left of the completion suggestion text.",
-            type: "boolean",
+            title: 'Use Left-Label column in Suggestions',
+            description: 'Shows return types in a right-aligned column to the left of the completion suggestion text.',
+            type: 'boolean',
             default: false
         },
         useIcons: {
-            title: "Use unique icons for kind indicators in Suggestions",
-            description: "Shows kinds with unique icons rather than autocomplete default styles.",
-            type: "boolean",
+            title: 'Use unique icons for kind indicators in Suggestions',
+            description: 'Shows kinds with unique icons rather than autocomplete default styles.',
+            type: 'boolean',
             default: true
         },
         autoAdjustTreeView: {
-            title: "Adjust the tree view to match the solution root.",
-            descrption: "This will automatically adjust the treeview to be the root of the solution.",
-            type: "boolean",
+            title: 'Adjust the tree view to match the solution root.',
+            descrption: 'This will automatically adjust the treeview to be the root of the solution.',
+            type: 'boolean',
             default: false
         },
         nagAdjustTreeView: {
-            title: "Show the notifications to Adjust the tree view",
-            type: "boolean",
+            title: 'Show the notifications to Adjust the tree view',
+            type: 'boolean',
             default: true
         },
         autoAddExternalProjects: {
-            title: "Add external projects to the tree view.",
-            descrption: "This will automatically add external sources to the tree view.\n External sources are any projects that are loaded outside of the solution root.",
-            type: "boolean",
+            title: 'Add external projects to the tree view.',
+            descrption: 'This will automatically add external sources to the tree view.\n External sources are any projects that are loaded outside of the solution root.',
+            type: 'boolean',
             default: false
         },
         nagAddExternalProjects: {
-            title: "Show the notifications to add or remove external projects",
-            type: "boolean",
+            title: 'Show the notifications to add or remove external projects',
+            type: 'boolean',
             default: true
         },
         hideLinterInterface: {
-            title: "Hide the linter interface when using omnisharp-atom editors",
-            type: "boolean",
+            title: 'Hide the linter interface when using omnisharp-atom editors',
+            type: 'boolean',
             default: true
         },
         wantMetadata: {
-            title: "Request metadata definition with Goto Definition",
-            descrption: "Request symbol metadata from the server, when using go-to-definition.  This is disabled by default on Linux, due to issues with Roslyn on Mono.",
-            type: "boolean",
+            title: 'Request metadata definition with Goto Definition',
+            descrption: 'Request symbol metadata from the server, when using go-to-definition.  This is disabled by default on Linux, due to issues with Roslyn on Mono.',
+            type: 'boolean',
             default: win32
         },
         altGotoDefinition: {
-            title: "Alt Go To Definition",
-            descrption: "Use the alt key instead of the ctrl/cmd key for goto defintion mouse over.",
-            type: "boolean",
+            title: 'Alt Go To Definition',
+            descrption: 'Use the alt key instead of the ctrl/cmd key for goto defintion mouse over.',
+            type: 'boolean',
             default: false
         },
         showHiddenDiagnostics: {
-            title: "Show 'Hidden' diagnostics in the linter",
-            descrption: "Show or hide hidden diagnostics in the linter, this does not affect greying out of namespaces that are unused.",
-            type: "boolean",
+            title: 'Show \'Hidden\' diagnostics in the linter',
+            descrption: 'Show or hide hidden diagnostics in the linter, this does not affect greying out of namespaces that are unused.',
+            type: 'boolean',
             default: true
         }
     };

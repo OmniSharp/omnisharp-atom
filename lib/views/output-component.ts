@@ -1,6 +1,5 @@
-let fastdom: typeof Fastdom = require("fastdom");
-import _ from "lodash";
-const $: JQueryStatic = require("jquery");
+import { throttle, each, findIndex, toArray } from 'lodash';
+const $: JQueryStatic = require('jquery');
 
 export interface MessageElement<TItem> extends HTMLLIElement {
     key: string;
@@ -22,80 +21,69 @@ export class OutputElement<TItem, TElement extends MessageElement<TItem>> extend
 
     public createdCallback() {
         this.output = [];
-        this.classList.add("messages-container", "ol");
+        this.classList.add('messages-container', 'ol');
         const parent = this;
-        const onclickHandler = function(e: UIEvent) {
+        const onclickHandler = function (e: UIEvent) {
             parent.selected = this.key;
             parent.handleClick(this.item);
         };
 
-        this._update = _.throttle(() => {
-            fastdom.measure(() => {
-                for (let i = 0, len = this.children.length > this.output.length ? this.children.length : this.output.length; i < len; i++) {
-                    const item = this.output[i];
-                    let child: TElement = <any>this.children[i];
-                    if (!item && child) {
-                        this.removeChild(child);
-                        continue;
-                    }
-                    fastdom.mutate(() => {
-                        if (item && !child) {
-                            child = this.elementFactory();
-                            child.onclick = onclickHandler;
-                            this.appendChild(child);
-                        }
-
-                        if (item && child) {
-                            const key = this.getKey(item);
-                            if (child.key !== key) {
-                                child.setMessage(key, item);
-                                child.item = item;
-                            }
-                        }
-
-                        if (child) {
-                            if (child.key === this._selectedKey && !child.selected) {
-                                child.selected = true;
-                            } else if (child.selected) {
-                                child.selected = false;
-                            }
-                        }
-                    });
+        this._update = throttle(() => {
+            for (let i = 0, len = this.children.length > this.output.length ? this.children.length : this.output.length; i < len; i++) {
+                const item = this.output[i];
+                let child: TElement = <any>this.children[i];
+                if (!item && child) {
+                    this.removeChild(child);
+                    continue;
+                }
+                if (item && !child) {
+                    child = this.elementFactory();
+                    child.onclick = onclickHandler;
+                    this.appendChild(child);
                 }
 
-                fastdom.mutate(() => {
-                    this.scrollToItemView();
-                    this._calculateInview();
-                });
-            });
+                if (item && child) {
+                    const key = this.getKey(item);
+                    if (child.key !== key) {
+                        child.setMessage(key, item);
+                        child.item = item;
+                    }
+                }
+
+                if (child) {
+                    if (child.key === this._selectedKey && !child.selected) {
+                        child.selected = true;
+                    } else if (child.selected) {
+                        child.selected = false;
+                    }
+                }
+            }
+
+            this.scrollToItemView();
+            this._calculateInview();
         }, 100, { leading: true, trailing: true });
 
         this.onkeydown = (e: any) => this.keydownPane(e);
-        this._scroll = _.throttle((e: UIEvent) => this._calculateInview(), 100, { leading: true, trailing: true });
+        this._scroll = throttle((e: UIEvent) => this._calculateInview(), 100, { leading: true, trailing: true });
     }
 
     public attachedCallback() {
-        this.parentElement.addEventListener("scroll", this._scroll);
+        this.parentElement.addEventListener('scroll', this._scroll);
         this._calculateInview();
     }
 
     public attached() {
-        fastdom.mutate(() => {
             this._update();
-            _.each(this.children, (x: TElement) => x.attached());
+            each(this.children, (x: TElement) => x.attached());
             this._calculateInview();
-        });
     }
 
     public detached() {
-        fastdom.mutate(() => {
-            _.each(this.children, (x: TElement) => x.detached());
-        });
+            each(this.children, (x: TElement) => x.detached());
     }
 
     private _calculateInview() {
         const self = $(this);
-        fastdom.measure(() => {
             const top = self.scrollTop();
             const bottom = top + this.parentElement.clientHeight * 2;
             for (let i = 0, len = this.children.length; i < len; i++) {
@@ -107,12 +95,9 @@ export class OutputElement<TItem, TElement extends MessageElement<TItem>> extend
                 const inview = position.top + height > top && position.top < bottom;
 
                 if (child.inview !== inview) {
-                    fastdom.mutate(() => {
                         child.inview = inview;
-                    });
                 }
             }
-        });
     }
 
     public getKey: (message: TItem) => string;
@@ -122,7 +107,7 @@ export class OutputElement<TItem, TElement extends MessageElement<TItem>> extend
 
     public get selected() { return this._selectedKey; }
     public set selected(value: string) {
-        const index = _.findIndex(this.children, (e: TElement) => e.key === value);
+        const index = findIndex(this.children, (e: TElement) => e.key === value);
         if (index) {
             const e: TElement = <any>this.children[index];
             this._selectedKey = value;
@@ -154,16 +139,16 @@ export class OutputElement<TItem, TElement extends MessageElement<TItem>> extend
     }
 
     public updateOutput(output: TItem[] | IterableIterator<TItem>) {
-        this.output = _.toArray(output);
+        this.output = toArray(output);
         this._update();
     }
 
     private keydownPane(e: any) {
-        if (e.keyIdentifier === "Down") {
+        if (e.keyIdentifier === 'Down') {
             atom.commands.dispatch(atom.views.getView(atom.workspace), `omnisharp-atom:next-${this.eventName}`);
-        } else if (e.keyIdentifier === "Up") {
+        } else if (e.keyIdentifier === 'Up') {
             atom.commands.dispatch(atom.views.getView(atom.workspace), `omnisharp-atom:previous-${this.eventName}`);
-        } else if (e.keyIdentifier === "Enter") {
+        } else if (e.keyIdentifier === 'Enter') {
             atom.commands.dispatch(atom.views.getView(atom.workspace), `omnisharp-atom:go-to-${this.eventName}`);
         }
     }
@@ -186,4 +171,4 @@ export class OutputElement<TItem, TElement extends MessageElement<TItem>> extend
     }
 }
 
-(<any>exports).OutputElement = (<any>document).registerElement("omnisharp-output-list", { prototype: OutputElement.prototype });
+(<any>exports).OutputElement = (<any>document).registerElement('omnisharp-output-list', { prototype: OutputElement.prototype });

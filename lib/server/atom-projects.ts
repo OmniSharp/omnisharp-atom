@@ -1,6 +1,6 @@
-import {Subject} from "rxjs";
-import {CompositeDisposable, IDisposable} from "ts-disposables";
-import {difference} from "lodash";
+import {difference} from 'lodash';
+import {Subject} from 'rxjs';
+import {CompositeDisposable, IDisposable} from 'ts-disposables';
 
 export class AtomProjectTracker implements IDisposable {
     private _disposable = new CompositeDisposable();
@@ -22,8 +22,8 @@ export class AtomProjectTracker implements IDisposable {
         const addedPaths = difference(paths, this._projectPaths);
         const removedPaths = difference(this._projectPaths, paths);
 
-        for (let project of addedPaths) this._addedSubject.next(project);
-        for (let project of removedPaths) this._removedSubject.next(project);
+        for (const project of addedPaths) this._addedSubject.next(project);
+        for (const project of removedPaths) this._removedSubject.next(project);
 
         this._projectPaths = paths;
     }

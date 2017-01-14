@@ -1,5 +1,5 @@
-import {CompositeDisposable} from "ts-disposables";
-import {Omni} from "../server/omni";
+import {CompositeDisposable} from 'ts-disposables';
+import {Omni} from '../server/omni';
 
 class PackageRestore implements IFeature {
     private disposable: CompositeDisposable;
@@ -18,8 +18,8 @@ class PackageRestore implements IFeature {
     }
 
     public required = true;
-    public title = "Package Restore";
-    public description = "Initializes a package restore, when an project.json file is saved.";
+    public title = 'Package Restore';
+    public description = 'Initializes a package restore, when an project.json file is saved.';
 }
 
 export const packageRestore = new PackageRestore;

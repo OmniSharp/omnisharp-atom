@@ -1,29 +1,29 @@
 /// <reference path="tsd.d.ts" />
-import {SolutionManager} from "../lib/server/solution-manager";
-import {Observable} from "rxjs";
-import {CompositeDisposable, Disposable} from "omnisharp-client";
-import {DriverState} from "omnisharp-client";
+import { CompositeDisposable, Disposable } from 'ts-disposables';
+import { DriverState } from 'omnisharp-client';
+import { Observable } from 'rxjs';
+import { SolutionManager } from '../lib/server/solution-manager';
 
 export function setupFeature(features: string[], unitTestMode = true) {
     let cd: CompositeDisposable;
-    beforeEach(function() {
+    beforeEach(function () {
         cd = new CompositeDisposable();
         SolutionManager._unitTestMode_ = unitTestMode;
         SolutionManager._kick_in_the_pants_ = true;
 
-        atom.config.set("omnisharp-atom:feature-white-list", true);
-        atom.config.set("omnisharp-atom:feature-list", features);
+        atom.config.set('omnisharp-atom:feature-white-list', true);
+        atom.config.set('omnisharp-atom:feature-list', features);
 
-        return atom.packages.activatePackage("language-csharp")
-            .then(() => atom.packages.activatePackage("omnisharp-atom"))
+        return atom.packages.activatePackage('language-csharp')
+            .then(() => atom.packages.activatePackage('omnisharp-atom'))
             .then((pack: Atom.Package) => pack.mainModule._activated.delay(200).toPromise());
     });
 
-    afterEach(function() {
-        atom.packages.deactivatePackage("omnisharp-atom");
-        atom.packages.deactivatePackage("language-csharp");
-        atom.config.set("omnisharp-atom:feature-white-list", undefined);
-        atom.config.set("omnisharp-atom:feature-list", undefined);
+    afterEach(function () {
+        atom.packages.deactivatePackage('omnisharp-atom');
+        atom.packages.deactivatePackage('language-csharp');
+        atom.config.set('omnisharp-atom:feature-white-list', undefined);
+        atom.config.set('omnisharp-atom:feature-list', undefined);
         SolutionManager._unitTestMode_ = false;
         SolutionManager._kick_in_the_pants_ = false;
         cd.dispose();

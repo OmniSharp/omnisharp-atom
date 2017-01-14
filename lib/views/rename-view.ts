@@ -1,16 +1,16 @@
-import * as spacePenViews from "atom-space-pen-views";
-import {Omni} from "../server/omni";
+import * as spacePenViews from 'atom-space-pen-views';
+import {Omni} from '../server/omni';
 
 export class RenameView extends spacePenViews.View {
     public static content() {
         return this.div({
-            "class": "rename overlay from-top"
+            class: 'rename overlay from-top'
         }, () => {
             this.p({
-                outlet: "message",
-                "class": "icon icon-diff-renamed"
-            }, "Rename to:");
-            return this.subview("miniEditor",
+                outlet: 'message',
+                class: 'icon icon-diff-renamed'
+            }, 'Rename to:');
+            return this.subview('miniEditor',
                 new spacePenViews.TextEditorView({
                     mini: true
                 }));
@@ -20,8 +20,8 @@ export class RenameView extends spacePenViews.View {
     public miniEditor: spacePenViews.TextEditorView;
 
     public initialize() {
-        atom.commands.add(this[0], "core:confirm", () => this.rename());
-        atom.commands.add(this[0], "core:cancel", () => this.destroy());
+        atom.commands.add(this[0], 'core:confirm', () => this.rename());
+        atom.commands.add(this[0], 'core:cancel', () => this.destroy());
     }
 
     public configure(wordToRename: string) {
@@ -39,7 +39,7 @@ export class RenameView extends spacePenViews.View {
     }
 
     public destroy() {
-        this.miniEditor.setText("");
+        this.miniEditor.setText('');
         return this.detach();
     }
 }

@@ -1,8 +1,8 @@
-import {Models} from "omnisharp-client";
+import {Models} from 'omnisharp-client';
 /* tslint:disable:variable-name */
-const Range = require("atom").Range;
+const Range = require('atom').Range;
 /* tslint:enable:variable-name */
-import {Observable} from "rxjs";
+import {Observable} from 'rxjs';
 
 export function applyChanges(editor: Atom.TextEditor, response: { Changes?: Models.LinePositionSpanTextChange[]; Buffer?: string; }) {
     if (!response) return;
@@ -10,7 +10,7 @@ export function applyChanges(editor: Atom.TextEditor, response: { Changes?: Mode
         const buffer = editor.getBuffer();
         const checkpoint = buffer.createCheckpoint();
 
-        response.Changes.forEach((change) => {
+        response.Changes.forEach(change => {
             const range = new Range([change.StartLine, change.StartColumn], [change.EndLine, change.EndColumn]);
             buffer.setTextInRange(range, change.NewText);
         });
@@ -27,14 +27,14 @@ export function applyChanges(editor: Atom.TextEditor, response: { Changes?: Mode
 function resetPreviewTab() {
     const pane: HTMLElement = <any>atom.views.getView(atom.workspace.getActivePane());
     if (pane) {
-    const title = pane.querySelector(".title.temp");
+    const title = pane.querySelector('.title.temp');
     if (title) {
-        title.classList.remove("temp");
+        title.classList.remove('temp');
     }
 
-    const tab = pane.querySelector(".preview-tab.active");
+    const tab = pane.querySelector('.preview-tab.active');
     if (tab) {
-        tab.classList.remove("preview-tab");
+        tab.classList.remove('preview-tab');
         (<any>tab).isPreviewTab = false;
     }
     }

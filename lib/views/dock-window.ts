@@ -1,5 +1,5 @@
-import {Observable} from "rxjs";
-import {Disposable, CompositeDisposable, SingleAssignmentDisposable, IDisposable} from "ts-disposables";
+import {Observable} from 'rxjs';
+import {CompositeDisposable, Disposable, IDisposable, SingleAssignmentDisposable} from 'ts-disposables';
 
 export interface ToggleButton {
     id: string;
@@ -55,13 +55,13 @@ export class DockWindow extends HTMLDivElement implements WebComponent {
         const pane = this._panes.get(value);
 
         if (this._selectedPane) {
-            this._selectedPane._button.classList.remove("selected");
+            this._selectedPane._button.classList.remove('selected');
             this._selectedPane.view.remove();
         }
 
         if (pane) {
             this._selectedPane = pane;
-            pane._button.classList.add("selected");
+            pane._button.classList.add('selected');
             this.appendChild(pane.view);
         }
 
@@ -71,18 +71,18 @@ export class DockWindow extends HTMLDivElement implements WebComponent {
     public createdCallback() {
         this.disposable = new CompositeDisposable();
         this._panes = new Map<string, InternalPaneButton>();
-        this._selected = "output";
+        this._selected = 'output';
         this.visible = false;
         this.tempHeight = 0;
-        this.fontSize = atom.config.get<number>("editor.fontSize");
+        this.fontSize = atom.config.get<number>('editor.fontSize');
 
         let fontSize = this.fontSize - 1;
         if (fontSize <= 0)
             fontSize = 1;
 
-        this.classList.add("inset-panel", "font-size-" + fontSize);
+        this.classList.add('inset-panel', 'font-size-' + fontSize);
         if (this.clientHeight || this.tempHeight) {
-            this.style.height = this.clientHeight + this.tempHeight + "px";
+            this.style.height = this.clientHeight + this.tempHeight + 'px';
         }
 
         const resizer = new exports.Resizer();
@@ -95,28 +95,28 @@ export class DockWindow extends HTMLDivElement implements WebComponent {
         resizer.done = () => { /* */ };
         this.appendChild(resizer);
 
-        const windows = document.createElement("div");
-        windows.classList.add("panel-heading", "clearfix");
+        const windows = document.createElement('div');
+        windows.classList.add('panel-heading', 'clearfix');
         this.appendChild(windows);
 
-        this._toolbar = document.createElement("div");
-        this._toolbar.classList.add("btn-toolbar", "pull-left");
+        this._toolbar = document.createElement('div');
+        this._toolbar.classList.add('btn-toolbar', 'pull-left');
         windows.appendChild(this._toolbar);
 
-        this._paneButtons = document.createElement("div");
-        this._paneButtons.classList.add("btn-group", "btn-toggle");
+        this._paneButtons = document.createElement('div');
+        this._paneButtons.classList.add('btn-group', 'btn-toggle');
         this._toolbar.appendChild(this._paneButtons);
 
-        this._toggleButtons = document.createElement("div");
-        this._toggleButtons.classList.add("btn-well", "pull-right", "btn-group");
+        this._toggleButtons = document.createElement('div');
+        this._toggleButtons.classList.add('btn-well', 'pull-right', 'btn-group');
         windows.appendChild(this._toggleButtons);
     }
 
     public attachedCallback() {
-        this.disposable.add(atom.config.observe("editor.fontSize", (size: number) => {
-            this.className = this.className.replace(/font-size-[\d]*/g, "");
+        this.disposable.add(atom.config.observe('editor.fontSize', (size: number) => {
+            this.className = this.className.replace(/font-size-[\d]*/g, '');
             this.fontSize = size;
-            this.classList.add("font-size-" + size);
+            this.classList.add('font-size-' + size);
         }));
     }
 
@@ -127,35 +127,35 @@ export class DockWindow extends HTMLDivElement implements WebComponent {
     private _addDockButton(button: InternalPaneButton) {
         const {id, title, options, disposable} = button;
 
-        const view = document.createElement("button");
-        view.classList.add("btn", "btn-default", "btn-fix");
+        const view = document.createElement('button');
+        view.classList.add('btn', 'btn-default', 'btn-fix');
         (view as any)._id = id;
         (view as any)._priority = options.priority;
 
         disposable.add(Disposable.create(() => {
-            if (view.classList.contains("selected")) {
+            if (view.classList.contains('selected')) {
                 this.selected = (view.previousElementSibling as any)._id;
             }
             view.remove();
         }));
 
-        const text = document.createElement("span");
+        const text = document.createElement('span');
         text.innerHTML = title;
-        text.classList.add("text");
+        text.classList.add('text');
         view.appendChild(text);
 
         if (options.closeable) {
-            view.classList.add("closeable");
+            view.classList.add('closeable');
 
-            const close = document.createElement("span");
-            close.classList.add("fa", "fa-times-circle", "close-pane");
-            close.onclick = (e) => {
+            const close = document.createElement('span');
+            close.classList.add('fa', 'fa-times-circle', 'close-pane');
+            close.onclick = e => {
                 disposable.dispose();
             };
             view.appendChild(close);
         }
 
-        view.onclick = (e) => {
+        view.onclick = e => {
             e.stopPropagation();
             e.preventDefault();
             this.selected = id;
@@ -249,7 +249,7 @@ export class DockWindow extends HTMLDivElement implements WebComponent {
 
         // Focus the panel!
         this.updateAtom(() => {
-            const panel: any = this.querySelector(".omnisharp-atom-output.selected");
+            const panel: any = this.querySelector('.omnisharp-atom-output.selected');
             if (panel) panel.focus();
         });
     }
@@ -266,13 +266,13 @@ export class DockWindow extends HTMLDivElement implements WebComponent {
         if (parentDisposable)
             cd.add(parentDisposable);
 
-        view.classList.add("omnisharp-atom-output", `${id}-output`, "selected");
+        view.classList.add('omnisharp-atom-output', `${id}-output`, 'selected');
 
-        cd.add(atom.commands.add("atom-workspace", "omnisharp-atom:dock-show-" + id, () => this.selectWindow(id)));
-        cd.add(atom.commands.add("atom-workspace", "omnisharp-atom:dock-toggle-" + id, () => this.toggleWindow(id)));
+        cd.add(atom.commands.add('atom-workspace', 'omnisharp-atom:dock-show-' + id, () => this.selectWindow(id)));
+        cd.add(atom.commands.add('atom-workspace', 'omnisharp-atom:dock-toggle-' + id, () => this.toggleWindow(id)));
 
         if (options.closeable) {
-            cd.add(atom.commands.add("atom-workspace", "omnisharp-atom:dock-close-" + id, () => {
+            cd.add(atom.commands.add('atom-workspace', 'omnisharp-atom:dock-close-' + id, () => {
                 this.disposable.remove(disposable);
                 disposable.dispose();
                 this.hideView();
@@ -281,7 +281,7 @@ export class DockWindow extends HTMLDivElement implements WebComponent {
 
         cd.add(Disposable.create(() => {
             if (this.selected === id) {
-                this.selected = "output";
+                this.selected = 'output';
             }
         }));
 
@@ -312,7 +312,7 @@ export class DockWindow extends HTMLDivElement implements WebComponent {
     }
 }
 
-(<any>exports).DockWindow = (<any>document).registerElement("omnisharp-dock-window", { prototype: DockWindow.prototype });
+(<any>exports).DockWindow = (<any>document).registerElement('omnisharp-dock-window', { prototype: DockWindow.prototype });
 
 export class Resizer extends HTMLDivElement implements WebComponent {
     private disposable: CompositeDisposable;
@@ -321,7 +321,7 @@ export class Resizer extends HTMLDivElement implements WebComponent {
     public start: () => void;
 
     public createdCallback() {
-        this.classList.add("omnisharp-atom-output-resizer");
+        this.classList.add('omnisharp-atom-output-resizer');
     }
 
     public detachedCallback() {
@@ -330,15 +330,15 @@ export class Resizer extends HTMLDivElement implements WebComponent {
 
     public attachedCallback() {
         this.disposable = new CompositeDisposable();
-        const mousemove = Observable.fromEvent<MouseEvent>(document.body, "mousemove").share();
-        const mouseup = Observable.fromEvent<MouseEvent>(document.body, "mouseup").share();
-        const mousedown = Observable.fromEvent<MouseEvent>(this, "mousedown").share();
+        const mousemove = Observable.fromEvent<MouseEvent>(document.body, 'mousemove').share();
+        const mouseup = Observable.fromEvent<MouseEvent>(document.body, 'mouseup').share();
+        const mousedown = Observable.fromEvent<MouseEvent>(this, 'mousedown').share();
 
-        const mousedrag = mousedown.flatMap((md) => {
+        const mousedrag = mousedown.flatMap(md => {
             const startX = md.clientX + window.scrollX,
                 startY = md.clientY + window.scrollY;
 
-            return mousemove.map((mm) => {
+            return mousemove.map(mm => {
                 mm.preventDefault();
 
                 return {
@@ -349,8 +349,8 @@ export class Resizer extends HTMLDivElement implements WebComponent {
         });
 
         this.disposable.add(mousedown.subscribe(x => this.start()));
-        this.disposable.add(mousedrag.subscribe((x) => this.update(x), null, () => this.done()));
+        this.disposable.add(mousedrag.subscribe(x => this.update(x), null, () => this.done()));
     }
 }
 
-(<any>exports).Resizer = (<any>document).registerElement("omnisharp-resizer", { prototype: Resizer.prototype });
+(<any>exports).Resizer = (<any>document).registerElement('omnisharp-resizer', { prototype: Resizer.prototype });

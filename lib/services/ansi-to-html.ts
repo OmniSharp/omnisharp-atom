@@ -1,57 +1,57 @@
-import {extend} from "lodash";
-const entities = require("entities");
+import {extend} from 'lodash';
+const entities = require('entities');
 
 const STYLES = {
-    "ef0": "color:#000",
-    "ef1": "color:#A00",
-    "ef2": "color:#0A0",
-    "ef3": "color:#A50",
-    "ef4": "color:#00A",
-    "ef5": "color:#A0A",
-    "ef6": "color:#0AA",
-    "ef7": "color:#AAA",
-    "ef8": "color:#555",
-    "ef9": "color:#F55",
-    "ef10": "color:#5F5",
-    "ef11": "color:#FF5",
-    "ef12": "color:#55F",
-    "ef13": "color:#F5F",
-    "ef14": "color:#5FF",
-    "ef15": "color:#FFF",
-    "eb0": "background-color:#000",
-    "eb1": "background-color:#A00",
-    "eb2": "background-color:#0A0",
-    "eb3": "background-color:#A50",
-    "eb4": "background-color:#00A",
-    "eb5": "background-color:#A0A",
-    "eb6": "background-color:#0AA",
-    "eb7": "background-color:#AAA",
-    "eb8": "background-color:#555",
-    "eb9": "background-color:#F55",
-    "eb10": "background-color:#5F5",
-    "eb11": "background-color:#FF5",
-    "eb12": "background-color:#55F",
-    "eb13": "background-color:#F5F",
-    "eb14": "background-color:#5FF",
-    "eb15": "background-color:#FFF"
+    'ef0': 'color:#000',
+    'ef1': 'color:#A00',
+    'ef2': 'color:#0A0',
+    'ef3': 'color:#A50',
+    'ef4': 'color:#00A',
+    'ef5': 'color:#A0A',
+    'ef6': 'color:#0AA',
+    'ef7': 'color:#AAA',
+    'ef8': 'color:#555',
+    'ef9': 'color:#F55',
+    'ef10': 'color:#5F5',
+    'ef11': 'color:#FF5',
+    'ef12': 'color:#55F',
+    'ef13': 'color:#F5F',
+    'ef14': 'color:#5FF',
+    'ef15': 'color:#FFF',
+    'eb0': 'background-color:#000',
+    'eb1': 'background-color:#A00',
+    'eb2': 'background-color:#0A0',
+    'eb3': 'background-color:#A50',
+    'eb4': 'background-color:#00A',
+    'eb5': 'background-color:#A0A',
+    'eb6': 'background-color:#0AA',
+    'eb7': 'background-color:#AAA',
+    'eb8': 'background-color:#555',
+    'eb9': 'background-color:#F55',
+    'eb10': 'background-color:#5F5',
+    'eb11': 'background-color:#FF5',
+    'eb12': 'background-color:#55F',
+    'eb13': 'background-color:#F5F',
+    'eb14': 'background-color:#5FF',
+    'eb15': 'background-color:#FFF'
 };
 
-const toHexString = function(num: any) {
+const toHexString = function (num: any) {
     num = num.toString(16);
     while (num.length < 2) {
-        num = "0" + num;
+        num = '0' + num;
     }
     return num;
 };
 
-[0, 1, 2, 3, 4, 5].forEach(function(red) {
-    return [0, 1, 2, 3, 4, 5].forEach(function(green) {
-        return [0, 1, 2, 3, 4, 5].forEach(function(blue) {
+[0, 1, 2, 3, 4, 5].forEach(function (red) {
+    return [0, 1, 2, 3, 4, 5].forEach(function (green) {
+        return [0, 1, 2, 3, 4, 5].forEach(function (blue) {
             const c = 16 + (red * 36) + (green * 6) + blue;
             const r = red > 0 ? red * 40 + 55 : 0;
             const g = green > 0 ? green * 40 + 55 : 0;
             const b = blue > 0 ? blue * 40 + 55 : 0;
-            const rgb = ((function() {
+            const rgb = ((function () {
                 const ref = [r, g, b];
                 const results: any[] = [];
                 for (let j = 0, len = ref.length; j < len; j++) {
@@ -59,27 +59,27 @@ const toHexString = function(num: any) {
                     results.push(toHexString(n));
                 }
                 return results;
-            })()).join("");
-            STYLES["ef" + c] = "color:#" + rgb;
-            return STYLES["eb" + c] = "background-color:#" + rgb;
+            })()).join('');
+            STYLES['ef' + c] = 'color:#' + rgb;
+            return STYLES['eb' + c] = 'background-color:#' + rgb;
         });
     });
 });
 
-(function() {
+(function () {
     const results: any[] = [];
     for (let j = 0; j <= 23; j++) { results.push(j); }
     return results;
-}).apply(this).forEach(function(gray: any) {
+}).apply(this).forEach(function (gray: any) {
     const c = gray + 232;
     const l = toHexString(gray * 10 + 8);
-    STYLES["ef" + c] = "color:#" + l + l + l;
-    return STYLES["eb" + c] = "background-color:#" + l + l + l;
+    STYLES['ef' + c] = 'color:#' + l + l + l;
+    return STYLES['eb' + c] = 'background-color:#' + l + l + l;
 });
 
 const defaults = {
-    fg: "#FFF",
-    bg: "#000",
+    fg: '#FFF',
+    bg: '#000',
     newline: false,
     escapeXML: false,
     stream: false
@@ -98,23 +98,23 @@ export class Convert {
     }
 
     public toHtml(input: any) {
-        this.input = typeof input === "string" ? [input] : input;
+        this.input = typeof input === 'string' ? [input] : input;
         const buf: any[] = [];
-        this.stickyStack.forEach((element) => {
-            return this.generateOutput(element.token, element.data, function(chunk: any) {
+        this.stickyStack.forEach(element => {
+            return this.generateOutput(element.token, element.data, function (chunk: any) {
                 return buf.push(chunk);
             });
         });
-        this.forEach(function(chunk: any) {
+        this.forEach(function (chunk: any) {
             return buf.push(chunk);
         });
         this.input = [];
-        return buf.join("");
+        return buf.join('');
     }
 
     private forEach(callback: any) {
-        let buf = "";
-        this.input.forEach((chunk) => {
+        let buf = '';
+        this.input.forEach(chunk => {
             buf += chunk;
             return this.tokenize(buf, (token: any, data: any) => {
                 this.generateOutput(token, data, callback);
@@ -130,22 +130,22 @@ export class Convert {
 
     private generateOutput(token: any, data: any, callback: any) {
         switch (token) {
-            case "text":
+            case 'text':
                 return callback(this.pushText(data));
-            case "display":
+            case 'display':
                 return this.handleDisplay(data, callback);
-            case "xterm256":
-                return callback(this.pushStyle("ef" + data));
+            case 'xterm256':
+                return callback(this.pushStyle('ef' + data));
         }
     }
 
     private updateStickyStack(token: any, data: any) {
-        const notCategory = function(category: any) {
-            return function(e: any) {
-                return (category === null || e.category !== category) && category !== "all";
+        const notCategory = function (category: any) {
+            return function (e: any) {
+                return (category === null || e.category !== category) && category !== 'all';
             };
         };
-        if (token !== "text") {
+        if (token !== 'text') {
             this.stickyStack = this.stickyStack.filter(notCategory(this.categoryForCode(data)));
             return this.stickyStack.push({
                 token: token,
@@ -158,7 +158,7 @@ export class Convert {
     private handleDisplay(code: any, callback: any) {
         code = parseInt(code, 10);
         if (code === -1) {
-            callback("<br/>");
+            callback('<br/>');
         }
         if (code === 0) {
             if (this.stack.length) {
@@ -166,61 +166,61 @@ export class Convert {
             }
         }
         if (code === 1) {
-            callback(this.pushTag("b"));
+            callback(this.pushTag('b'));
         }
         if ((2 < code && code < 5)) {
-            callback(this.pushTag("u"));
+            callback(this.pushTag('u'));
         }
         if ((4 < code && code < 7)) {
-            callback(this.pushTag("blink"));
+            callback(this.pushTag('blink'));
         }
         if (code === 8) {
-            callback(this.pushStyle("display:none"));
+            callback(this.pushStyle('display:none'));
         }
         if (code === 9) {
-            callback(this.pushTag("strike"));
+            callback(this.pushTag('strike'));
         }
         if (code === 24) {
-            callback(this.closeTag("u"));
+            callback(this.closeTag('u'));
         }
         if ((29 < code && code < 38)) {
-            callback(this.pushStyle("ef" + (code - 30)));
+            callback(this.pushStyle('ef' + (code - 30)));
         }
         if (code === 39) {
-            callback(this.pushStyle("color:" + this.opts.fg));
+            callback(this.pushStyle('color:' + this.opts.fg));
         }
         if ((39 < code && code < 48)) {
-            callback(this.pushStyle("eb" + (code - 40)));
+            callback(this.pushStyle('eb' + (code - 40)));
         }
         if (code === 49) {
-            callback(this.pushStyle("background-color:" + this.opts.bg));
+            callback(this.pushStyle('background-color:' + this.opts.bg));
         }
         if ((89 < code && code < 98)) {
-            callback(this.pushStyle("ef" + (8 + (code - 90))));
+            callback(this.pushStyle('ef' + (8 + (code - 90))));
         }
         if ((99 < code && code < 108)) {
-            return callback(this.pushStyle("eb" + (8 + (code - 100))));
+            return callback(this.pushStyle('eb' + (8 + (code - 100))));
         }
     }
 
     private categoryForCode(code: any) {
         code = parseInt(code, 10);
         if (code === 0) {
-            return "all";
+            return 'all';
         } else if (code === 1) {
-            return "bold";
+            return 'bold';
         } else if ((2 < code && code < 5)) {
-            return "underline";
+            return 'underline';
         } else if ((4 < code && code < 7)) {
-            return "blink";
+            return 'blink';
         } else if (code === 8) {
-            return "hide";
+            return 'hide';
         } else if (code === 9) {
-            return "strike";
+            return 'strike';
         } else if ((29 < code && code < 38) || code === 39 || (89 < code && code < 98)) {
-            return "foreground-color";
+            return 'foreground-color';
         } else if ((39 < code && code < 48) || code === 49 || (99 < code && code < 108)) {
-            return "background-color";
+            return 'background-color';
         } else {
             return null;
         }
@@ -228,13 +228,13 @@ export class Convert {
 
     private pushTag(tag: any, style?: any) {
         if (style == null) {
-            style = "";
+            style = '';
         }
-        if (style.length && style.indexOf(":") === -1) {
+        if (style.length && style.indexOf(':') === -1) {
             style = STYLES[style];
         }
         this.stack.push(tag);
-        return ["<" + tag, (style ? " style=\"" + style + "\"" : void 0), ">"].join("");
+        return ['<' + tag, (style ? ' style=\"' + style + '\"' : void 0), '>'].join('');
     }
 
     private pushText(text: any) {
@@ -246,7 +246,7 @@ export class Convert {
     }
 
     private pushStyle(style: any) {
-        return this.pushTag("span", style);
+        return this.pushTag('span', style);
     }
 
     private closeTag(style: any) {
@@ -255,52 +255,52 @@ export class Convert {
             last = this.stack.pop();
         }
         if (last != null) {
-            return "</" + style + ">";
+            return '</' + style + '>';
         }
     }
 
     private resetStyles() {
         const ref = [this.stack, []], stack = ref[0];
         this.stack = ref[1];
-        return stack.reverse().map(function(tag) {
-            return "</" + tag + ">";
-        }).join("");
+        return stack.reverse().map(function (tag) {
+            return '</' + tag + '>';
+        }).join('');
     }
 
     private tokenize(text: any, callback: any) {
         let ansiMatch = false;
         const ansiHandler = 3;
-        const remove = function(m: any) {
-            return "";
+        const remove = function (m: any) {
+            return '';
         };
-        const removeXterm256 = function(m: any, g1: any) {
-            callback("xterm256", g1);
-            return "";
+        const removeXterm256 = function (m: any, g1: any) {
+            callback('xterm256', g1);
+            return '';
         };
         const newline = (m: any) => {
             if (this.opts.newline) {
-                callback("display", -1);
+                callback('display', -1);
             } else {
-                callback("text", m);
+                callback('text', m);
             }
-            return "";
+            return '';
         };
-        const ansiMess = function(m: any, g1: any) {
+        const ansiMess = function (m: any, g1: any) {
             ansiMatch = true;
             let code: any;
             if (g1.trim().length === 0) {
-                g1 = "0";
+                g1 = '0';
             }
-            g1 = g1.trimRight(";").split(";");
+            g1 = g1.trimRight(';').split(';');
             for (let o = 0, len = g1.length; o < len; o++) {
                 code = g1[o];
-                callback("display", code);
+                callback('display', code);
             }
-            return "";
+            return '';
         };
-        const realText = function(m: any) {
-            callback("text", m);
-            return "";
+        const realText = function (m: any) {
+            callback('text', m);
+            return '';
         };
         const tokens = [
             {
@@ -326,7 +326,7 @@ export class Convert {
                 sub: realText
             }
         ];
-        const process = function(handler: any, i: any) {
+        const process = function (handler: any, i: any) {
             if (i > ansiHandler && ansiMatch) {
                 return;
             } else {

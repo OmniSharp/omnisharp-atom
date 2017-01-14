@@ -1,13 +1,13 @@
-import _ from "lodash";
-import * as path from "path";
-import {Observable, AsyncSubject, BehaviorSubject, Scheduler, Subject} from "rxjs";
-import {RefCountDisposable, IDisposable, Disposable, CompositeDisposable} from "ts-disposables";
-import {Solution} from "./solution";
-import {AtomProjectTracker} from "./atom-projects";
-import {SolutionObserver, SolutionAggregateObserver} from "./composite-solution";
-import {DriverState, findCandidates, Runtime, Candidate} from "omnisharp-client";
-import {GenericSelectListView} from "../views/generic-list-view";
-import {OmnisharpTextEditor, isOmnisharpTextEditor, OmnisharpEditorContext} from "./omnisharp-text-editor";
+import { defer, delay, difference, each, endsWith, filter, find, intersection, pull, some, take } from 'lodash';
+import { findCandidates, Candidate, DriverState, Runtime } from 'omnisharp-client';
+import * as path from 'path';
+import { AsyncSubject, BehaviorSubject, Observable, Scheduler, Subject } from 'rxjs';
+import { CompositeDisposable, Disposable, IDisposable, RefCountDisposable } from 'ts-disposables';
+import { GenericSelectListView } from '../views/generic-list-view';
+import { AtomProjectTracker } from './atom-projects';
+import { SolutionAggregateObserver, SolutionObserver } from './composite-solution';
+import { isOmnisharpTextEditor, IOmnisharpTextEditor, OmnisharpEditorContext } from './omnisharp-text-editor';
+import { Solution } from './solution';
 
 type REPOSITORY = { getWorkingDirectory(): string; };
 const SOLUTION_LOAD_TIME = 30000;
@@ -46,7 +46,7 @@ class SolutionInstanceManager {
     private _activeSearch: Promise<any>;
 
     // These extensions only support server per folder, unlike normal cs files.
-    private _specialCaseExtensions = [".csx", /*".cake"*/];
+    private _specialCaseExtensions = ['.csx', /*".cake"*/];
     public get __specialCaseExtensions() { return this._specialCaseExtensions; }
 
     private _activeSolutions: Solution[] = [];
@@ -77,7 +77,7 @@ class SolutionInstanceManager {
         return this._activatedSubject;
     }
 
-    public activate(activeEditor: Observable<OmnisharpTextEditor>) {
+    public activate(activeEditor: Observable<IOmnisharpTextEditor>) {
         if (this._activated) return;
 
         this._disposable = new CompositeDisposable();
@@ -145,9 +145,9 @@ class SolutionInstanceManager {
                             .toArray()
                             .toPromise()
                             .then(repos => {
-                                const newCandidates = _.difference(candidates.map(z => z.path), fromIterator(this._solutions.keys())).map(z => _.find(candidates, { path: z }))
+                                const newCandidates = difference(candidates.map(z => z.path), fromIterator(this._solutions.keys())).map(z => find(candidates, { path: z }))
                                     .map(({ path, isProject, originalFile }) => {
-                                        const found = _.find(repos, x => x.candidate.path === path);
+                                        const found = find(repos, x => x.candidate.path === path);
                                         const repo = found && found.repo;
                                         return { path, isProject, repo, originalFile };
                                     });
@@ -171,7 +171,7 @@ class SolutionInstanceManager {
 
     private _addSolution(candidate: string, repo: REPOSITORY, isProject: boolean, {temporary = false, project, originalFile}: { delay?: number; temporary?: boolean; project?: string; originalFile?: string; }) {
         const projectPath = candidate;
-        if (_.endsWith(candidate, ".sln")) {
+        if (endsWith(candidate, '.sln')) {
             candidate = path.dirname(candidate);
         }
 
@@ -190,11 +190,11 @@ class SolutionInstanceManager {
         }
 
         solution = new Solution({
-            projectPath: projectPath,
+            projectPath,
             index: ++this._nextIndex,
-            temporary: temporary,
+            temporary,
             repository: <any>repo,
-            runtime: _.endsWith(originalFile, ".csx") ? Runtime.ClrOrMono : Runtime.CoreClr
+            runtime: endsWith(originalFile, '.csx') ? Runtime.ClrOrMono : Runtime.ClrOrMono
         });
 
         if (!isProject) {
@@ -213,7 +213,7 @@ class SolutionInstanceManager {
 
         cd.add(Disposable.create(() => {
             this._solutionDisposable.remove(cd);
-            _.pull(this._activeSolutions, solution);
+            pull(this._activeSolutions, solution);
             this._solutions.delete(candidate);
 
             if (this._temporarySolutions.has(solution)) {
@@ -265,6 +265,7 @@ class SolutionInstanceManager {
             .take(1)
             .map(() => solution)
             .timeout(SOLUTION_LOAD_TIME, Scheduler.queue) // Wait 30 seconds for the project to load.
+            .onErrorResumeNext()
             .subscribe(() => {
                 // We loaded successfully return the solution
                 result.next(solution);
@@ -278,7 +279,7 @@ class SolutionInstanceManager {
     }
 
     private _removeSolution(candidate: string) {
-        if (_.endsWith(candidate, ".sln")) {
+        if (endsWith(candidate, '.sln')) {
             candidate = path.dirname(candidate);
         }
 
@@ -305,7 +306,7 @@ class SolutionInstanceManager {
             // No text editor found
             return Observable.empty<Solution>();
 
-        const isFolderPerFile = _.some(this.__specialCaseExtensions, ext => _.endsWith(path, ext));
+        const isFolderPerFile = some(this.__specialCaseExtensions, ext => endsWith(path, ext));
 
         const location = path;
         if (!location) {
@@ -327,7 +328,7 @@ class SolutionInstanceManager {
 
     private _setupEditorWithContext(editor: Atom.TextEditor, solution: Solution) {
         const context = new OmnisharpEditorContext(editor, solution);
-        const result: OmnisharpTextEditor = <any>editor;
+        const result: IOmnisharpTextEditor = <any>editor;
         this._disposable.add(context);
 
         if (solution && !context.temp && this._temporarySolutions.has(solution)) {
@@ -364,7 +365,7 @@ class SolutionInstanceManager {
             const solution = editor.omnisharp.solution;
 
             // If the solution has disconnected, reconnect it
-            if (solution.currentState === DriverState.Disconnected && atom.config.get("omnisharp-atom.autoStartOnCompatibleFile"))
+            if (solution.currentState === DriverState.Disconnected && atom.config.get('omnisharp-atom.autoStartOnCompatibleFile'))
                 solution.connect();
 
             // Client is in an invalid state
@@ -375,7 +376,7 @@ class SolutionInstanceManager {
             return Observable.of(solution);
         }
 
-        const isFolderPerFile = _.some(this.__specialCaseExtensions, ext => _.endsWith(editor.getPath(), ext));
+        const isFolderPerFile = some(this.__specialCaseExtensions, ext => endsWith(editor.getPath(), ext));
         const solution = this._getSolutionForUnderlyingPath(location, isFolderPerFile);
         if (solution) {
             this._setupEditorWithContext(editor, solution);
@@ -383,7 +384,7 @@ class SolutionInstanceManager {
         }
 
         return this._findSolutionForUnderlyingPath(location, isFolderPerFile)
-            .do((sln) => this._setupEditorWithContext(editor, sln));
+            .do(sln => this._setupEditorWithContext(editor, sln));
     }
 
     private _isPartOfAnyActiveSolution<T>(location: string, cb: (intersect: string, solution: Solution) => T) {
@@ -436,17 +437,17 @@ class SolutionInstanceManager {
 
         const segments = location.split(path.sep);
         const mappedLocations = segments.map((loc, index) => {
-            return _.take(segments, index + 1).join(path.sep);
+            return take(segments, index + 1).join(path.sep);
         });
 
-        for (let l of mappedLocations) {
+        for (const l of mappedLocations) {
             if (this._findSolutionCache.has(l)) {
                 return this._findSolutionCache.get(l);
             }
         }
 
         const subject = new AsyncSubject<Solution>();
-        _.each(mappedLocations, l => {
+        each(mappedLocations, l => {
             this._findSolutionCache.set(l, <Observable<Solution>><any>subject);
             subject.subscribe({ complete: () => this._findSolutionCache.delete(l) });
         });
@@ -456,7 +457,7 @@ class SolutionInstanceManager {
             // We only want to search for solutions after the main solutions have been processed.
             // We can get into this race condition if the user has windows that were opened previously.
             if (!this._activated) {
-                _.delay(cb, SOLUTION_LOAD_TIME);
+                delay(cb, SOLUTION_LOAD_TIME);
                 return;
             }
 
@@ -473,15 +474,16 @@ class SolutionInstanceManager {
             this._activeSearch.then(() => Observable.from(candidates)
                 .flatMap(x => this._findRepositoryForPath(x.path), (candidate, repo) => ({ candidate, repo }))
                 .toArray()
-                .toPromise())
+                .toPromise()
                 .then(repos => {
-                    const newCandidates = _.difference(candidates.map(z => z.path), fromIterator(this._solutions.keys())).map(z => _.find(candidates, { path: z }))
+                    const newCandidates = difference(candidates.map(z => z.path), fromIterator(this._solutions.keys())).map(z => find(candidates, { path: z }))
                         .map(({ path, isProject, originalFile }) => {
-                            const found = _.find(repos, x => x.candidate.path === path);
+                            const found = find(repos, x => x.candidate.path === path);
                             const repo = found && found.repo;
                             return { path, isProject, repo, originalFile };
                         });
-                    addCandidatesInOrder(newCandidates, (candidate, repo, isProject, originalFile) => this._addSolution(candidate, repo, isProject, { temporary: !project, originalFile }))
+                    addCandidatesInOrder(newCandidates,
+                        (candidate, repo, isProject, originalFile) => this._addSolution(candidate, repo, isProject, { temporary: !project, originalFile }))
                         .then(() => {
                             if (!isFolderPerFile) {
                                 // Attempt to see if this file is part a solution
@@ -490,7 +492,7 @@ class SolutionInstanceManager {
                                     subject.complete();
                                     return;
                                 });
-                                if (r) return;
+                                if (r) { return; }
                             }
 
                             const intersect = this._intersectPath(location) || this._intersectAtomProjectPath(location);
@@ -503,7 +505,7 @@ class SolutionInstanceManager {
                             }
                             subject.complete();
                         });
-                });
+                }));
         };
 
         this._candidateFinder(directory).subscribe(cb);
@@ -513,21 +515,21 @@ class SolutionInstanceManager {
 
     private _candidateFinder(directory: string) {
         return findCandidates.withCandidates(directory, this.logger, {
-            solutionIndependentSourceFilesToSearch: this.__specialCaseExtensions.map(z => "*" + z)
+            independentSourceFilesToSearch: this.__specialCaseExtensions.map(z => '*' + z)
         })
             .flatMap(candidates => {
-                const slns = _.filter(candidates, x => _.endsWith(x.path, ".sln"));
+                const slns = filter(candidates, x => endsWith(x.path, '.sln'));
                 if (slns.length > 1) {
-                    const items = _.difference(candidates, slns);
+                    const items = difference(candidates, slns);
                     const asyncResult = new AsyncSubject<typeof candidates>();
                     asyncResult.next(items);
 
                     // handle multiple solutions.
-                    const listView = new GenericSelectListView("",
+                    const listView = new GenericSelectListView('',
                         slns.map(x => ({ displayName: x.path, name: x.path })),
                         (result: any) => {
                             items.unshift(...slns.filter(x => x.path === result));
-                            _.each(candidates, x => {
+                            each(candidates, x => {
                                 this._candidateFinderCache.add(x.path);
                             });
 
@@ -538,22 +540,22 @@ class SolutionInstanceManager {
                         }
                     );
 
-                    listView.message.text("Please select a solution to load.");
+                    listView.message.text('Please select a solution to load.');
 
                     // Show the view
                     if (openSelectList) {
                         openSelectList.onClosed.subscribe(() => {
-                            if (!_.some(slns, x => this._candidateFinderCache.has(x.path))) {
-                                _.defer(() => listView.toggle());
+                            if (!some(slns, x => this._candidateFinderCache.has(x.path))) {
+                                defer(() => listView.toggle());
                             } else {
                                 asyncResult.complete();
                             }
                         });
                     } else {
-                        _.defer(() => listView.toggle());
+                        defer(() => listView.toggle());
                     }
 
-                    asyncResult.do({ complete: () => openSelectList = null });
+                    asyncResult.do({ complete: () => { openSelectList = null; } });
                     openSelectList = listView;
 
                     return <Observable<typeof candidates>><any>asyncResult;
@@ -573,13 +575,13 @@ class SolutionInstanceManager {
 
         const segments = location.split(path.sep);
         const mappedLocations = segments.map((loc, index) => {
-            return _.take(segments, index + 1).join(path.sep);
+            return take(segments, index + 1).join(path.sep);
         });
 
         // Look for the closest match first.
         mappedLocations.reverse();
 
-        const intersect: string = _.intersection(mappedLocations, validSolutionPaths)[0];
+        const intersect: string = intersection(mappedLocations, validSolutionPaths)[0];
         if (intersect) {
             return intersect;
         }

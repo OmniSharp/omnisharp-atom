@@ -1,13 +1,13 @@
-import * as spacePen from "atom-space-pen-views";
-import _ from "lodash";
-import {AsyncSubject} from "rxjs";
+import * as spacePen from 'atom-space-pen-views';
+import { sortBy } from 'lodash';
+import { AsyncSubject } from 'rxjs';
 
 export class GenericSelectListView extends spacePen.SelectListView {
     public static content() {
         return this.div({}, () => {
             this.p({
-                outlet: "message"
-            }, "");
+                outlet: 'message'
+            }, '');
 
             (<any>spacePen.SelectListView).content.call(this);
         });
@@ -29,14 +29,14 @@ export class GenericSelectListView extends spacePen.SelectListView {
 
     public initialize() {
         (<any>spacePen.SelectListView).prototype.initialize.call(this);
-        this.addClass("generic-list");
+        this.addClass('generic-list');
         this.message.text(this.messageText);
 
         return false;
     }
 
     public getFilterKey() {
-        return "displayName";
+        return 'displayName';
     }
 
     public cancelled() {
@@ -70,7 +70,7 @@ export class GenericSelectListView extends spacePen.SelectListView {
         });
 
         // infer the generator somehow? based on the project information?  store in the project system??
-        const commands = _.sortBy(this._items, x => x.displayName);
+        const commands = sortBy(this._items, x => x.displayName);
         this.setItems(commands);
         this.focusFilterEditor();
     }
@@ -87,10 +87,10 @@ export class GenericSelectListView extends spacePen.SelectListView {
     }
 
     public viewForItem(item: { displayName: string; name: string; }) {
-        return spacePen.$$(function() {
+        return spacePen.$$(function () {
             return this.li({
-                "class": "event",
-                "data-event-name": item.name
+                'class': 'event',
+                'data-event-name': item.name
             }, () => {
                 return this.span(item.displayName, {
                     title: item.name

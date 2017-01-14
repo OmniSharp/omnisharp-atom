@@ -1,10 +1,10 @@
-import _ from "lodash";
-import {Observable} from "rxjs";
-import {Omni} from "../server/omni";
-import {SolutionManager} from "../server/solution-manager";
-import {ajax} from "jquery";
-const filter = require("fuzzaldrin").filter;
-import {Runtime} from "omnisharp-client";
+import { ajax } from 'jquery';
+import { some, trim, find, startsWith, findKey, flatMap, sortBy, uniq, map } from 'lodash';
+import { Observable } from 'rxjs';
+import { Omni } from '../server/omni';
+import { SolutionManager } from '../server/solution-manager';
+const filter = require('fuzzaldrin').filter;
+import { Runtime } from 'omnisharp-client';
 
 const cache = new Map<string, { prefix?: string; results: string[] }>();
 const versionCache = new Map<string, any>();
@@ -12,14 +12,14 @@ Omni.listener.packagesource
     .flatMap(z => z.response && z.response.Sources || [])
     .subscribe((source: string) => {
         if (!cache.get(source))
-            fetchFromGithub(source, "_keys", "").subscribe(result => {
+            fetchFromGithub(source, '_keys', '').subscribe(result => {
                 cache.set(source, result);
             });
     });
 
 function fetchFromGithub(source: string, prefix: string, searchPrefix: string): Observable<{ prefix?: string; results: string[] }> {
     // We precache the keys to make this speedy
-    if (prefix === "_keys" && cache.has(source)) {
+    if (prefix === '_keys' && cache.has(source)) {
         return Observable.of(cache.get(source));
     }
 
@@ -30,7 +30,7 @@ function fetchFromGithub(source: string, prefix: string, searchPrefix: string): 
             return Observable.of(c);
         }
 
-        if (!_.some(c.results, x => x.toLowerCase() === prefix.toLowerCase() + ".")) {
+        if (!some(c.results, x => x.toLowerCase() === prefix.toLowerCase() + '.')) {
             return Observable.of({ results: [] });
         }
     }
@@ -41,28 +41,28 @@ function fetchFromGithub(source: string, prefix: string, searchPrefix: string): 
     const realSource = source;
 
     // This is the same convention used by omnisharp-nuget build tool
-    source = _.trim(source, "/").replace("www.", "").replace("https://", "").replace("http://", "").replace(/\/|\:/g, "-");
+    source = trim(source, '/').replace('www.', '').replace('https://', '').replace('http://', '').replace(/\/|\:/g, '-');
 
     // Get the file from github
     let result = ajax(`https://raw.githubusercontent.com/OmniSharp/omnisharp-nuget/resources/resources/${source}/${prefix.toLowerCase()}.json`).then(res => JSON.parse(res), () => { /* */ });
 
     // The non key files have an object layout
-    if (prefix !== "_keys") {
-        const sp = searchPrefix.split(".");
-        const filePrefix = sp.slice(1, sp.length - 1).join(".").toLowerCase();
+    if (prefix !== '_keys') {
+        const sp = searchPrefix.split('.');
+        const filePrefix = sp.slice(1, sp.length - 1).join('.').toLowerCase();
         result = result.then((value: { _keys: string[];[key: string]: string[] }) => {
-            const k = _.find(cache.get(realSource).results, x => x.toLowerCase() === prefix.toLowerCase());
+            const k = find(cache.get(realSource).results, x => x.toLowerCase() === prefix.toLowerCase());
             if (!filePrefix) {
                 return { prefix: k, results: value._keys };
             } else {
-                const v = (<any>_).findKey(value, (x: any, key: string) => key.toLowerCase() === filePrefix),
-                    p = `${k}.${v}`;
+                const v = findKey(value, (x: any, key: string) => key.toLowerCase() === filePrefix);
+                const p = `${k}.${v}`;
 
                 return { prefix: k && v && p, results: value[v] || [] };
             }
         });
     } else {
-        result = result.then((results) => ({ prefix: "", results }));
+        result = result.then(results => ({ prefix: '', results }));
     }
 
     // Return the result
@@ -87,12 +87,12 @@ interface IAutocompleteProvider {
 }
 
 function makeSuggestion(item: string, path: string, replacementPrefix: string) {
-    const type = "package";
+    const type = 'package';
 
-    const r = replacementPrefix.split(".");
-    let rs = r.slice(0, r.length - 1).join(".");
-    if (rs.length) rs += ".";
-    if (path.length) path += ".";
+    const r = replacementPrefix.split('.');
+    let rs = r.slice(0, r.length - 1).join('.');
+    if (rs.length) rs += '.';
+    if (path.length) path += '.';
 
     return {
         _search: item,
@@ -101,12 +101,12 @@ function makeSuggestion(item: string, path: string, replacementPrefix: string) {
         type: type,
         displayText: item,
         replacementPrefix,//: `${rs}${item}`,
-        className: "autocomplete-project-json",
+        className: 'autocomplete-project-json',
     };
 }
 
 function makeSuggestion2(item: string, replacementPrefix: string) {
-    const type = "version";
+    const type = 'version';
 
     return {
         _search: item,
@@ -115,7 +115,7 @@ function makeSuggestion2(item: string, replacementPrefix: string) {
         type: type,
         displayText: item,
         replacementPrefix,
-        className: "autocomplete-project-json",
+        className: 'autocomplete-project-json',
     };
 }
 
@@ -123,12 +123,14 @@ const nameRegex = /\/?dependencies$/;
 const versionRegex = /\/?dependencies\/([a-zA-Z0-9\._]*?)(?:\/version)?$/;
 
 class NugetNameProvider implements IAutocompleteProvider {
+    public fileMatchs = ['project.json'];
+
     public getSuggestions(options: IAutocompleteProviderOptions) {
 
-        const searchTokens = options.replacementPrefix.split(".");
+        const searchTokens = options.replacementPrefix.split('.');
         let packagePrefix: string;
-        if (options.replacementPrefix.indexOf(".") > -1) {
-            packagePrefix = options.replacementPrefix.split(".")[0];
+        if (options.replacementPrefix.indexOf('.') > -1) {
+            packagePrefix = options.replacementPrefix.split('.')[0];
         }
 
         return SolutionManager.getSolutionForEditor(options.editor)
@@ -138,7 +140,7 @@ class NugetNameProvider implements IAutocompleteProvider {
             .flatMap(z => z.model.packageSources)
             .flatMap(source => {
                 // Attempt to get the source from github
-                return fetchFromGithub(source, packagePrefix || "_keys", options.replacementPrefix)
+                return fetchFromGithub(source, packagePrefix || '_keys', options.replacementPrefix)
                     .flatMap(z => {
                         if (!z) {
                             // fall back to the server if source isn"t found
@@ -148,7 +150,7 @@ class NugetNameProvider implements IAutocompleteProvider {
                                 IncludePrerelease: true,
                                 ProjectPath: solution.path,
                                 Sources: [source],
-                            })).map(x => ({ prefix: "", results: x.Packages.map(item => item.Id) }));
+                            })).map(x => ({ prefix: '', results: x.Packages.map(item => item.Id) }));
                         } else {
                             return Observable.of(z);
                         }
@@ -156,21 +158,16 @@ class NugetNameProvider implements IAutocompleteProvider {
             })
             .toArray()
             .map(z => {
-                const prefix = _.find(z, x => !!x.prefix);
-                const p = prefix ? prefix.prefix : "";
-                return _(z.map(x => x.results))
-                    .flatten<string>()
-                    .sortBy()
-                    .uniq()
-                    .map(x =>
-                        makeSuggestion(x, p, options.replacementPrefix))
-                    .value();
+                const prefix = find(z, x => !!x.prefix);
+                const p = prefix ? prefix.prefix : '';
+
+                return map(sortBy(uniq(flatMap(z, c => c.results))),
+                    x => makeSuggestion(x, p, options.replacementPrefix));
             })
             .map(s =>
-                filter(s, searchTokens[searchTokens.length - 1], { key: "_search" }))
+                filter(s, searchTokens[searchTokens.length - 1], { key: '_search' }))
             .toPromise();
     }
-    public fileMatchs = ["project.json"];
     public pathMatch(path: string) {
         return path && !!path.match(nameRegex);
     }
@@ -194,7 +191,7 @@ class NugetVersionProvider implements IAutocompleteProvider {
                 .filter(z => {
                     if (cache.has(z)) {
                         // Short out early if the source doesn"t even have the given prefix
-                        return _.some(cache.get(z).results, x => _.startsWith(name, x));
+                        return some(cache.get(z).results, x => startsWith(name, x));
                     }
                     return true;
                 })
@@ -216,10 +213,10 @@ class NugetVersionProvider implements IAutocompleteProvider {
             .map(z => z.map(x =>
                 makeSuggestion2(x, options.replacementPrefix)))
             .map(s =>
-                filter(s, options.prefix, { key: "_search" }))
+                filter(s, options.prefix, { key: '_search' }))
             .toPromise();
     }
-    public fileMatchs = ["project.json"];
+    public fileMatchs = ['project.json'];
     public pathMatch(path: string) {
         return path && !!path.match(versionRegex);
     }

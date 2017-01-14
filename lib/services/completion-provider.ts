@@ -1,8 +1,8 @@
-import {Omni} from "../server/omni";
-import {Models} from "omnisharp-client";
-import _ from "lodash";
-import {CompositeDisposable, IDisposable} from "ts-disposables";
-const filter = require("fuzzaldrin").filter;
+import { trim, clone } from 'lodash';
+import { Models } from 'omnisharp-client';
+import { CompositeDisposable, IDisposable } from 'ts-disposables';
+import { Omni } from '../server/omni';
+const filter = require('fuzzaldrin').filter;
 
 interface RequestOptions {
     editor: Atom.TextEditor;
@@ -40,7 +40,7 @@ function calcuateMovement(previous: RequestOptions, current: RequestOptions) {
 }
 
 const autoCompleteOptions = <Models.AutoCompleteRequest>{
-    WordToComplete: "",
+    WordToComplete: '',
     WantDocumentationForEveryCompletionResult: false,
     WantKind: true,
     WantSnippet: true,
@@ -70,8 +70,8 @@ class CompletionProvider implements IDisposable {
     private previous: RequestOptions;
     private results: Promise<Models.AutoCompleteResponse[]>;
 
-    public selector = ".source.omnisharp";
-    public disableForSelector = ".source.omnisharp .comment";
+    public selector = '.source.omnisharp';
+    public disableForSelector = '.source.omnisharp .comment';
     public inclusionPriority = 1;
     public suggestionPriority = 10;
     public excludeLowerPriority = false;
@@ -83,7 +83,7 @@ class CompletionProvider implements IDisposable {
             this.results = null;
         }
 
-        if (this.results && options.prefix === "." || (options.prefix && !_.trim(options.prefix)) || !options.prefix || options.activatedManually) {
+        if (this.results && options.prefix === '.' || (options.prefix && !trim(options.prefix)) || !options.prefix || options.activatedManually) {
             this.results = null;
         }
 
@@ -100,14 +100,14 @@ class CompletionProvider implements IDisposable {
         }
 
         let search = options.prefix;
-        if (search === ".")
-            search = "";
+        if (search === '.')
+            search = '';
 
-        if (!this.results) this.results = Omni.request(solution => solution.autocomplete(_.clone(autoCompleteOptions))).toPromise();
+        if (!this.results) this.results = Omni.request(solution => solution.autocomplete(clone(autoCompleteOptions))).toPromise();
 
         let p = this.results;
         if (search)
-            p = p.then(s => filter(s, search, { key: "CompletionText" }));
+            p = p.then(s => filter(s, search, { key: 'CompletionText' }));
 
         return p.then(response => response.map(s => this._makeSuggestion(s)));
     }
@@ -132,17 +132,17 @@ class CompletionProvider implements IDisposable {
         // Clear when auto-complete is opening.
         // TODO: Update atom typings
         disposable.add(atom.commands.onWillDispatch((event: Event) => {
-            if (event.type === "autocomplete-plus:activate" || event.type === "autocomplete-plus:confirm" || event.type === "autocomplete-plus:cancel") {
+            if (event.type === 'autocomplete-plus:activate' || event.type === 'autocomplete-plus:confirm' || event.type === 'autocomplete-plus:cancel') {
                 this.results = null;
             }
         }));
 
         // TODO: Dispose of these when not needed
-        disposable.add(atom.config.observe("omnisharp-atom.useIcons", (value) => {
+        disposable.add(atom.config.observe('omnisharp-atom.useIcons', value => {
             this._useIcons = value;
         }));
 
-        disposable.add(atom.config.observe("omnisharp-atom.useLeftLabelColumnForSuggestions", (value) => {
+        disposable.add(atom.config.observe('omnisharp-atom.useLeftLabelColumnForSuggestions', value => {
             this._useLeftLabelColumnForSuggestions = value;
         }));
 
@@ -157,7 +157,7 @@ class CompletionProvider implements IDisposable {
             leftLabel = item.ReturnType;
         } else {
             description = renderReturnType(item.ReturnType);
-            leftLabel = "";
+            leftLabel = '';
         }
 
         if (this._useIcons === true) {
@@ -174,7 +174,7 @@ class CompletionProvider implements IDisposable {
             type: type,
             iconHTML: iconHTML,
             displayText: item.DisplayText,
-            className: "autocomplete-omnisharp-atom",
+            className: 'autocomplete-omnisharp-atom',
             description: description,
             leftLabel: leftLabel,
         };

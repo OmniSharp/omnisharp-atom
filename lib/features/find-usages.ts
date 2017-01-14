@@ -1,9 +1,9 @@
-import {Models} from "omnisharp-client";
-import {Observable, Subject} from "rxjs";
-import {CompositeDisposable, Disposable} from "ts-disposables";
-import {Omni} from "../server/omni";
-import {dock} from "../atom/dock";
-import {FindWindow} from "../views/find-pane-view";
+import {Models} from 'omnisharp-client';
+import {Observable, Subject} from 'rxjs';
+import {CompositeDisposable, Disposable} from 'ts-disposables';
+import {dock} from '../atom/dock';
+import {Omni} from '../server/omni';
+import {FindWindow} from '../views/find-pane-view';
 
 class FindUsages implements IFeature {
     private disposable: CompositeDisposable;
@@ -39,37 +39,37 @@ class FindUsages implements IFeature {
             find: observable,
             // NOTE: We cannot do the same for find implementations because find implementation
             //      just goes to the item if only one comes back.
-            open: Omni.listener.requests.filter(z => !z.silent && z.command === "findusages").map(() => true),
-            reset: Omni.listener.requests.filter(z => !z.silent && (z.command === "findimplementations" || z.command === "findusages")).map(() => true),
+            open: Omni.listener.requests.filter(z => !z.silent && z.command === 'findusages').map(() => true),
+            reset: Omni.listener.requests.filter(z => !z.silent && (z.command === 'findimplementations' || z.command === 'findusages')).map(() => true),
             selected: selected.asObservable()
         };
 
-        this.disposable.add(Omni.addTextEditorCommand("omnisharp-atom:find-usages", () => {
+        this.disposable.add(Omni.addTextEditorCommand('omnisharp-atom:find-usages', () => {
             Omni.request(solution => solution.findusages({}));
         }));
 
-        this.disposable.add(Omni.addTextEditorCommand("omnisharp-atom:go-to-implementation", () => {
+        this.disposable.add(Omni.addTextEditorCommand('omnisharp-atom:go-to-implementation', () => {
             Omni.request(solution => solution.findimplementations({}));
         }));
 
-        this.disposable.add(atom.commands.add("atom-workspace", "omnisharp-atom:next-usage", () => {
+        this.disposable.add(atom.commands.add('atom-workspace', 'omnisharp-atom:next-usage', () => {
             this._findWindow.next();
         }));
 
-        this.disposable.add(atom.commands.add("atom-workspace", "omnisharp-atom:go-to-usage", () => {
+        this.disposable.add(atom.commands.add('atom-workspace', 'omnisharp-atom:go-to-usage', () => {
             Omni.navigateTo(this._findWindow.current);
         }));
 
-        this.disposable.add(atom.commands.add("atom-workspace", "omnisharp-atom:previous-usage", () => {
+        this.disposable.add(atom.commands.add('atom-workspace', 'omnisharp-atom:previous-usage', () => {
             this._findWindow.prev();
         }));
 
-        this.disposable.add(atom.commands.add("atom-workspace", "omnisharp-atom:go-to-next-usage", () => {
+        this.disposable.add(atom.commands.add('atom-workspace', 'omnisharp-atom:go-to-next-usage', () => {
             this._findWindow.next();
             Omni.navigateTo(this._findWindow.current);
         }));
 
-        this.disposable.add(atom.commands.add("atom-workspace", "omnisharp-atom:go-to-previous-usage", () => {
+        this.disposable.add(atom.commands.add('atom-workspace', 'omnisharp-atom:go-to-previous-usage', () => {
             this._findWindow.prev();
             Omni.navigateTo(this._findWindow.current);
         }));
@@ -81,7 +81,7 @@ class FindUsages implements IFeature {
 
         this.disposable.add(Observable.merge(this.observe.find.map(z => true), this.observe.open.map(z => true)).subscribe(() => {
             this.ensureWindowIsCreated();
-            dock.selectWindow("find");
+            dock.selectWindow('find');
         }));
 
         this.disposable.add(this.observe.reset.subscribe(() => {
@@ -91,7 +91,7 @@ class FindUsages implements IFeature {
         }));
 
 
-        this.disposable.add(Omni.listener.findimplementations.subscribe((data) => {
+        this.disposable.add(Omni.listener.findimplementations.subscribe(data => {
             if (data.response.QuickFixes.length === 1) {
                 Omni.navigateTo(data.response.QuickFixes[0]);
             }
@@ -101,7 +101,7 @@ class FindUsages implements IFeature {
     private ensureWindowIsCreated() {
         if (!this.window) {
             this.window = new CompositeDisposable();
-            const windowDisposable = dock.addWindow("find", "Find", this._findWindow, { priority: 2000, closeable: true }, this.window);
+            const windowDisposable = dock.addWindow('find', 'Find', this._findWindow, { priority: 2000, closeable: true }, this.window);
             this.window.add(windowDisposable);
             this.window.add(Disposable.create(() => {
                 this.disposable.remove(this.window);
@@ -120,7 +120,7 @@ class FindUsages implements IFeature {
     }
 
     public required = true;
-    public title = "Find Usages / Go To Implementations";
-    public description = "Adds support to find usages, and go to implementations";
+    public title = 'Find Usages / Go To Implementations';
+    public description = 'Adds support to find usages, and go to implementations';
 }
 export const findUsages = new FindUsages;

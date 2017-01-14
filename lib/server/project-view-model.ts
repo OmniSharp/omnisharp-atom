@@ -1,26 +1,26 @@
-import {IProjectViewModel} from "../omnisharp";
-import {Models, ScriptCs} from "omnisharp-client";
-import _ from "lodash";
-import {Observable, ReplaySubject} from "rxjs";
+import { difference, each, filter, forIn, has, keys, map, startsWith } from 'lodash';
+import { Models, ScriptCs } from 'omnisharp-client';
+import { Observable, ReplaySubject } from 'rxjs';
+import { IProjectViewModel } from '../omnisharp';
 
 const projectFactories: { [key: string]: { new (project: any, solutionPath: string): any; }; } = {
     MsBuildProject: <any>MsBuildProjectViewModel,
     DotNetProject: <any>DotNetProjectViewModel
 };
 
-const supportedProjectTypes = _.keys(projectFactories);
+const supportedProjectTypes = keys(projectFactories);
 export function projectViewModelFactory(omnisharpProject: Models.ProjectInformationResponse, solutionPath: string) {
-    const projectTypes = _.filter(supportedProjectTypes, type => _.has(omnisharpProject, type));
-    const missing = _.difference(_.keys(omnisharpProject), supportedProjectTypes);
+    const projectTypes = filter(supportedProjectTypes, type => has(omnisharpProject, type));
+    const missing = difference(keys(omnisharpProject), supportedProjectTypes);
     if (missing.length) {
         console.log(`Missing factory for project type ${missing}`);
     }
 
     const results: ProjectViewModel<any>[] = [];
     let skipDnx = false;
-    if (projectTypes["DotNetProject"] && projectTypes["DnxProject"]) skipDnx = true;
-    _.each(projectTypes, projectType => {
-        if (skipDnx && _.startsWith(projectType, "Dnx")) return;
+    if (projectTypes['DotNetProject'] && projectTypes['DnxProject']) { skipDnx = true; }
+    each(projectTypes, projectType => {
+        if (skipDnx && startsWith(projectType, 'Dnx')) { return; }
         if (projectType && projectFactories[projectType]) {
             results.push(new projectFactories[projectType](omnisharpProject[projectType], solutionPath));
         }
@@ -30,10 +30,10 @@ export function projectViewModelFactory(omnisharpProject: Models.ProjectInformat
 
 const workspaceFactories: { [key: string]: (workspace: any, solutionPath: string) => ProjectViewModel<any>[] } = {
     MsBuild: (workspace: Models.MsBuildWorkspaceInformation, solutionPath: string) => {
-        return _.map(workspace.Projects, projectInformation => new MsBuildProjectViewModel(projectInformation, solutionPath));
+        return map(workspace.Projects, projectInformation => new MsBuildProjectViewModel(projectInformation, solutionPath));
     },
     DotNet: (workspace: Models.DotNetWorkspaceInformation, solutionPath: string) => {
-        return _.map(workspace.Projects, projectInformation => new DotNetProjectViewModel(projectInformation, solutionPath));
+        return map(workspace.Projects, projectInformation => new DotNetProjectViewModel(projectInformation, solutionPath));
     },
     ScriptCs: (workspace: ScriptCs.ScriptCsContextModel, solutionPath: string) => {
         /*if (workspace.CsxFiles.length > 0)
@@ -46,10 +46,10 @@ const workspaceFactories: { [key: string]: (workspace: any, solutionPath: string
 export function workspaceViewModelFactory(omnisharpWorkspace: Models.WorkspaceInformationResponse, solutionPath: string) {
     const projects: any[] = [];
     let skipDnx = false;
-    if (omnisharpWorkspace["DotNet"] && omnisharpWorkspace["Dnx"]) skipDnx = true;
-    _.forIn(omnisharpWorkspace, (item, key) => {
+    if (omnisharpWorkspace['DotNet'] && omnisharpWorkspace['Dnx']) skipDnx = true;
+    forIn(omnisharpWorkspace, (item, key) => {
         const factory = workspaceFactories[key];
-        if (skipDnx && _.startsWith(key, "Dnx")) return;
+        if (skipDnx && startsWith(key, 'Dnx')) return;
         if (factory) {
             projects.push(...factory(item, solutionPath));
         }
@@ -89,7 +89,7 @@ export abstract class ProjectViewModel<T> implements IProjectViewModel {
     public get filesSet() {
         if (!this._filesSet) {
             this._filesSet = new Set<string>();
-            _.each(this._sourceFiles, file => {
+            each(this._sourceFiles, file => {
                 this._filesSet.add(file);
             });
         }
@@ -106,15 +106,15 @@ export abstract class ProjectViewModel<T> implements IProjectViewModel {
     }
     public set activeFramework(value) {
         this._activeFramework = value;
-        if (!this._subjectActiveFramework.isUnsubscribed) {
+        if (!this._subjectActiveFramework.closed) {
             this._subjectActiveFramework.next(this._activeFramework);
         }
     }
 
-    private _frameworks: Models.DotNetFramework[] = [{ FriendlyName: "All", Name: "all", ShortName: "all" }];
+    private _frameworks: Models.DotNetFramework[] = [{ FriendlyName: 'All', Name: 'all', ShortName: 'all' }];
     public get frameworks() { return this._frameworks; }
     public set frameworks(value) {
-        this._frameworks = [{ FriendlyName: "All", Name: "all", ShortName: "all" }].concat(value);
+        this._frameworks = [{ FriendlyName: 'All', Name: 'all', ShortName: 'all' }].concat(value);
         if (!this.activeFramework) {
             this.activeFramework = this._frameworks[0];
         }
@@ -186,7 +186,7 @@ class DotNetProjectViewModel extends ProjectViewModel<Models.DotNetProjectInform
 
 class ScriptCsProjectViewModel extends ProjectViewModel<ScriptCs.ScriptCsContextModel> {
     public init(project: ScriptCs.ScriptCsContextModel) {
-        this.name = "ScriptCs";
+        this.name = 'ScriptCs';
         this.path = project.RootPath;
         this.sourceFiles = project.CsxFilesBeingProcessed;
     }

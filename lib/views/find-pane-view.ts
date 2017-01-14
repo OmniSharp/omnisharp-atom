@@ -1,16 +1,16 @@
 /* tslint:disable:no-string-literal */
-import {Models} from "omnisharp-client";
-import {Omni} from "../server/omni";
-import * as path from "path";
-import {OutputElement, MessageElement} from "./output-component";
-import {HighlightElement} from "./highlight-element";
+import {Models} from 'omnisharp-client';
+import * as path from 'path';
+import {Omni} from '../server/omni';
+import {HighlightElement} from './highlight-element';
+import {MessageElement, OutputElement} from './output-component';
 
 export interface FindMessageElement extends MessageElement<Models.DiagnosticLocation> { }
 
-const getMessageElement = (function() {
+const getMessageElement = (function () {
     const selectedProps = {
-        get: function selected() { return this.classList.contains("selected"); },
-        set: function selected(value: boolean) { if (value) this.classList.add("selected"); else this.classList.remove("selected"); }
+        get: function selected() { return this.classList.contains('selected'); },
+        set: function selected(value: boolean) { if (value) this.classList.add('selected'); else this.classList.remove('selected'); }
     };
 
     const keyProps = {
@@ -45,24 +45,24 @@ const getMessageElement = (function() {
     function detached() { this._inview = false; }
 
     return function getMessageElement(): FindMessageElement {
-        const element: FindMessageElement = <any>document.createElement("li");
-        element.classList.add("find-usages");
+        const element: FindMessageElement = <any>document.createElement('li');
+        element.classList.add('find-usages');
 
         const text = (element as any)._text = new HighlightElement();
-        text.classList.add("text-highlight");
+        text.classList.add('text-highlight');
         element.appendChild(text);
 
-        const location = (element as any)._location = document.createElement("pre");
-        location.classList.add("inline-block");
+        const location = (element as any)._location = document.createElement('pre');
+        location.classList.add('inline-block');
         element.appendChild(location);
 
-        const filename = (element as any)._filename = document.createElement("pre");
-        filename.classList.add("text-subtle", "inline-block");
+        const filename = (element as any)._filename = document.createElement('pre');
+        filename.classList.add('text-subtle', 'inline-block');
         element.appendChild(filename);
 
-        Object.defineProperty(element, "key", keyProps);
-        Object.defineProperty(element, "selected", selectedProps);
-        Object.defineProperty(element, "inview", inviewProps);
+        Object.defineProperty(element, 'key', keyProps);
+        Object.defineProperty(element, 'selected', selectedProps);
+        Object.defineProperty(element, 'inview', inviewProps);
         element.setMessage = setMessage;
         element.attached = attached;
         element.detached = detached;
@@ -72,20 +72,20 @@ const getMessageElement = (function() {
 })();
 
 export class FindWindow extends HTMLDivElement implements WebComponent {
-    public displayName = "FindPaneWindow";
+    public displayName = 'FindPaneWindow';
     private _list: OutputElement<Models.QuickFix, FindMessageElement>;
 
     public createdCallback() {
-        this.classList.add("find-output-pane");
+        this.classList.add('find-output-pane');
         this._list = new OutputElement<Models.QuickFix, FindMessageElement>();
         this.appendChild(this._list);
         this._list.getKey = (usage: Models.QuickFix) => {
-            return `quick-fix-${usage.FileName}-(${usage.Line}-${usage.Column})-(${usage.EndLine}-${usage.EndColumn})-(${usage.Projects.join("-")})`;
+            return `quick-fix-${usage.FileName}-(${usage.Line}-${usage.Column})-(${usage.EndLine}-${usage.EndColumn})-(${usage.Projects.join('-')})`;
         };
         this._list.handleClick = (item: Models.QuickFix) => {
             this.gotoUsage(item);
         };
-        this._list.eventName = "usage";
+        this._list.eventName = 'usage';
         this._list.elementFactory = getMessageElement;
     }
 
@@ -118,4 +118,4 @@ export class FindWindow extends HTMLDivElement implements WebComponent {
     }
 }
 
-(<any>exports).FindWindow = (<any>document).registerElement("omnisharp-find-window", { prototype: FindWindow.prototype });
+(<any>exports).FindWindow = (<any>document).registerElement('omnisharp-find-window', { prototype: FindWindow.prototype });

@@ -1,4 +1,4 @@
-import * as spacePen from "atom-space-pen-views";
+import * as spacePen from 'atom-space-pen-views';
 const $ = spacePen.jQuery;
 
 interface Rect {
@@ -11,8 +11,8 @@ interface Rect {
 export class TooltipView extends spacePen.View {
 
     public static content() {
-        return this.div({ class: "atom-typescript-tooltip tooltip" }, () => {
-            this.div({ class: "tooltip-inner", outlet: "inner" });
+        return this.div({ class: 'atom-typescript-tooltip tooltip' }, () => {
+            this.div({ class: 'tooltip-inner', outlet: 'inner' });
         });
     }
 
@@ -26,7 +26,7 @@ export class TooltipView extends spacePen.View {
 
     public updateText(text: string) {
         this.inner.html(text);
-        this.inner.css({ "white-space": "pre", "text-align": "left" });
+        this.inner.css({ 'white-space': 'pre', 'text-align': 'left' });
         this.updatePosition();
         (<any>this).fadeTo(300, 1);
     }
@@ -41,7 +41,7 @@ export class TooltipView extends spacePen.View {
         if (left + this[0].offsetWidth >= $(document.body).width())
             left = $(document.body).width() - this[0].offsetWidth - offset;
         if (left < 0) {
-            this.css({ "white-space": "pre-wrap" });
+            this.css({ 'white-space': 'pre-wrap' });
             left = offset;
             right = offset;
         }

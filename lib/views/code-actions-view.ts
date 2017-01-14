@@ -1,11 +1,11 @@
-import * as SpacePen from "atom-space-pen-views";
+import * as SpacePen from 'atom-space-pen-views';
 
 export interface SelectListViewOptions<T> {
     items: T[];
     confirmed: (item: T) => any;
 }
 
-export default function <T>(options: SelectListViewOptions<T>, editor: Atom.TextEditor): CodeActionsView<T> {
+export  function factory <T> (options: SelectListViewOptions<T>, editor: Atom.TextEditor): CodeActionsView<T> {
     let codeActionView = (<any>editor).codeActionView;
     if (!codeActionView) {
         (<any>editor).codeActionView = codeActionView = new CodeActionsView<T>(options, editor);
@@ -27,9 +27,9 @@ class CodeActionsView<T> extends SpacePen.SelectListView {
     constructor(public options: SelectListViewOptions<T>, public editor: Atom.TextEditor) {
         super();
         this._editorElement = atom.views.getView(editor);
-        this._vimMode = atom.packages.isPackageActive("vim-mode");
-        this.$.addClass("code-actions-overlay");
-        (<any>this).filterEditorView.model.placeholderText = "Filter list";
+        this._vimMode = atom.packages.isPackageActive('vim-mode');
+        this.$.addClass('code-actions-overlay');
+        (<any>this).filterEditorView.model.placeholderText = 'Filter list';
     }
 
     get $(): JQuery {
@@ -55,7 +55,7 @@ class CodeActionsView<T> extends SpacePen.SelectListView {
         this.disableVimMode();
         this.destroyOverlay();
         this._overlayDecoration = this.editor.decorateMarker(this.editor.getLastCursor().getMarker(),
-            { type: "overlay", position: "tail", item: this });
+            { type: 'overlay', position: 'tail', item: this });
 
         setTimeout(() => this.focusFilterEditor(), 100);
     }
@@ -78,24 +78,24 @@ class CodeActionsView<T> extends SpacePen.SelectListView {
 
     public enableVimMode() {
         if (this._vimMode) {
-            this._editorElement.classList.add("vim-mode");
+            this._editorElement.classList.add('vim-mode');
         }
     }
 
     public disableVimMode() {
         if (this._vimMode) {
-            this._editorElement.classList.remove("vim-mode");
+            this._editorElement.classList.remove('vim-mode');
         }
     }
 
-    public getFilterKey() { return "Name"; }
+    public getFilterKey() { return 'Name'; }
 
     public viewForItem(item: any) {
 
-        return SpacePen.$$(function() {
+        return SpacePen.$$(function () {
             return this.li({
-                "class": "event",
-                "data-event-name": item.Name
+                'class': 'event',
+                'data-event-name': item.Name
             }, () => {
                 return this.span(item.Name, {
                     title: item.Name

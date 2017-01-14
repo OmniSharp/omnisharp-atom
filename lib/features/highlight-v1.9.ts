@@ -1,19 +1,18 @@
 /* tslint:disable:no-string-literal */
-import {Models} from "omnisharp-client";
-import {Omni} from "../server/omni";
-import {OmnisharpTextEditor, isOmnisharpTextEditor} from "../server/omnisharp-text-editor";
-import {each, extend, has, some, range, remove, pull, find, chain, uniq, findIndex, every, isEqual, min, debounce, sortBy, uniqueId, filter} from "lodash";
-import {Observable, Subject, ReplaySubject, BehaviorSubject, Subscriber} from "rxjs";
-import {CompositeDisposable, Disposable} from "ts-disposables";
-import {registerContextItem} from "../server/omnisharp-text-editor";
+import {chain, debounce, each, every, extend, filter, find, findIndex, has, isEqual, min, pull, range, remove, some, sortBy, uniq, uniqueId} from 'lodash';
+import {Models} from 'omnisharp-client';
+import {BehaviorSubject, Observable, ReplaySubject, Subject, Subscriber} from 'rxjs';
+import {CompositeDisposable, Disposable} from 'ts-disposables';
+import {Omni} from '../server/omni';
+import {isOmnisharpTextEditor, IOmnisharpTextEditor} from '../server/omnisharp-text-editor';
+import {registerContextItem} from '../server/omnisharp-text-editor';
 /* tslint:disable:variable-name */
-const AtomGrammar = require((<any>atom).config.resourcePath + "/node_modules/first-mate/lib/grammar.js");
+const AtomGrammar = require((<any>atom).config.resourcePath + '/node_modules/first-mate/lib/grammar.js');
 /* tslint:enable:variable-name */
 const DEBOUNCE_TIME = 240/*240*/;
-let fastdom: typeof Fastdom = require("fastdom");
 
-const HIGHLIGHT = "HIGHLIGHT",
-    HIGHLIGHT_REQUEST = "HIGHLIGHT_REQUEST";
+const HIGHLIGHT = 'HIGHLIGHT',
+    HIGHLIGHT_REQUEST = 'HIGHLIGHT_REQUEST';
 
 function getHighlightsFromQuickFixes(path: string, quickFixes: Models.DiagnosticLocation[], projectNames: string[]) {
     return chain(quickFixes)
@@ -23,7 +22,7 @@ function getHighlightsFromQuickFixes(path: string, quickFixes: Models.Diagnostic
             StartColumn: x.Column,
             EndLine: x.EndLine,
             EndColumn: x.EndColumn,
-            Kind: "unused code",
+            Kind: 'unused code',
             Projects: projectNames
         } as Models.HighlightSpan))
         .value();
@@ -41,7 +40,7 @@ export const ExcludeClassifications = [
 
 class Highlight implements IFeature {
     private disposable: CompositeDisposable;
-    private editors: Array<OmnisharpTextEditor>;
+    private editors: IOmnisharpTextEditor[];
     private unusedCodeRows = new UnusedMap();
 
     public activate() {
@@ -52,13 +51,13 @@ class Highlight implements IFeature {
         this.editors = [];
 
         this.disposable.add(
-            registerContextItem(HIGHLIGHT_REQUEST, (context) => new Subject<boolean>()),
+            registerContextItem(HIGHLIGHT_REQUEST, context => new Subject<boolean>()),
             registerContextItem(HIGHLIGHT, (context, editor) =>
                 context.get<Subject<boolean>>(HIGHLIGHT_REQUEST)
                     .startWith(true)
                     .debounceTime(100)
                     .switchMap(() => Observable.defer(() => {
-                        const projects = context.project.activeFramework.Name === "all" ? [] : [context.project.activeFramework.Name];
+                        const projects = context.project.activeFramework.Name === 'all' ? [] : [context.project.activeFramework.Name];
 
                         let linesToFetch = uniq<number>((<any>editor.getGrammar()).linesToFetch);
                         if (!linesToFetch || !linesToFetch.length)
@@ -86,24 +85,24 @@ class Highlight implements IFeature {
                     }))),
             Omni.listener.model.diagnosticsByFile
                 .subscribe(changes => {
-                    for (let [file, diagnostics] of changes) {
-                        this.unusedCodeRows.set(file, filter(diagnostics, x => x.LogLevel === "Hidden"));
+                    for (const [file, diagnostics] of changes) {
+                        this.unusedCodeRows.set(file, filter(diagnostics, x => x.LogLevel === 'Hidden'));
                     }
                 }),
             Omni.eachEditor((editor, cd) => {
                 this.setupEditor(editor, cd);
 
                 cd.add(editor.omnisharp
-                    .get<Observable<{ editor: OmnisharpTextEditor; highlights: Models.HighlightSpan[]; projects: string[] }>>(HIGHLIGHT)
+                    .get<Observable<{ editor: IOmnisharpTextEditor; highlights: Models.HighlightSpan[]; projects: string[] }>>(HIGHLIGHT)
                     .subscribe(() => {
-                        (editor as any).tokenizedBuffer["silentRetokenizeLines"]();
+                        (editor as any).tokenizedBuffer['silentRetokenizeLines']();
                     }));
                 editor.omnisharp.get<Subject<boolean>>(HIGHLIGHT_REQUEST).next(true);
             }),
             Omni.switchActiveEditor((editor, cd) => {
                 editor.omnisharp.get<Subject<boolean>>(HIGHLIGHT_REQUEST).next(true);
-                if ((editor as any).tokenizedBuffer["silentRetokenizeLines"]) {
-                    (editor as any).tokenizedBuffer["silentRetokenizeLines"]();
+                if ((editor as any).tokenizedBuffer['silentRetokenizeLines']) {
+                    (editor as any).tokenizedBuffer['silentRetokenizeLines']();
                 }
             }),
             Disposable.create(() => {
@@ -117,8 +116,8 @@ class Highlight implements IFeature {
         }
     }
 
-    private setupEditor(editor: OmnisharpTextEditor, disposable: CompositeDisposable) {
-        if (editor["_oldGrammar"] || !editor.getGrammar) return;
+    private setupEditor(editor: IOmnisharpTextEditor, disposable: CompositeDisposable) {
+        if (editor['_oldGrammar'] || !editor.getGrammar) return;
 
         const issueRequest = editor.omnisharp.get<Subject<boolean>>(HIGHLIGHT_REQUEST);
 
@@ -131,7 +130,7 @@ class Highlight implements IFeature {
             (<any>editor.getGrammar()).linesToFetch = [];
             if ((<any>editor.getGrammar()).responses) (<any>editor.getGrammar()).responses.clear();
             (editor as any).tokenizedBuffer.retokenizeLines();
-            delete editor["_oldGrammar"];
+            delete editor['_oldGrammar'];
         }));
 
         this.disposable.add(editor.onDidDestroy(() => {
@@ -164,33 +163,33 @@ class Highlight implements IFeature {
     }
 
     public required = false;
-    public title = "Enhanced Highlighting";
-    public description = "Enables server based highlighting, which includes support for string interpolation, class names and more.";
+    public title = 'Enhanced Highlighting';
+    public description = 'Enables server based highlighting, which includes support for string interpolation, class names and more.';
     public default = false;
 }
 
 export function augmentEditor(editor: Atom.TextEditor, unusedCodeRows: UnusedMap = null, doSetGrammar = false) {
-    if (!editor["_oldGrammar"])
-        editor["_oldGrammar"] = editor.getGrammar();
-    if (!editor["_setGrammar"])
-        editor["_setGrammar"] = editor.setGrammar;
-    if (!(editor as any).tokenizedBuffer["_buildTokenizedLineForRowWithText"])
-        (editor as any).tokenizedBuffer["_buildTokenizedLineForRowWithText"] = (editor as any).tokenizedBuffer.buildTokenizedLineForRowWithText;
-    if (!(editor as any).tokenizedBuffer["_markTokenizationComplete"])
-        (editor as any).tokenizedBuffer["_markTokenizationComplete"] = (editor as any).tokenizedBuffer.markTokenizationComplete;
-    if (!(editor as any).tokenizedBuffer["_retokenizeLines"])
-        (editor as any).tokenizedBuffer["_retokenizeLines"] = (editor as any).tokenizedBuffer.retokenizeLines;
-    if (!(editor as any).tokenizedBuffer["_tokenizeInBackground"])
-        (editor as any).tokenizedBuffer["_tokenizeInBackground"] = (editor as any).tokenizedBuffer.tokenizeInBackground;
-    if (!(editor as any).tokenizedBuffer["_chunkSize"])
-        (editor as any).tokenizedBuffer["chunkSize"] = 20;
+    if (!editor['_oldGrammar'])
+        editor['_oldGrammar'] = editor.getGrammar();
+    if (!editor['_setGrammar'])
+        editor['_setGrammar'] = editor.setGrammar;
+    if (!(editor as any).tokenizedBuffer['_buildTokenizedLineForRowWithText'])
+        (editor as any).tokenizedBuffer['_buildTokenizedLineForRowWithText'] = (editor as any).tokenizedBuffer.buildTokenizedLineForRowWithText;
+    if (!(editor as any).tokenizedBuffer['_markTokenizationComplete'])
+        (editor as any).tokenizedBuffer['_markTokenizationComplete'] = (editor as any).tokenizedBuffer.markTokenizationComplete;
+    if (!(editor as any).tokenizedBuffer['_retokenizeLines'])
+        (editor as any).tokenizedBuffer['_retokenizeLines'] = (editor as any).tokenizedBuffer.retokenizeLines;
+    if (!(editor as any).tokenizedBuffer['_tokenizeInBackground'])
+        (editor as any).tokenizedBuffer['_tokenizeInBackground'] = (editor as any).tokenizedBuffer.tokenizeInBackground;
+    if (!(editor as any).tokenizedBuffer['_chunkSize'])
+        (editor as any).tokenizedBuffer['chunkSize'] = 20;
 
     editor.setGrammar = setGrammar;
     if (doSetGrammar) editor.setGrammar(editor.getGrammar());
 
     (<any>(editor as any).tokenizedBuffer).buildTokenizedLineForRowWithText = function (row: number) {
-        (<any>editor.getGrammar())["__row__"] = row;
-        return (editor as any).tokenizedBuffer["_buildTokenizedLineForRowWithText"].apply(this, arguments);
+        (<any>editor.getGrammar())['__row__'] = row;
+        return (editor as any).tokenizedBuffer['_buildTokenizedLineForRowWithText'].apply(this, arguments);
     };
 
     if (!(<any>(editor as any).tokenizedBuffer).silentRetokenizeLines) {
@@ -213,13 +212,13 @@ export function augmentEditor(editor: Atom.TextEditor, unusedCodeRows: UnusedMap
     (<any>(editor as any).tokenizedBuffer).markTokenizationComplete = function () {
         if ((<any>editor.getGrammar()).isObserveRetokenizing)
             (<any>editor.getGrammar()).isObserveRetokenizing.next(true);
-        return (editor as any).tokenizedBuffer["_markTokenizationComplete"].apply(this, arguments);
+        return (editor as any).tokenizedBuffer['_markTokenizationComplete'].apply(this, arguments);
     };
 
     (<any>(editor as any).tokenizedBuffer).retokenizeLines = function () {
         if ((<any>editor.getGrammar()).isObserveRetokenizing)
             (<any>editor.getGrammar()).isObserveRetokenizing.next(false);
-        return (editor as any).tokenizedBuffer["_retokenizeLines"].apply(this, arguments);
+        return (editor as any).tokenizedBuffer['_retokenizeLines'].apply(this, arguments);
     };
 
     (<any>(editor as any).tokenizedBuffer).tokenizeInBackground = function () {
@@ -227,12 +226,10 @@ export function augmentEditor(editor: Atom.TextEditor, unusedCodeRows: UnusedMap
             return;
 
         this.pendingChunk = true;
-        fastdom.mutate(() => {
             this.pendingChunk = false;
             if (this.isAlive() && this.buffer.isAlive()) {
                 this.tokenizeNextChunk();
             }
-        });
     };
 
     (<any>(editor as any).tokenizedBuffer).scopesFromTags = function (startingScopes: number[], tags: number[]) {
@@ -252,7 +249,7 @@ export function augmentEditor(editor: Atom.TextEditor, unusedCodeRows: UnusedMap
                         if (scopes.length === 0) {
                             // Hack to ensure that all lines always get the proper source lines.
                             scopes.push(<any>grammar.startIdForScope(`.${grammar.scopeName}`));
-                            console.info("Encountered an unmatched scope end tag.", {
+                            console.info('Encountered an unmatched scope end tag.', {
                                 filePath: editor.buffer.getPath(),
                                 grammarScopeName: grammar.scopeName,
                                 tag,
@@ -291,7 +288,7 @@ class Grammar {
     public linesToTokenize: any[];
     public activeFramework: any;
     public responses: Map<number, Models.HighlightSpan[]>;
-    public _gid = uniqueId("og");
+    public _gid = uniqueId('og');
 
     constructor(editor: Atom.TextEditor, base: FirstMate.Grammar, options: { readonly: boolean }) {
         this.isObserveRetokenizing = new ReplaySubject<boolean>(1);
@@ -378,8 +375,8 @@ class Grammar {
         each(groupedItems, (item: { highlight: Models.HighlightSpan }[], key: number) => {
             let k = +key, mappedItem = item.map(x => x.highlight);
 
-            if (!enableExcludeCode || some(mappedItem, i => i.Kind === "preprocessor keyword") && every(mappedItem, i => i.Kind === "excluded code" || i.Kind === "preprocessor keyword")) {
-                mappedItem = mappedItem.filter(z => z.Kind !== "excluded code");
+            if (!enableExcludeCode || some(mappedItem, i => i.Kind === 'preprocessor keyword') && every(mappedItem, i => i.Kind === 'excluded code' || i.Kind === 'preprocessor keyword')) {
+                mappedItem = mappedItem.filter(z => z.Kind !== 'excluded code');
             }
 
             if (!this.responses.has(k)) {
@@ -401,19 +398,19 @@ class Grammar {
 /* tslint:disable:variable-name */
 extend(Grammar.prototype, AtomGrammar.prototype);
 
-Grammar.prototype["omnisharp"] = true;
-Grammar.prototype["tokenizeLine"] = function (line: string, ruleStack: any[], firstLine = false): { tags: number[]; ruleStack: any } {
+Grammar.prototype['omnisharp'] = true;
+Grammar.prototype['tokenizeLine'] = function (line: string, ruleStack: any[], firstLine = false): { tags: number[]; ruleStack: any } {
     const baseResult = AtomGrammar.prototype.tokenizeLine.call(this, line, ruleStack, firstLine);
     let tags: any[];
 
     if (this.responses) {
-        const row = this["__row__"];
+        const row = this['__row__'];
 
         if (!this.responses.has(row)) return baseResult;
 
         const highlights = this.responses.get(row);
         // Excluded code blows away any other formatting, otherwise we get into a very weird state.
-        if (highlights[0] && highlights[0].Kind === "excluded code") {
+        if (highlights[0] && highlights[0].Kind === 'excluded code') {
             tags = [line.length];
             getAtomStyleForToken(this.name, tags, highlights[0], 0, tags.length - 1, line);
             baseResult.ruleStack = [baseResult.ruleStack[0]];
@@ -428,7 +425,7 @@ Grammar.prototype["tokenizeLine"] = function (line: string, ruleStack: any[], fi
 (Grammar.prototype as any).getCsTokensForLine = function (highlights: Models.HighlightSpan[], line: string, row: number, ruleStack: any[], firstLine: boolean, tags: number[]) {
     ruleStack = [{ rule: this.getInitialRule() }];
 
-    each(highlights, (highlight) => {
+    each(highlights, highlight => {
         const start = highlight.StartColumn - 1;
         const end = highlight.EndColumn - 1;
 
@@ -639,38 +636,38 @@ function getAtomStyleForToken(grammar: string, tags: number[], token: Models.Hig
         });
     }
     switch (token.Kind) {
-        case "number":
+        case 'number':
             add(`constant.numeric`);
             break;
-        case "struct name":
+        case 'struct name':
             add(`support.constant.numeric.identifier.struct`);
             break;
-        case "enum name":
+        case 'enum name':
             add(`support.constant.numeric.identifier.enum`);
             break;
-        case "identifier":
+        case 'identifier':
             add(`identifier`);
             break;
-        case "class name":
+        case 'class name':
             add(`support.class.type.identifier`);
             break;
-        case "delegate name":
+        case 'delegate name':
             add(`support.class.type.identifier.delegate`);
             break;
-        case "interface name":
+        case 'interface name':
             add(`support.class.type.identifier.interface`);
             break;
-        case "preprocessor keyword":
+        case 'preprocessor keyword':
             add(`constant.other.symbol`);
             break;
-        case "excluded code":
+        case 'excluded code':
             add(`comment.block`);
             break;
-        case "unused code":
+        case 'unused code':
             add(`unused`);
             break;
         default:
-            console.log("unhandled Kind " + token.Kind);
+            console.log('unhandled Kind ' + token.Kind);
             break;
     }
 
@@ -694,7 +691,7 @@ function setGrammar(grammar: FirstMate.Grammar): FirstMate.Grammar {
 
 export function getEnhancedGrammar(editor: Atom.TextEditor, grammar?: FirstMate.Grammar, options?: { readonly: boolean }) {
     if (!grammar) grammar = editor.getGrammar();
-    if (!grammar["omnisharp"] && Omni.isValidGrammar(grammar)) {
+    if (!grammar['omnisharp'] && Omni.isValidGrammar(grammar)) {
         const newGrammar = new Grammar(editor, grammar, options);
         each(grammar, (x, i) => {
             if (has(grammar, i)) {

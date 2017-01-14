@@ -1,42 +1,42 @@
-import {Observable} from "rxjs";
-import {CompositeDisposable} from "ts-disposables";
-import {each, endsWith, filter} from "lodash";
-import * as path from "path";
+import {each, endsWith, filter} from 'lodash';
+import * as path from 'path';
+import {Observable} from 'rxjs';
+import {CompositeDisposable} from 'ts-disposables';
 
 // TODO: Make sure it stays in sync with
 const commands = [
-    "AngularController",
-    "AngularControllerAs",
-    "AngularDirective",
-    "AngularFactory",
-    "AngularModule",
-    "BowerJson",
-    "Class",
-    "CoffeeScript",
-    "Config",
-    "gitignore",
-    "Gruntfile",
-    "Gulpfile",
-    "HTMLPage",
-    "Interface",
-    "JavaScript",
-    "JScript",
-    "JSON",
-    "JSONSchema",
-    "JSX",
-    "Middleware",
-    "MvcController",
-    "MvcView",
-    "PackageJson",
-    "StartupClass",
-    "StyleSheet",
-    "StyleSheetLess",
-    "StyleSheetSCSS",
-    "TagHelper",
-    "TextFile",
-    "TypeScript",
-    "TypeScriptConfig",
-    "WebApiController"
+    'AngularController',
+    'AngularControllerAs',
+    'AngularDirective',
+    'AngularFactory',
+    'AngularModule',
+    'BowerJson',
+    'Class',
+    'CoffeeScript',
+    'Config',
+    'gitignore',
+    'Gruntfile',
+    'Gulpfile',
+    'HTMLPage',
+    'Interface',
+    'JavaScript',
+    'JScript',
+    'JSON',
+    'JSONSchema',
+    'JSX',
+    'Middleware',
+    'MvcController',
+    'MvcView',
+    'PackageJson',
+    'StartupClass',
+    'StyleSheet',
+    'StyleSheetLess',
+    'StyleSheetSCSS',
+    'TagHelper',
+    'TextFile',
+    'TypeScript',
+    'TypeScriptConfig',
+    'WebApiController'
 ];
 
 module Yeoman {
@@ -62,14 +62,14 @@ class GeneratorAspnet implements IFeature {
     public activate() {
         this.disposable = new CompositeDisposable();
 
-        this.disposable.add(atom.commands.add("atom-workspace", "omnisharp-atom:new-project", () => this.newProject()));
-        this.disposable.add(atom.commands.add("atom-workspace", "c#:new-project", () => this.newProject()));
+        this.disposable.add(atom.commands.add('atom-workspace', 'omnisharp-atom:new-project', () => this.newProject()));
+        this.disposable.add(atom.commands.add('atom-workspace', 'c#:new-project', () => this.newProject()));
 
-        this.disposable.add(atom.commands.add("atom-workspace", "omnisharp-atom:new-class", () => this.run("aspnet:Class")));
-        this.disposable.add(atom.commands.add("atom-workspace", "C#:new-class", () => this.run("aspnet:Class")));
+        this.disposable.add(atom.commands.add('atom-workspace', 'omnisharp-atom:new-class', () => this.run('aspnet:Class')));
+        this.disposable.add(atom.commands.add('atom-workspace', 'C#:new-class', () => this.run('aspnet:Class')));
 
         each(commands, command => {
-            this.disposable.add(atom.commands.add("atom-workspace", `omnisharp-atom:aspnet-${command}`, () => this.loadCsFile(this.run(`aspnet:${command}`))));
+            this.disposable.add(atom.commands.add('atom-workspace', `omnisharp-atom:aspnet-${command}`, () => this.loadCsFile(this.run(`aspnet:${command}`))));
         });
     }
 
@@ -80,7 +80,7 @@ class GeneratorAspnet implements IFeature {
                 .concat(messages.identical)
                 .concat(messages.force);
 
-            return Observable.from<string>(["Startup.cs", "Program.cs", ".cs"])
+            return Observable.from<string>(['Startup.cs', 'Program.cs', '.cs'])
                 .concatMap(file => filter(allMessages, message => endsWith(message, file)))
                 .take(1)
                 .map(file => path.join(messages.cwd, file))
@@ -90,10 +90,10 @@ class GeneratorAspnet implements IFeature {
     }
 
     private newProject() {
-        return this.loadCsFile(this.run("aspnet:app --createInDirectory"))
+        return this.loadCsFile(this.run('aspnet:app --createInDirectory'))
             .then(() => Observable.timer(2000).toPromise())
             .then(() => {
-                atom.commands.dispatch(atom.views.getView(atom.workspace), "omnisharp-atom:restart-server");
+                atom.commands.dispatch(atom.views.getView(atom.workspace), 'omnisharp-atom:restart-server');
             });
     }
 
@@ -110,8 +110,8 @@ class GeneratorAspnet implements IFeature {
     }
 
     public required = true;
-    public title = "Aspnet Yeoman Generator";
-    public description = "Enables the aspnet yeoman generator.";
+    public title = 'Aspnet Yeoman Generator';
+    public description = 'Enables the aspnet yeoman generator.';
 }
 
 export const generatorAspnet = new GeneratorAspnet;

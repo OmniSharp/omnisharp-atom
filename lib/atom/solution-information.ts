@@ -1,12 +1,15 @@
-import {CompositeDisposable, Disposable, IDisposable} from "ts-disposables";
-import _ from "lodash";
-import {SolutionStatusCard} from "../views/solution-status-view";
-import {SolutionManager} from "../server/solution-manager";
-import {DriverState} from "omnisharp-client";
+import { findIndex } from 'lodash';
+import { DriverState } from 'omnisharp-client';
+import { CompositeDisposable, Disposable, IDisposable } from 'ts-disposables';
+import { SolutionManager } from '../server/solution-manager';
+import { SolutionStatusCard } from '../views/solution-status-view';
 
 class SolutionInformation implements IFeature {
-    private disposable: CompositeDisposable;
+    public required = true;
+    public title = 'Solution Information';
+    public description = 'Monitors each running solution and offers the ability to start/restart/stop a solution.';
     public selectedIndex: number = 0;
+    private disposable: CompositeDisposable;
     private card: SolutionStatusCard;
     private cardDisposable: IDisposable;
     private selectedDisposable: IDisposable;
@@ -16,35 +19,35 @@ class SolutionInformation implements IFeature {
         this.disposable = new CompositeDisposable();
 
         this.disposable.add(SolutionManager.activeSolution.subscribe(sln => {
-            this.selectedIndex = _.findIndex(SolutionManager.activeSolutions, { index: sln.model.index });
-            this.updateSelectedItem(this.selectedIndex);
+            this.selectedIndex = findIndex(SolutionManager.activeSolutions, { index: sln.model.index });
+            this._updateSelectedItem(this.selectedIndex);
         }));
 
-        this.disposable.add(atom.commands.add("atom-workspace", "omnisharp-atom:next-solution-status", () => {
-            this.updateSelectedItem(this.selectedIndex + 1);
+        this.disposable.add(atom.commands.add('atom-workspace', 'omnisharp-atom:next-solution-status', () => {
+            this._updateSelectedItem(this.selectedIndex + 1);
         }));
 
-        this.disposable.add(atom.commands.add("atom-workspace", "omnisharp-atom:solution-status", () => {
+        this.disposable.add(atom.commands.add('atom-workspace', 'omnisharp-atom:solution-status', () => {
             if (this.cardDisposable) {
                 this.cardDisposable.dispose();
             } else {
-                this.cardDisposable = this.createSolutionCard();
+                this.cardDisposable = this._createSolutionCard();
             }
         }));
 
-        this.disposable.add(atom.commands.add("atom-workspace", "omnisharp-atom:previous-solution-status", () => {
-            this.updateSelectedItem(this.selectedIndex - 1);
+        this.disposable.add(atom.commands.add('atom-workspace', 'omnisharp-atom:previous-solution-status', () => {
+            this._updateSelectedItem(this.selectedIndex - 1);
         }));
 
-        this.disposable.add(atom.commands.add("atom-workspace", "omnisharp-atom:stop-server", () => {
+        this.disposable.add(atom.commands.add('atom-workspace', 'omnisharp-atom:stop-server', () => {
             SolutionManager.activeSolutions[this.selectedIndex].dispose();
         }));
 
-        this.disposable.add(atom.commands.add("atom-workspace", "omnisharp-atom:start-server", () => {
+        this.disposable.add(atom.commands.add('atom-workspace', 'omnisharp-atom:start-server', () => {
             SolutionManager.activeSolutions[this.selectedIndex].connect();
         }));
 
-        this.disposable.add(atom.commands.add("atom-workspace", "omnisharp-atom:restart-server", () => {
+        this.disposable.add(atom.commands.add('atom-workspace', 'omnisharp-atom:restart-server', () => {
             const solution = SolutionManager.activeSolutions[this.selectedIndex];
             solution.state
                 .filter(z => z === DriverState.Disconnected)
@@ -57,13 +60,20 @@ class SolutionInformation implements IFeature {
         }));
     }
 
-    private updateSelectedItem(index: number) {
-        if (index < 0)
+    public dispose() {
+        this.disposable.dispose();
+    }
+
+    private _updateSelectedItem(index: number) {
+        if (index < 0) {
             index = SolutionManager.activeSolutions.length - 1;
-        if (index >= SolutionManager.activeSolutions.length)
+        }
+        if (index >= SolutionManager.activeSolutions.length) {
             index = 0;
-        if (this.selectedIndex !== index)
+        }
+        if (this.selectedIndex !== index) {
             this.selectedIndex = index;
+        }
 
         if (this.card) {
             if (this.selectedDisposable) {
@@ -81,31 +91,32 @@ class SolutionInformation implements IFeature {
         }
     }
 
-    private createSolutionCard() {
+    private _createSolutionCard() {
         const disposable = new CompositeDisposable();
         this.disposable.add(disposable);
         const workspace = <any>atom.views.getView(atom.workspace);
         if (!this.container) {
-            const container = this.container = document.createElement("div");
+            const container = this.container = document.createElement('div');
             workspace.appendChild(container);
         }
 
         if (SolutionManager.activeSolutions.length) {
-            const element = new SolutionStatusCard;
-            element.attachTo = ".projects-icon";
+            const element = new SolutionStatusCard();
+            element.attachTo = '.projects-icon';
             element.updateCard(SolutionManager.activeSolutions[this.selectedIndex].model, SolutionManager.activeSolutions.length);
             this.container.appendChild(element);
 
             this.card = element;
 
-            disposable.add(atom.commands.add("atom-workspace", "core:cancel", () => {
+            disposable.add(atom.commands.add('atom-workspace', 'core:cancel', () => {
                 disposable.dispose();
                 this.disposable.remove(disposable);
             }));
 
             disposable.add(Disposable.create(() => {
-                if (this.card)
+                if (this.card) {
                     this.card.remove();
+                }
                 this.card = null;
                 this.cardDisposable = null;
             }));
@@ -115,8 +126,9 @@ class SolutionInformation implements IFeature {
             }
 
             disposable.add(Disposable.create(() => {
-                if (this.card)
+                if (this.card) {
                     this.card.remove();
+                }
                 this.card = null;
                 this.cardDisposable = null;
             }));
@@ -125,14 +137,7 @@ class SolutionInformation implements IFeature {
 
         return disposable;
     }
-
-    public dispose() {
-        this.disposable.dispose();
-    }
-
-    public required = true;
-    public title = "Solution Information";
-    public description = "Monitors each running solution and offers the ability to start/restart/stop a solution.";
 }
 
-export const solutionInformation = new SolutionInformation;
+// tslint:disable-next-line:export-name
+export const solutionInformation = new SolutionInformation();

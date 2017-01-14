@@ -1,7 +1,7 @@
-import {CompositeDisposable} from "ts-disposables";
-import {Omni} from "../server/omni";
-import {readFileSync} from "fs";
-import {join} from "path";
+import {readFileSync} from 'fs';
+import {join} from 'path';
+import {CompositeDisposable} from 'ts-disposables';
+import {Omni} from '../server/omni';
 
 class Menu implements IFeature {
     private disposable: CompositeDisposable;
@@ -10,8 +10,8 @@ class Menu implements IFeature {
     public activate() {
         this.disposable = new CompositeDisposable();
         if (!this._json) {
-            const menuJsonFile = join(Omni.packageDir, "omnisharp-atom/menus/omnisharp-menu.json");
-            this._json = JSON.parse(readFileSync(menuJsonFile, "utf8")).menu;
+            const menuJsonFile = join(Omni.packageDir, 'omnisharp-atom/menus/omnisharp-menu.json');
+            this._json = JSON.parse(readFileSync(menuJsonFile, 'utf8')).menu;
         }
 
         this.disposable.add(Omni.switchActiveSolution((solution, cd) => {
@@ -26,8 +26,8 @@ class Menu implements IFeature {
     }
 
     public required = false;
-    public title = "Show OmniSharp Menu";
-    public description = "Shows the Omnisharp Menu at the top of the window.";
+    public title = 'Show OmniSharp Menu';
+    public description = 'Shows the Omnisharp Menu at the top of the window.';
     public default = true;
 }
 

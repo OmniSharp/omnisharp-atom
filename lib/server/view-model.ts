@@ -1,13 +1,11 @@
-import _ from "lodash";
-import {Solution} from "./solution";
-import {Models, DriverState, OmnisharpClientStatus} from "omnisharp-client";
-import {Observable, Subject, ReplaySubject} from "rxjs";
-import {CompositeDisposable, Disposable, IDisposable} from "ts-disposables";
-import {normalize} from "path";
-import {ProjectViewModel, projectViewModelFactory, workspaceViewModelFactory} from "./project-view-model";
-import {OutputMessageElement} from "../views/output-message-element";
-let fastdom: typeof Fastdom = require("fastdom");
-import {bufferFor} from "../operators/bufferFor";
+import { flatMap, sortBy, identity, each, some, pull, find, includes, startsWith, bind, groupBy, isNumber } from 'lodash';
+import { DriverState, Models, IOmnisharpClientStatus } from 'omnisharp-client';
+import { normalize } from 'path';
+import { Observable, ReplaySubject, Subject } from 'rxjs';
+import { CompositeDisposable, Disposable, IDisposable } from 'ts-disposables';
+import { OutputMessageElement } from '../views/output-message-element';
+import { projectViewModelFactory, workspaceViewModelFactory, ProjectViewModel } from './project-view-model';
+import { Solution } from './solution';
 
 export interface VMViewState {
     isOff: boolean;
@@ -31,13 +29,15 @@ export class ViewModel implements VMViewState, IDisposable {
     public get index() { return this._solution.index; }
     public get path() { return this._solution.path; }
     public output: OutputMessage[] = [];
-    public outputElement = document.createElement("div");
+    public outputElement = document.createElement('div');
     public diagnosticsByFile = new Map<string, Models.DiagnosticLocation[]>();
     public get diagnostics() {
-        return _(_.toArray(this.diagnosticsByFile.values()))
-            .flatMap(x => x)
-            .sortBy(x => x.LogLevel, x => x.FileName, x => x.Line, x => x.Column, x => x.Text)
-            .value();
+        const results: Models.DiagnosticLocation[] = [];
+        for (let result of this.diagnosticsByFile.values()) {
+            results.push(...result);
+        }
+
+        return sortBy(results, x => x.LogLevel, x => x.FileName, x => x.Line, x => x.Column, x => x.Text);
     }
     public diagnosticCounts: { [index: string]: number; } = { error: 0, warning: 0, hidden: 0 };
 
@@ -58,7 +58,7 @@ export class ViewModel implements VMViewState, IDisposable {
         diagnosticsCounts: Observable<{ [index: string]: number; }>;
         diagnosticsByFile: Observable<Map<string, Models.DiagnosticLocation[]>>;
         output: Observable<OutputMessage[]>;
-        status: Observable<OmnisharpClientStatus>;
+        status: Observable<IOmnisharpClientStatus>;
         state: Observable<ViewModel>;
         projectAdded: Observable<ProjectViewModel<any>>;
         projectRemoved: Observable<ProjectViewModel<any>>;
@@ -70,7 +70,7 @@ export class ViewModel implements VMViewState, IDisposable {
         this._uniqueId = _solution.uniqueId;
         this._updateState(_solution.currentState);
 
-        this.outputElement.classList.add("messages-container");
+        this.outputElement.classList.add('messages-container');
 
         // Manage our build log for display
         this.disposable.add(_solution.logs
@@ -81,26 +81,17 @@ export class ViewModel implements VMViewState, IDisposable {
                     this.output.shift();
                 }
             }),
-            bufferFor(_solution.logs, 100)
-                .subscribe(items => {
-                    let removals: Element[] = [];
+            _solution.logs
+                .subscribe(item => {
                     if (this.outputElement.children.length === 1000) {
-                        for (let i = 0; i < items.length; i++) {
-                            removals.push(this.outputElement.children[i]);
-                        }
+                        this.outputElement.children[0].remove();
                     }
 
-                    fastdom.mutate(() => {
-                        _.each(removals, x => x.remove());
-
-                        _.each(items, event => {
-                            this.outputElement.appendChild(OutputMessageElement.create(event));
-                        });
-                    });
+                    this.outputElement.appendChild(OutputMessageElement.create(item));
                 }),
             _solution.state.filter(z => z === DriverState.Disconnected)
                 .subscribe(() => {
-                    _.each(this.projects.slice(), project => this._projectRemovedStream.next(project));
+                    each(this.projects.slice(), project => this._projectRemovedStream.next(project));
                     this.projects = [];
                     this.diagnosticsByFile.clear();
                 })
@@ -138,7 +129,7 @@ export class ViewModel implements VMViewState, IDisposable {
             get projectChanged() { return _projectChangedStream; },
         };
 
-        this.disposable.add(_solution.state.subscribe(_.bind(this._updateState, this)));
+        this.disposable.add(_solution.state.subscribe(bind(this._updateState, this)));
 
         /* tslint:disable */
         (window["clients"] || (window["clients"] = [])).push(this);  //TEMP
@@ -155,12 +146,12 @@ export class ViewModel implements VMViewState, IDisposable {
             }));
 
         this.disposable.add(_solution.state.filter(z => z === DriverState.Disconnected).subscribe(() => {
-            _.each(this.projects.slice(), project => this._projectRemovedStream.next(project));
+            each(this.projects.slice(), project => this._projectRemovedStream.next(project));
         }));
 
         this.disposable.add(_solution.observe.projectAdded.subscribe(projectInformation => {
-            _.each(projectViewModelFactory(projectInformation, _solution.projectPath), project => {
-                if (!_.some(this.projects, { path: project.path })) {
+            each(projectViewModelFactory(projectInformation, _solution.projectPath), project => {
+                if (!some(this.projects, { path: project.path })) {
                     this.projects.push(project);
                     this._projectAddedStream.next(project);
                 }
@@ -168,18 +159,18 @@ export class ViewModel implements VMViewState, IDisposable {
         }));
 
         this.disposable.add(_solution.observe.projectRemoved.subscribe(projectInformation => {
-            _.each(projectViewModelFactory(projectInformation, _solution.projectPath), project => {
-                const found: ProjectViewModel<any> = _.find(this.projects, { path: project.path });
+            each(projectViewModelFactory(projectInformation, _solution.projectPath), project => {
+                const found: ProjectViewModel<any> = find(this.projects, { path: project.path });
                 if (found) {
-                    _.pull(this.projects, found);
+                    pull(this.projects, found);
                     this._projectRemovedStream.next(project);
                 }
             });
         }));
 
         this.disposable.add(_solution.observe.projectChanged.subscribe(projectInformation => {
-            _.each(projectViewModelFactory(projectInformation, _solution.projectPath), project => {
-                const found: ProjectViewModel<any> = _.find(this.projects, { path: project.path });
+            each(projectViewModelFactory(projectInformation, _solution.projectPath), project => {
+                const found: ProjectViewModel<any> = find(this.projects, { path: project.path });
                 if (found) {
                     found.update(project);
                     this._projectChangedStream.next(project);
@@ -188,8 +179,8 @@ export class ViewModel implements VMViewState, IDisposable {
         }));
 
         this.disposable.add(_solution.observe.projects.subscribe(context => {
-            _.each(workspaceViewModelFactory(context.response, _solution.projectPath), project => {
-                const found: ProjectViewModel<any> = _.find(this.projects, { path: project.path });
+            each(workspaceViewModelFactory(context.response, _solution.projectPath), project => {
+                const found: ProjectViewModel<any> = find(this.projects, { path: project.path });
                 if (found) {
                     found.update(project);
                     this._projectChangedStream.next(project);
@@ -205,7 +196,7 @@ export class ViewModel implements VMViewState, IDisposable {
         this.disposable.add(this._projectRemovedStream);
 
         this.disposable.add(Disposable.create(() => {
-            _.each(this.projects, x => x.dispose());
+            each(this.projects, x => x.dispose());
         }));
     }
 
@@ -220,13 +211,13 @@ export class ViewModel implements VMViewState, IDisposable {
 
     public getProjectForPath(path: string) {
         if (this.isOn && this.projects.length) {
-            const project = _.find(this.projects, x => x.filesSet.has(path));
+            const project = find(this.projects, x => x.filesSet.has(path));
             if (project) {
                 return Observable.of(project);
             }
         }
 
-        return this.observe.projectAdded.filter(x => _.startsWith(path, x.path)).take(1);
+        return this.observe.projectAdded.filter(x => startsWith(path, x.path)).take(1);
     }
 
     public getProjectContainingEditor(editor: Atom.TextEditor) {
@@ -235,14 +226,14 @@ export class ViewModel implements VMViewState, IDisposable {
 
     public getProjectContainingFile(path: string) {
         if (this.isOn && this.projects.length) {
-            const project = _.find(this.projects, x => _.includes(x.sourceFiles, normalize(path)));
+            const project = find(this.projects, x => includes(x.sourceFiles, normalize(path)));
             if (project) {
                 return Observable.of(project);
             }
             return Observable.of(null);
         } else {
             return this.observe.projectAdded
-                .filter(x => _.includes(x.sourceFiles, normalize(path)))
+                .filter(x => includes(x.sourceFiles, normalize(path)))
                 .take(1)
                 .defaultIfEmpty(null);
         }
@@ -263,24 +254,24 @@ export class ViewModel implements VMViewState, IDisposable {
             .map(data => {
                 const files: string[] = [];
                 const counts = this.diagnosticCounts;
-                _.each(data.Results, result => {
+                each(data.Results, result => {
                     files.push(result.FileName);
                     if (this.diagnosticsByFile.has(result.FileName)) {
                         const old = this.diagnosticsByFile.get(result.FileName);
                         this.diagnosticsByFile.delete(result.FileName);
 
-                        const grouped = _.groupBy(old, x => x.LogLevel.toLowerCase());
-                        _.each(grouped, (items, key) => {
-                            if (!_.isNumber(counts[key])) { counts[key] = 0; }
+                        const grouped = groupBy(old, x => x.LogLevel.toLowerCase());
+                        each(grouped, (items, key) => {
+                            if (!isNumber(counts[key])) { counts[key] = 0; }
                             counts[key] -= items.length;
                             if (counts[key] < 0) counts[key] = 0;
                         });
                     }
 
-                    this.diagnosticsByFile.set(result.FileName, _.sortBy(result.QuickFixes, x => x.Line, quickFix => quickFix.LogLevel, x => x.Text));
-                    const grouped = _.groupBy(result.QuickFixes, x => x.LogLevel.toLowerCase());
-                    _.each(grouped, (items, key) => {
-                        if (!_.isNumber(counts[key])) { counts[key] = 0; }
+                    this.diagnosticsByFile.set(result.FileName, sortBy(result.QuickFixes, x => x.Line, quickFix => quickFix.LogLevel, x => x.Text));
+                    const grouped = groupBy(result.QuickFixes, x => x.LogLevel.toLowerCase());
+                    each(grouped, (items, key) => {
+                        if (!isNumber(counts[key])) { counts[key] = 0; }
                         counts[key] += items.length;
                     });
                 });
@@ -290,21 +281,21 @@ export class ViewModel implements VMViewState, IDisposable {
 
         const diagnostics = baseCodecheck
             .map(x => this.diagnostics)
-            .cache(1);
+            .publishReplay(1).refCount();
 
         const diagnosticsByFile = baseCodecheck
             .map(files => {
                 const map = new Map<string, Models.DiagnosticLocation[]>();
-                _.each(files, file => {
+                each(files, file => {
                     map.set(file, this.diagnosticsByFile.get(file));
                 });
                 return map;
             })
-            .cache(1);
+            .publishReplay(1).refCount();
 
         const diagnosticsCounts = baseCodecheck
             .map(x => this.diagnosticCounts)
-            .cache(1);
+            .publishReplay(1).refCount();
 
         this.disposable.add(baseCodecheck.subscribe());
         return { diagnostics, diagnosticsByFile, diagnosticsCounts };

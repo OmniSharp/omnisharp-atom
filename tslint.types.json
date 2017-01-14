@@ -1,0 +1,22 @@
+{
+    "rulesDirectory": [
+        "node_modules/tslint-microsoft-contrib",
+        "node_modules/tslint-eslint-rules/dist/rules"
+    ],
+    "extends": "./tslint.json",
+    "rules": {
+        "promise-function-async": true,
+        "no-for-in-array": true,
+        "no-inferred-empty-object-type": true,
+        "no-void-expression": true,
+        "restrict-plus-operands": true,
+        "strict-boolean-expressions": true,
+        "completed-docs": [
+            true,
+            "classes",
+            "functions",
+            "methods",
+            "properties"
+        ]
+    }
+}

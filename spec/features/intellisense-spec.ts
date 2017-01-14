@@ -1,12 +1,12 @@
 /// <reference path="../tsd.d.ts" />
 //import {expect} from "chai";
-import {CompositeDisposable} from "omnisharp-client";
-import {setupFeature} from "../test-helpers";
+import {CompositeDisposable} from 'ts-disposables';
+import {setupFeature} from '../test-helpers';
 
-describe("Intellisense", () => {
-    setupFeature(["features/intellisense"]);
+describe('Intellisense', () => {
+    setupFeature(['features/intellisense']);
 
-    it("adds commands", () => {
+    it('adds commands', () => {
         const disposable = new CompositeDisposable();
         //const commands: any = atom.commands;
 
