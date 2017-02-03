@@ -103,7 +103,8 @@ class CompletionProvider implements IDisposable {
         if (search === '.')
             search = '';
 
-        if (!this.results) this.results = Omni.request(solution => solution.autocomplete(clone(autoCompleteOptions))).toPromise();
+        if (!this.results) this.results = Omni.request(solution => solution.autocomplete(clone(autoCompleteOptions)))
+            .toPromise();
 
         let p = this.results;
         if (search)
