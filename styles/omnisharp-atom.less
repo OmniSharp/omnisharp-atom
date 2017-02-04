@@ -48,7 +48,7 @@
             }
 
             omnisharp-highlight-element {
-                atom-text-editor::shadow {
+                atom-text-editor.editor {
                     font-size: ~"@{index}px" !important;
                 }
             }
@@ -285,7 +285,7 @@
 @green-color: @syntax-color-added;
 @blue-color: @syntax-color-renamed;
 
-atom-text-editor::shadow {
+atom-text-editor.editor {
     .highlight-green .region {
         background-image: url("atom://omnisharp-atom/styles/wiggle-green.png");
         background-repeat: repeat-x;
@@ -540,7 +540,7 @@ body atom-text-editor.autocomplete-active {
         display:none;
     }
 }
-atom-text-editor::shadow.autocomplete-active .linter-highlight{
+atom-text-editor.editor.autocomplete-active .linter-highlight{
     display:none;
 }
 
@@ -560,7 +560,7 @@ omnisharp-signature-help {
 }
 
 @import "ui-variables";
-atom-text-editor::shadow .linter-highlight,
+atom-text-editor.editor .linter-highlight,
 .linter-highlight {
     &.info {
         /* Style for Message Badges */
@@ -594,8 +594,8 @@ atom-text-editor::shadow .linter-highlight,
     }
 }
 
-atom-text-editor, atom-text-editor::shadow {
-    .unused {
+atom-text-editor, atom-text-editor.editor {
+    .syntax--unused {
         opacity: 0.6;
     }
 }
