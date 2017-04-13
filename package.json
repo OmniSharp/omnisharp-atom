@@ -60,7 +60,7 @@
     "tsc:w": "tsc -w"
   },
   "dependencies": {
-    "atom-package-deps": "^4.3.1",
+    "atom-package-deps": "^4.5.0",
     "atom-space-pen-views": "^2.2.0",
     "entities": "^1.1.1",
     "escape-html": "^1.0.1",
