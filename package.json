@@ -96,7 +96,7 @@
     "tslint-eslint-rules": "^3.2.3",
     "tslint-microsoft-contrib": "^4.0.0",
     "typescript": "^2.2.0",
-    "typings": "^2.1.0"
+    "typings": "^2.1.1"
   },
   "consumedServices": {
     "status-bar": {
