@@ -2,7 +2,7 @@
   "name": "omnisharp-atom",
   "main": "./index.js",
   "atomTestRunner": "./spec/test-runner",
-  "version": "0.31.1",
+  "version": "0.31.2",
   "description": "Brings the wonderful OmniSharp server to powercharge Atom's C# development experience",
   "keywords": [
     "c#",
