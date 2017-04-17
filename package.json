@@ -70,7 +70,7 @@
     "globby": "^6.1.0",
     "jquery": "^3.1.1",
     "lodash": "^4.17.4",
-    "omnisharp-client": "^7.0.5",
+    "omnisharp-client": "^7.0.6",
     "rxjs": "^5.1.0",
     "semver": "^5.0.3",
     "ts-disposables": "^2.2.3"
