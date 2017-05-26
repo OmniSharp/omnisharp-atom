@@ -93,7 +93,7 @@
     "mocha-unfunk-reporter": "^0.4.0",
     "through2": "^2.0.3",
     "tslint": "^4.4.2",
-    "tslint-eslint-rules": "^3.2.3",
+    "tslint-eslint-rules": "^4.1.1",
     "tslint-microsoft-contrib": "^4.0.0",
     "typescript": "^2.2.0",
     "typings": "^2.1.0"
