@@ -60,8 +60,8 @@ export class OmnisharpEditorContext implements IDisposable {
             () => {
                 solution.disposable.add(solution.close({ FileName: editor.getPath() }).subscribe());
             },
-            editor.getBuffer().onWillChange((change: { oldRange: TextBuffer.Range; newRange: TextBuffer.Range; oldText: string; newText: string; }) => {
-                this.pushChange(change);
+            editor.getBuffer().onDidChangeText((event: {changes: IAtomTextChange[]}) => {
+                this._changes.push(...event.changes)
             }),
             editor.onDidStopChanging(() => {
                 if (this.hasChanges) {
@@ -120,10 +120,6 @@ export class OmnisharpEditorContext implements IDisposable {
             this.set(name, contextItems.get(name));
         }
         return <any>this._items.get(name);
-    }
-
-    public pushChange(change: IAtomTextChange) {
-        this._changes.push(change);
     }
 
     public popChanges() {
