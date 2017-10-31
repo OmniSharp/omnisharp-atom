@@ -18,6 +18,8 @@ var _tsDisposables = require('ts-disposables');
 
 var _projectViewModel = require('./project-view-model');
 
+function _toConsumableArray(arr) { if (Array.isArray(arr)) { for (var i = 0, arr2 = Array(arr.length); i < arr.length; i++) { arr2[i] = arr[i]; } return arr2; } else { return Array.from(arr); } }
+
 function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
 
 var contextItems = new Map();
@@ -60,8 +62,10 @@ var OmnisharpEditorContext = exports.OmnisharpEditorContext = function () {
             });
         }), solution.open({ FileName: editor.getPath() }).subscribe(), solution.updatebuffer({ FileName: editor.getPath(), FromDisk: true }, { silent: true }).subscribe(), function () {
             solution.disposable.add(solution.close({ FileName: editor.getPath() }).subscribe());
-        }, editor.getBuffer().onWillChange(function (change) {
-            _this.pushChange(change);
+        }, editor.getBuffer().onDidChangeText(function (event) {
+            var _changes;
+
+            (_changes = _this._changes).push.apply(_changes, _toConsumableArray(event.changes));
         }), editor.onDidStopChanging(function () {
             if (_this.hasChanges) {
                 solution.updatebuffer({ FileName: editor.getPath(), Changes: _this.popChanges() }, { silent: true });
@@ -106,11 +110,6 @@ var OmnisharpEditorContext = exports.OmnisharpEditorContext = function () {
                 this.set(name, contextItems.get(name));
             }
             return this._items.get(name);
-        }
-    }, {
-        key: 'pushChange',
-        value: function pushChange(change) {
-            this._changes.push(change);
         }
     }, {
         key: 'popChanges',
