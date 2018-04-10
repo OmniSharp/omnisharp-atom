@@ -137,12 +137,12 @@ var OmniSharpAtom = function () {
                     }
                 });
             }));
-            var grammars = atom.grammars;
+            var grammars = atom.grammars.textmateRegistry || atom.grammars;
             var grammarCb = function grammarCb(grammar) {
                 if ((0, _lodash.find)(_omni.Omni.grammars, function (gmr) {
                     return gmr.scopeName === grammar.scopeName;
                 })) {
-                    atom.grammars.startIdForScope(grammar.scopeName);
+                    grammars.startIdForScope(grammar.scopeName);
                     var omnisharpScopeName = grammar.scopeName + '.omnisharp';
                     var scopeId = grammars.idsByScope[grammar.scopeName];
                     grammars.idsByScope[omnisharpScopeName] = scopeId;
