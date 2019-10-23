@@ -1,6 +1,6 @@
 # omnisharp-atom package [![build status](https://travis-ci.org/OmniSharp/omnisharp-atom.svg)](https://travis-ci.org/OmniSharp/omnisharp-atom/)  [![Windows Build Status](https://ci.appveyor.com/api/projects/status/github/OmniSharp/omnisharp-atom?branch=master&svg=true)](https://ci.appveyor.com/project/nosami/omnisharp-atom)
 
-###(The hackable IDE)
+# The hackable IDE
 
 ![omnisharp-atom](https://cloud.githubusercontent.com/assets/667194/7758038/8ad7bdfa-fffe-11e4-98be-74e0c660aabd.gif)
 
@@ -22,9 +22,7 @@ apm install omnisharp-atom
 
 ## To use
 
-- Open a c# file
-
-- or open a scriptcs file
+- Open a c# file or a scriptcs file
 
 When the flame icon in the bottom left corner turns green, the server has started!
 
