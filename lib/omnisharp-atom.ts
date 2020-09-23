@@ -30,11 +30,11 @@ class OmniSharpAtom {
                 }
             })));
 
-        const grammars = (<any>atom.grammars);
+        const grammars = atom.grammars.textmateRegistry || atom.grammars;
         const grammarCb = (grammar: { scopeName: string; }) => {
             if (find(Omni.grammars, (gmr: any) => gmr.scopeName === grammar.scopeName)) {
                 // ensure the scope has been inited
-                atom.grammars.startIdForScope(grammar.scopeName);
+                grammars.startIdForScope(grammar.scopeName);
 
                 const omnisharpScopeName = `${grammar.scopeName}.omnisharp`;
                 const scopeId = grammars.idsByScope[grammar.scopeName];
